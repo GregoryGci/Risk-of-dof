@@ -34,7 +34,8 @@
         <div class="help">
           <b>Déplacement</b> ZQSD / WASD / flèches &nbsp;·&nbsp; <b>Visée</b> souris<br />
           <b>Clic gauche</b> Flèche Magique &nbsp;·&nbsp; <b>Clic droit</b> Flèche Enflammée<br />
-          <b>Espace</b> Flèche de Recul &nbsp;·&nbsp; <b>R</b> Flèche Explosive
+          <b>Espace</b> Flèche de Recul &nbsp;·&nbsp; <b>R</b> Flèche Explosive<br />
+          <b>E</b> Ouvrir un coffre (coûte des kamas)
         </div>
       </div>
     </div>
@@ -60,6 +61,9 @@
         <div class="stat"><span class="skull-icon">☠</span><span id="kills">0</span></div>
       </div>
 
+      <!-- Mini-carte -->
+      <div id="hud-minimap" class="panel small"><canvas id="minimap"></canvas></div>
+
       <!-- Bas : PV + barre de sorts -->
       <div id="hud-bottom">
         <div id="hp-orb">
@@ -68,6 +72,11 @@
         </div>
         <div id="spellbar" class="panel"></div>
       </div>
+
+      <!-- Objets possédés, aide d'interaction, annonce d'objet -->
+      <div id="inventory"></div>
+      <div id="prompt" class="panel small hidden"></div>
+      <div id="toast" class="panel small hidden"></div>
 
       <!-- Bandeau central (salon, spectateur) -->
       <div id="banner" class="panel hidden"></div>

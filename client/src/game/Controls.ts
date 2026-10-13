@@ -9,6 +9,8 @@ export class Controls {
   private keys = new Set<string>();
   /** Sorts dont la touche est maintenue (tir automatique dès que le sort est prêt). */
   private held = [false, false, false, false];
+  /** Touches enfoncées depuis la dernière lecture (actions ponctuelles comme « interagir »). */
+  private pressed = new Set<string>();
   private cleanup: (() => void)[] = [];
 
   constructor(canvas: HTMLCanvasElement) {
@@ -19,6 +21,7 @@ export class Controls {
 
     on(window, 'keydown', (e) => {
       if (e.target instanceof HTMLInputElement) return;
+      if (!e.repeat) this.pressed.add(e.code);
       this.keys.add(e.code);
       const slot = KEY_SLOTS[e.code];
       if (slot !== undefined) this.held[slot] = true;
@@ -69,6 +72,11 @@ export class Controls {
     const y = sy / TILE_H - sx / TILE_W;
     const len = Math.hypot(x, y);
     return { x: x / len, y: y / len };
+  }
+
+  /** Vrai une seule fois par appui sur la touche. */
+  consumePress(code: string): boolean {
+    return this.pressed.delete(code);
   }
 
   isHeld(slot: number): boolean {

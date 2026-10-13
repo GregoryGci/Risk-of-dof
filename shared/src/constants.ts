@@ -30,3 +30,7 @@ export const PHASE_LOST = 2;
 export const MSTATE_NORMAL = 0;
 export const MSTATE_WINDUP = 1; // prépare une charge / une attaque (télégraphe)
 export const MSTATE_CHARGE = 2; // charge en ligne droite
+
+/** Coffres présents en permanence sur la carte, et distance d'interaction (cases). */
+export const CHEST_COUNT = 12;
+export const INTERACT_RANGE = 1.6;

@@ -20,6 +20,8 @@ export const PlayerState = schema(
     moving: t.boolean().default(false),
     kamas: t.uint32().default(0),
     kills: t.uint16().default(0),
+    /** Inventaire encodé en texte (voir formatInventory). */
+    items: t.string().default(''),
   },
   'PlayerState',
 );
@@ -40,6 +42,16 @@ export const MonsterState = schema(
 );
 export type MonsterState = InstanceType<typeof MonsterState>;
 
+export const ChestState = schema(
+  {
+    x: t.float32().default(0),
+    y: t.float32().default(0),
+    opened: t.boolean().default(false),
+  },
+  'ChestState',
+);
+export type ChestState = InstanceType<typeof ChestState>;
+
 export const GameState = schema(
   {
     phase: t.uint8().default(PHASE_LOBBY),
@@ -52,6 +64,8 @@ export const GameState = schema(
     kills: t.uint16().default(0),
     players: t.map(PlayerState),
     monsters: t.map(MonsterState),
+    chests: t.map(ChestState),
+    chestCost: t.uint16().default(35),
   },
   'GameState',
 );

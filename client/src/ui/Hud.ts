@@ -1,5 +1,5 @@
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, kamas, équipe, bandeaux.
-import { PHASE_LOBBY, PHASE_LOST, difficultyTier, getSpell, type GameStateView, type PlayerView } from '@rod/shared';
+import { ITEMS, PHASE_LOBBY, PHASE_LOST, difficultyTier, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import { spellIconSvg } from './icons.ts';
@@ -162,8 +162,34 @@ export class Hud {
     orb.classList.add('hit');
   }
 
-  update(state: GameStateView, myId: string, spectating: string | null): void {
+  /** Annonce temporaire au centre de l'écran (objet obtenu). */
+  toast(html: string): void {
+    const el = $('toast');
+    el.innerHTML = html;
+    el.classList.remove('hidden', 'show');
+    void el.offsetWidth;
+    el.classList.add('show');
+  }
+
+  update(state: GameStateView, myId: string, spectating: string | null, prompt = ''): void {
     const me = state.players.get(myId);
+
+    // Aide d'interaction (coffre à portée)
+    this.setHtml('prompt', prompt);
+    $('prompt').classList.toggle('hidden', prompt === '');
+
+    // Inventaire
+    if (me && this.cache.items !== me.items) {
+      this.cache.items = me.items;
+      let html = '';
+      for (const [id, count] of parseInventory(me.items)) {
+        const item = ITEMS[id];
+        const url = this.store.itemIconUrl(id);
+        const style = url ? `background-image:url('${url}')` : `background:radial-gradient(circle at 35% 30%, #fff8, ${cssColor(item.color)} 55%, #0008)`;
+        html += `<div class="item${item.rare ? ' rare' : ''}" title="${escapeHtml(item.name)} — ${escapeHtml(item.description)}"><div class="item-icon" style="${style}"></div>${count > 1 ? `<span>x${count}</span>` : ''}</div>`;
+      }
+      $('inventory').innerHTML = html;
+    }
 
     // PV
     if (me) {

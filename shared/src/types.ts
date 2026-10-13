@@ -83,6 +83,27 @@ export interface MonsterDef {
   kamas: [number, number];
 }
 
+/** Statistiques modifiables par les objets. */
+export type StatKey =
+  | 'maxHp' // PV max (valeur fixe)
+  | 'damage' // dégâts (+%)
+  | 'haste' // vitesse de recharge (+%)
+  | 'speed' // vitesse de déplacement (+%)
+  | 'regen' // PV par seconde
+  | 'crit' // chance de coup critique
+  | 'armor' // chaque point réduit les dégâts subis de 8 %
+  | 'killHeal' // PV rendus par monstre vaincu
+  | 'kamas'; // kamas gagnés (+%)
+
+export interface ItemDef {
+  id: string;
+  name: string;
+  description: string;
+  color: number;
+  rare: boolean;
+  stats: Partial<Record<StatKey, number>>;
+}
+
 // ---------------------------------------------------------------------------
 // Protocole réseau
 // ---------------------------------------------------------------------------
@@ -141,6 +162,13 @@ export interface DamageEvent {
   player: boolean;
   crit?: boolean;
 }
+/** Un joueur a ouvert un coffre et obtenu un objet. */
+export interface ItemEvent {
+  player: string;
+  item: string;
+  x: number;
+  y: number;
+}
 /** Un monstre donne un coup au corps à corps (animation). */
 export interface AttackEvent {
   id: string;
@@ -177,6 +205,8 @@ export interface PlayerView {
   moving: boolean;
   kamas: number;
   kills: number;
+  /** Inventaire : "id:nombre,id:nombre" (voir parseInventory). */
+  items: string;
 }
 export interface MonsterView {
   type: string;
@@ -188,6 +218,11 @@ export interface MonsterView {
   level: number;
   state: number;
 }
+export interface ChestView {
+  x: number;
+  y: number;
+  opened: boolean;
+}
 export interface GameStateView {
   phase: number;
   seed: number;
@@ -197,4 +232,7 @@ export interface GameStateView {
   kills: number;
   players: SyncMap<PlayerView>;
   monsters: SyncMap<MonsterView>;
+  chests: SyncMap<ChestView>;
+  /** Prix actuel d'un coffre (kamas). */
+  chestCost: number;
 }

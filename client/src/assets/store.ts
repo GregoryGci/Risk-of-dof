@@ -79,7 +79,7 @@ export class AssetStore {
     }
 
     // Décors.
-    for (const o of OBSTACLES) {
+    for (const o of [...OBSTACLES, { id: 'coffre' }, { id: 'coffre_ouvert' }]) {
       const defs = asArray<ImageDef>(m.objects?.[o.id] ?? []);
       const provided: ImageVisual[] = [];
       defs.forEach((d, i) => {
@@ -158,6 +158,11 @@ export class AssetStore {
   /** URL de l'icône d'un sort si elle est fournie (utilisée par le HUD en DOM). */
   spellIconUrl(icon: string): string | null {
     const file = this.manifest.spells?.[icon];
+    return file ? ASSET_ROOT + file : null;
+  }
+
+  itemIconUrl(id: string): string | null {
+    const file = this.manifest.items?.[id];
     return file ? ASSET_ROOT + file : null;
   }
 

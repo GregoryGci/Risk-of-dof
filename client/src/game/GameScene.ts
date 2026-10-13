@@ -3,12 +3,15 @@
 import Phaser from 'phaser';
 import type { Room } from '@colyseus/sdk';
 import {
+  INTERACT_RANGE,
   PHASE_LOST,
+  PHASE_PLAYING,
   PLAYER_RADIUS,
   MSTATE_WINDUP,
   dirFromVector,
   generateMap,
   getClass,
+  getItem,
   getMonster,
   getSpell,
   screenToWorld,
@@ -16,11 +19,13 @@ import {
   worldToScreen,
   type AttackEvent,
   type CastEvent,
+  type ChestView,
   type DamageEvent,
   type DeathEvent,
   type ExplodeEvent,
   type GameMap,
   type GameStateView,
+  type ItemEvent,
   type MonsterView,
   type PlayerView,
   type ProjEndEvent,
@@ -28,6 +33,7 @@ import {
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import type { Hud } from '../ui/Hud.ts';
+import { Minimap } from '../ui/Minimap.ts';
 import { Controls } from './Controls.ts';
 import { Effects } from './Effects.ts';
 import { EntityView } from './EntityView.ts';
@@ -52,11 +58,13 @@ export class GameScene extends Phaser.Scene {
   private hud!: Hud;
   private controls!: Controls;
   private effects!: Effects;
+  private minimap = new Minimap();
 
   private map!: GameMap;
   private mapView?: MapView;
   private players = new Map<string, EntityView>();
   private monsters = new Map<string, EntityView>();
+  private chests = new Map<string, { image: Phaser.GameObjects.Image; opened: boolean }>();
 
   /** Position prédite du joueur local (cases). */
   private me = { x: 0, y: 0 };
@@ -104,6 +112,7 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('explode', (e: ExplodeEvent) => this.onExplode(e));
     this.room.onMessage('dmg', (e: DamageEvent) => this.onDamage(e));
     this.room.onMessage('death', (e: DeathEvent) => this.onDeath(e));
+    this.room.onMessage('item', (e: ItemEvent) => this.onItem(e));
     this.room.onMessage('atk', (e: AttackEvent) => this.monsters.get(e.id)?.attack());
 
     // Mort : un clic change de joueur observé.
@@ -136,17 +145,20 @@ export class GameScene extends Phaser.Scene {
     if (myState) this.updateLocalPlayer(time, dt, myState, canAct);
     this.syncPlayers(state, dt);
     this.syncMonsters(state, dt);
+    const prompt = this.syncChests(state, myState, canAct);
     this.effects.update(dt);
     this.updateCamera(state, myState, dt);
 
+    this.minimap.draw(state, this.room.sessionId);
     this.hud.updateCooldowns(time, this.cdEnd, this.cdTotal);
-    this.hud.update(state, this.room.sessionId, myState && !myState.alive ? this.spectating : null);
+    this.hud.update(state, this.room.sessionId, myState && !myState.alive ? this.spectating : null, prompt);
   }
 
   private rebuildMap(seed: number): void {
     this.mapView?.destroy();
     this.map = generateMap(seed);
     this.mapView = new MapView(this, this.store, this.map);
+    this.minimap.setMap(this.map);
     this.effects.clear();
     // Nouvelle partie : on repart de la position serveur et les sorts sont de nouveau prêts.
     this.meReady = false;
@@ -264,6 +276,40 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Affiche les coffres et gère l'interaction (touche E).
+   * Retourne le texte d'aide à afficher si un coffre est à portée.
+   */
+  private syncChests(state: GameStateView, myState: PlayerView | undefined, canAct: boolean): string {
+    let nearest = Infinity;
+    state.chests.forEach((c: ChestView, id: string) => {
+      let view = this.chests.get(id);
+      if (!view || view.opened !== c.opened) {
+        view?.image.destroy();
+        const v = this.store.objectVisual(c.opened ? 'coffre_ouvert' : 'coffre', 0);
+        const p = worldToScreen(c.x, c.y);
+        const image = this.add.image(p.x, p.y, v.key).setOrigin(v.origin[0], v.origin[1]).setScale(v.scale).setDepth(p.y);
+        if (c.opened) image.setAlpha(0.75);
+        view = { image, opened: c.opened };
+        this.chests.set(id, view);
+      }
+      if (!c.opened) nearest = Math.min(nearest, Math.hypot(c.x - this.me.x, c.y - this.me.y));
+    });
+    for (const [id, view] of this.chests) {
+      if (state.chests.get(id)) continue;
+      view.image.destroy();
+      this.chests.delete(id);
+    }
+
+    const pressed = this.controls.consumePress('KeyE');
+    if (!canAct || !myState || state.phase !== PHASE_PLAYING || nearest > INTERACT_RANGE) return '';
+    const affordable = myState.kamas >= state.chestCost;
+    if (pressed && affordable) this.room.send('interact');
+    return affordable
+      ? `<b>E</b> — Ouvrir le coffre (${state.chestCost} K)`
+      : `Coffre : ${state.chestCost} K <span class="missing">(il vous manque ${state.chestCost - myState.kamas} K)</span>`;
+  }
+
   // -------------------------------------------------------------------------
   // Caméra et mode spectateur
   // -------------------------------------------------------------------------
@@ -354,6 +400,19 @@ export class GameScene extends Phaser.Scene {
       if (e.crit) this.effects.floatText(e.x, e.y, `${e.amount} !`, '#ffb020', 19, 44);
       else this.effects.floatText(e.x, e.y, String(e.amount), '#ffffff', 13);
       this.store.playSound(this, 'hit', 0.3);
+    }
+  }
+
+  private onItem(e: ItemEvent): void {
+    const item = getItem(e.item);
+    if (!item || document.hidden) return;
+    const mine = e.player === this.room.sessionId;
+    const color = `#${item.color.toString(16).padStart(6, '0')}`;
+    this.effects.floatText(e.x, e.y, item.name, color, mine ? 16 : 12, 60);
+    this.effects.spark(worldToScreen(e.x, e.y).x, worldToScreen(e.x, e.y).y - 20, item.color);
+    if (mine) {
+      this.hud.toast(`<b style="color:${color}">${item.name}</b> — ${item.description}`);
+      this.store.playSound(this, 'item');
     }
   }
 

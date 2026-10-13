@@ -8,7 +8,7 @@ export function difficultyAt(seconds: number, playerCount: number): number {
 
 /** Crédits de spawn gagnés par seconde par le directeur. */
 export function spawnCreditsPerSecond(difficulty: number, playerCount: number): number {
-  return (0.35 + 0.45 * difficulty) * (0.7 + 0.3 * playerCount);
+  return (0.4 + 0.45 * difficulty) * (0.7 + 0.3 * playerCount);
 }
 
 export function monsterHpMultiplier(difficulty: number): number {
