@@ -1,0 +1,74 @@
+{
+  "characters": {
+    "cra": {
+      "image": "sprites/cra.png",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "origin": [0.5, 0.9],
+      "scale": 1,
+      "mirror": { "3": 1, "4": 0, "5": 7 },
+      "anims": {
+        "idle": {
+          "0": { "start": 0, "end": 0 },
+          "1": { "start": 8, "end": 8 },
+          "2": { "start": 16, "end": 16 },
+          "6": { "start": 24, "end": 24 },
+          "7": { "start": 32, "end": 32 }
+        },
+        "run": {
+          "0": { "start": 0, "end": 7, "frameRate": 12 },
+          "1": { "start": 8, "end": 15, "frameRate": 12 },
+          "2": { "start": 16, "end": 23, "frameRate": 12 },
+          "6": { "start": 24, "end": 31, "frameRate": 12 },
+          "7": { "start": 32, "end": 39, "frameRate": 12 }
+        },
+        "attack": {
+          "1": { "start": 40, "end": 47, "frameRate": 16, "repeat": 0 }
+        }
+      }
+    }
+  },
+  "monsters": {
+    "bouftou": {
+      "image": "sprites/bouftou.png",
+      "atlas": "sprites/bouftou.json",
+      "origin": [0.5, 0.85],
+      "anims": {
+        "idle": { "1": { "prefix": "static_1_", "start": 0, "end": 0 } },
+        "run": { "1": { "prefix": "walk_1_", "start": 0, "end": 7, "frameRate": 12 } }
+      }
+    }
+  },
+  "tiles": {
+    "herbe": ["tiles/herbe_1.png", "tiles/herbe_2.png"],
+    "fleurs": "tiles/fleurs_1.png",
+    "chemin": ["tiles/chemin_1.png"],
+    "ble": "tiles/ble_1.png"
+  },
+  "objects": {
+    "arbre": [
+      { "image": "objects/arbre_1.png", "origin": [0.5, 0.92] },
+      { "image": "objects/arbre_2.png", "origin": [0.5, 0.92] }
+    ],
+    "rocher": { "image": "objects/rocher.png", "origin": [0.5, 0.8] }
+  },
+  "spells": {
+    "fleche_magique": "spells/fleche_magique.png",
+    "fleche_enflammee": "spells/fleche_enflammee.png",
+    "fleche_de_recul": "spells/fleche_de_recul.png",
+    "fleche_explosive": "spells/fleche_explosive.png"
+  },
+  "projectiles": {
+    "fleche_magique": { "image": "sprites/fleche.png", "origin": [0.5, 0.5] }
+  },
+  "sounds": {
+    "cast_fleche_magique": "sounds/arc.mp3",
+    "hit": "sounds/hit.mp3",
+    "death": "sounds/death.mp3",
+    "explode": "sounds/explosion.mp3",
+    "player_hit": "sounds/ouch.mp3"
+  },
+  "ui": {
+    "kama": "ui/kama.png"
+  }
+}

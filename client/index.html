@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Risk of Dof</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- Canvas Phaser -->
+    <div id="game"></div>
+
+    <!-- Écran d'accueil -->
+    <div id="menu" class="overlay">
+      <div class="panel menu-panel">
+        <h1>Risk of Dof</h1>
+        <p class="subtitle">Fan game coop — Champs d'Astrub</p>
+
+        <label for="pseudo">Pseudo</label>
+        <input id="pseudo" type="text" maxlength="16" placeholder="Aventurier" autocomplete="off" />
+
+        <button id="btn-create" class="btn btn-primary">Créer une partie</button>
+
+        <div class="separator"><span>ou</span></div>
+
+        <label for="code">Code de la partie</label>
+        <div class="row">
+          <input id="code" type="text" maxlength="4" placeholder="ABCD" autocomplete="off" />
+          <button id="btn-join" class="btn">Rejoindre</button>
+        </div>
+
+        <p id="menu-error" class="error"></p>
+
+        <div class="help">
+          <b>Déplacement</b> ZQSD / WASD / flèches &nbsp;·&nbsp; <b>Visée</b> souris<br />
+          <b>Clic gauche</b> Flèche Magique &nbsp;·&nbsp; <b>Clic droit</b> Flèche Enflammée<br />
+          <b>Espace</b> Flèche de Recul &nbsp;·&nbsp; <b>R</b> Flèche Explosive
+        </div>
+      </div>
+    </div>
+
+    <!-- HUD en jeu -->
+    <div id="hud" class="hidden">
+      <!-- Haut gauche : code + équipe -->
+      <div id="hud-team" class="panel small">
+        <div class="room-code" id="room-code" title="Cliquer pour copier le lien d'invitation">Partie <b>----</b></div>
+        <div id="team-list"></div>
+      </div>
+
+      <!-- Haut centre : timer + difficulté -->
+      <div id="hud-timer" class="panel small">
+        <div id="timer">00:00</div>
+        <div id="difficulty-name">Piou</div>
+        <div class="bar"><div id="difficulty-bar"></div></div>
+      </div>
+
+      <!-- Haut droite : kamas + victimes -->
+      <div id="hud-stats" class="panel small">
+        <div class="stat"><span class="kama-icon"></span><span id="kamas">0</span></div>
+        <div class="stat"><span class="skull-icon">☠</span><span id="kills">0</span></div>
+      </div>
+
+      <!-- Bas : PV + barre de sorts -->
+      <div id="hud-bottom">
+        <div id="hp-orb">
+          <div id="hp-fill"></div>
+          <div id="hp-text">120</div>
+        </div>
+        <div id="spellbar" class="panel"></div>
+      </div>
+
+      <!-- Bandeau central (salon, spectateur) -->
+      <div id="banner" class="panel hidden"></div>
+
+      <!-- Défaite -->
+      <div id="gameover" class="overlay hidden">
+        <div class="panel menu-panel">
+          <h1>Défaite</h1>
+          <p class="subtitle" id="gameover-stats"></p>
+          <div id="gameover-players"></div>
+          <button id="btn-restart" class="btn btn-primary">Relancer une partie</button>
+          <button id="btn-quit" class="btn">Quitter</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

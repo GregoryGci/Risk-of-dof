@@ -1,0 +1,22 @@
+{
+  "name": "risk-of-dof",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Fan game coop Dofus Retro x Risk of Rain (usage privé)",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n serveur,client -c yellow,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
+    "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w client",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server",
+    "bot": "node server/tools/bot.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,32 @@
+// Constantes partagées entre le client et le serveur.
+
+/** Fréquence de simulation du serveur (ticks par seconde). */
+export const TICK_RATE = 30;
+/** Intervalle d'envoi de l'état aux clients (ms). */
+export const PATCH_MS = 50;
+
+export const SERVER_PORT = 2567;
+export const ROOM_NAME = 'partie';
+export const MAX_PLAYERS = 4;
+export const ROOM_CODE_LENGTH = 4;
+export const NAME_MAX_LENGTH = 16;
+
+/** Taille de la carte en cases (carrée). */
+export const MAP_SIZE = 56;
+/** Dimensions d'une case isométrique à l'écran (px). */
+export const TILE_W = 64;
+export const TILE_H = 32;
+
+export const PLAYER_RADIUS = 0.35;
+/** Nombre maximum de monstres vivants en même temps. */
+export const MAX_MONSTERS = 70;
+
+/** Phases d'une partie. */
+export const PHASE_LOBBY = 0;
+export const PHASE_PLAYING = 1;
+export const PHASE_LOST = 2;
+
+/** États d'animation d'un monstre (synchronisés). */
+export const MSTATE_NORMAL = 0;
+export const MSTATE_WINDUP = 1; // prépare une charge / une attaque (télégraphe)
+export const MSTATE_CHARGE = 2; // charge en ligne droite

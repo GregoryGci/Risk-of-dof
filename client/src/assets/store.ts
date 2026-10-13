@@ -1,0 +1,200 @@
+// Chargement des assets décrits par le manifeste et résolution asset réel / placeholder.
+// Le reste du jeu ne demande jamais un fichier : il demande « le sprite du bouftou »
+// ou « une tile d'herbe » et reçoit soit l'asset fourni, soit le placeholder.
+import Phaser from 'phaser';
+import { GROUND_NAMES, OBSTACLES, getMonster } from '@rod/shared';
+import { ASSET_ROOT, DEFAULT_MIRROR, type AnimDef, type ImageDef, type Manifest, type SpriteDef } from './manifest.ts';
+import {
+  ENTITY_PLACEHOLDER_ORIGIN,
+  OBJECT_PLACEHOLDER_ORIGIN,
+  TILE_VARIANTS,
+  characterPlaceholderKey,
+  ensureGenericMonster,
+  makeAllPlaceholders,
+  monsterPlaceholderKey,
+  tilePlaceholderKey,
+} from './placeholders.ts';
+
+/** Ce qu'il faut pour afficher un personnage ou un monstre. */
+export interface EntityVisual {
+  key: string;
+  origin: [number, number];
+  scale: number;
+  /** Définition d'animations si c'est un vrai asset, null pour un placeholder. */
+  sprite: SpriteDef | null;
+}
+
+export interface ImageVisual {
+  key: string;
+  origin: [number, number];
+  scale: number;
+}
+
+function asArray<T>(v: T | T[]): T[] {
+  return Array.isArray(v) ? v : [v];
+}
+
+export class AssetStore {
+  private tiles: Record<string, string[]> = {};
+  private objects: Record<string, ImageVisual[]> = {};
+
+  constructor(public manifest: Manifest) {}
+
+  // -------------------------------------------------------------------------
+  // Chargement (appelé dans preload)
+  // -------------------------------------------------------------------------
+
+  preload(scene: Phaser.Scene): void {
+    const m = this.manifest;
+    scene.load.setPath(ASSET_ROOT);
+    scene.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
+      console.warn(`[assets] introuvable : ${file.src} -> placeholder`);
+    });
+
+    const loadSprite = (key: string, def: SpriteDef) => {
+      if (def.atlas) scene.load.atlas(key, def.image, def.atlas);
+      else if (def.frameWidth && def.frameHeight) scene.load.spritesheet(key, def.image, { frameWidth: def.frameWidth, frameHeight: def.frameHeight });
+      else scene.load.image(key, def.image);
+    };
+    for (const [id, def] of Object.entries(m.characters ?? {})) loadSprite(`char_${id}`, def);
+    for (const [id, def] of Object.entries(m.monsters ?? {})) loadSprite(`mon_${id}`, def);
+    for (const [type, files] of Object.entries(m.tiles ?? {})) asArray(files).forEach((f, i) => scene.load.image(`tile_${type}_${i}`, f));
+    for (const [id, defs] of Object.entries(m.objects ?? {})) asArray(defs).forEach((d, i) => scene.load.image(`obj_${id}_${i}`, d.image));
+    for (const [id, def] of Object.entries(m.projectiles ?? {})) scene.load.image(`proj_${id}`, def.image);
+    for (const [name, file] of Object.entries(m.sounds ?? {})) scene.load.audio(`snd_${name}`, file);
+  }
+
+  // -------------------------------------------------------------------------
+  // Après chargement (appelé dans create)
+  // -------------------------------------------------------------------------
+
+  finalize(scene: Phaser.Scene): void {
+    makeAllPlaceholders(scene);
+    const m = this.manifest;
+
+    // Sol : variantes fournies, sinon placeholders.
+    for (const type of GROUND_NAMES) {
+      const provided = asArray(m.tiles?.[type] ?? []).map((_, i) => `tile_${type}_${i}`).filter((k) => scene.textures.exists(k));
+      this.tiles[type] = provided.length > 0 ? provided : Array.from({ length: TILE_VARIANTS }, (_, v) => tilePlaceholderKey(type, v));
+    }
+
+    // Décors.
+    for (const o of OBSTACLES) {
+      const defs = asArray<ImageDef>(m.objects?.[o.id] ?? []);
+      const provided: ImageVisual[] = [];
+      defs.forEach((d, i) => {
+        const key = `obj_${o.id}_${i}`;
+        if (scene.textures.exists(key)) provided.push({ key, origin: d.origin ?? [0.5, 0.9], scale: d.scale ?? 1 });
+      });
+      this.objects[o.id] = provided.length > 0 ? provided : [{ key: `ph_obj_${o.id}`, origin: OBJECT_PLACEHOLDER_ORIGIN, scale: 1 }];
+    }
+
+    // Animations des spritesheets fournies.
+    for (const [id, def] of Object.entries(m.characters ?? {})) this.createAnims(scene, `char_${id}`, def);
+    for (const [id, def] of Object.entries(m.monsters ?? {})) this.createAnims(scene, `mon_${id}`, def);
+  }
+
+  private createAnims(scene: Phaser.Scene, key: string, def: SpriteDef): void {
+    if (!scene.textures.exists(key)) return;
+    for (const [name, byDir] of Object.entries(def.anims ?? {})) {
+      for (const [dir, a] of Object.entries(byDir)) {
+        const animKey = `${key}:${name}:${dir}`;
+        if (scene.anims.exists(animKey)) continue;
+        scene.anims.create({
+          key: animKey,
+          frames: this.animFrames(scene, key, a),
+          frameRate: a.frameRate ?? 10,
+          repeat: a.repeat ?? (name === 'idle' || name === 'run' ? -1 : 0),
+        });
+      }
+    }
+  }
+
+  private animFrames(scene: Phaser.Scene, key: string, a: AnimDef): Phaser.Types.Animations.AnimationFrame[] {
+    if (a.frames) return a.frames.map((frame) => ({ key, frame }));
+    if (a.prefix !== undefined) return scene.anims.generateFrameNames(key, { prefix: a.prefix, suffix: a.suffix ?? '', start: a.start ?? 0, end: a.end ?? 0, zeroPad: a.zeroPad ?? 0 });
+    return scene.anims.generateFrameNumbers(key, { start: a.start ?? 0, end: a.end ?? a.start ?? 0 });
+  }
+
+  // -------------------------------------------------------------------------
+  // Résolution
+  // -------------------------------------------------------------------------
+
+  tileKey(scene: Phaser.Scene, type: string, variant: number): string {
+    const keys = this.tiles[type] ?? this.tiles.herbe;
+    return keys[variant % keys.length];
+  }
+
+  objectVisual(id: string, variant: number): ImageVisual {
+    const list = this.objects[id] ?? this.objects.arbre;
+    return list[variant % list.length];
+  }
+
+  character(scene: Phaser.Scene, classId: string, slot: number): EntityVisual {
+    const key = `char_${classId}`;
+    const def = this.manifest.characters?.[classId];
+    if (def && scene.textures.exists(key)) return { key, origin: def.origin ?? [0.5, 0.9], scale: def.scale ?? 1, sprite: def };
+    const ph = scene.textures.exists(characterPlaceholderKey(classId, slot)) ? characterPlaceholderKey(classId, slot) : characterPlaceholderKey('cra', slot);
+    return { key: ph, origin: ENTITY_PLACEHOLDER_ORIGIN, scale: 1, sprite: null };
+  }
+
+  monster(scene: Phaser.Scene, type: string): EntityVisual {
+    const key = `mon_${type}`;
+    const def = this.manifest.monsters?.[type];
+    if (def && scene.textures.exists(key)) return { key, origin: def.origin ?? [0.5, 0.9], scale: def.scale ?? 1, sprite: def };
+    let ph = monsterPlaceholderKey(type);
+    if (!scene.textures.exists(ph)) ph = ensureGenericMonster(scene, type, getMonster(type).color);
+    return { key: ph, origin: ENTITY_PLACEHOLDER_ORIGIN, scale: 1, sprite: null };
+  }
+
+  /** Image de projectile fournie pour ce sort, ou null (flèche placeholder). */
+  projectile(scene: Phaser.Scene, spellId: string): ImageVisual | null {
+    const def = this.manifest.projectiles?.[spellId];
+    const key = `proj_${spellId}`;
+    if (!def || !scene.textures.exists(key)) return null;
+    return { key, origin: def.origin ?? [0.5, 0.5], scale: def.scale ?? 1 };
+  }
+
+  /** URL de l'icône d'un sort si elle est fournie (utilisée par le HUD en DOM). */
+  spellIconUrl(icon: string): string | null {
+    const file = this.manifest.spells?.[icon];
+    return file ? ASSET_ROOT + file : null;
+  }
+
+  uiUrl(name: string): string | null {
+    const file = this.manifest.ui?.[name];
+    return file ? ASSET_ROOT + file : null;
+  }
+
+  /** Joue un son s'il est fourni ; silencieux sinon. */
+  playSound(scene: Phaser.Scene, name: string, volume = 0.5): void {
+    const key = `snd_${name}`;
+    if (scene.cache.audio.exists(key)) scene.sound.play(key, { volume });
+  }
+
+  /**
+   * Trouve l'animation à jouer pour (nom, direction).
+   * Gère les directions en miroir et retombe sur « idle » si l'animation manque.
+   */
+  resolveAnim(scene: Phaser.Scene, visual: EntityVisual, name: string, dir: number): { key: string; flipX: boolean } | null {
+    const def = visual.sprite;
+    if (!def?.anims) return null;
+    const mirror = def.mirror ?? DEFAULT_MIRROR;
+    for (const n of name === 'idle' ? ['idle'] : [name, 'idle']) {
+      const byDir = def.anims[n];
+      if (!byDir) continue;
+      if (byDir[dir]) return { key: `${visual.key}:${n}:${dir}`, flipX: false };
+      const src = mirror[dir];
+      if (src !== undefined && byDir[src]) return { key: `${visual.key}:${n}:${src}`, flipX: true };
+      // Feuille 4 directions (diagonales seulement) : on prend la diagonale voisine.
+      for (const alt of [(dir + 1) % 8, (dir + 7) % 8]) {
+        if (byDir[alt]) return { key: `${visual.key}:${n}:${alt}`, flipX: false };
+        const s = mirror[alt];
+        if (s !== undefined && byDir[s]) return { key: `${visual.key}:${n}:${s}`, flipX: true };
+      }
+      const any = Object.keys(byDir)[0];
+      if (any !== undefined) return { key: `${visual.key}:${n}:${any}`, flipX: false };
+    }
+    return null;
+  }
+}
