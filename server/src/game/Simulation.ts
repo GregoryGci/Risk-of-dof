@@ -91,6 +91,7 @@ export interface MonsterRt {
   wobble: number;
 }
 
+/** Un sort en cours : projectile en vol, ou coup instantané (mêlée, zone) le temps de son application. */
 interface Projectile {
   id: number;
   spell: SpellDef;
@@ -146,8 +147,8 @@ export class Simulation {
   // Cycle de vie
   // -------------------------------------------------------------------------
 
-  addPlayer(id: string, name: string): void {
-    const def = getClass('cra');
+  addPlayer(id: string, name: string, classId?: string): void {
+    const def = getClass(classId ?? '');
     const state = new PlayerState();
     state.name = name;
     state.classId = def.id;
@@ -166,6 +167,19 @@ export class Simulation {
     this.players.delete(id);
     this.state.players.delete(id);
     this.checkDefeat();
+  }
+
+  /** Changement de classe : possible uniquement dans le salon. */
+  setClass(id: string, classId: unknown): void {
+    const p = this.players.get(id);
+    if (!p || this.state.phase !== PHASE_LOBBY || typeof classId !== 'string') return;
+    p.def = getClass(classId);
+    p.state.classId = p.def.id;
+    const { x, y } = p.state;
+    this.resetPlayer(p);
+    // On garde sa place : inutile de renvoyer le joueur au point d'apparition.
+    p.state.x = x;
+    p.state.y = y;
   }
 
   /** L'hôte lance la partie depuis le salon. */
@@ -311,7 +325,9 @@ export class Simulation {
     // Les objets de « hâte » raccourcissent la recharge, ceux de dégâts et de critique améliorent le tir.
     const cooldown = spell.cooldown / (1 + p.stats.haste);
     p.readyAt[slot] = this.now + cooldown / 1000;
-    const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, 1 + p.stats.damage, BASE_CRIT_CHANCE + p.stats.crit, slot, cooldown);
+    let damageMult = 1 + p.stats.damage;
+    if (spell.missingHpBonus) damageMult *= 1 + spell.missingHpBonus * (1 - p.state.hp / p.state.maxHp);
+    const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, BASE_CRIT_CHANCE + p.stats.crit, slot, cooldown);
     p.state.dir = dirFromVector(dir.x, dir.y);
 
     // Effets sur le lanceur (bond en arrière / en avant).
@@ -338,17 +354,54 @@ export class Simulation {
       dx /= d;
       dy /= d;
     }
-    // Un tir en cloche s'arrête au point visé, les autres vont au bout de leur portée.
-    const travel = spell.projectile.toTarget ? Math.min(d, spell.range) : spell.range;
     const id = this.nextProjectileId++;
-    this.projectiles.push({ id, spell, owner, fromPlayer, x, y, dx, dy, remaining: travel, damageMult, critChance, hit: new Set() });
-    const event: CastEvent = { id, caster: owner, spell: spell.id, x, y, tx: x + dx * travel, ty: y + dy * travel };
+    const pr: Projectile = { id, spell, owner, fromPlayer, x, y, dx, dy, remaining: 0, damageMult, critChance, hit: new Set() };
+    const event: CastEvent = { id, caster: owner, spell: spell.id, x, y, tx: x + dx, ty: y + dy };
     if (slot !== undefined) {
       event.slot = slot;
       event.cooldown = cooldown ?? spell.cooldown;
     }
-    this.broadcast('cast', event);
+
+    if (spell.projectile) {
+      // Un tir en cloche s'arrête au point visé, les autres vont au bout de leur portée.
+      pr.remaining = spell.projectile.toTarget ? Math.min(d, spell.range) : spell.range;
+      event.tx = x + dx * pr.remaining;
+      event.ty = y + dy * pr.remaining;
+      this.projectiles.push(pr);
+      this.broadcast('cast', event);
+    } else if (spell.melee) {
+      // Coup en cône : tout ce qui est à portée et dans l'arc face à la visée.
+      event.tx = x + dx * spell.range;
+      event.ty = y + dy * spell.range;
+      this.broadcast('cast', event);
+      const cosHalf = Math.cos(((spell.melee.arc / 2) * Math.PI) / 180);
+      for (const t of this.enemiesOf(fromPlayer)) {
+        const ex = t.x - x;
+        const ey = t.y - y;
+        const dist = Math.hypot(ex, ey);
+        if (dist > spell.range + t.radius) continue;
+        // Une cible collée au lanceur est toujours touchée, quel que soit l'angle.
+        if (dist > t.radius + 0.4 && (ex * dx + ey * dy) / dist < cosHalf) continue;
+        this.applyHit(pr, t.id, dx, dy);
+      }
+    } else if (spell.zone) {
+      // Zone instantanée : autour du lanceur, ou au point visé limité par la portée.
+      const reach = spell.zone.self ? 0 : Math.min(d, spell.range);
+      event.tx = x + dx * reach;
+      event.ty = y + dy * reach;
+      this.broadcast('cast', event);
+      this.explode(pr, event.tx, event.ty, spell.zone.radius);
+    } else {
+      // Sort utilitaire (bond...) : seul l'effet sur le lanceur compte.
+      this.broadcast('cast', event);
+    }
     return { x: dx, y: dy };
+  }
+
+  /** Cibles hostiles à un lanceur : les monstres pour un joueur, les joueurs vivants pour un monstre. */
+  private enemiesOf(fromPlayer: boolean): { id: string; x: number; y: number; radius: number }[] {
+    if (fromPlayer) return [...this.monsters.values()].map((m) => ({ id: m.id, x: m.state.x, y: m.state.y, radius: m.def.radius }));
+    return [...this.players.values()].filter((p) => p.state.alive).map((p) => ({ id: p.id, x: p.state.x, y: p.state.y, radius: PLAYER_RADIUS }));
   }
 
   // -------------------------------------------------------------------------
@@ -403,12 +456,14 @@ export class Simulation {
   private updateProjectiles(dt: number): void {
     const alive: Projectile[] = [];
     for (const pr of this.projectiles) {
-      const step = Math.min(pr.spell.projectile.speed * dt, pr.remaining);
+      const shape = pr.spell.projectile;
+      if (!shape) continue;
+      const step = Math.min(shape.speed * dt, pr.remaining);
       const x1 = pr.x + pr.dx * step;
       const y1 = pr.y + pr.dy * step;
       let stopped = false;
 
-      if (!pr.spell.projectile.toTarget) {
+      if (!shape.toTarget) {
         // Cibles dont le cercle coupe le segment parcouru ce tick, triées par distance.
         const touched: { id: string; along: number; x: number; y: number }[] = [];
         const test = (id: string, tx: number, ty: number, radius: number) => {
@@ -416,7 +471,7 @@ export class Simulation {
           const along = clamp((tx - pr.x) * pr.dx + (ty - pr.y) * pr.dy, 0, step);
           const cx = pr.x + pr.dx * along;
           const cy = pr.y + pr.dy * along;
-          if (Math.hypot(tx - cx, ty - cy) <= radius + pr.spell.projectile.radius) touched.push({ id, along, x: cx, y: cy });
+          if (Math.hypot(tx - cx, ty - cy) <= radius + shape.radius) touched.push({ id, along, x: cx, y: cy });
         };
         if (pr.fromPlayer) {
           for (const m of this.monsters.values()) test(m.id, m.state.x, m.state.y, m.def.radius);
@@ -426,9 +481,9 @@ export class Simulation {
         touched.sort((a, b) => a.along - b.along);
         for (const t of touched) {
           pr.hit.add(t.id);
-          if (pr.spell.area) this.explode(pr, t.x, t.y);
+          if (pr.spell.area) this.explode(pr, t.x, t.y, pr.spell.area.radius);
           else this.applyHit(pr, t.id, pr.dx, pr.dy);
-          if (!pr.spell.projectile.pierce) {
+          if (!shape.pierce) {
             this.broadcast('projEnd', { id: pr.id, x: t.x, y: t.y });
             stopped = true;
             break;
@@ -442,7 +497,7 @@ export class Simulation {
       pr.remaining -= step;
       if (pr.remaining <= 0.0001) {
         // Arrivé au bout : les sorts de zone explosent à l'arrivée.
-        if (pr.spell.area) this.explode(pr, pr.x, pr.y);
+        if (pr.spell.area) this.explode(pr, pr.x, pr.y, pr.spell.area.radius);
         continue;
       }
       alive.push(pr);
@@ -450,20 +505,28 @@ export class Simulation {
     this.projectiles = alive;
   }
 
-  private explode(pr: Projectile, x: number, y: number): void {
-    const radius = pr.spell.area!.radius;
+  private explode(pr: Projectile, x: number, y: number, radius: number): void {
     this.broadcast('explode', { spell: pr.spell.id, x, y, radius });
-    const hitOne = (id: string, tx: number, ty: number, r: number) => {
-      const d = Math.hypot(tx - x, ty - y);
-      if (d > radius + r) return;
+
+    // Sort de soin : touche les alliés (joueurs vivants) au lieu des ennemis.
+    if (pr.spell.heal) {
+      const [min, max] = pr.spell.heal;
+      for (const p of this.players.values()) {
+        if (!p.state.alive || Math.hypot(p.state.x - x, p.state.y - y) > radius + PLAYER_RADIUS) continue;
+        const amount = Math.round(Math.min(p.state.maxHp - p.state.hp, min + Math.random() * (max - min)));
+        if (amount <= 0) continue;
+        p.state.hp += amount;
+        this.broadcast('heal', { target: p.id, amount, x: p.state.x, y: p.state.y });
+      }
+      return;
+    }
+
+    for (const t of this.enemiesOf(pr.fromPlayer)) {
+      const d = Math.hypot(t.x - x, t.y - y);
+      if (d > radius + t.radius) continue;
       // Recul depuis le centre de l'explosion.
-      if (d > 0.01) this.applyHit(pr, id, (tx - x) / d, (ty - y) / d);
-      else this.applyHit(pr, id, pr.dx, pr.dy);
-    };
-    if (pr.fromPlayer) {
-      for (const m of [...this.monsters.values()]) hitOne(m.id, m.state.x, m.state.y, m.def.radius);
-    } else {
-      for (const p of this.players.values()) if (p.state.alive) hitOne(p.id, p.state.x, p.state.y, PLAYER_RADIUS);
+      if (d > 0.01) this.applyHit(pr, t.id, (t.x - x) / d, (t.y - y) / d);
+      else this.applyHit(pr, t.id, pr.dx, pr.dy);
     }
   }
 
@@ -485,6 +548,17 @@ export class Simulation {
       if (e.type === 'knockback') {
         const duration = 0.18;
         m.push = { vx: (dirX * e.distance) / duration, vy: (dirY * e.distance) / duration, time: duration };
+      } else if (e.type === 'pull') {
+        // Attire la cible jusqu'au contact du lanceur (sans le traverser).
+        const caster = this.players.get(pr.owner);
+        if (caster) {
+          const px = caster.state.x - m.state.x;
+          const py = caster.state.y - m.state.y;
+          const dist = Math.hypot(px, py);
+          const travel = Math.min(e.distance, Math.max(0, dist - 1));
+          const duration = 0.2;
+          if (dist > 0.01) m.push = { vx: ((px / dist) * travel) / duration, vy: ((py / dist) * travel) / duration, time: duration };
+        }
       } else if (e.type === 'burn') {
         m.burnDps = e.dps;
         m.burnUntil = this.now + e.duration;

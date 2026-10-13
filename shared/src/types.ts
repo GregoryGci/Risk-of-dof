@@ -6,6 +6,8 @@ export type Element = 'neutre' | 'terre' | 'feu' | 'eau' | 'air';
 export type SpellEffect =
   /** Repousse les cibles touchées (distance en cases). */
   | { type: 'knockback'; distance: number }
+  /** Attire les cibles touchées vers le lanceur (distance maximale en cases). */
+  | { type: 'pull'; distance: number }
   /** Déplace le lanceur : en arrière ou en avant par rapport à la visée. */
   | { type: 'dash'; direction: 'back' | 'forward'; distance: number; duration: number }
   /** Brûlure : dégâts par seconde pendant une durée (s). */
@@ -30,13 +32,23 @@ export interface SpellDef {
   /** Dégâts [min, max]. */
   damage: [number, number];
   /**
+   * Forme du sort — une seule parmi projectile / melee / zone (aucune = sort purement utilitaire, ex. un bond).
+   *
    * Projectile : vitesse (cases/s), rayon de collision,
    * `pierce` = traverse et touche tous les ennemis sur la ligne,
    * `toTarget` = vole jusqu'au point visé sans toucher en chemin (tir en cloche).
    */
-  projectile: { speed: number; radius: number; pierce?: boolean; toTarget?: boolean };
-  /** Zone d'explosion à l'impact / à l'arrivée (rayon en cases). */
+  projectile?: { speed: number; radius: number; pierce?: boolean; toTarget?: boolean };
+  /** Coup au corps à corps : touche tout ce qui est à `range` dans un cône de `arc` degrés face à la visée. */
+  melee?: { arc: number };
+  /** Zone instantanée de `radius` cases au point visé (limité par `range`), ou autour du lanceur si `self`. */
+  zone?: { radius: number; self?: boolean };
+  /** Zone d'explosion d'un projectile à l'impact / à l'arrivée (rayon en cases). */
   area?: { radius: number };
+  /** Si présent, le sort SOIGNE les alliés touchés de [min, max] PV au lieu de blesser les ennemis. */
+  heal?: [number, number];
+  /** Dégâts multipliés par (1 + bonus × part de PV manquants du lanceur). */
+  missingHpBonus?: number;
   effects?: SpellEffect[];
 }
 
@@ -157,6 +169,13 @@ export interface ExplodeEvent {
   x: number;
   y: number;
   radius: number;
+}
+/** Un joueur est soigné. */
+export interface HealEvent {
+  target: string;
+  amount: number;
+  x: number;
+  y: number;
 }
 export interface DamageEvent {
   /** Id de la cible (sessionId ou id de monstre). */

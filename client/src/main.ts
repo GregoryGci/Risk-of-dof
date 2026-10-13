@@ -1,11 +1,11 @@
 // Point d'entrée du client : écran d'accueil (DOM), connexion Colyseus, puis lancement de Phaser.
 import Phaser from 'phaser';
 import { Client, type Room } from '@colyseus/sdk';
-import { NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT } from '@rod/shared';
+import { CLASSES, DEFAULT_CLASS, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT } from '@rod/shared';
 import { loadManifest } from './assets/manifest.ts';
 import { AssetStore } from './assets/store.ts';
 import { GameScene } from './game/GameScene.ts';
-import { Hud } from './ui/Hud.ts';
+import { Hud, classButtonsHtml } from './ui/Hud.ts';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -36,6 +36,23 @@ pseudoInput.value = localStorage.getItem('rod.pseudo') ?? '';
 const invited = new URLSearchParams(location.search).get('code');
 if (invited) codeInput.value = invited.toUpperCase().slice(0, ROOM_CODE_LENGTH);
 (invited && pseudoInput.value ? btnJoin : pseudoInput).focus();
+
+// Classe choisie, mémorisée d'une partie à l'autre.
+let classId = localStorage.getItem('rod.classe') ?? DEFAULT_CLASS;
+if (!CLASSES[classId]) classId = DEFAULT_CLASS;
+const classPicker = $('class-picker');
+function renderClassPicker(): void {
+  classPicker.innerHTML = classButtonsHtml(classId);
+  $('class-desc').textContent = CLASSES[classId].description;
+}
+classPicker.addEventListener('click', (e) => {
+  const id = (e.target as HTMLElement).dataset.class;
+  if (!id || !CLASSES[id]) return;
+  classId = id;
+  localStorage.setItem('rod.classe', id);
+  renderClassPicker();
+});
+renderClassPicker();
 
 function setBusy(busy: boolean): void {
   btnCreate.disabled = busy;
@@ -71,7 +88,7 @@ async function connect(join: () => Promise<Room>): Promise<void> {
   }
 }
 
-btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, { name: pseudo() })));
+btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, { name: pseudo(), classId })));
 
 function joinWithCode(): void {
   const code = codeInput.value.trim().toUpperCase();
@@ -79,7 +96,7 @@ function joinWithCode(): void {
     errorEl.textContent = `Le code fait ${ROOM_CODE_LENGTH} lettres.`;
     return;
   }
-  connect(() => client.joinById(code, { name: pseudo() }));
+  connect(() => client.joinById(code, { name: pseudo(), classId }));
 }
 btnJoin.addEventListener('click', joinWithCode);
 codeInput.addEventListener('keydown', (e) => {
@@ -95,6 +112,13 @@ async function startGame(room: Room): Promise<void> {
     onStart: () => room.send('start'),
     onRestart: () => room.send('restart'),
     onQuit: () => room.leave(),
+    onClass: (id) => {
+      // Le choix fait dans le salon devient aussi le choix par défaut de l'accueil.
+      classId = id;
+      localStorage.setItem('rod.classe', id);
+      renderClassPicker();
+      room.send('class', { classId: id });
+    },
   });
 
   menu.classList.add('hidden');

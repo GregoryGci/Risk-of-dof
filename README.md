@@ -36,17 +36,33 @@ Astuces :
 
 ## Commandes
 
-| Action                | Touche                              |
-|-----------------------|-------------------------------------|
-| Se déplacer           | ZQSD (AZERTY) / WASD / flèches      |
-| Viser                 | Souris                              |
-| Flèche Magique        | Clic gauche (maintenir pour enchaîner) |
-| Flèche Enflammée      | Clic droit — traverse les ennemis et les brûle |
-| Flèche de Recul       | Espace — repousse l'ennemi, bond en arrière |
-| Flèche Explosive      | R — explosion de zone au point visé |
+| Action        | Touche                                   |
+|---------------|------------------------------------------|
+| Se déplacer   | ZQSD (AZERTY) / WASD / flèches           |
+| Viser         | Souris                                   |
+| Sort 1        | Clic gauche (maintenir pour enchaîner)   |
+| Sort 2        | Clic droit                               |
+| Sort 3        | Espace (sort de mobilité)                |
+| Sort 4        | R (ultime)                               |
+| Interagir     | E (coffre, Zaap)                         |
 
-Un joueur mort devient spectateur (clic pour changer de joueur observé). La partie est perdue
-quand tout le monde est mort ; n'importe qui peut alors la relancer.
+Survolez une icône de la barre de sorts pour voir sa description.
+
+## Déroulement d'une partie
+
+- **Classes** : Crâ (archer), Iop (mêlée), Eniripsa (soins), Sacrieur (berserker). Le choix se
+  fait à l'accueil, et peut être changé dans le salon avant le lancement.
+- **Difficulté** : elle monte avec le temps (timer en haut). Les vagues arrivent plus vite et les
+  monstres ont plus de PV et de dégâts.
+- **Kamas et coffres** : chaque monstre vaincu rapporte des kamas à tous les joueurs. Un coffre
+  (points dorés de la mini-carte) coûte de plus en plus cher et donne un **objet** dont les bonus
+  se cumulent (PV, dégâts, vitesse de recharge, critiques...). 15 % de chances d'obtenir un Dofus.
+- **Zaap** : chaque zone contient un Zaap (losange bleu de la mini-carte). L'activer fait
+  apparaître son gardien, le **Bouftou Royal**, et lance une charge de 45 s. Une fois le Zaap
+  chargé et le gardien vaincu, il mène à la zone suivante : nouvelle carte, coffres neufs, et les
+  joueurs morts reviennent à la vie.
+- **Mort** : un joueur mort devient spectateur (clic pour changer de joueur observé). La partie
+  est perdue quand tout le monde est mort ; n'importe qui peut alors la relancer.
 
 ## Assets
 
@@ -60,14 +76,15 @@ Sans assets, le jeu utilise des placeholders géométriques et reste entièremen
 shared/   Types, constantes et DONNÉES de jeu, utilisés par le client et le serveur
   src/data/spells.ts     sorts (dégâts, portée, cooldown, projectile, zone, effets)
   src/data/classes.ts    classes (stats + 4 sorts)
-  src/data/monsters.ts   monstres (stats, comportement, coût de spawn)
+  src/data/monsters.ts   monstres et boss (stats, comportement, coût de spawn)
+  src/data/items.ts      objets cumulables et prix des coffres
   src/difficulty.ts      courbe de difficulté
   src/map.ts             génération de la carte (par graine) et collisions
   src/iso.ts             projection isométrique
 server/   Serveur autoritaire Node + Colyseus
   src/rooms/GameRoom.ts  salle = une partie, code court, messages réseau
   src/state.ts           état synchronisé vers les clients
-  src/game/Simulation.ts joueurs, sorts, projectiles, dégâts
+  src/game/Simulation.ts joueurs, sorts, projectiles, dégâts, coffres, Zaap et zones
   src/game/monsters.ts   IA des monstres
   src/game/director.ts   spawn des vagues
 client/   Vite + TypeScript + Phaser 3
@@ -76,7 +93,7 @@ client/   Vite + TypeScript + Phaser 3
   src/game/EntityView.ts sprite d'un joueur/monstre + interpolation
   src/game/Effects.ts    projectiles, explosions, chiffres de dégâts
   src/assets/            manifeste, chargement, placeholders
-  src/ui/                HUD (DOM)
+  src/ui/                HUD (DOM), mini-carte, icônes de remplacement
 ```
 
 Principes réseau :
@@ -89,13 +106,22 @@ Principes réseau :
   personnage (corrigé en douceur par le serveur) et affiche projectiles et effets à partir
   d'événements ponctuels.
 
-### Ajouter un sort ou une classe
+### Ajouter du contenu
 
-Tout se passe dans `shared/src/data/` : ajoutez le sort dans `spells.ts`, puis une classe dans
-`classes.ts` avec ses 4 sorts. Les mécaniques disponibles (projectile simple, perçant, tir en
-cloche, zone d'explosion, recul, bond, brûlure, ralentissement) se combinent sans toucher au code.
-Une mécanique vraiment nouvelle = un type d'effet de plus dans `shared/src/types.ts` et son
-traitement dans `server/src/game/Simulation.ts`.
+Tout se passe dans `shared/src/data/`, sans toucher à la logique :
+
+- **Sort** (`spells.ts`) : une forme parmi `projectile` (simple, perçant, en cloche avec
+  explosion), `melee` (cône devant soi) ou `zone` (au point visé ou autour de soi), plus des
+  effets combinables : recul, attraction, bond, brûlure, ralentissement. Un sort avec `heal`
+  soigne les alliés au lieu de blesser les ennemis.
+- **Classe** (`classes.ts`) : PV, vitesse, régénération et 4 ids de sorts. Elle apparaît
+  automatiquement dans le choix de classe.
+- **Monstre** (`monsters.ts`) : stats, comportement (`melee`, `erratic`, `charger`, `ranged`),
+  coût et difficulté minimale d'apparition ; `boss: true` pour un gardien de Zaap.
+- **Objet** (`items.ts`) : une liste de bonus de stats.
+
+Une mécanique vraiment nouvelle = un type de plus dans `shared/src/types.ts` et son traitement
+dans `server/src/game/Simulation.ts` (sorts) ou `monsters.ts` (IA).
 
 ## Autres commandes
 

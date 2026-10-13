@@ -29,6 +29,7 @@ import {
   type ExplodeEvent,
   type GameMap,
   type GameStateView,
+  type HealEvent,
   type ItemEvent,
   type MonsterView,
   type PlayerView,
@@ -67,6 +68,9 @@ export class GameScene extends Phaser.Scene {
   private map!: GameMap;
   private mapView?: MapView;
   private players = new Map<string, EntityView>();
+  /** Classe affichée par joueur : la vue est recréée si elle change (salon). */
+  private playerClass = new Map<string, string>();
+  private myClass = '';
   private monsters = new Map<string, EntityView>();
   private chests = new Map<string, { image: Phaser.GameObjects.Image; opened: boolean }>();
   private zaap?: { image: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Image };
@@ -106,7 +110,6 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(0x1a2611);
     this.controls = new Controls(this.game.canvas);
     this.effects = new Effects(this, this.store);
-    this.hud.setSpells(getClass('cra').spells);
 
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyZoom, this);
     this.applyZoom();
@@ -119,6 +122,9 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('death', (e: DeathEvent) => this.onDeath(e));
     this.room.onMessage('boss', (e: { name: string }) => this.hud.toast(`<b style="color:#ff6a5a">${e.name}</b> garde le Zaap !`));
     this.room.onMessage('stage', (e: { stage: number }) => this.hud.toast(`<b>Zone ${e.stage}</b>`));
+    this.room.onMessage('heal', (e: HealEvent) => {
+      if (!document.hidden) this.effects.floatText(e.x, e.y, `+${e.amount}`, '#6ee67a', 15);
+    });
     this.room.onMessage('item', (e: ItemEvent) => this.onItem(e));
     this.room.onMessage('atk', (e: AttackEvent) => this.monsters.get(e.id)?.attack());
 
@@ -149,6 +155,12 @@ export class GameScene extends Phaser.Scene {
     const myState = state.players.get(this.room.sessionId);
     const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST;
 
+    if (myState && myState.classId !== this.myClass) {
+      // Première frame ou changement de classe : la barre de sorts suit.
+      this.myClass = myState.classId;
+      this.hud.setSpells(getClass(myState.classId).spells);
+      this.cdEnd = [0, 0, 0, 0];
+    }
     if (myState) this.updateLocalPlayer(time, dt, myState, canAct);
     this.syncPlayers(state, dt);
     this.syncMonsters(state, dt);
@@ -229,7 +241,12 @@ export class GameScene extends Phaser.Scene {
     const myId = this.room.sessionId;
     state.players.forEach((p: PlayerView, id: string) => {
       let view = this.players.get(id);
+      if (view && this.playerClass.get(id) !== p.classId) {
+        view.destroy();
+        view = undefined;
+      }
       if (!view) {
+        this.playerClass.set(id, p.classId);
         const color = PLAYER_COLORS[p.slot % PLAYER_COLORS.length];
         view = new EntityView(this, this.store, this.store.character(this, p.classId, p.slot), p.x, p.y, {
           label: p.name,
@@ -415,7 +432,9 @@ export class GameScene extends Phaser.Scene {
 
   private onExplode(e: ExplodeEvent): void {
     if (document.hidden) return;
-    this.effects.explosion(e.x, e.y, e.radius, getSpell(e.spell).color);
+    const spell = getSpell(e.spell);
+    this.effects.explosion(e.x, e.y, e.radius, spell.color);
+    if (spell.heal) return;
     // Secousse proportionnelle à la proximité.
     const d = Math.hypot(e.x - this.me.x, e.y - this.me.y);
     if (d < 12) this.cameras.main.shake(160, 0.006 * (1 - d / 12));

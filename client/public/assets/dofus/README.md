@@ -25,13 +25,14 @@ assets/dofus/
 
 | Section       | Clés attendues                                                        |
 |---------------|------------------------------------------------------------------------|
-| `characters`  | id de classe : `cra`                                                   |
-| `monsters`    | `bouftou`, `tofu`, `arakne`, `tournesol`                               |
+| `characters`  | id de classe : `cra`, `iop`, `eniripsa`, `sacrieur`                   |
+| `monsters`    | `bouftou`, `tofu`, `arakne`, `tournesol`, `bouftou_royal`            |
 | `tiles`       | `herbe`, `fleurs`, `chemin`, `ble` — un fichier ou une liste de variantes |
-| `objects`     | `arbre`, `rocher`, `foin`, `buisson`, `souche` — un objet ou une liste  |
-| `spells`      | clé d'icône du sort : `fleche_magique`, `fleche_enflammee`, `fleche_de_recul`, `fleche_explosive` |
+| `objects`     | `arbre`, `rocher`, `foin`, `buisson`, `souche`, `coffre`, `coffre_ouvert`, `zaap` — un objet ou une liste |
+| `spells`      | clé d'icône du sort (champ `icon` dans `shared/src/data/spells.ts`) : `fleche_magique`, `pression`, `mot_curatif`... |
+| `items`       | id d'objet (`shared/src/data/items.ts`) : `amulette_bouftou`, `dofus_emeraude`... |
 | `projectiles` | id de sort (image orientée vers la **droite**)                        |
-| `sounds`      | `cast_<idSort>`, `hit`, `death`, `explode`, `player_hit`               |
+| `sounds`      | `cast_<idSort>`, `hit`, `death`, `explode`, `player_hit`, `item`      |
 | `ui`          | `kama`                                                                 |
 
 ## Tiles

@@ -19,6 +19,10 @@
         <label for="pseudo">Pseudo</label>
         <input id="pseudo" type="text" maxlength="16" placeholder="Aventurier" autocomplete="off" />
 
+        <label>Classe</label>
+        <div id="class-picker"></div>
+        <div id="class-desc" class="class-desc"></div>
+
         <button id="btn-create" class="btn btn-primary">Créer une partie</button>
 
         <div class="separator"><span>ou</span></div>
@@ -33,8 +37,7 @@
 
         <div class="help">
           <b>Déplacement</b> ZQSD / WASD / flèches &nbsp;·&nbsp; <b>Visée</b> souris<br />
-          <b>Clic gauche</b> Flèche Magique &nbsp;·&nbsp; <b>Clic droit</b> Flèche Enflammée<br />
-          <b>Espace</b> Flèche de Recul &nbsp;·&nbsp; <b>R</b> Flèche Explosive<br />
+          <b>Sorts</b> clic gauche · clic droit · Espace · R (ultime)<br />
           <b>E</b> Ouvrir un coffre (coûte des kamas)
         </div>
       </div>

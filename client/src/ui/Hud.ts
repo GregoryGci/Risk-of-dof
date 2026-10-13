@@ -1,5 +1,5 @@
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, kamas, équipe, bandeaux.
-import { ITEMS, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
+import { CLASSES, ITEMS, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import { spellIconSvg } from './icons.ts';
@@ -27,6 +27,14 @@ export interface HudCallbacks {
   onStart(): void;
   onRestart(): void;
   onQuit(): void;
+  onClass(classId: string): void;
+}
+
+/** Boutons de choix de classe (accueil et salon). */
+export function classButtonsHtml(current: string): string {
+  return `<div class="class-picker">${Object.values(CLASSES)
+    .map((c) => `<button class="btn class-btn${c.id === current ? ' active' : ''}" data-class="${c.id}" title="${escapeHtml(c.description)}">${escapeHtml(c.name)}</button>`)
+    .join('')}</div>`;
 }
 
 export class Hud {
@@ -47,8 +55,9 @@ export class Hud {
     $('banner').addEventListener(
       'click',
       (e) => {
-        const action = (e.target as HTMLElement).dataset.action;
-        if (action === 'start') this.callbacks.onStart();
+        const data = (e.target as HTMLElement).dataset;
+        if (data.action === 'start') this.callbacks.onStart();
+        if (data.class) this.callbacks.onClass(data.class);
       },
       { signal },
     );
@@ -96,12 +105,14 @@ export class Hud {
     bar.innerHTML = '';
     this.spellEls = [];
     this.cdEls = [];
+    this.wasReady = [];
     spellIds.forEach((id, slot) => {
       const spell = getSpell(id);
       const url = this.store.spellIconUrl(spell.icon);
       const el = document.createElement('div');
       el.className = 'spell ready';
-      el.title = `${spell.name} — ${spell.description}\nDégâts ${spell.damage[0]}-${spell.damage[1]} · Portée ${spell.range} · Recharge ${spell.cooldown / 1000}s`;
+      const stats = [spell.heal ? `Soin ${spell.heal[0]}-${spell.heal[1]}` : spell.damage[1] > 0 ? `Dégâts ${spell.damage[0]}-${spell.damage[1]}` : '', spell.range > 0 ? `Portée ${spell.range}` : '', `Recharge ${spell.cooldown / 1000}s`];
+      el.title = `${spell.name} — ${spell.description}\n${stats.filter(Boolean).join(' · ')}`;
       el.innerHTML = `<div class="spell-icon">${url ? `<img alt="">` : spellIconSvg(spell)}<div class="spell-cd"></div></div><div class="spell-key">${SLOT_KEYS[slot] ?? ''}</div>`;
       if (url) {
         // Icône fournie ; si elle ne se charge pas, on retombe sur le placeholder.
@@ -258,7 +269,9 @@ export class Hud {
       const hostName = state.players.get(state.hostId)?.name ?? '';
       banner =
         `Code de la partie<span class="big-code">${escapeHtml(this.roomCode)}</span><br>` +
-        `${state.players.size} joueur${state.players.size > 1 ? 's' : ''} — entraînez-vous en attendant.<br>` +
+        `${state.players.size} joueur${state.players.size > 1 ? 's' : ''} — choisissez votre classe et entraînez-vous.<br>` +
+        classButtonsHtml(me?.classId ?? '') +
+        `<div class="class-desc">${escapeHtml(CLASSES[me?.classId ?? '']?.description ?? '')}</div>` +
         (host ? `<button class="btn btn-primary" data-action="start">Lancer la partie</button>` : `En attente de ${escapeHtml(hostName)}…`);
     } else if (me && !me.alive && state.phase !== PHASE_LOST) {
       const target = spectating ? state.players.get(spectating) : undefined;
@@ -266,6 +279,7 @@ export class Hud {
     }
     this.setHtml('banner', banner);
     $('banner').classList.toggle('hidden', banner === '');
+    $('banner').classList.toggle('low', state.phase !== PHASE_LOBBY);
 
     // Défaite
     const lost = state.phase === PHASE_LOST;

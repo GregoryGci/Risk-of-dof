@@ -2,6 +2,8 @@
 // Rien ici n'influe sur le jeu : les dégâts sont calculés par le serveur.
 import Phaser from 'phaser';
 import { TILE_H, TILE_W, getSpell, worldToScreen, type CastEvent, type SpellDef } from '@rod/shared';
+
+type ProjectileShape = NonNullable<SpellDef['projectile']>;
 import type { AssetStore } from '../assets/store.ts';
 
 const DEPTH_GROUND_FX = -1000;
@@ -12,6 +14,7 @@ const FLY_HEIGHT = 18;
 interface ProjectileView {
   id: number;
   spell: SpellDef;
+  shape: ProjectileShape;
   x: number;
   y: number;
   dx: number;
@@ -39,25 +42,33 @@ export class Effects {
 
   spawnProjectile(e: CastEvent): void {
     const spell = getSpell(e.spell);
+    const shape = spell.projectile;
+    if (!shape) {
+      // Pas de projectile : seul un coup de mêlée a un effet visuel propre (les zones passent par « explode »).
+      if (spell.melee) this.slash(e, spell, spell.melee.arc);
+      this.store.playSound(this.scene, `cast_${spell.id}`);
+      return;
+    }
     const total = Math.hypot(e.tx - e.x, e.ty - e.y);
     if (total < 0.001) return;
     const dx = (e.tx - e.x) / total;
     const dy = (e.ty - e.y) / total;
 
     const custom = this.store.projectile(this.scene, spell.id);
-    const isSeed = spell.icon === 'graine';
+    // Les flèches ont leur image ; les autres projectiles (mots, graines) sont des orbes colorés.
+    const isSeed = !spell.icon.startsWith('fleche');
     const sprite = custom
       ? this.scene.add.image(0, 0, custom.key).setOrigin(custom.origin[0], custom.origin[1]).setScale(custom.scale)
       : this.scene.add.image(0, 0, isSeed ? 'ph_seed' : 'ph_arrow').setTint(spell.color);
-    if (!custom && !isSeed) sprite.setScale(spell.projectile.pierce ? 1.35 : 1);
+    if (!custom && !isSeed) sprite.setScale(shape.pierce ? 1.35 : 1);
     const glow = this.scene.add.image(0, 0, 'ph_glow').setTint(spell.color).setBlendMode(Phaser.BlendModes.ADD).setScale(0.7).setAlpha(0.9);
 
     // Orientation à l'écran de la direction monde.
     const s = worldToScreen(dx, dy);
     sprite.setRotation(Math.atan2(s.y, s.x));
 
-    const pv: ProjectileView = { id: e.id, spell, x: e.x, y: e.y, dx, dy, total, travelled: 0, sprite, glow, trailTimer: 0 };
-    if (spell.projectile.toTarget && spell.area) {
+    const pv: ProjectileView = { id: e.id, spell, shape, x: e.x, y: e.y, dx, dy, total, travelled: 0, sprite, glow, trailTimer: 0 };
+    if (shape.toTarget && spell.area) {
       const c = worldToScreen(e.tx, e.ty);
       pv.marker = this.groundEllipse(c.x, c.y, spell.area.radius, spell.color, 0.18).setStrokeStyle(2, spell.color, 0.9);
     }
@@ -87,11 +98,11 @@ export class Effects {
     // Tir en cloche : parabole au-dessus de la trajectoire.
     const k = pv.travelled / pv.total;
     const height = 30 + pv.total * 6;
-    const arc = pv.spell.projectile.toTarget ? Math.sin(k * Math.PI) * height : 0;
+    const arc = pv.shape.toTarget ? Math.sin(k * Math.PI) * height : 0;
     const y = p.y - FLY_HEIGHT - arc;
     pv.sprite.setPosition(p.x, y).setDepth(p.y + 20);
     pv.glow.setPosition(p.x, y).setDepth(p.y + 19);
-    if (pv.spell.projectile.toTarget) {
+    if (pv.shape.toTarget) {
       // La flèche suit la tangente de la parabole : elle monte puis pique du nez.
       const s = worldToScreen(pv.dx, pv.dy);
       pv.sprite.setRotation(Math.atan2(s.y * pv.total - height * Math.PI * Math.cos(k * Math.PI), s.x * pv.total));
@@ -100,7 +111,7 @@ export class Effects {
 
   update(dt: number): void {
     for (const pv of [...this.projectiles.values()]) {
-      const step = pv.spell.projectile.speed * dt;
+      const step = pv.shape.speed * dt;
       pv.travelled += step;
       if (pv.travelled >= pv.total) {
         // Arrivé au bout de sa course (l'explosion éventuelle arrive par l'événement « explode »).
@@ -119,6 +130,26 @@ export class Effects {
         this.scene.tweens.add({ targets: dot, alpha: 0, scale: 0.2, duration: 220, onComplete: () => dot.destroy() });
       }
     }
+  }
+
+  /** Coup de mêlée : éventail lumineux au sol, dans la direction du coup. */
+  private slash(e: CastEvent, spell: SpellDef, arcDeg: number): void {
+    const angle = Math.atan2(e.ty - e.y, e.tx - e.x);
+    const half = ((arcDeg / 2) * Math.PI) / 180;
+    const origin = worldToScreen(e.x, e.y);
+    const points: { x: number; y: number }[] = [{ x: 0, y: 0 }];
+    for (let i = 0; i <= 10; i++) {
+      const a = angle - half + (i / 10) * half * 2;
+      const p = worldToScreen(e.x + Math.cos(a) * spell.range, e.y + Math.sin(a) * spell.range);
+      points.push({ x: p.x - origin.x, y: p.y - origin.y });
+    }
+    const g = this.scene.add.graphics({ x: origin.x, y: origin.y - 6 }).setDepth(DEPTH_GROUND_FX + 1);
+    g.fillStyle(spell.color, 0.5);
+    g.fillPoints(points, true);
+    g.lineStyle(3, 0xffffff, 0.9);
+    g.strokePoints(points.slice(1), false);
+    g.setScale(0.5);
+    this.scene.tweens.add({ targets: g, scale: 1, alpha: 0, duration: 200, ease: 'Cubic.easeOut', onComplete: () => g.destroy() });
   }
 
   // -------------------------------------------------------------------------

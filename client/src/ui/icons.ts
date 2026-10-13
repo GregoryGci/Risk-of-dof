@@ -23,6 +23,24 @@ const DETAILS: Record<string, string> = {
   fleche_explosive: `<polygon points="42,2 45,10 53,8 48,15 55,20 46,21 46,30 40,23 33,28 35,19 27,15 36,13" fill="#ffd23a" stroke="#fff" stroke-width="1"/>`,
 };
 
+/** Glyphes génériques pour les sorts sans dessin dédié, choisis d'après la forme du sort. */
+const GLYPHS = {
+  epee: `<polygon points="14,44 18,48 44,20 46,10 36,12" fill="#f6efd8"/><rect x="9" y="36" width="16" height="4" transform="rotate(45 17 38)" fill="#f0c040"/><rect x="8" y="44" width="5" height="8" transform="rotate(45 10 48)" fill="#8a5a2a"/>`,
+  soin: `<rect x="22" y="10" width="12" height="36" rx="3" fill="#ffffff"/><rect x="10" y="22" width="36" height="12" rx="3" fill="#ffffff"/>`,
+  zone: `<circle cx="28" cy="30" r="17" fill="none" stroke="#fff" stroke-width="3" opacity="0.9"/><circle cx="28" cy="30" r="9" fill="#fff" opacity="0.85"/><polygon points="28,2 31,14 25,14" fill="#fff"/>`,
+  orbe: `<circle cx="34" cy="22" r="10" fill="#fff" opacity="0.95"/><path d="M10 46 Q20 40 28 28" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.7"/>`,
+  bond: `<polyline points="16,40 28,28 16,16" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="30,40 42,28 30,16" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>`,
+};
+
+function glyphFor(spell: SpellDef): string {
+  if (spell.icon.startsWith('fleche')) return ARROW + (DETAILS[spell.icon] ?? '');
+  if (spell.heal) return GLYPHS.soin;
+  if (spell.melee) return GLYPHS.epee;
+  if (spell.zone) return GLYPHS.zone;
+  if (spell.projectile) return GLYPHS.orbe;
+  return GLYPHS.bond;
+}
+
 export function spellIconSvg(spell: SpellDef): string {
   const c = hex(spell.color);
   const id = `g_${spell.id}`;
@@ -31,7 +49,6 @@ export function spellIconSvg(spell: SpellDef): string {
       <stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="#1a0f08"/>
     </radialGradient></defs>
     <rect width="56" height="56" fill="url(#${id})"/>
-    ${ARROW}
-    ${DETAILS[spell.icon] ?? ''}
+    ${glyphFor(spell)}
   </svg>`;
 }

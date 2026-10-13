@@ -425,7 +425,7 @@ input[type='text']:focus {
 
 #banner {
   position: absolute;
-  top: 150px;
+  top: 84px;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
@@ -596,4 +596,32 @@ input[type='text']:focus {
   height: 100%;
   background: linear-gradient(180deg, #ff5a4a, var(--rouge));
   transition: width 0.1s linear;
+}
+
+/* --- Choix de classe ---------------------------------------------------- */
+.class-picker {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 6px 0 2px;
+}
+.class-btn {
+  flex: 1;
+  padding: 6px 8px;
+  margin: 0 !important;
+}
+.class-btn.active {
+  background: linear-gradient(180deg, var(--orange-clair), var(--orange));
+  border-color: #ffd9a0;
+  color: #3a1c02;
+}
+.class-desc {
+  min-height: 16px;
+  font-size: 11px;
+  color: var(--beige);
+}
+
+/* Hors salon, le bandeau passe sous la barre du boss. */
+#banner.low {
+  top: 170px;
 }

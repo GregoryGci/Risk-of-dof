@@ -252,51 +252,102 @@ export function characterPlaceholderKey(classId: string, slot: number): string {
   return `ph_char_${classId}_${slot % PLAYER_COLORS.length}`;
 }
 
+/** Apparence des placeholders de personnage : la tunique prend la couleur du joueur, le reste dépend de la classe. */
+const CLASS_LOOKS: Record<string, { hair: number; skin: number; weapon: 'arc' | 'epee' | 'baguette' | 'poings' }> = {
+  cra: { hair: 0xf5e06a, skin: 0xf0c9a0, weapon: 'arc' },
+  iop: { hair: 0xe8601a, skin: 0xf0c9a0, weapon: 'epee' },
+  eniripsa: { hair: 0xffc0e0, skin: 0xf6dcc0, weapon: 'baguette' },
+  sacrieur: { hair: 0x2a2030, skin: 0xd8a888, weapon: 'poings' },
+};
+
 function makeCharacters(scene: Phaser.Scene): void {
-  PLAYER_COLORS.forEach((color, slot) => {
-    // Crâ : silhouette d'archer avec arc.
-    make(scene, characterPlaceholderKey('cra', slot), 52, 76, (g) => {
-      const sombre = shade(color, 0.7);
-      // Jambes
-      g.fillStyle(0x4a3524, 1);
-      g.fillRect(19, 54, 6, 16);
-      g.fillRect(28, 54, 6, 16);
-      g.fillStyle(0x2e2014, 1);
-      g.fillRect(17, 68, 9, 4);
-      g.fillRect(27, 68, 10, 4);
-      // Carquois dans le dos
-      g.fillStyle(0x7a5530, 1);
-      g.fillRect(11, 26, 6, 22);
-      g.fillStyle(0xe8e0c0, 1);
-      g.fillRect(12, 21, 1.5, 6);
-      g.fillRect(14.5, 22, 1.5, 5);
-      // Tunique
-      g.fillStyle(color, 1);
-      g.fillPoints([{ x: 17, y: 30 }, { x: 36, y: 30 }, { x: 39, y: 57 }, { x: 14, y: 57 }], true);
-      g.fillStyle(sombre, 1);
-      g.fillPoints([{ x: 17, y: 30 }, { x: 23, y: 30 }, { x: 20, y: 57 }, { x: 14, y: 57 }], true);
-      g.fillStyle(0x7a5530, 1);
-      g.fillRect(15, 44, 23, 3);
-      // Bras tendu vers l'arc
-      g.fillStyle(0xf0c9a0, 1);
-      g.fillRect(32, 34, 11, 4);
-      // Tête, oreilles pointues, cheveux blonds
-      g.fillStyle(0xf0c9a0, 1);
-      g.fillCircle(27, 20, 10);
-      g.fillTriangle(17, 18, 9, 11, 19, 24);
-      g.fillStyle(0xf5e06a, 1);
-      g.fillPoints([{ x: 16, y: 20 }, { x: 18, y: 9 }, { x: 28, y: 6 }, { x: 38, y: 12 }, { x: 34, y: 15 }, { x: 24, y: 14 }, { x: 20, y: 22 }], true);
-      g.fillStyle(0x2a1a10, 1);
-      g.fillCircle(31, 20, 1.6);
-      // Arc
-      g.lineStyle(3, 0x8a5a2a, 1);
-      g.beginPath();
-      g.arc(34, 36, 16, -1.15, 1.15, false);
-      g.strokePath();
-      g.lineStyle(1, 0xf2ead8, 1);
-      g.lineBetween(40.5, 21.5, 40.5, 50.5);
+  for (const [classId, look] of Object.entries(CLASS_LOOKS)) {
+    PLAYER_COLORS.forEach((color, slot) => {
+      make(scene, characterPlaceholderKey(classId, slot), 52, 76, (g) => {
+        const sombre = shade(color, 0.7);
+        // Ailes de l'Eniripsa (derrière le corps)
+        if (classId === 'eniripsa') {
+          g.fillStyle(0xd8f4ff, 0.9);
+          g.fillEllipse(12, 30, 14, 22);
+          g.fillEllipse(10, 44, 10, 14);
+        }
+        // Jambes
+        g.fillStyle(0x4a3524, 1);
+        g.fillRect(19, 54, 6, 16);
+        g.fillRect(28, 54, 6, 16);
+        g.fillStyle(0x2e2014, 1);
+        g.fillRect(17, 68, 9, 4);
+        g.fillRect(27, 68, 10, 4);
+        // Carquois du Crâ
+        if (look.weapon === 'arc') {
+          g.fillStyle(0x7a5530, 1);
+          g.fillRect(11, 26, 6, 22);
+          g.fillStyle(0xe8e0c0, 1);
+          g.fillRect(12, 21, 1.5, 6);
+          g.fillRect(14.5, 22, 1.5, 5);
+        }
+        // Tunique
+        g.fillStyle(color, 1);
+        g.fillPoints([{ x: 17, y: 30 }, { x: 36, y: 30 }, { x: 39, y: 57 }, { x: 14, y: 57 }], true);
+        g.fillStyle(sombre, 1);
+        g.fillPoints([{ x: 17, y: 30 }, { x: 23, y: 30 }, { x: 20, y: 57 }, { x: 14, y: 57 }], true);
+        g.fillStyle(0x7a5530, 1);
+        g.fillRect(15, 44, 23, 3);
+        // Bras tendu
+        g.fillStyle(look.skin, 1);
+        g.fillRect(32, 34, 11, 4);
+        // Tête
+        g.fillCircle(27, 20, 10);
+        if (classId === 'cra' || classId === 'eniripsa') g.fillTriangle(17, 18, 9, 11, 19, 24); // oreilles pointues
+        // Cheveux
+        g.fillStyle(look.hair, 1);
+        if (classId === 'iop') {
+          // Mèches en pointes
+          g.fillPoints([{ x: 16, y: 18 }, { x: 14, y: 6 }, { x: 21, y: 11 }, { x: 24, y: 1 }, { x: 28, y: 9 }, { x: 34, y: 2 }, { x: 34, y: 11 }, { x: 40, y: 10 }, { x: 36, y: 16 }, { x: 24, y: 14 }], true);
+        } else if (classId === 'sacrieur') {
+          // Cheveux noirs et queue de cheval
+          g.fillPoints([{ x: 16, y: 20 }, { x: 18, y: 9 }, { x: 28, y: 6 }, { x: 38, y: 12 }, { x: 34, y: 15 }, { x: 24, y: 14 }, { x: 20, y: 22 }], true);
+          g.fillPoints([{ x: 17, y: 14 }, { x: 6, y: 18 }, { x: 8, y: 34 }, { x: 13, y: 22 }], true);
+        } else {
+          g.fillPoints([{ x: 16, y: 20 }, { x: 18, y: 9 }, { x: 28, y: 6 }, { x: 38, y: 12 }, { x: 34, y: 15 }, { x: 24, y: 14 }, { x: 20, y: 22 }], true);
+        }
+        g.fillStyle(0x2a1a10, 1);
+        g.fillCircle(31, 20, 1.6);
+        // Tatouages du Sacrieur
+        if (classId === 'sacrieur') {
+          g.fillStyle(0xc8281e, 1);
+          g.fillRect(34, 34, 2, 4);
+          g.fillRect(38, 34, 2, 4);
+          g.fillRect(29, 23, 5, 1.5);
+        }
+        // Arme
+        if (look.weapon === 'arc') {
+          g.lineStyle(3, 0x8a5a2a, 1);
+          g.beginPath();
+          g.arc(34, 36, 16, -1.15, 1.15, false);
+          g.strokePath();
+          g.lineStyle(1, 0xf2ead8, 1);
+          g.lineBetween(40.5, 21.5, 40.5, 50.5);
+        } else if (look.weapon === 'epee') {
+          g.fillStyle(0xd8dce8, 1);
+          g.fillPoints([{ x: 42, y: 34 }, { x: 46, y: 34 }, { x: 46, y: 8 }, { x: 44, y: 3 }, { x: 42, y: 8 }], true);
+          g.fillStyle(0xf0c040, 1);
+          g.fillRect(38, 33, 12, 3);
+          g.fillRect(42.5, 36, 3, 6);
+        } else if (look.weapon === 'baguette') {
+          g.lineStyle(2.5, 0x8a5a2a, 1);
+          g.lineBetween(43, 40, 47, 18);
+          g.fillStyle(0xff8ac8, 1);
+          g.fillCircle(47.5, 15, 4);
+          g.fillStyle(0xffffff, 1);
+          g.fillCircle(46.5, 14, 1.5);
+        } else {
+          g.fillStyle(look.skin, 1);
+          g.fillCircle(44, 36, 3.5);
+        }
+      });
     });
-  });
+  }
 }
 
 export function monsterPlaceholderKey(type: string): string {
