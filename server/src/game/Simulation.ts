@@ -9,6 +9,11 @@ import {
   PHASE_LOST,
   PHASE_PLAYING,
   PLAYER_RADIUS,
+  ZAAP_CHARGE_TIME,
+  ZAAP_CHARGING,
+  ZAAP_IDLE,
+  ZAAP_RANGE,
+  ZAAP_READY,
   chestCost,
   clamp,
   difficultyAt,
@@ -16,8 +21,11 @@ import {
   formatInventory,
   generateMap,
   getClass,
+  getMonster,
   getSpell,
   isBlocked,
+  monsterDamageMultiplier,
+  monsterHpMultiplier,
   resolveCollisions,
   stepMovement,
   sumStats,
@@ -77,6 +85,8 @@ export interface MonsterRt {
   chargeDx: number;
   chargeDy: number;
   chargeHit: Set<string>;
+  /** Prochaine invocation de renforts (boss). */
+  summonAt: number;
   /** Décalage aléatoire pour désynchroniser les zigzags. */
   wobble: number;
 }
@@ -120,6 +130,8 @@ export class Simulation {
   private nextChestId = 1;
   /** Actions différées (réapparition des coffres...). */
   private timers: { at: number; run: () => void }[] = [];
+  /** Id du gardien du Zaap en vie ('' sinon). */
+  private bossId = '';
   private director = new Director(this);
 
   constructor(
@@ -162,10 +174,69 @@ export class Simulation {
     this.state.phase = PHASE_PLAYING;
     this.state.time = 0;
     this.state.difficulty = 1;
+    this.state.stage = 1;
+    this.setupStage();
+  }
+
+  /** Prépare une zone : coffres neufs, Zaap éteint placé loin du point d'apparition. */
+  private setupStage(): void {
     this.director.reset();
     this.timers = [];
+    this.bossId = '';
     for (const id of [...this.state.chests.keys()]) this.state.chests.delete(id);
     for (let i = 0; i < CHEST_COUNT; i++) this.spawnChest();
+
+    const c = MAP_SIZE / 2;
+    this.state.zaapState = ZAAP_IDLE;
+    this.state.zaapCharge = 0;
+    for (let attempt = 0; attempt < 200; attempt++) {
+      const x = 5 + Math.random() * (this.map.size - 10);
+      const y = 5 + Math.random() * (this.map.size - 10);
+      if (Math.hypot(x - c, y - c) < 16 || isBlocked(this.map, x, y, 1.3)) continue;
+      this.state.zaapX = x;
+      this.state.zaapY = y;
+      break;
+    }
+  }
+
+  /** Zone suivante : nouvelle carte, les morts reviennent, la difficulté continue de monter. */
+  private nextStage(): void {
+    for (const id of [...this.monsters.keys()]) this.removeMonster(id);
+    this.projectiles = [];
+    this.state.seed = Math.floor(Math.random() * 0xffffffff);
+    this.map = generateMap(this.state.seed);
+    this.state.stage++;
+    for (const p of this.players.values()) {
+      this.placeAtSpawn(p);
+      if (!p.state.alive) {
+        p.state.alive = true;
+        p.state.hp = p.state.maxHp * 0.5;
+      }
+    }
+    this.setupStage();
+    this.broadcast('stage', { stage: this.state.stage });
+  }
+
+  private activateZaap(): void {
+    this.state.zaapState = ZAAP_CHARGING;
+    this.state.zaapCharge = 0;
+    // Le gardien apparaît à côté du Zaap ; il est plus résistant quand les joueurs sont nombreux.
+    const def = getMonster('bouftou_royal');
+    const diff = this.state.difficulty;
+    let x = this.state.zaapX;
+    let y = this.state.zaapY;
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const a = Math.random() * Math.PI * 2;
+      const px = this.state.zaapX + Math.cos(a) * 4;
+      const py = this.state.zaapY + Math.sin(a) * 4;
+      if (isBlocked(this.map, px, py, def.radius)) continue;
+      x = px;
+      y = py;
+      break;
+    }
+    const hpMult = monsterHpMultiplier(diff) * (1 + 0.5 * (this.players.size - 1));
+    this.bossId = this.spawnMonster(def, x, y, hpMult, monsterDamageMultiplier(diff), Math.round(diff)).id;
+    this.broadcast('boss', { name: def.name });
   }
 
   /** Relance une partie après une défaite : nouvelle carte, tout le monde revit. */
@@ -187,12 +258,7 @@ export class Simulation {
   }
 
   private resetPlayer(p: PlayerRt): void {
-    const c = MAP_SIZE / 2;
-    // Les joueurs apparaissent en carré autour du centre.
-    const offsets = [[-1, -1], [1, 1], [1, -1], [-1, 1]];
-    const o = offsets[p.state.slot % offsets.length];
-    p.state.x = c + o[0] * 1.2;
-    p.state.y = c + o[1] * 1.2;
+    this.placeAtSpawn(p);
     this.applyStats(p);
     p.state.hp = p.state.maxHp;
     p.state.alive = true;
@@ -202,6 +268,17 @@ export class Simulation {
     p.push = null;
     p.readyAt = [0, 0, 0, 0];
     p.lastHitAt = -999;
+  }
+
+  /** Les joueurs apparaissent en carré autour du centre de la carte. */
+  private placeAtSpawn(p: PlayerRt): void {
+    const c = MAP_SIZE / 2;
+    const offsets = [[-1, -1], [1, 1], [1, -1], [-1, 1]];
+    const o = offsets[p.state.slot % offsets.length];
+    p.state.x = c + o[0] * 1.2;
+    p.state.y = c + o[1] * 1.2;
+    p.state.moving = false;
+    p.push = null;
   }
 
   // -------------------------------------------------------------------------
@@ -290,6 +367,11 @@ export class Simulation {
       this.state.time += dt;
       this.state.difficulty = difficultyAt(this.state.time, this.players.size);
       this.state.chestCost = chestCost(this.state.difficulty);
+      // Le Zaap se charge tout seul une fois activé, mais ne s'ouvre que si son gardien est vaincu.
+      if (this.state.zaapState === ZAAP_CHARGING) {
+        this.state.zaapCharge = Math.min(1, this.state.zaapCharge + dt / ZAAP_CHARGE_TIME);
+        if (this.state.zaapCharge >= 1 && !this.monsters.has(this.bossId)) this.state.zaapState = ZAAP_READY;
+      }
       this.director.update(dt);
       updateMonsters(this, dt);
     }
@@ -506,6 +588,13 @@ export class Simulation {
   interact(id: string): void {
     const p = this.players.get(id);
     if (!p || !p.state.alive || this.state.phase !== PHASE_PLAYING) return;
+
+    // Zaap à portée : on l'active, ou on part pour la zone suivante s'il est prêt.
+    if (Math.hypot(this.state.zaapX - p.state.x, this.state.zaapY - p.state.y) <= ZAAP_RANGE) {
+      if (this.state.zaapState === ZAAP_IDLE) return this.activateZaap();
+      if (this.state.zaapState === ZAAP_READY) return this.nextStage();
+    }
+
     let bestId = '';
     let best = INTERACT_RANGE;
     this.state.chests.forEach((c, cid) => {
@@ -575,6 +664,7 @@ export class Simulation {
       chargeDx: 0,
       chargeDy: 0,
       chargeHit: new Set(),
+      summonAt: this.now + (def.summon?.interval ?? 0),
       wobble: Math.random() * Math.PI * 2,
     };
     this.monsters.set(id, rt);

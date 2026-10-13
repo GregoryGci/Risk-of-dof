@@ -79,7 +79,7 @@ export class AssetStore {
     }
 
     // Décors.
-    for (const o of [...OBSTACLES, { id: 'coffre' }, { id: 'coffre_ouvert' }]) {
+    for (const o of [...OBSTACLES, { id: 'coffre' }, { id: 'coffre_ouvert' }, { id: 'zaap' }]) {
       const defs = asArray<ImageDef>(m.objects?.[o.id] ?? []);
       const provided: ImageVisual[] = [];
       defs.forEach((d, i) => {
@@ -144,7 +144,7 @@ export class AssetStore {
     if (def && scene.textures.exists(key)) return { key, origin: def.origin ?? [0.5, 0.9], scale: def.scale ?? 1, sprite: def };
     let ph = monsterPlaceholderKey(type);
     if (!scene.textures.exists(ph)) ph = ensureGenericMonster(scene, type, getMonster(type).color);
-    return { key: ph, origin: ENTITY_PLACEHOLDER_ORIGIN, scale: 1, sprite: null };
+    return { key: ph, origin: ENTITY_PLACEHOLDER_ORIGIN, scale: getMonster(type).scale ?? 1, sprite: null };
   }
 
   /** Image de projectile fournie pour ce sort, ou null (flèche placeholder). */

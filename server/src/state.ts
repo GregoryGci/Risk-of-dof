@@ -66,6 +66,11 @@ export const GameState = schema(
     monsters: t.map(MonsterState),
     chests: t.map(ChestState),
     chestCost: t.uint16().default(35),
+    stage: t.uint8().default(1),
+    zaapX: t.float32().default(0),
+    zaapY: t.float32().default(0),
+    zaapState: t.uint8().default(0),
+    zaapCharge: t.float32().default(0),
   },
   'GameState',
 );

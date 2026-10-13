@@ -1,5 +1,5 @@
 // IA des monstres : chaque monstre cible le joueur vivant le plus proche.
-import { MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getSpell, resolveCollisions } from '@rod/shared';
+import { MAX_MONSTERS, MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getMonster, getSpell, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, resolveCollisions } from '@rod/shared';
 import type { MonsterRt, PlayerRt, Simulation } from './Simulation.ts';
 
 /** Durée du télégraphe avant un tir de monstre (s). */
@@ -21,7 +21,21 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
     if (!sim.monsters.has(m.id)) return;
   }
 
-  // Recul subi : interrompt ce que faisait le monstre.
+  // Renforts invoqués à intervalle régulier (boss).
+  if (m.def.summon && sim.now >= m.summonAt) {
+    m.summonAt = sim.now + m.def.summon.interval;
+    const def = getMonster(m.def.summon.monster);
+    const diff = sim.state.difficulty;
+    for (let i = 0; i < m.def.summon.count && sim.monsters.size < MAX_MONSTERS; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const x = s.x + Math.cos(a) * 2;
+      const y = s.y + Math.sin(a) * 2;
+      if (!isBlocked(sim.map, x, y, def.radius)) sim.spawnMonster(def, x, y, monsterHpMultiplier(diff), monsterDamageMultiplier(diff), Math.round(diff));
+    }
+  }
+
+  // Recul subi : interrompt ce que faisait le monstre. Un boss ne se laisse pas repousser.
+  if (m.push && m.def.boss) m.push = null;
   if (m.push) {
     const pos = { x: s.x + m.push.vx * dt, y: s.y + m.push.vy * dt };
     resolveCollisions(sim.map, pos, m.def.radius);

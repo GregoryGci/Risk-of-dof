@@ -59,6 +59,24 @@ export const MONSTERS: Record<string, MonsterDef> = {
     weight: 1.5,
     kamas: [8, 12],
   },
+  // --- Boss ----------------------------------------------------------------
+  bouftou_royal: {
+    id: 'bouftou_royal',
+    name: 'Bouftou Royal',
+    color: 0xf0d060,
+    hp: 900,
+    speed: 2.3,
+    radius: 0.9,
+    melee: { damage: 20, range: 1.5, cooldown: 1.4 },
+    behavior: { type: 'charger', chargeRange: 9, windup: 0.8, chargeSpeed: 11, chargeDuration: 0.9, chargeCooldown: 5, chargeDamage: 30 },
+    boss: true,
+    summon: { monster: 'bouftou', count: 2, interval: 9 },
+    scale: 2,
+    cost: 999,
+    minDifficulty: 999,
+    weight: 0,
+    kamas: [120, 160],
+  },
 };
 
 export function getMonster(id: string): MonsterDef {

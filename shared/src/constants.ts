@@ -34,3 +34,10 @@ export const MSTATE_CHARGE = 2; // charge en ligne droite
 /** Coffres présents en permanence sur la carte, et distance d'interaction (cases). */
 export const CHEST_COUNT = 12;
 export const INTERACT_RANGE = 1.6;
+
+/** Zaap (téléporteur de fin de zone) : états, portée d'interaction, durée de charge (s). */
+export const ZAAP_IDLE = 0;
+export const ZAAP_CHARGING = 1;
+export const ZAAP_READY = 2;
+export const ZAAP_RANGE = 2.4;
+export const ZAAP_CHARGE_TIME = 45;

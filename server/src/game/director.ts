@@ -1,6 +1,6 @@
 // Directeur de spawn façon Risk of Rain : il accumule des crédits avec le temps
 // (de plus en plus vite) et les dépense en vagues de monstres autour des joueurs.
-import { MAX_MONSTERS, MONSTERS, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
+import { MAX_MONSTERS, MONSTERS, ZAAP_CHARGING, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
 import type { Simulation } from './Simulation.ts';
 
 /** Distance d'apparition par rapport au joueur (hors écran). */
@@ -25,7 +25,9 @@ export class Director {
   update(dt: number): void {
     const sim = this.sim;
     const diff = sim.state.difficulty;
-    this.credits += spawnCreditsPerSecond(diff, sim.players.size) * dt;
+    // Pendant la charge du Zaap, les monstres affluent.
+    const rush = sim.state.zaapState === ZAAP_CHARGING ? 1.4 : 1;
+    this.credits += spawnCreditsPerSecond(diff, sim.players.size) * rush * dt;
 
     this.nextWaveIn -= dt;
     if (this.nextWaveIn <= 0) {
@@ -43,7 +45,7 @@ export class Director {
   private spawnWave(): void {
     const sim = this.sim;
     const diff = sim.state.difficulty;
-    const eligible = Object.values(MONSTERS).filter((m) => m.minDifficulty <= diff && m.cost <= this.credits);
+    const eligible = Object.values(MONSTERS).filter((m) => !m.boss && m.minDifficulty <= diff && m.cost <= this.credits);
     if (eligible.length === 0) return;
     const def = pickWeighted(eligible);
     // Une vague = un groupe du même monstre.

@@ -202,6 +202,33 @@ function makeObjects(scene: Phaser.Scene): void {
       }
     });
   }
+  // Zaap : arche de pierre avec un portail bleu.
+  make(scene, 'ph_obj_zaap', 96, 120, (g) => {
+    g.fillStyle(0x000000, 0.28);
+    g.fillEllipse(48, 108, 90, 22);
+    // Socle
+    g.fillStyle(0x6e6e78, 1);
+    g.fillEllipse(48, 104, 84, 20);
+    g.fillStyle(0x8c8c98, 1);
+    g.fillEllipse(48, 100, 84, 20);
+    // Portail
+    g.fillStyle(0x1a4aa8, 1);
+    g.fillEllipse(48, 58, 52, 84);
+    g.fillStyle(0x3a8cf0, 1);
+    g.fillEllipse(48, 58, 40, 68);
+    g.fillStyle(0x9fd8ff, 1);
+    g.fillEllipse(48, 58, 22, 40);
+    g.fillStyle(0xffffff, 0.9);
+    g.fillEllipse(48, 58, 8, 16);
+    // Arche
+    g.lineStyle(10, 0x7a7a86, 1);
+    g.strokeEllipse(48, 58, 60, 92);
+    g.lineStyle(3, 0xa8a8b4, 1);
+    g.strokeEllipse(48, 58, 66, 98);
+    // Runes dorées
+    g.fillStyle(0xf0c040, 1);
+    for (const [x, y] of [[48, 10], [18, 40], [78, 40], [20, 78], [76, 78]]) g.fillCircle(x, y, 3);
+  });
   make(scene, 'ph_obj_souche', 40, 32, (g) => {
     g.fillStyle(0x000000, 0.25);
     g.fillEllipse(20, 27, 36, 9);
@@ -277,7 +304,8 @@ export function monsterPlaceholderKey(type: string): string {
 }
 
 function makeMonsters(scene: Phaser.Scene): void {
-  make(scene, monsterPlaceholderKey('bouftou'), 60, 52, (g) => {
+  for (const royal of [false, true])
+  make(scene, monsterPlaceholderKey(royal ? 'bouftou_royal' : 'bouftou'), 60, 52, (g) => {
     // Pattes
     g.fillStyle(0x3a2a1c, 1);
     for (const x of [16, 25, 35, 43]) g.fillRect(x, 40, 5, 10);
@@ -285,7 +313,7 @@ function makeMonsters(scene: Phaser.Scene): void {
     const laine: [number, number, number][] = [[20, 28, 13], [32, 24, 14], [42, 30, 12], [28, 34, 12], [14, 34, 9], [36, 36, 11]];
     g.fillStyle(0xb8ad92, 1);
     for (const [x, y, r] of laine) g.fillCircle(x, y + 1.5, r + 1.5);
-    g.fillStyle(0xf1ead6, 1);
+    g.fillStyle(royal ? 0xf6e2a0 : 0xf1ead6, 1);
     for (const [x, y, r] of laine) g.fillCircle(x, y, r);
     // Tête sombre et cornes
     g.fillStyle(0x4a3524, 1);
@@ -299,6 +327,13 @@ function makeMonsters(scene: Phaser.Scene): void {
     g.fillCircle(51, 25, 1.6);
     g.fillStyle(0x2a1a10, 1);
     g.fillEllipse(53, 33, 6, 3.5);
+    if (royal) {
+      // Couronne
+      g.fillStyle(0xf0c020, 1);
+      g.fillPoints([{ x: 41, y: 17 }, { x: 40, y: 6 }, { x: 44, y: 11 }, { x: 48, y: 4 }, { x: 52, y: 11 }, { x: 56, y: 6 }, { x: 55, y: 17 }], true);
+      g.fillStyle(0xd62f4a, 1);
+      g.fillCircle(48, 13, 1.8);
+    }
   });
   make(scene, monsterPlaceholderKey('tofu'), 40, 46, (g) => {
     // Pattes

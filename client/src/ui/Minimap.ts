@@ -1,6 +1,6 @@
 // Mini-carte (canvas 2D) : même orientation isométrique que le jeu.
 // Le terrain est dessiné une fois par carte, les points mobiles à chaque frame.
-import { GROUND_BLE, GROUND_CHEMIN, GROUND_FLEURS, type GameMap, type GameStateView } from '@rod/shared';
+import { GROUND_BLE, GROUND_CHEMIN, GROUND_FLEURS, PHASE_PLAYING, ZAAP_IDLE, type GameMap, type GameStateView } from '@rod/shared';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 
 const W = 180;
@@ -56,6 +56,22 @@ export class Minimap {
         c.stroke();
       }
     };
+
+    // Zaap : losange bleu, qui clignote une fois activé.
+    if (state.phase === PHASE_PLAYING && (state.zaapState === ZAAP_IDLE || Math.floor(performance.now() / 300) % 2 === 0)) {
+      const [zx, zy] = this.project(state.zaapX, state.zaapY);
+      c.fillStyle = '#4aa8ff';
+      c.strokeStyle = '#ffffff';
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(zx, zy - 5);
+      c.lineTo(zx + 4, zy);
+      c.lineTo(zx, zy + 5);
+      c.lineTo(zx - 4, zy);
+      c.closePath();
+      c.fill();
+      c.stroke();
+    }
 
     state.chests.forEach((ch) => {
       if (!ch.opened) dot(ch.x, ch.y, 2.2, '#ffd23a', '#5a3a00');

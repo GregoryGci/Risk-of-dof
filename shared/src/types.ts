@@ -74,6 +74,12 @@ export interface MonsterDef {
   /** Attaque de contact. */
   melee: { damage: number; range: number; cooldown: number };
   behavior: MonsterBehavior;
+  /** Boss : n'apparaît jamais dans les vagues normales, affiche une barre de vie en haut de l'écran. */
+  boss?: boolean;
+  /** Invoque régulièrement des renforts (intervalle en s). */
+  summon?: { monster: string; count: number; interval: number };
+  /** Échelle d'affichage du placeholder. */
+  scale?: number;
   /** Coût en crédits pour le directeur de spawn. */
   cost: number;
   /** Difficulté minimale avant apparition. */
@@ -233,6 +239,14 @@ export interface GameStateView {
   players: SyncMap<PlayerView>;
   monsters: SyncMap<MonsterView>;
   chests: SyncMap<ChestView>;
+  /** Numéro de la zone en cours (1, 2, 3...). */
+  stage: number;
+  zaapX: number;
+  zaapY: number;
+  /** ZAAP_IDLE / ZAAP_CHARGING / ZAAP_READY. */
+  zaapState: number;
+  /** Charge du Zaap, de 0 à 1. */
+  zaapCharge: number;
   /** Prix actuel d'un coffre (kamas). */
   chestCost: number;
 }

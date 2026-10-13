@@ -1,5 +1,5 @@
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, kamas, équipe, bandeaux.
-import { ITEMS, PHASE_LOBBY, PHASE_LOST, difficultyTier, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
+import { ITEMS, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import { spellIconSvg } from './icons.ts';
@@ -215,6 +215,32 @@ export class Hud {
       const bar = $('difficulty-bar');
       bar.style.width = `${Math.round(tier.progress * 100)}%`;
       bar.style.background = tier.color;
+    }
+
+    // Objectif de la zone
+    let objective = '';
+    if (state.phase === PHASE_PLAYING) {
+      if (state.zaapState === ZAAP_IDLE) objective = `Zone ${state.stage} — trouvez et activez le <b>Zaap</b>`;
+      else if (state.zaapState === ZAAP_CHARGING) objective = `Zone ${state.stage} — <b>Zaap ${Math.floor(state.zaapCharge * 100)} %</b>${state.zaapCharge >= 1 ? ' — vainquez le gardien' : ''}`;
+      else objective = `Zone ${state.stage} — <b>Zaap prêt</b> : retournez-y`;
+    }
+    this.setHtml('objective', objective);
+
+    // Barre de vie du boss (premier monstre marqué « boss »)
+    let bossName = '';
+    let bossPct = 0;
+    state.monsters.forEach((m) => {
+      const def = getMonster(m.type);
+      if (!def.boss || bossName) return;
+      bossName = def.name;
+      bossPct = Math.round((Math.max(0, m.hp) / (m.maxHp || 1)) * 1000) / 10;
+    });
+    const bossKey = `${bossName}|${bossPct}`;
+    if (this.cache.boss !== bossKey) {
+      this.cache.boss = bossKey;
+      $('boss').classList.toggle('hidden', bossName === '');
+      $('boss-name').textContent = bossName;
+      $('boss-bar').style.width = `${bossPct}%`;
     }
 
     // Équipe

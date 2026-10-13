@@ -6,7 +6,7 @@ const code = (process.argv[2] ?? '').toUpperCase();
 const client = new Client(`ws://localhost:${process.env.PORT ?? 2567}`);
 const room = code ? await client.joinById(code, { name: 'Bot' }) : await client.create('partie', { name: 'Bot' });
 console.log(`[bot] connecté à la partie ${room.roomId}`);
-for (const type of ['cast', 'projEnd', 'explode', 'dmg', 'death', 'atk', 'boss']) room.onMessage(type, () => {});
+for (const type of ['cast', 'projEnd', 'explode', 'dmg', 'death', 'atk', 'boss', 'stage']) room.onMessage(type, () => {});
 room.onMessage('item', (e) => {
   if (e.player === room.sessionId) console.log(`[bot] objet obtenu : ${e.item}`);
 });
@@ -41,6 +41,12 @@ setInterval(() => {
     // Monstre trop près : on recule.
     dx = -(monster.target.x - me.x) / (monster.dist || 1);
     dy = -(monster.target.y - me.y) / (monster.dist || 1);
+  } else if (state.zaapState === 2 || (state.zaapState === 0 && state.time > 40 * state.stage)) {
+    // Zaap prêt (ou assez attendu) : on y va pour l'activer / changer de zone.
+    const d = Math.hypot(state.zaapX - me.x, state.zaapY - me.y);
+    dx = (state.zaapX - me.x) / (d || 1);
+    dy = (state.zaapY - me.y) / (d || 1);
+    if (d < 2) room.send('interact');
   } else if (chest.target && me.kamas >= state.chestCost) {
     // Assez de kamas : on va ouvrir le coffre le plus proche.
     dx = (chest.target.x - me.x) / (chest.dist || 1);
@@ -58,5 +64,5 @@ setInterval(() => {
 // Résumé périodique.
 setInterval(() => {
   const me = room.state?.players?.get(room.sessionId);
-  if (me) console.log(`[bot] t=${room.state.time.toFixed(0)}s diff=${room.state.difficulty.toFixed(2)} pv=${Math.ceil(me.hp)}/${me.maxHp} kamas=${me.kamas} objets=${me.items || '-'} monstres=${room.state.monsters.size}`);
+  if (me) console.log(`[bot] zone=${room.state.stage} zaap=${room.state.zaapState}:${Math.round(room.state.zaapCharge*100)}% t=${room.state.time.toFixed(0)}s diff=${room.state.difficulty.toFixed(2)} pv=${Math.ceil(me.hp)}/${me.maxHp} kamas=${me.kamas} objets=${me.items || '-'} monstres=${room.state.monsters.size}`);
 }, 15000);

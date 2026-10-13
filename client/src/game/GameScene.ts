@@ -8,6 +8,10 @@ import {
   PHASE_PLAYING,
   PLAYER_RADIUS,
   MSTATE_WINDUP,
+  ZAAP_CHARGING,
+  ZAAP_IDLE,
+  ZAAP_RANGE,
+  ZAAP_READY,
   dirFromVector,
   generateMap,
   getClass,
@@ -65,6 +69,7 @@ export class GameScene extends Phaser.Scene {
   private players = new Map<string, EntityView>();
   private monsters = new Map<string, EntityView>();
   private chests = new Map<string, { image: Phaser.GameObjects.Image; opened: boolean }>();
+  private zaap?: { image: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Image };
 
   /** Position prédite du joueur local (cases). */
   private me = { x: 0, y: 0 };
@@ -112,6 +117,8 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('explode', (e: ExplodeEvent) => this.onExplode(e));
     this.room.onMessage('dmg', (e: DamageEvent) => this.onDamage(e));
     this.room.onMessage('death', (e: DeathEvent) => this.onDeath(e));
+    this.room.onMessage('boss', (e: { name: string }) => this.hud.toast(`<b style="color:#ff6a5a">${e.name}</b> garde le Zaap !`));
+    this.room.onMessage('stage', (e: { stage: number }) => this.hud.toast(`<b>Zone ${e.stage}</b>`));
     this.room.onMessage('item', (e: ItemEvent) => this.onItem(e));
     this.room.onMessage('atk', (e: AttackEvent) => this.monsters.get(e.id)?.attack());
 
@@ -145,7 +152,7 @@ export class GameScene extends Phaser.Scene {
     if (myState) this.updateLocalPlayer(time, dt, myState, canAct);
     this.syncPlayers(state, dt);
     this.syncMonsters(state, dt);
-    const prompt = this.syncChests(state, myState, canAct);
+    const prompt = this.syncZaap(state, canAct) || this.syncChests(state, myState, canAct);
     this.effects.update(dt);
     this.updateCamera(state, myState, dt);
 
@@ -258,7 +265,7 @@ export class GameScene extends Phaser.Scene {
     state.monsters.forEach((m: MonsterView, id: string) => {
       let view = this.monsters.get(id);
       if (!view) {
-        view = new EntityView(this, this.store, this.store.monster(this, m.type), m.x, m.y, { barWidth: 30, barColor: 0xd83a2a, barAlways: false });
+        view = new EntityView(this, this.store, this.store.monster(this, m.type), m.x, m.y, { barWidth: getMonster(m.type).boss ? 70 : 30, barColor: 0xd83a2a, barAlways: false });
         this.monsters.set(id, view);
       }
       // Sens du déplacement déduit de la position visée (pas de champ « moving » synchronisé).
@@ -274,6 +281,37 @@ export class GameScene extends Phaser.Scene {
       view.destroy();
       this.monsters.delete(id);
     }
+  }
+
+  /** Affiche le Zaap de la zone ; retourne le texte d'aide si le joueur est à portée. */
+  private syncZaap(state: GameStateView, canAct: boolean): string {
+    const visible = state.phase === PHASE_PLAYING;
+    if (!visible) {
+      this.zaap?.image.setVisible(false);
+      this.zaap?.glow.setVisible(false);
+      return '';
+    }
+    if (!this.zaap) {
+      const v = this.store.objectVisual('zaap', 0);
+      const image = this.add.image(0, 0, v.key).setOrigin(v.origin[0], v.origin[1]).setScale(v.scale);
+      const glow = this.add.image(0, 0, 'ph_glow').setTint(0x4aa8ff).setBlendMode(Phaser.BlendModes.ADD);
+      this.zaap = { image, glow };
+    }
+    const p = worldToScreen(state.zaapX, state.zaapY);
+    const { image, glow } = this.zaap;
+    image.setVisible(true).setPosition(p.x, p.y).setDepth(p.y);
+    // Éteint tant qu'il n'est pas activé, puis de plus en plus lumineux.
+    image.setTint(state.zaapState === ZAAP_IDLE ? 0x8a8a9a : 0xffffff);
+    const pulse = 1 + Math.sin(this.time.now / 180) * 0.12;
+    const power = state.zaapState === ZAAP_READY ? 1.3 : state.zaapCharge;
+    glow.setVisible(state.zaapState !== ZAAP_IDLE).setPosition(p.x, p.y - 50).setDepth(p.y + 1).setScale((1.5 + power * 3) * pulse).setAlpha(0.5 + power * 0.4);
+
+    const near = Math.hypot(state.zaapX - this.me.x, state.zaapY - this.me.y) <= ZAAP_RANGE;
+    if (!canAct || !near) return '';
+    if (state.zaapState === ZAAP_CHARGING) return '';
+    // La touche est consommée ici : un coffre voisin ne s'ouvrira pas par erreur.
+    if (this.controls.consumePress('KeyE')) this.room.send('interact');
+    return state.zaapState === ZAAP_IDLE ? '<b>E</b> — Activer le Zaap (son gardien apparaîtra)' : '<b>E</b> — Partir pour la zone suivante';
   }
 
   /**

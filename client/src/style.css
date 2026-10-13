@@ -425,7 +425,7 @@ input[type='text']:focus {
 
 #banner {
   position: absolute;
-  top: 96px;
+  top: 150px;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
@@ -559,4 +559,41 @@ input[type='text']:focus {
 #minimap {
   width: 180px;
   height: 92px;
+}
+
+#objective {
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--beige);
+  white-space: nowrap;
+}
+#objective b {
+  color: #7cc4ff;
+}
+#boss {
+  position: absolute;
+  top: 118px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(460px, 60vw);
+  text-align: center;
+}
+#boss-name {
+  font-family: Georgia, serif;
+  font-size: 17px;
+  font-weight: bold;
+  color: #ffd27a;
+  text-shadow:
+    0 2px 0 #000,
+    0 0 6px #000;
+  margin-bottom: 3px;
+}
+#boss .bar {
+  height: 12px;
+  border: 2px solid var(--beige-fonce);
+}
+#boss-bar {
+  height: 100%;
+  background: linear-gradient(180deg, #ff5a4a, var(--rouge));
+  transition: width 0.1s linear;
 }

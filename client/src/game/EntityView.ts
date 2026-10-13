@@ -61,7 +61,7 @@ export class EntityView {
     this.wx = this.fromX = this.toX = x;
     this.wy = this.fromY = this.toY = y;
 
-    this.shadow = scene.add.image(0, 0, 'ph_shadow');
+    this.shadow = scene.add.image(0, 0, 'ph_shadow').setScale(visual.sprite ? 1 : visual.scale);
     this.body = scene.add.sprite(0, 0, visual.key).setOrigin(visual.origin[0], visual.origin[1]).setScale(visual.scale);
     this.headY = -this.body.displayHeight * visual.origin[1] - 6;
 
