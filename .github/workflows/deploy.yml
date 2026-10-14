@@ -1,0 +1,55 @@
+# Publie le client du jeu sur GitHub Pages à chaque push sur master.
+#
+# Pages ne sert que des fichiers statiques : le serveur de jeu (Colyseus) tourne ailleurs,
+# sur Render (voir render.yaml). Son adresse est inscrite dans le client au moment du build
+# via VITE_SERVER_URL : variable de dépôt SERVER_URL si elle existe, sinon l'adresse Render par défaut.
+name: Deploiement
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Une erreur de type arrête la publication au lieu de mettre en ligne un jeu cassé.
+      - run: npm run typecheck
+
+      - run: npm run build
+        env:
+          VITE_SERVER_URL: ${{ vars.SERVER_URL || 'wss://risk-of-dof.onrender.com' }}
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: client/dist
+
+  publier:
+    needs: construire
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - id: deploiement
+        uses: actions/deploy-pages@v4

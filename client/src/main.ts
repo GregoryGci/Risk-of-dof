@@ -22,9 +22,11 @@ const errorEl = $('menu-error');
 /**
  * Adresse du serveur de jeu.
  * - en dev (Vite sur 5173) : même machine, port du serveur Colyseus ;
- * - en production : le serveur sert aussi le client, donc même origine.
+ * - version publiée (GitHub Pages) : adresse du serveur inscrite au build (VITE_SERVER_URL) ;
+ * - sinon en production : le serveur sert aussi le client, donc même origine.
  */
 function serverUrl(): string {
+  if (import.meta.env.VITE_SERVER_URL) return import.meta.env.VITE_SERVER_URL;
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   if (import.meta.env.DEV) return `${proto}://${location.hostname}:${SERVER_PORT}`;
   return `${proto}://${location.host}`;

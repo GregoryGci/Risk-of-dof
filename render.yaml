@@ -1,0 +1,16 @@
+# Serveur de jeu (Colyseus) sur Render, offre gratuite.
+# Render > New > Blueprint > choisir ce dépôt : le service est créé à partir de ce fichier.
+# L'offre gratuite s'endort après 15 min sans connexion : la première partie met ~30 s à démarrer.
+services:
+  - type: web
+    name: risk-of-dof
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /sante
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
