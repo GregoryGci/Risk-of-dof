@@ -4,6 +4,7 @@ import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import { spellIconSvg } from './icons.ts';
 import { spellDetailsHtml } from './spellInfo.ts';
+import { account } from '../account.ts';
 
 const SLOT_KEYS = ['Clic G', 'Clic D', 'Espace', 'R'];
 
@@ -139,6 +140,27 @@ export class Hud {
   /** La scène s'abonne au survol des sorts (remplace le rappel donné à la construction). */
   setSpellHover(fn: (slot: number | null) => void): void {
     this.callbacks.onSpellHover = fn;
+  }
+
+  private dashEl?: HTMLElement;
+  private dashReady = true;
+
+  /** Emplacement du dash (Maj) en bout de barre, avec son temps de recharge. */
+  updateDash(now: number, cdEnd: number): void {
+    if (!this.dashEl) {
+      this.dashEl = document.createElement('div');
+      this.dashEl.className = 'spell spell-dash ready';
+      this.dashEl.title = 'Dash — petit bond rapide dans la direction de déplacement (recharge 2,5 s)';
+      this.dashEl.innerHTML = `<div class="spell-icon"><svg viewBox="0 0 56 56"><rect width="56" height="56" fill="#2a1d10"/><polyline points="14,40 26,28 14,16" fill="none" stroke="#f6efd8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="28,40 40,28 28,16" fill="none" stroke="#f6efd8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/></svg><div class="spell-cd"></div></div><div class="spell-key">Maj</div>`;
+    }
+    if (!this.dashEl.isConnected) $('spellbar').appendChild(this.dashEl);
+    const remaining = cdEnd - now;
+    const ready = remaining <= 0;
+    if (ready !== this.dashReady) {
+      this.dashReady = ready;
+      this.dashEl.classList.toggle('ready', ready);
+    }
+    if (!ready) (this.dashEl.querySelector('.spell-cd') as HTMLElement).style.setProperty('--p', String(Math.min(1, remaining / 2500)));
   }
 
   /** Infobulle détaillée d'un sort + aperçu de sa zone en jeu. */
@@ -315,6 +337,10 @@ export class Hud {
       this.cache.lost = lost ? '1' : '0';
       $('gameover').classList.toggle('hidden', !lost);
       if (lost) {
+        // Fin de partie : les kamas gagnés (et un bonus par zone atteinte) vont dans la bourse de l'arbre de talents.
+        const reward = me ? me.kamasEarned + (state.stage - 1) * 100 : 0;
+        const credited = account.creditRun(`${this.roomCode}-${state.seed}`, reward);
+        $('gameover-reward').innerHTML = reward > 0 ? `+${reward} kamas dans votre bourse${credited ? '' : ' (déjà comptés)'} — total <b>${account.bank}</b><br><small>Dépensez-les dans l'arbre de talents, à l'accueil.</small>` : '';
         $('gameover-stats').textContent = `Vous avez tenu ${formatTime(state.time)} — difficulté ${tier.name} — ${state.kills} monstres vaincus`;
         let rows = '';
         state.players.forEach((p: PlayerView) => {

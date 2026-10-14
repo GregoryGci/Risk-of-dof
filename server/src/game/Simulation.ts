@@ -27,6 +27,7 @@ import {
   monsterDamageMultiplier,
   monsterHpMultiplier,
   resolveCollisions,
+  sanitizeLoadout,
   stepMovement,
   sumStats,
   type CastEvent,
@@ -38,7 +39,7 @@ import {
   type SpellDef,
   type StatKey,
 } from '@rod/shared';
-import { ChestState, GameState, MonsterState, PlayerState } from '../state.ts';
+import { ChestState, GameState, GroundState, MonsterState, PlayerState } from '../state.ts';
 import { Director } from './director.ts';
 import { updateMonsters } from './monsters.ts';
 
@@ -63,6 +64,12 @@ export interface PlayerRt {
   /** Objets possédés (id -> nombre) et somme de leurs bonus. */
   inventory: Map<string, number>;
   stats: Record<StatKey, number>;
+  /** Sorts équipés dans les 4 emplacements (arbre de talents). */
+  spells: string[];
+  /** Bonus temporaires (sorts de soutien). */
+  buffs: { stats: Partial<Record<StatKey, number>>; until: number; invisible: boolean }[];
+  /** Prochain dash (Maj) disponible. */
+  dashReadyAt: number;
 }
 
 /** Données serveur d'un monstre qui ne sont pas synchronisées. */
@@ -89,6 +96,21 @@ export interface MonsterRt {
   summonAt: number;
   /** Décalage aléatoire pour désynchroniser les zigzags. */
   wobble: number;
+  /** Invocation alliée : joueur propriétaire, fin de vie, prochain soin (poupée soigneuse). */
+  allyOwner: string;
+  expiresAt: number;
+  healAt: number;
+}
+
+/** Piège ou glyphe posé au sol, avec les bonus de son lanceur au moment de la pose. */
+interface GroundRt {
+  id: string;
+  state: GroundState;
+  pr: Projectile;
+  owner: string;
+  expiresAt: number;
+  armedAt: number;
+  nextTick: number;
 }
 
 /** Un sort en cours : projectile en vol, ou coup instantané (mêlée, zone) le temps de son application. */
@@ -120,6 +142,10 @@ const RARE_CHANCE = 0.15;
 const CRIT_MULT = 1.5;
 /** Délai sans dégât avant que la régénération reprenne (s). */
 const REGEN_DELAY = 4;
+/** Dash (Maj) : distance, durée et temps de recharge. */
+const DASH_DISTANCE = 3;
+const DASH_DURATION = 0.15;
+const DASH_COOLDOWN = 2.5;
 
 export class Simulation {
   map: GameMap;
@@ -135,6 +161,8 @@ export class Simulation {
   private timers: { at: number; run: () => void }[] = [];
   /** Id du gardien du Zaap en vie ('' sinon). */
   private bossId = '';
+  grounds = new Map<string, GroundRt>();
+  private nextGroundId = 1;
   private director = new Director(this);
 
   constructor(
@@ -143,13 +171,31 @@ export class Simulation {
   ) {
     this.state.seed = Math.floor(Math.random() * 0xffffffff);
     this.map = generateMap(this.state.seed);
+    this.spawnDummies();
+  }
+
+  /** Épouvantails d'entraînement du salon, en arc de cercle devant le point d'apparition. */
+  private spawnDummies(): void {
+    const def = getMonster('epouvantail');
+    const c = MAP_SIZE / 2;
+    for (const [ox, oy] of [[4, -2], [4.5, 0.5], [3, 3]]) {
+      let x = c + ox;
+      let y = c + oy;
+      for (let k = 0; k < 10 && isBlocked(this.map, x, y, def.radius); k++) x += 0.5;
+      this.spawnMonster(def, x, y, 1, 1, 1);
+    }
+  }
+
+  /** Retire les épouvantails (lancement de la partie). */
+  private removeDummies(): void {
+    for (const m of [...this.monsters.values()]) if (m.def.behavior.type === 'dummy') this.removeMonster(m.id);
   }
 
   // -------------------------------------------------------------------------
   // Cycle de vie
   // -------------------------------------------------------------------------
 
-  addPlayer(id: string, name: string, classId?: string): void {
+  addPlayer(id: string, name: string, classId?: string, loadout?: unknown): void {
     // Un nouveau joueur arrive : plus de pause possible.
     this.state.paused = false;
     const def = getClass(classId ?? '');
@@ -161,24 +207,42 @@ export class Simulation {
     let slot = 0;
     while (used.has(slot)) slot++;
     state.slot = slot;
-    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, inventory: new Map(), stats: sumStats(new Map()) };
+    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, inventory: new Map(), stats: sumStats(new Map()), spells: [], buffs: [], dashReadyAt: 0 };
+    this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
     this.state.players.set(id, state);
   }
 
   removePlayer(id: string): void {
+    // Ses invocations et ses pièges partent avec lui.
+    for (const m of [...this.monsters.values()]) if (m.allyOwner === id) this.removeMonster(m.id);
+    for (const g of [...this.grounds.values()]) if (g.owner === id) this.removeGround(g.id);
     this.players.delete(id);
     this.state.players.delete(id);
     this.checkDefeat();
   }
 
+  /** Sorts équipés, validés contre l'arbre de talents de la classe. */
+  private setSpells(p: PlayerRt, loadout: unknown): void {
+    p.spells = sanitizeLoadout(p.def.id, loadout);
+    p.state.spells = p.spells.join(',');
+  }
+
+  /** Changement des sorts équipés : possible uniquement dans le salon. */
+  setLoadout(id: string, loadout: unknown): void {
+    const p = this.players.get(id);
+    if (!p || this.state.phase !== PHASE_LOBBY) return;
+    this.setSpells(p, loadout);
+  }
+
   /** Changement de classe : possible uniquement dans le salon. */
-  setClass(id: string, classId: unknown): void {
+  setClass(id: string, classId: unknown, loadout?: unknown): void {
     const p = this.players.get(id);
     if (!p || this.state.phase !== PHASE_LOBBY || typeof classId !== 'string') return;
     p.def = getClass(classId);
     p.state.classId = p.def.id;
+    this.setSpells(p, loadout);
     const { x, y } = p.state;
     this.resetPlayer(p);
     // On garde sa place : inutile de renvoyer le joueur au point d'apparition.
@@ -195,6 +259,8 @@ export class Simulation {
   /** L'hôte lance la partie depuis le salon. */
   start(): void {
     if (this.state.phase !== PHASE_LOBBY) return;
+    this.removeDummies();
+    for (const id of [...this.grounds.keys()]) this.removeGround(id);
     this.state.phase = PHASE_PLAYING;
     this.state.time = 0;
     this.state.difficulty = 1;
@@ -226,6 +292,7 @@ export class Simulation {
   /** Zone suivante : nouvelle carte, les morts reviennent, la difficulté continue de monter. */
   private nextStage(): void {
     for (const id of [...this.monsters.keys()]) this.removeMonster(id);
+    for (const id of [...this.grounds.keys()]) this.removeGround(id);
     this.projectiles = [];
     this.state.seed = Math.floor(Math.random() * 0xffffffff);
     this.map = generateMap(this.state.seed);
@@ -267,6 +334,7 @@ export class Simulation {
   restart(): void {
     if (this.state.phase !== PHASE_LOST) return;
     for (const id of [...this.monsters.keys()]) this.removeMonster(id);
+    for (const id of [...this.grounds.keys()]) this.removeGround(id);
     this.projectiles = [];
     this.state.seed = Math.floor(Math.random() * 0xffffffff);
     this.map = generateMap(this.state.seed);
@@ -275,6 +343,7 @@ export class Simulation {
       p.inventory.clear();
       this.resetPlayer(p);
       p.state.kamas = 0;
+      p.state.kamasEarned = 0;
       p.state.kills = 0;
     }
     this.state.phase = PHASE_LOBBY;
@@ -292,6 +361,9 @@ export class Simulation {
     p.push = null;
     p.readyAt = [0, 0, 0, 0];
     p.lastHitAt = -999;
+    p.buffs = [];
+    p.state.invisible = false;
+    this.applyStats(p);
   }
 
   /** Les joueurs apparaissent en carré autour du centre de la carte. */
@@ -326,12 +398,12 @@ export class Simulation {
     const slot = Number(msg.slot);
     const tx = Number(msg.tx);
     const ty = Number(msg.ty);
-    if (!Number.isInteger(slot) || slot < 0 || slot >= p.def.spells.length) return;
+    if (!Number.isInteger(slot) || slot < 0 || slot >= p.spells.length) return;
     if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
     // Le serveur est seul juge du temps de recharge.
     if (this.now < p.readyAt[slot]) return;
 
-    const spell = getSpell(p.def.spells[slot]);
+    const spell = getSpell(p.spells[slot]);
     // Les objets de « hâte » raccourcissent la recharge, ceux de dégâts et de critique améliorent le tir.
     const cooldown = spell.cooldown / (1 + p.stats.haste);
     p.readyAt[slot] = this.now + cooldown / 1000;
@@ -347,6 +419,20 @@ export class Simulation {
       const v = (e.distance / e.duration) * sign;
       p.push = { vx: dir.x * v, vy: dir.y * v, time: e.duration };
     }
+  }
+
+  /** Dash (Maj) : petit bond rapide dans la direction demandée, commun à toutes les classes. */
+  playerDash(id: string, msg: { dx?: number; dy?: number }): void {
+    const p = this.players.get(id);
+    if (!p || !p.state.alive || this.state.phase === PHASE_LOST || this.now < p.dashReadyAt || p.push) return;
+    const dx = Number(msg?.dx);
+    const dy = Number(msg?.dy);
+    const len = Math.hypot(dx, dy);
+    if (!Number.isFinite(len) || len < 0.01) return;
+    p.dashReadyAt = this.now + DASH_COOLDOWN;
+    const v = DASH_DISTANCE / DASH_DURATION;
+    p.push = { vx: (dx / len) * v, vy: (dy / len) * v, time: DASH_DURATION };
+    this.broadcast('dash', { id, x: p.state.x, y: p.state.y, tx: p.state.x + (dx / len) * DASH_DISTANCE, ty: p.state.y + (dy / len) * DASH_DISTANCE, cooldown: DASH_COOLDOWN * 1000 });
   }
 
   /**
@@ -370,6 +456,46 @@ export class Simulation {
     if (slot !== undefined) {
       event.slot = slot;
       event.cooldown = cooldown ?? spell.cooldown;
+    }
+
+    const caster = fromPlayer ? this.players.get(owner) : undefined;
+    // Point visé, limité par la portée.
+    const reachTarget = Math.min(d, spell.range);
+    const aimX = x + dx * reachTarget;
+    const aimY = y + dy * reachTarget;
+
+    if (spell.teleport && caster) {
+      // Téléportation : on recule le long de la ligne jusqu'à une case libre.
+      let reach = reachTarget;
+      while (reach > 0.2 && isBlocked(this.map, x + dx * reach, y + dy * reach, PLAYER_RADIUS)) reach -= 0.25;
+      caster.state.x = x + dx * reach;
+      caster.state.y = y + dy * reach;
+      caster.push = null;
+      event.tx = caster.state.x;
+      event.ty = caster.state.y;
+      this.broadcast('cast', event);
+      return { x: dx, y: dy };
+    }
+    if (spell.summon && caster) {
+      event.tx = aimX;
+      event.ty = aimY;
+      this.broadcast('cast', event);
+      this.summonAlly(caster, spell.summon, aimX, aimY);
+      return { x: dx, y: dy };
+    }
+    if (spell.ground) {
+      const gx = spell.ground.self ? x : aimX;
+      const gy = spell.ground.self ? y : aimY;
+      event.tx = gx;
+      event.ty = gy;
+      this.broadcast('cast', event);
+      this.placeGround(pr, gx, gy);
+      return { x: dx, y: dy };
+    }
+    if (spell.buff && caster) {
+      this.broadcast('cast', event);
+      this.applyBuff(caster, spell.buff);
+      return { x: dx, y: dy };
     }
 
     if (spell.projectile) {
@@ -396,11 +522,31 @@ export class Simulation {
       }
     } else if (spell.zone) {
       // Zone instantanée : autour du lanceur, ou au point visé limité par la portée.
-      const reach = spell.zone.self ? 0 : Math.min(d, spell.range);
+      const radius = spell.zone.radius;
+      const dash = spell.effects?.find((e) => e.type === 'dash');
+      if (spell.zoneAtDashEnd && caster && dash && dash.type === 'dash') {
+        // La zone frappe là où le lanceur atterrit.
+        event.tx = x + dx * dash.distance;
+        event.ty = y + dy * dash.distance;
+        this.broadcast('cast', event);
+        this.after(dash.duration, () => {
+          if (caster.state.alive) this.explode(pr, caster.state.x, caster.state.y, radius);
+        });
+        return { x: dx, y: dy };
+      }
+      const reach = spell.zone.self ? 0 : reachTarget;
       event.tx = x + dx * reach;
       event.ty = y + dy * reach;
       this.broadcast('cast', event);
-      this.explode(pr, event.tx, event.ty, spell.zone.radius);
+      if (spell.delay) {
+        // Zone à retardement : annoncée au sol, puis elle frappe.
+        const zx = event.tx;
+        const zy = event.ty;
+        this.broadcast('telegraph', { spell: spell.id, x: zx, y: zy, radius, duration: spell.delay });
+        this.after(spell.delay, () => this.explode(pr, zx, zy, radius));
+      } else {
+        this.explode(pr, event.tx, event.ty, radius);
+      }
     } else {
       // Sort utilitaire (bond...) : seul l'effet sur le lanceur compte.
       this.broadcast('cast', event);
@@ -408,9 +554,9 @@ export class Simulation {
     return { x: dx, y: dy };
   }
 
-  /** Cibles hostiles à un lanceur : les monstres pour un joueur, les joueurs vivants pour un monstre. */
+  /** Cibles hostiles à un lanceur : les monstres (hors invocations) pour un joueur, les joueurs vivants pour un monstre. */
   private enemiesOf(fromPlayer: boolean): { id: string; x: number; y: number; radius: number }[] {
-    if (fromPlayer) return [...this.monsters.values()].map((m) => ({ id: m.id, x: m.state.x, y: m.state.y, radius: m.def.radius }));
+    if (fromPlayer) return [...this.monsters.values()].filter((m) => !m.state.ally).map((m) => ({ id: m.id, x: m.state.x, y: m.state.y, radius: m.def.radius }));
     return [...this.players.values()].filter((p) => p.state.alive).map((p) => ({ id: p.id, x: p.state.x, y: p.state.y, radius: PLAYER_RADIUS }));
   }
 
@@ -426,6 +572,7 @@ export class Simulation {
 
     this.runTimers();
     this.updatePlayers(dt);
+    this.updateGrounds();
     if (this.state.phase === PHASE_PLAYING) {
       this.state.time += dt;
       this.state.difficulty = difficultyAt(this.state.time, this.players.size);
@@ -436,14 +583,20 @@ export class Simulation {
         if (this.state.zaapCharge >= 1 && !this.monsters.has(this.bossId)) this.state.zaapState = ZAAP_READY;
       }
       this.director.update(dt);
-      updateMonsters(this, dt);
     }
+    // Aussi dans le salon : les invocations d'entraînement bougent et expirent.
+    updateMonsters(this, dt);
     this.updateProjectiles(dt);
   }
 
   private updatePlayers(dt: number): void {
     for (const p of this.players.values()) {
       const s = p.state;
+      // Bonus temporaires expirés.
+      if (p.buffs.some((b) => b.until <= this.now)) {
+        p.buffs = p.buffs.filter((b) => b.until > this.now);
+        this.applyStats(p);
+      }
       if (!s.alive) continue;
       const pos = { x: s.x, y: s.y };
       if (p.push) {
@@ -484,7 +637,7 @@ export class Simulation {
           if (Math.hypot(tx - cx, ty - cy) <= radius + shape.radius) touched.push({ id, along, x: cx, y: cy });
         };
         if (pr.fromPlayer) {
-          for (const m of this.monsters.values()) test(m.id, m.state.x, m.state.y, m.def.radius);
+          for (const m of this.monsters.values()) if (!m.state.ally) test(m.id, m.state.x, m.state.y, m.def.radius);
         } else {
           for (const p of this.players.values()) if (p.state.alive) test(p.id, p.state.x, p.state.y, PLAYER_RADIUS);
         }
@@ -515,8 +668,8 @@ export class Simulation {
     this.projectiles = alive;
   }
 
-  private explode(pr: Projectile, x: number, y: number, radius: number): void {
-    this.broadcast('explode', { spell: pr.spell.id, x, y, radius });
+  private explode(pr: Projectile, x: number, y: number, radius: number, silent = false): void {
+    if (!silent) this.broadcast('explode', { spell: pr.spell.id, x, y, radius });
 
     // Sort de soin : touche les alliés (joueurs vivants) au lieu des ennemis.
     if (pr.spell.heal) {
@@ -552,8 +705,14 @@ export class Simulation {
     }
     const m = this.monsters.get(targetId);
     if (!m) return;
-    const crit = Math.random() < pr.critChance;
+    let crit = Math.random() < pr.critChance;
     if (crit) amount *= pr.critMult;
+    // Pari (Ecaflip) : gagné, les dégâts s'envolent et s'affichent comme un critique.
+    if (pr.spell.gamble) {
+      const won = Math.random() < pr.spell.gamble.chance;
+      amount *= won ? pr.spell.gamble.win : pr.spell.gamble.lose;
+      crit = crit || won;
+    }
     for (const e of pr.spell.effects ?? []) {
       if (e.type === 'knockback') {
         const duration = 0.18;
@@ -577,9 +736,106 @@ export class Simulation {
       } else if (e.type === 'slow') {
         m.slowFactor = e.factor;
         m.slowUntil = this.now + e.duration;
+      } else if (e.type === 'lifesteal') {
+        const caster = this.players.get(pr.owner);
+        if (caster?.state.alive) this.healPlayer(caster, Math.min(amount, Math.max(0, m.state.hp)) * e.fraction);
       }
     }
     this.damageMonster(m, amount, pr.owner, crit);
+  }
+
+  // -------------------------------------------------------------------------
+  // Bonus, pièges et glyphes, invocations
+  // -------------------------------------------------------------------------
+
+  healPlayer(p: PlayerRt, amount: number): void {
+    const gain = Math.round(Math.min(p.state.maxHp - p.state.hp, amount));
+    if (gain <= 0) return;
+    p.state.hp += gain;
+    this.broadcast('heal', { target: p.id, amount: gain, x: p.state.x, y: p.state.y });
+  }
+
+  private applyBuff(p: PlayerRt, buff: NonNullable<SpellDef['buff']>): void {
+    let stats = buff.stats ?? {};
+    let label = buff.label ?? '';
+    if (buff.randomOne) {
+      // Roue de la Fortune : un seul des bonus, au hasard.
+      const keys = Object.keys(stats) as StatKey[];
+      const k = keys[Math.floor(Math.random() * keys.length)];
+      stats = { [k]: stats[k] };
+      const names: Partial<Record<StatKey, string>> = { damage: 'dégâts', haste: 'vitesse de recharge', crit: 'critiques', speed: 'vitesse', critDamage: 'dégâts critiques', armor: 'armure' };
+      label = `+${Math.round((stats[k] ?? 0) * 100)} % ${names[k] ?? k}`;
+    }
+    p.buffs.push({ stats, until: this.now + buff.duration, invisible: !!buff.invisible });
+    this.applyStats(p);
+    if (label) this.broadcast('buff', { target: p.id, label, duration: buff.duration });
+  }
+
+  private placeGround(pr: Projectile, x: number, y: number): void {
+    const def = pr.spell.ground!;
+    // Nombre limité par lanceur et par sort : le plus ancien disparaît.
+    const mine = [...this.grounds.values()].filter((g) => g.owner === pr.owner && g.state.spell === pr.spell.id);
+    if (def.max && mine.length >= def.max) this.removeGround(mine[0].id);
+    const id = `g${this.nextGroundId++}`;
+    const state = new GroundState();
+    state.kind = def.kind;
+    state.spell = pr.spell.id;
+    state.x = x;
+    state.y = y;
+    state.radius = def.kind === 'trap' ? (def.blast ?? def.radius) : def.radius;
+    state.armed = !def.arm;
+    this.grounds.set(id, { id, state, pr, owner: pr.owner, expiresAt: this.now + def.duration, armedAt: this.now + (def.arm ?? 0), nextTick: this.now });
+    this.state.grounds.set(id, state);
+  }
+
+  removeGround(id: string): void {
+    this.grounds.delete(id);
+    this.state.grounds.delete(id);
+  }
+
+  private updateGrounds(): void {
+    for (const g of [...this.grounds.values()]) {
+      if (this.now >= g.expiresAt) {
+        this.removeGround(g.id);
+        continue;
+      }
+      const def = g.pr.spell.ground!;
+      const { x, y } = g.state;
+      if (def.kind === 'trap') {
+        if (this.now < g.armedAt) continue;
+        g.state.armed = true;
+        // Un ennemi marche dessus : explosion.
+        const triggered = this.enemiesOf(true).some((t) => Math.hypot(t.x - x, t.y - y) <= def.radius + t.radius);
+        if (triggered) {
+          this.removeGround(g.id);
+          this.explode(g.pr, x, y, def.blast ?? def.radius);
+        }
+      } else if (this.now >= g.nextTick) {
+        // Glyphe : applique le sort à tout ce qui est dans la zone, à intervalle régulier.
+        g.nextTick = this.now + (def.tick ?? 0.5);
+        this.explode(g.pr, x, y, def.radius, true);
+      }
+    }
+  }
+
+  private summonAlly(owner: PlayerRt, summon: NonNullable<SpellDef['summon']>, x: number, y: number): void {
+    const def = getMonster(summon.monster);
+    const mine = [...this.monsters.values()].filter((m) => m.allyOwner === owner.id && m.def.id === def.id);
+    if (mine.length >= summon.max) this.removeMonster(mine[0].id);
+    // Point libre près du point visé.
+    let px = x;
+    let py = y;
+    for (let attempt = 0; attempt < 12 && isBlocked(this.map, px, py, def.radius); attempt++) {
+      const a = Math.random() * Math.PI * 2;
+      px = x + Math.cos(a) * (0.5 + attempt * 0.2);
+      py = y + Math.sin(a) * (0.5 + attempt * 0.2);
+    }
+    // Les poupées profitent des dégâts de leur maître et deviennent plus résistantes avec la difficulté.
+    const ally = this.spawnMonster(def, px, py, 1 + 0.25 * (this.state.difficulty - 1), 1 + owner.stats.damage, 1);
+    ally.state.ally = true;
+    ally.allyOwner = owner.id;
+    ally.expiresAt = this.now + summon.duration;
+    ally.meleeReadyAt = this.now;
   }
 
   // -------------------------------------------------------------------------
@@ -589,13 +845,27 @@ export class Simulation {
   damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false): void {
     amount = Math.max(1, Math.round(amount));
     m.state.hp -= amount;
+    if (m.def.behavior.type === 'dummy') m.phaseUntil = this.now;
     this.broadcast('dmg', { target: m.id, amount, x: m.state.x, y: m.state.y, player: false, crit });
+    if (m.def.behavior.type === 'dummy') {
+      if (m.state.hp <= 0) m.state.hp = m.state.maxHp;
+      return;
+    }
     if (m.state.hp > 0) return;
+    if (m.state.ally) {
+      this.broadcast('death', { id: m.id, player: false, x: m.state.x, y: m.state.y });
+      this.removeMonster(m.id);
+      return;
+    }
 
     // Mort : les kamas sont partagés, chaque joueur reçoit la somme entière.
     const [kMin, kMax] = m.def.kamas;
     const kamas = Math.round(kMin + Math.random() * (kMax - kMin));
-    for (const p of this.players.values()) p.state.kamas += Math.round(kamas * (1 + p.stats.kamas));
+    for (const p of this.players.values()) {
+      const gain = Math.round(kamas * (1 + p.stats.kamas));
+      p.state.kamas += gain;
+      p.state.kamasEarned += gain;
+    }
     const killer = this.players.get(ownerId);
     if (killer) {
       killer.state.kills++;
@@ -634,6 +904,8 @@ export class Simulation {
   /** Recalcule les stats d'un joueur à partir de son inventaire. */
   private applyStats(p: PlayerRt): void {
     p.stats = sumStats(p.inventory);
+    for (const b of p.buffs) for (const [k, v] of Object.entries(b.stats)) p.stats[k as StatKey] += v ?? 0;
+    p.state.invisible = p.buffs.some((b) => b.invisible);
     const oldMax = p.state.maxHp;
     p.state.maxHp = p.def.maxHp + p.stats.maxHp;
     p.state.speed = p.def.speed * (1 + p.stats.speed);
@@ -750,6 +1022,9 @@ export class Simulation {
       chargeHit: new Set(),
       summonAt: this.now + (def.summon?.interval ?? 0),
       wobble: Math.random() * Math.PI * 2,
+      allyOwner: '',
+      expiresAt: Infinity,
+      healAt: 0,
     };
     this.monsters.set(id, rt);
     this.state.monsters.set(id, state);
@@ -761,12 +1036,12 @@ export class Simulation {
     this.state.monsters.delete(id);
   }
 
-  /** Joueur vivant le plus proche d'un point (ou null). */
-  nearestPlayer(x: number, y: number): { player: PlayerRt; dist: number } | null {
+  /** Joueur vivant (et visible, sauf `includeInvisible`) le plus proche d'un point (ou null). */
+  nearestPlayer(x: number, y: number, includeInvisible = true): { player: PlayerRt; dist: number } | null {
     let best: PlayerRt | null = null;
     let bestDist = Infinity;
     for (const p of this.players.values()) {
-      if (!p.state.alive) continue;
+      if (!p.state.alive || (!includeInvisible && p.state.invisible)) continue;
       const d = Math.hypot(p.state.x - x, p.state.y - y);
       if (d < bestDist) {
         bestDist = d;

@@ -113,6 +113,23 @@ export class SpellPreview {
         pts.push([x + Math.cos(a) * spell.range, y + Math.sin(a) * spell.range]);
       }
       fill(pts);
+    } else if (spell.ground || spell.summon || spell.teleport) {
+      // Sorts posés au point visé : piège, glyphe, invocation, téléportation.
+      const reach = spell.ground?.self ? 0 : Math.min(targetDist ?? spell.range, spell.range);
+      const cx = x + dx * reach;
+      const cy = y + dy * reach;
+      if (spell.teleport) {
+        path([[x, y], [cx, cy]], false);
+        c.setLineDash([6 * ratio, 6 * ratio]);
+        c.lineWidth = 2 * ratio;
+        c.strokeStyle = css(color, 0.9);
+        c.stroke();
+        c.setLineDash([]);
+      }
+      const r = spell.ground ? (spell.ground.blast ?? spell.ground.radius) : 0.6;
+      fill(circlePoints(cx, cy, r));
+    } else if (spell.buff) {
+      fill(circlePoints(x, y, 0.9), 0.2);
     } else if (spell.zone) {
       const reach = spell.zone.self ? 0 : Math.min(targetDist ?? spell.range, spell.range);
       fill(circlePoints(x + dx * reach, y + dy * reach, spell.zone.radius));

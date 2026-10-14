@@ -160,6 +160,15 @@ export class EntityView {
     }
   }
 
+  private invisible = false;
+
+  /** Joueur invisible : presque transparent (ses alliés le voient encore). */
+  setInvisible(invisible: boolean): void {
+    if (invisible === this.invisible || this.dead) return;
+    this.invisible = invisible;
+    this.body.setAlpha(invisible ? 0.3 : 1);
+  }
+
   /** Télégraphe : le monstre prépare une attaque (clignote en rouge + « ! »). */
   setWarning(warn: boolean): void {
     if (warn === this.warn) return;

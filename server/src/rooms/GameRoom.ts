@@ -44,7 +44,9 @@ export class GameRoom extends Room<{ state: GameState }> {
 
     this.onMessage('input', (client: Client, message: InputMessage) => this.sim.setInput(client.sessionId, message));
     this.onMessage('cast', (client: Client, message: CastMessage) => this.sim.playerCast(client.sessionId, message));
-    this.onMessage('class', (client: Client, message: { classId?: string }) => this.sim.setClass(client.sessionId, message?.classId));
+    this.onMessage('class', (client: Client, message: { classId?: string; spells?: string[] }) => this.sim.setClass(client.sessionId, message?.classId, message?.spells));
+    this.onMessage('loadout', (client: Client, message: { spells?: string[] }) => this.sim.setLoadout(client.sessionId, message?.spells));
+    this.onMessage('dash', (client: Client, message: { dx?: number; dy?: number }) => this.sim.playerDash(client.sessionId, message));
     this.onMessage('pause', (client: Client, message: { paused?: boolean }) => this.sim.setPaused(client.sessionId, message?.paused));
     this.onMessage('interact', (client: Client) => this.sim.interact(client.sessionId));
     this.onMessage('start', (client: Client) => {
@@ -55,9 +57,9 @@ export class GameRoom extends Room<{ state: GameState }> {
     console.log(`[salle ${this.roomId}] créée`);
   }
 
-  onJoin(client: Client, options?: { name?: string; classId?: string }): void {
+  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[] }): void {
     const name = cleanName(options?.name);
-    this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined);
+    this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells);
     if (!this.state.hostId) this.state.hostId = client.sessionId;
     console.log(`[salle ${this.roomId}] ${name} a rejoint (${this.state.players.size}/${MAX_PLAYERS})`);
   }

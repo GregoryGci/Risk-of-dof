@@ -6,24 +6,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const SPELL_NAMES = {
-  fleche_magique: 'Flèche Magique',
-  fleche_enflammee: 'Flèche Enflammée',
-  fleche_de_recul: 'Flèche de Recul',
-  fleche_explosive: 'Flèche Explosive',
-  pression: 'Pression',
-  epee_celeste: 'Épée Céleste',
-  bond: 'Bond',
-  colere_de_iop: 'Colère de Iop',
-  mot_blessant: 'Mot Blessant',
-  mot_curatif: 'Mot Curatif',
-  mot_de_frayeur: 'Mot de Frayeur',
-  mot_de_reconstitution: 'Mot de Reconstitution',
-  pied_du_sacrieur: 'Pied du Sacrieur',
-  attirance: 'Attirance',
-  assaut: 'Assaut',
-  punition: 'Punition',
-};
+/** Noms des sorts du jeu, lus dans shared/src/data/spells.ts (clé -> nom affiché). */
+export const SPELL_NAMES = (() => {
+  const file = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../shared/src/data/spells.ts');
+  const src = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+  const names = {};
+  for (const m of src.matchAll(/^ {2}(\w+): \{\n {4}name: (['"])(.+?)\2,/gm)) names[m[1]] = m[3].replace(/\\'/g, "'");
+  return names;
+})();
 
 function findSolFiles(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {

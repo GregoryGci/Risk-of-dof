@@ -1,4 +1,5 @@
-// Classes jouables. Une classe = des stats de base + 4 sorts (voir data/spells.ts).
+// Classes jouables. Une classe = des stats de base + 4 sorts de base (voir data/spells.ts).
+// Les sorts alternatifs à débloquer sont dans data/talents.ts.
 import type { ClassDef } from '../types.ts';
 
 export const CLASSES: Record<string, ClassDef> = {
@@ -15,12 +16,12 @@ export const CLASSES: Record<string, ClassDef> = {
   iop: {
     id: 'iop',
     name: 'Iop',
-    description: 'Guerrier : frappe fort au corps à corps et bondit dans la mêlée.',
+    description: 'Guerrier : dégâts de zone au corps à corps et un coup unique dévastateur.',
     color: 0xe07a2a,
     maxHp: 180,
     speed: 4.6,
     regen: 1.5,
-    spells: ['pression', 'epee_celeste', 'bond', 'colere_de_iop'],
+    spells: ['pression', 'epee_de_iop', 'tempete_de_puissance', 'colere_de_iop'],
   },
   eniripsa: {
     id: 'eniripsa',
@@ -35,12 +36,52 @@ export const CLASSES: Record<string, ClassDef> = {
   sacrieur: {
     id: 'sacrieur',
     name: 'Sacrieur',
-    description: 'Berserker : très résistant, plus dangereux quand il est blessé.',
+    description: 'Berserker : frappe tout autour de lui, vole de la vie et se régénère vite.',
     color: 0xc8281e,
     maxHp: 210,
     speed: 4.8,
-    regen: 2,
+    regen: 3,
     spells: ['pied_du_sacrieur', 'attirance', 'assaut', 'punition'],
+  },
+  sram: {
+    id: 'sram',
+    name: 'Sram',
+    description: 'Assassin : pose des pièges, frappe dans le dos et disparaît.',
+    color: 0x7a4ab0,
+    maxHp: 130,
+    speed: 5,
+    regen: 1.2,
+    spells: ['sournoiserie', 'piege_sournois', 'invisibilite', 'piege_de_masse'],
+  },
+  sadida: {
+    id: 'sadida',
+    name: 'Sadida',
+    description: 'Invocateur : ses poupées combattent et protègent à sa place.',
+    color: 0x4a9a30,
+    maxHp: 140,
+    speed: 4.5,
+    regen: 1.5,
+    spells: ['ronce', 'la_folle', 'la_bloqueuse', 'vent_empoisonne'],
+  },
+  ecaflip: {
+    id: 'ecaflip',
+    name: 'Ecaflip',
+    description: 'Joueur : tout repose sur la chance, pour le meilleur et pour le pire.',
+    color: 0xe0b030,
+    maxHp: 150,
+    speed: 4.7,
+    regen: 1.2,
+    spells: ['pile_ou_face', 'roue_de_la_fortune', 'bond_du_felin', 'rekop'],
+  },
+  feca: {
+    id: 'feca',
+    name: 'Feca',
+    description: 'Protecteur : contrôle le terrain avec des glyphes au sol.',
+    color: 0x6080e0,
+    maxHp: 160,
+    speed: 4.4,
+    regen: 1.5,
+    spells: ['attaque_naturelle', 'glyphe_agressif', 'teleportation', 'glyphe_enflamme'],
   },
 };
 

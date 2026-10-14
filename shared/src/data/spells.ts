@@ -1,16 +1,25 @@
 // Sorts du jeu, définis uniquement en données.
-// Pour ajouter un sort (Iop, Eniripsa, Sacrieur...) : ajouter une entrée ici et
-// le référencer dans data/classes.ts. Aucune logique à modifier tant que les
-// mécaniques existantes (projectile, zone, effets) suffisent.
+// Pour ajouter un sort : une entrée ici, puis la référencer dans data/classes.ts (sort de base)
+// ou data/talents.ts (sort à débloquer). Aucune logique à modifier tant que les mécaniques
+// existantes suffisent (projectile, mêlée, zone, piège, glyphe, invocation, bonus, téléportation...).
 import type { SpellDef } from '../types.ts';
 
-export const SPELLS: Record<string, SpellDef> = {
-  // --- Crâ ---------------------------------------------------------------
+type SpellBase = Omit<SpellDef, 'id' | 'icon'> & { icon?: string };
+
+/** L'id et l'icône sont déduits de la clé : on évite les fautes de recopie. */
+function define(spells: Record<string, SpellBase>): Record<string, SpellDef> {
+  const out: Record<string, SpellDef> = {};
+  for (const [id, s] of Object.entries(spells)) out[id] = { ...s, id, icon: s.icon ?? id };
+  return out;
+}
+
+export const SPELLS: Record<string, SpellDef> = define({
+  // =========================================================================
+  // Crâ — tir à distance
+  // =========================================================================
   fleche_magique: {
-    id: 'fleche_magique',
     name: 'Flèche Magique',
     description: 'Tir de base rapide.',
-    icon: 'fleche_magique',
     color: 0x7fd6ff,
     element: 'air',
     cooldown: 350,
@@ -19,10 +28,8 @@ export const SPELLS: Record<string, SpellDef> = {
     projectile: { speed: 22, radius: 0.3 },
   },
   fleche_enflammee: {
-    id: 'fleche_enflammee',
     name: 'Flèche Enflammée',
     description: 'Traverse et brûle tous les ennemis sur la ligne.',
-    icon: 'fleche_enflammee',
     color: 0xff7a1a,
     element: 'feu',
     cooldown: 4000,
@@ -32,10 +39,8 @@ export const SPELLS: Record<string, SpellDef> = {
     effects: [{ type: 'burn', dps: 5, duration: 3 }],
   },
   fleche_de_recul: {
-    id: 'fleche_de_recul',
     name: 'Flèche de Recul',
     description: "Repousse l'ennemi touché et fait bondir le Crâ en arrière.",
-    icon: 'fleche_de_recul',
     color: 0xc8f0a0,
     element: 'air',
     cooldown: 5000,
@@ -48,10 +53,8 @@ export const SPELLS: Record<string, SpellDef> = {
     ],
   },
   fleche_explosive: {
-    id: 'fleche_explosive',
     name: 'Flèche Explosive',
     description: 'Ultime : explose en zone au point visé.',
-    icon: 'fleche_explosive',
     color: 0xff3b2f,
     element: 'feu',
     cooldown: 10000,
@@ -61,13 +64,60 @@ export const SPELLS: Record<string, SpellDef> = {
     area: { radius: 2.5 },
     effects: [{ type: 'knockback', distance: 1 }],
   },
+  // Talents
+  fleche_punitive: {
+    name: 'Flèche Punitive',
+    description: 'Tir plus lent mais bien plus puissant, et de plus longue portée.',
+    color: 0xb0a0ff,
+    element: 'terre',
+    cooldown: 650,
+    range: 13,
+    damage: [20, 26],
+    projectile: { speed: 26, radius: 0.3 },
+  },
+  fleche_glacee: {
+    name: 'Flèche Glacée',
+    description: 'Perce la ligne et gèle à moitié les ennemis touchés.',
+    color: 0x9fe8ff,
+    element: 'eau',
+    cooldown: 3500,
+    range: 12,
+    damage: [14, 18],
+    projectile: { speed: 20, radius: 0.5, pierce: true },
+    effects: [{ type: 'slow', factor: 0.4, duration: 2.5 }],
+  },
+  fleche_d_immobilisation: {
+    name: "Flèche d'Immobilisation",
+    description: "Bond en arrière et cloue presque sur place l'ennemi touché.",
+    color: 0xd0f0ff,
+    element: 'eau',
+    cooldown: 5000,
+    range: 8,
+    damage: [8, 12],
+    projectile: { speed: 24, radius: 0.45 },
+    effects: [
+      { type: 'slow', factor: 0.15, duration: 2.5 },
+      { type: 'dash', direction: 'back', distance: 4, duration: 0.2 },
+    ],
+  },
+  pluie_de_fleches: {
+    name: 'Pluie de Flèches',
+    description: 'Ultime : une pluie de flèches s\'abat sur une grande zone après un court instant.',
+    color: 0xffd060,
+    element: 'air',
+    cooldown: 12000,
+    range: 11,
+    damage: [65, 85],
+    zone: { radius: 3.5 },
+    delay: 0.9,
+  },
 
-  // --- Iop ---------------------------------------------------------------
+  // =========================================================================
+  // Iop — corps à corps, dégâts de zone et coup unique dévastateur
+  // =========================================================================
   pression: {
-    id: 'pression',
     name: 'Pression',
     description: "Coup d'épée en arc devant soi.",
-    icon: 'pression',
     color: 0xffb04a,
     element: 'terre',
     cooldown: 450,
@@ -75,11 +125,58 @@ export const SPELLS: Record<string, SpellDef> = {
     damage: [17, 23],
     melee: { arc: 110 },
   },
+  epee_de_iop: {
+    name: 'Épée de Iop',
+    description: 'Une large entaille frappe toute une zone devant le Iop.',
+    color: 0xffd27a,
+    element: 'terre',
+    cooldown: 3500,
+    range: 3.5,
+    damage: [28, 36],
+    zone: { radius: 2.2 },
+    effects: [{ type: 'knockback', distance: 0.8 }],
+  },
+  tempete_de_puissance: {
+    name: 'Tempête de Puissance',
+    description: "Bondit vers la direction visée et frappe une zone à l'atterrissage.",
+    color: 0x9fd8ff,
+    element: 'air',
+    cooldown: 6000,
+    range: 5,
+    damage: [24, 32],
+    zone: { radius: 2.4 },
+    zoneAtDashEnd: true,
+    effects: [
+      { type: 'dash', direction: 'forward', distance: 5, duration: 0.22 },
+      { type: 'knockback', distance: 1.2 },
+    ],
+  },
+  colere_de_iop: {
+    name: 'Colère de Iop',
+    description: 'Ultime : un unique coup dévastateur sur la cible devant soi.',
+    color: 0xff3b2f,
+    element: 'terre',
+    cooldown: 14000,
+    range: 2.6,
+    damage: [190, 240],
+    melee: { arc: 45 },
+    effects: [{ type: 'knockback', distance: 3 }],
+  },
+  // Talents
+  intimidation: {
+    name: 'Intimidation',
+    description: 'Coup qui repousse nettement les ennemis.',
+    color: 0xe0c090,
+    element: 'neutre',
+    cooldown: 500,
+    range: 2.3,
+    damage: [13, 17],
+    melee: { arc: 110 },
+    effects: [{ type: 'knockback', distance: 2.2 }],
+  },
   epee_celeste: {
-    id: 'epee_celeste',
     name: 'Épée Céleste',
-    description: 'Une épée tombe du ciel et frappe une zone.',
-    icon: 'epee_celeste',
+    description: 'Une épée tombe du ciel et frappe une zone à distance.',
     color: 0x9fd8ff,
     element: 'air',
     cooldown: 5000,
@@ -89,37 +186,33 @@ export const SPELLS: Record<string, SpellDef> = {
     effects: [{ type: 'knockback', distance: 1 }],
   },
   bond: {
-    id: 'bond',
     name: 'Bond',
     description: 'Saute vers la direction visée.',
-    icon: 'bond',
     color: 0xc8f0a0,
     element: 'air',
-    cooldown: 5000,
+    cooldown: 4000,
     range: 5,
     damage: [0, 0],
     effects: [{ type: 'dash', direction: 'forward', distance: 5, duration: 0.22 }],
   },
-  colere_de_iop: {
-    id: 'colere_de_iop',
-    name: 'Colère de Iop',
-    description: 'Ultime : un coup dévastateur devant soi.',
-    icon: 'colere_de_iop',
-    color: 0xff3b2f,
-    element: 'terre',
-    cooldown: 13000,
-    range: 3.2,
-    damage: [120, 150],
-    melee: { arc: 130 },
-    effects: [{ type: 'knockback', distance: 3 }],
+  epee_du_jugement: {
+    name: 'Épée du Jugement',
+    description: 'Ultime : une immense épée frappe une large zone après un instant.',
+    color: 0xffe08a,
+    element: 'feu',
+    cooldown: 14000,
+    range: 6,
+    damage: [95, 125],
+    zone: { radius: 3.2 },
+    delay: 0.6,
   },
 
-  // --- Eniripsa ------------------------------------------------------------
+  // =========================================================================
+  // Eniripsa — soins et contrôle
+  // =========================================================================
   mot_blessant: {
-    id: 'mot_blessant',
     name: 'Mot Blessant',
     description: 'Tir de base magique.',
-    icon: 'mot_blessant',
     color: 0xff8ac8,
     element: 'feu',
     cooldown: 400,
@@ -128,10 +221,8 @@ export const SPELLS: Record<string, SpellDef> = {
     projectile: { speed: 20, radius: 0.3 },
   },
   mot_curatif: {
-    id: 'mot_curatif',
     name: 'Mot Curatif',
     description: 'Soigne les alliés dans la zone visée (soi compris).',
-    icon: 'mot_curatif',
     color: 0x6ee67a,
     element: 'feu',
     cooldown: 6000,
@@ -141,10 +232,8 @@ export const SPELLS: Record<string, SpellDef> = {
     zone: { radius: 2.5 },
   },
   mot_de_frayeur: {
-    id: 'mot_de_frayeur',
     name: 'Mot de Frayeur',
     description: "Repousse violemment l'ennemi touché.",
-    icon: 'mot_de_frayeur',
     color: 0xb9a2ff,
     element: 'air',
     cooldown: 4500,
@@ -154,10 +243,8 @@ export const SPELLS: Record<string, SpellDef> = {
     effects: [{ type: 'knockback', distance: 5 }, { type: 'slow', factor: 0.5, duration: 2 }],
   },
   mot_de_reconstitution: {
-    id: 'mot_de_reconstitution',
     name: 'Mot de Reconstitution',
     description: 'Ultime : grand soin de tous les alliés proches.',
-    icon: 'mot_de_reconstitution',
     color: 0xa8ffb0,
     element: 'eau',
     cooldown: 20000,
@@ -166,25 +253,66 @@ export const SPELLS: Record<string, SpellDef> = {
     heal: [90, 110],
     zone: { radius: 6, self: true },
   },
+  // Talents
+  mot_interdit: {
+    name: 'Mot Interdit',
+    description: 'Tir plus lent mais bien plus puissant.',
+    color: 0xd04aa0,
+    element: 'feu',
+    cooldown: 750,
+    range: 10,
+    damage: [19, 25],
+    projectile: { speed: 18, radius: 0.35 },
+  },
+  mot_de_regeneration: {
+    name: 'Mot de Régénération',
+    description: 'Pose une glyphe qui soigne les alliés présents toutes les demi-secondes.',
+    color: 0x7ef08a,
+    element: 'eau',
+    cooldown: 9000,
+    range: 9,
+    damage: [0, 0],
+    heal: [5, 7],
+    ground: { kind: 'glyph', radius: 2.5, duration: 6, tick: 0.5, max: 1 },
+  },
+  mot_d_envol: {
+    name: "Mot d'Envol",
+    description: 'Se téléporte au point visé.',
+    color: 0xffd0f0,
+    element: 'air',
+    cooldown: 6000,
+    range: 6,
+    damage: [0, 0],
+    teleport: true,
+  },
+  mot_stimulant: {
+    name: 'Mot Stimulant',
+    description: 'Ultime : +40 % de dégâts et +40 % de vitesse de recharge pendant 8 s.',
+    color: 0xffa0e0,
+    element: 'feu',
+    cooldown: 20000,
+    range: 0,
+    damage: [0, 0],
+    buff: { stats: { damage: 0.4, haste: 0.4 }, duration: 8, label: 'Stimulé !' },
+  },
 
-  // --- Sacrieur ------------------------------------------------------------
+  // =========================================================================
+  // Sacrieur — zone au corps à corps, vol de vie et régénération
+  // =========================================================================
   pied_du_sacrieur: {
-    id: 'pied_du_sacrieur',
     name: 'Pied du Sacrieur',
-    description: 'Coup de pied rapide devant soi.',
-    icon: 'pied_du_sacrieur',
+    description: 'Balayage autour de soi qui vole un peu de vie.',
     color: 0xe0503a,
     element: 'terre',
-    cooldown: 480,
-    range: 2.1,
-    damage: [14, 19],
-    melee: { arc: 100 },
+    cooldown: 550,
+    range: 0,
+    damage: [12, 16],
+    zone: { radius: 1.9, self: true },
+    effects: [{ type: 'lifesteal', fraction: 0.15 }],
   },
   attirance: {
-    id: 'attirance',
     name: 'Attirance',
     description: "Attire l'ennemi touché jusqu'à soi.",
-    icon: 'attirance',
     color: 0xd04a7a,
     element: 'neutre',
     cooldown: 4000,
@@ -194,22 +322,23 @@ export const SPELLS: Record<string, SpellDef> = {
     effects: [{ type: 'pull', distance: 8 }],
   },
   assaut: {
-    id: 'assaut',
     name: 'Assaut',
-    description: 'Fonce vers la direction visée.',
-    icon: 'assaut',
+    description: "Fonce vers la direction visée et frappe autour de soi à l'arrivée.",
     color: 0xffa07a,
     element: 'air',
     cooldown: 4500,
     range: 5,
-    damage: [0, 0],
-    effects: [{ type: 'dash', direction: 'forward', distance: 5, duration: 0.2 }],
+    damage: [14, 18],
+    zone: { radius: 1.8 },
+    zoneAtDashEnd: true,
+    effects: [
+      { type: 'dash', direction: 'forward', distance: 5, duration: 0.2 },
+      { type: 'lifesteal', fraction: 0.2 },
+    ],
   },
   punition: {
-    id: 'punition',
     name: 'Punition',
-    description: 'Ultime : zone autour de soi, bien plus forte quand le Sacrieur est blessé.',
-    icon: 'punition',
+    description: 'Ultime : zone autour de soi, bien plus forte quand le Sacrieur est blessé, qui vole de la vie.',
     color: 0xc8281e,
     element: 'neutre',
     cooldown: 11000,
@@ -217,12 +346,356 @@ export const SPELLS: Record<string, SpellDef> = {
     damage: [40, 52],
     zone: { radius: 3.2, self: true },
     missingHpBonus: 2,
-    effects: [{ type: 'knockback', distance: 1.5 }],
+    effects: [{ type: 'knockback', distance: 1.5 }, { type: 'lifesteal', fraction: 0.3 }],
+  },
+  // Talents
+  absorption: {
+    name: 'Absorption',
+    description: 'Coup devant soi qui vole beaucoup de vie.',
+    color: 0xa0202a,
+    element: 'feu',
+    cooldown: 600,
+    range: 2.3,
+    damage: [15, 19],
+    melee: { arc: 120 },
+    effects: [{ type: 'lifesteal', fraction: 0.4 }],
+  },
+  chatiment_agile: {
+    name: 'Châtiment Agile',
+    description: '+40 % de vitesse de déplacement et +20 % de dégâts pendant 6 s.',
+    color: 0xffc080,
+    element: 'air',
+    cooldown: 12000,
+    range: 0,
+    damage: [0, 0],
+    buff: { stats: { speed: 0.4, damage: 0.2 }, duration: 6, label: 'Châtiment Agile' },
+  },
+  folie_sanguinaire: {
+    name: 'Folie Sanguinaire',
+    description: 'Ultime : +60 % de dégâts et +30 % de vitesse de recharge pendant 7 s.',
+    color: 0xff2020,
+    element: 'feu',
+    cooldown: 18000,
+    range: 0,
+    damage: [0, 0],
+    buff: { stats: { damage: 0.6, haste: 0.3 }, duration: 7, label: 'Folie Sanguinaire !' },
   },
 
-  // --- Monstres ------------------------------------------------------------
+  // =========================================================================
+  // Sram — pièges et invisibilité
+  // =========================================================================
+  sournoiserie: {
+    name: 'Sournoiserie',
+    description: 'Coup de dague rapide devant soi.',
+    color: 0x9a7ad0,
+    element: 'terre',
+    cooldown: 400,
+    range: 2,
+    damage: [15, 20],
+    melee: { arc: 90 },
+  },
+  piege_sournois: {
+    name: 'Piège Sournois',
+    description: 'Pose un piège invisible (3 max) qui explose au passage d\'un ennemi.',
+    color: 0xb04ad0,
+    element: 'feu',
+    cooldown: 2500,
+    range: 7,
+    damage: [30, 40],
+    ground: { kind: 'trap', radius: 0.9, blast: 2, duration: 30, max: 3, arm: 0.6 },
+  },
+  invisibilite: {
+    name: 'Invisibilité',
+    description: 'Les monstres vous perdent de vue pendant 3 s et vous courez plus vite.',
+    color: 0xd0c0ff,
+    element: 'air',
+    cooldown: 12000,
+    range: 0,
+    damage: [0, 0],
+    buff: { stats: { speed: 0.4 }, duration: 3, invisible: true, label: 'Invisible' },
+  },
+  piege_de_masse: {
+    name: 'Piège de Masse',
+    description: 'Ultime : un énorme piège qui ravage une large zone.',
+    color: 0xff40a0,
+    element: 'feu',
+    cooldown: 14000,
+    range: 7,
+    damage: [90, 120],
+    ground: { kind: 'trap', radius: 1.2, blast: 3.5, duration: 40, max: 1, arm: 0.8 },
+    effects: [{ type: 'knockback', distance: 1.5 }],
+  },
+  // Talents
+  attaque_mortelle: {
+    name: 'Attaque Mortelle',
+    description: 'Coup plus lent mais très puissant.',
+    color: 0x6a3a90,
+    element: 'terre',
+    cooldown: 900,
+    range: 2.2,
+    damage: [32, 42],
+    melee: { arc: 80 },
+  },
+  piege_empoisonne: {
+    name: 'Piège Empoisonné',
+    description: 'Piège qui empoisonne longuement tous les ennemis de la zone.',
+    color: 0x60d040,
+    element: 'air',
+    cooldown: 2500,
+    range: 7,
+    damage: [10, 14],
+    ground: { kind: 'trap', radius: 0.9, blast: 2.2, duration: 30, max: 3, arm: 0.6 },
+    effects: [{ type: 'burn', dps: 12, duration: 4 }],
+  },
+  fourvoiement: {
+    name: 'Fourvoiement',
+    description: 'Se téléporte au point visé.',
+    color: 0xc0a0ff,
+    element: 'air',
+    cooldown: 6000,
+    range: 6,
+    damage: [0, 0],
+    teleport: true,
+  },
+
+  // =========================================================================
+  // Sadida — invocations
+  // =========================================================================
+  ronce: {
+    name: 'Ronce',
+    description: 'Projectile de ronces.',
+    color: 0x6ab040,
+    element: 'terre',
+    cooldown: 450,
+    range: 9,
+    damage: [10, 14],
+    projectile: { speed: 19, radius: 0.32 },
+  },
+  la_folle: {
+    name: 'La Folle',
+    description: 'Invoque une poupée rapide et agressive (3 max, 25 s).',
+    color: 0xff7070,
+    element: 'neutre',
+    cooldown: 6000,
+    range: 4,
+    damage: [0, 0],
+    summon: { monster: 'poupee_folle', max: 3, duration: 25 },
+  },
+  la_bloqueuse: {
+    name: 'La Bloqueuse',
+    description: 'Invoque une poupée robuste qui attire les monstres sur elle (1 max, 25 s).',
+    color: 0xa08060,
+    element: 'neutre',
+    cooldown: 12000,
+    range: 4,
+    damage: [0, 0],
+    summon: { monster: 'poupee_bloqueuse', max: 1, duration: 25 },
+  },
+  vent_empoisonne: {
+    name: 'Vent Empoisonné',
+    description: 'Ultime : un nuage empoisonne gravement tous les ennemis de la zone.',
+    color: 0x90e040,
+    element: 'air',
+    cooldown: 12000,
+    range: 8,
+    damage: [5, 8],
+    zone: { radius: 3 },
+    effects: [{ type: 'burn', dps: 16, duration: 5 }],
+  },
+  // Talents
+  ronce_apaisante: {
+    name: 'Ronce Apaisante',
+    description: 'Projectile qui ralentit fortement la cible.',
+    color: 0x80d070,
+    element: 'terre',
+    cooldown: 500,
+    range: 9,
+    damage: [8, 12],
+    projectile: { speed: 19, radius: 0.32 },
+    effects: [{ type: 'slow', factor: 0.5, duration: 1.5 }],
+  },
+  la_gonflable: {
+    name: 'La Gonflable',
+    description: 'Invoque une poupée qui soigne les alliés proches (1 max, 25 s).',
+    color: 0x80e0ff,
+    element: 'eau',
+    cooldown: 12000,
+    range: 4,
+    damage: [0, 0],
+    summon: { monster: 'poupee_gonflable', max: 1, duration: 25 },
+  },
+  ronces_multiples: {
+    name: 'Ronces Multiples',
+    description: 'Ultime : des ronces jaillissent dans une grande zone autour de soi.',
+    color: 0x4a9030,
+    element: 'terre',
+    cooldown: 12000,
+    range: 0,
+    damage: [55, 75],
+    zone: { radius: 4, self: true },
+    effects: [{ type: 'slow', factor: 0.5, duration: 2 }],
+  },
+
+  // =========================================================================
+  // Ecaflip — hasard
+  // =========================================================================
+  pile_ou_face: {
+    name: 'Pile ou Face',
+    description: 'Une chance sur deux de faire de gros dégâts... ou presque rien.',
+    color: 0xf0d040,
+    element: 'feu',
+    cooldown: 450,
+    range: 10,
+    damage: [9, 14],
+    projectile: { speed: 21, radius: 0.32 },
+    gamble: { chance: 0.5, win: 2.2, lose: 0.4 },
+  },
+  roue_de_la_fortune: {
+    name: 'Roue de la Fortune',
+    description: 'Un bonus au hasard pendant 6 s : dégâts, vitesse de recharge, critiques ou vitesse.',
+    color: 0xffa040,
+    element: 'feu',
+    cooldown: 10000,
+    range: 0,
+    damage: [0, 0],
+    buff: { stats: { damage: 0.6, haste: 0.6, crit: 0.5, speed: 0.5 }, duration: 6, randomOne: true },
+  },
+  bond_du_felin: {
+    name: 'Bond du Félin',
+    description: 'Saute vers la direction visée.',
+    color: 0xffe0a0,
+    element: 'air',
+    cooldown: 4500,
+    range: 5,
+    damage: [0, 0],
+    effects: [{ type: 'dash', direction: 'forward', distance: 5, duration: 0.2 }],
+  },
+  rekop: {
+    name: 'Rekop',
+    description: 'Ultime : après un instant, une zone inflige des dégâts totalement imprévisibles.',
+    color: 0xff6040,
+    element: 'feu',
+    cooldown: 13000,
+    range: 9,
+    damage: [20, 280],
+    zone: { radius: 3 },
+    delay: 1.2,
+  },
+  // Talents
+  tout_ou_rien: {
+    name: 'Tout ou Rien',
+    description: 'Une chance sur trois de faire des dégâts énormes.',
+    color: 0xffc000,
+    element: 'feu',
+    cooldown: 500,
+    range: 10,
+    damage: [11, 16],
+    projectile: { speed: 21, radius: 0.32 },
+    gamble: { chance: 0.33, win: 4, lose: 0.3 },
+  },
+  trefle: {
+    name: 'Trèfle',
+    description: '+40 % de critiques et +50 % de dégâts critiques pendant 8 s.',
+    color: 0x60e060,
+    element: 'eau',
+    cooldown: 14000,
+    range: 0,
+    damage: [0, 0],
+    buff: { stats: { crit: 0.4, critDamage: 0.5 }, duration: 8, label: 'Trèfle' },
+  },
+  perception: {
+    name: 'Perception',
+    description: 'Ultime : une grande zone autour de soi aux dégâts imprévisibles.',
+    color: 0xffb060,
+    element: 'air',
+    cooldown: 13000,
+    range: 0,
+    damage: [10, 200],
+    zone: { radius: 4, self: true },
+  },
+
+  // =========================================================================
+  // Feca — glyphes au sol
+  // =========================================================================
+  attaque_naturelle: {
+    name: 'Attaque Naturelle',
+    description: 'Projectile de terre.',
+    color: 0xc0a060,
+    element: 'terre',
+    cooldown: 450,
+    range: 9,
+    damage: [10, 14],
+    projectile: { speed: 20, radius: 0.32 },
+  },
+  glyphe_agressif: {
+    name: 'Glyphe Agressif',
+    description: 'Pose une glyphe qui blesse les ennemis présents toutes les demi-secondes (2 max).',
+    color: 0xff9040,
+    element: 'feu',
+    cooldown: 6000,
+    range: 8,
+    damage: [7, 9],
+    ground: { kind: 'glyph', radius: 2.5, duration: 5, tick: 0.5, max: 2 },
+  },
+  teleportation: {
+    name: 'Téléportation',
+    description: 'Se téléporte au point visé.',
+    color: 0xc0e0ff,
+    element: 'air',
+    cooldown: 6000,
+    range: 6,
+    damage: [0, 0],
+    teleport: true,
+  },
+  glyphe_enflamme: {
+    name: 'Glyphe Enflammé',
+    description: 'Ultime : une grande glyphe qui brûle et ralentit les ennemis présents.',
+    color: 0xff4020,
+    element: 'feu',
+    cooldown: 15000,
+    range: 8,
+    damage: [10, 13],
+    ground: { kind: 'glyph', radius: 3.5, duration: 6, tick: 0.5, max: 1 },
+    effects: [{ type: 'slow', factor: 0.6, duration: 0.6 }],
+  },
+  // Talents
+  bulle: {
+    name: 'Bulle',
+    description: 'Projectile qui éclate en petite zone.',
+    color: 0x80c0ff,
+    element: 'eau',
+    cooldown: 700,
+    range: 9,
+    damage: [14, 18],
+    projectile: { speed: 17, radius: 0.35 },
+    area: { radius: 1.5 },
+  },
+  glyphe_paralysant: {
+    name: 'Glyphe Paralysant',
+    description: 'Pose une glyphe qui ralentit fortement les ennemis présents (2 max).',
+    color: 0x80a0ff,
+    element: 'eau',
+    cooldown: 6000,
+    range: 8,
+    damage: [3, 4],
+    ground: { kind: 'glyph', radius: 2.5, duration: 6, tick: 0.5, max: 2 },
+    effects: [{ type: 'slow', factor: 0.3, duration: 0.6 }],
+  },
+  bouclier_feca: {
+    name: 'Bouclier Féca',
+    description: 'Réduit fortement les dégâts subis pendant 5 s.',
+    color: 0xe0e0ff,
+    element: 'terre',
+    cooldown: 12000,
+    range: 0,
+    damage: [0, 0],
+    buff: { stats: { armor: 6 }, duration: 5, label: 'Bouclier Féca' },
+  },
+
+  // =========================================================================
+  // Monstres
+  // =========================================================================
   graine_tournesol: {
-    id: 'graine_tournesol',
     name: 'Graine',
     description: 'Projectile lent du Tournesol Sauvage.',
     icon: 'graine',
@@ -233,7 +706,7 @@ export const SPELLS: Record<string, SpellDef> = {
     damage: [8, 11],
     projectile: { speed: 7.5, radius: 0.28 },
   },
-};
+});
 
 export function getSpell(id: string): SpellDef {
   const s = SPELLS[id];

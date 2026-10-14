@@ -23,6 +23,7 @@
         <div id="class-picker"></div>
         <div id="class-desc" class="class-desc"></div>
 
+        <button id="btn-talents" class="btn">Arbre de talents</button>
         <button id="btn-create" class="btn btn-primary">Créer une partie</button>
 
         <div class="separator"><span>ou</span></div>
@@ -38,8 +39,19 @@
         <div class="help">
           <b>Déplacement</b> ZQSD / WASD / flèches &nbsp;·&nbsp; <b>Visée</b> souris<br />
           <b>Sorts</b> clic gauche · clic droit · Espace · R (ultime)<br />
-          <b>E</b> Ouvrir un coffre (coûte des kamas) &nbsp;·&nbsp; <b>Tab</b> Détails / pause
+          <b>E</b> Ouvrir un coffre (coûte des kamas) &nbsp;·&nbsp; <b>Tab</b> Détails / pause &nbsp;·&nbsp; <b>Maj</b> Dash
         </div>
+      </div>
+    </div>
+
+    <!-- Arbre de talents (accueil et salon) -->
+    <div id="talents" class="overlay hidden">
+      <div class="panel details-panel talents-panel">
+        <div class="details-head">
+          <h2>Arbre de talents</h2>
+          <button id="talents-close" class="btn">Fermer</button>
+        </div>
+        <div id="talents-body"></div>
       </div>
     </div>
 
@@ -111,6 +123,7 @@
           <h1>Défaite</h1>
           <p class="subtitle" id="gameover-stats"></p>
           <div id="gameover-players"></div>
+          <p id="gameover-reward" class="subtitle"></p>
           <button id="btn-restart" class="btn btn-primary">Relancer une partie</button>
           <button id="btn-quit" class="btn">Quitter</button>
         </div>

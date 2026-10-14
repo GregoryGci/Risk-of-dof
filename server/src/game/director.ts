@@ -45,7 +45,7 @@ export class Director {
   private spawnWave(): void {
     const sim = this.sim;
     const diff = sim.state.difficulty;
-    const eligible = Object.values(MONSTERS).filter((m) => !m.boss && m.minDifficulty <= diff && m.cost <= this.credits);
+    const eligible = Object.values(MONSTERS).filter((m) => !m.boss && !m.ally && m.weight > 0 && m.minDifficulty <= diff && m.cost <= this.credits);
     if (eligible.length === 0) return;
     const def = pickWeighted(eligible);
     // Une vague = un groupe du même monstre.
@@ -92,6 +92,7 @@ export class Director {
   private leash(): void {
     const sim = this.sim;
     for (const m of sim.monsters.values()) {
+      if (m.state.ally) continue;
       const near = sim.nearestPlayer(m.state.x, m.state.y);
       if (!near || near.dist < LEASH_DIST) continue;
       const p = this.pickSpawnPoint(m.def.radius);

@@ -25,7 +25,10 @@ import {
   type CastEvent,
   type ChestView,
   type DamageEvent,
+  type BuffEvent,
   type DeathEvent,
+  type GroundView,
+  type TelegraphEvent,
   type ExplodeEvent,
   type GameMap,
   type GameStateView,
@@ -90,6 +93,12 @@ export class GameScene extends Phaser.Scene {
   private playerClass = new Map<string, string>();
   private myClass = '';
   private monsters = new Map<string, EntityView>();
+  /** Pièges et glyphes posés au sol. */
+  private grounds = new Map<string, { marker: ReturnType<Effects['groundMarker']> }>();
+  /** Sorts équipés (tels que synchronisés par le serveur). */
+  private mySpells: string[] = [];
+  private mySpellsKey = '';
+  private dashCdEnd = 0;
   private chests = new Map<string, { image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite; opened: boolean }>();
   private zaap?: { image: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Image };
 
@@ -171,6 +180,19 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('heal', (e: HealEvent) => {
       if (!document.hidden) this.effects.floatText(e.x, e.y, `+${e.amount}`, '#6ee67a', 15);
     });
+    this.room.onMessage('telegraph', (e: TelegraphEvent) => {
+      if (!document.hidden) this.effects.telegraph(e.x, e.y, e.radius, e.duration, getSpell(e.spell).color);
+    });
+    this.room.onMessage('buff', (e: BuffEvent) => {
+      const view = this.players.get(e.target);
+      if (view && !document.hidden) this.effects.floatText(view.wx, view.wy - 0.6, e.label, '#ffd84a', 15, 50);
+    });
+    this.room.onMessage('dash', (e: { id: string; x: number; y: number; tx: number; ty: number; cooldown: number }) => {
+      if (!document.hidden) this.effects.dashTrail(e.x, e.y, e.tx, e.ty, 0xffffff);
+      if (e.id !== this.room.sessionId) return;
+      this.dashCdEnd = this.time.now + e.cooldown;
+      this.followServerUntil = this.time.now + 300;
+    });
     this.room.onMessage('item', (e: ItemEvent) => this.onItem(e));
     this.room.onMessage('atk', (e: AttackEvent) => this.monsters.get(e.id)?.attack());
 
@@ -211,15 +233,18 @@ export class GameScene extends Phaser.Scene {
     this.lastFrameTime = time;
     const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !this.details.isOpen && !state.paused;
 
-    if (myState && myState.classId !== this.myClass) {
-      // Première frame ou changement de classe : la barre de sorts suit.
+    if (myState && (myState.classId !== this.myClass || myState.spells !== this.mySpellsKey)) {
+      // Première frame, changement de classe ou de sorts équipés : la barre de sorts suit.
       this.myClass = myState.classId;
-      this.hud.setSpells(getClass(myState.classId).spells);
+      this.mySpellsKey = myState.spells;
+      this.mySpells = myState.spells ? myState.spells.split(',') : getClass(myState.classId).spells;
+      this.hud.setSpells(this.mySpells);
       this.cdEnd = [0, 0, 0, 0];
     }
     if (myState) this.updateLocalPlayer(time, dt, myState, canAct);
     this.syncPlayers(state, dt);
     this.syncMonsters(state, dt);
+    this.syncGrounds(state, time);
     const prompt = this.syncZaap(state, canAct) || this.syncChests(state, myState, canAct);
     this.effects.update(dt);
     this.updateCamera(state, myState, dt);
@@ -227,12 +252,13 @@ export class GameScene extends Phaser.Scene {
     this.minimap.draw(state, this.room.sessionId);
     this.details.update(state, this.room.sessionId, time);
     // Aperçu de la zone d'effet du sort survolé, depuis la position du joueur dans la direction visée.
-    const hovered = this.previewSlot !== null && myState ? getClass(myState.classId).spells[this.previewSlot] : undefined;
-    const targeted = this.targeting !== null && myState ? getClass(myState.classId).spells[this.targeting] : undefined;
+    const hovered = this.previewSlot !== null && myState ? this.mySpells[this.previewSlot] : undefined;
+    const targeted = this.targeting !== null && myState ? this.mySpells[this.targeting] : undefined;
     if (hovered) this.preview.draw(getSpell(hovered), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y);
     else if (targeted) this.preview.draw(getSpell(targeted), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y, Math.hypot(this.aimPos.x - this.me.x, this.aimPos.y - this.me.y));
     else this.preview.hide();
     this.hud.updateCooldowns(time, this.cdEnd, this.cdTotal);
+    this.hud.updateDash(time, this.dashCdEnd);
     this.hud.update(state, this.room.sessionId, myState && !myState.alive ? this.spectating : null, prompt);
   }
 
@@ -301,6 +327,12 @@ export class GameScene extends Phaser.Scene {
     if (!canAct) {
       this.targeting = null;
       return;
+    }
+
+    // Dash (Maj), commun à toutes les classes.
+    if ((this.controls.consumePress('ShiftLeft') || this.controls.consumePress('ShiftRight')) && time >= this.dashCdEnd) {
+      const d = moving ? move : this.aimDir;
+      this.room.send('dash', { dx: d.x, dy: d.y });
     }
 
     // Smart cast désactivé : la touche d'un sort ouvre le ciblage, le clic gauche confirme, le clic droit annule.
@@ -375,6 +407,7 @@ export class GameScene extends Phaser.Scene {
       }
       view.setHp(p.hp, p.maxHp);
       view.setDead(!p.alive);
+      view.setInvisible(p.invisible);
       view.update(dt);
     });
     for (const [id, view] of this.players) {
@@ -388,7 +421,7 @@ export class GameScene extends Phaser.Scene {
     state.monsters.forEach((m: MonsterView, id: string) => {
       let view = this.monsters.get(id);
       if (!view) {
-        view = new EntityView(this, this.store, this.store.monster(this, m.type), m.x, m.y, { barWidth: getMonster(m.type).boss ? 70 : 30, barColor: 0xd83a2a, barAlways: false });
+        view = new EntityView(this, this.store, this.store.monster(this, m.type), m.x, m.y, { barWidth: getMonster(m.type).boss ? 70 : 30, barColor: m.ally ? 0x4ad04a : 0xd83a2a, barAlways: m.ally });
         this.monsters.set(id, view);
       }
       // Sens du déplacement déduit de la position visée (pas de champ « moving » synchronisé).
@@ -403,6 +436,24 @@ export class GameScene extends Phaser.Scene {
       if (state.monsters.get(id)) continue;
       view.destroy();
       this.monsters.delete(id);
+    }
+  }
+
+  /** Pièges et glyphes : un marqueur au sol par objet synchronisé. */
+  private syncGrounds(state: GameStateView, time: number): void {
+    state.grounds.forEach((g: GroundView, id: string) => {
+      let view = this.grounds.get(id);
+      if (!view) {
+        view = { marker: this.effects.groundMarker(g.x, g.y, g.radius, getSpell(g.spell).color, g.kind) };
+        this.grounds.set(id, view);
+      }
+      view.marker.setArmed(g.armed);
+      view.marker.update(time);
+    });
+    for (const [id, view] of this.grounds) {
+      if (state.grounds.get(id)) continue;
+      view.marker.destroy();
+      this.grounds.delete(id);
     }
   }
 
@@ -545,6 +596,10 @@ export class GameScene extends Phaser.Scene {
       this.effects.dashTrail(e.x, e.y, e.x + ((e.tx - e.x) / len) * dash.distance * sign, e.y + ((e.ty - e.y) / len) * dash.distance * sign, spell.color);
     }
     (this.players.get(e.caster) ?? this.monsters.get(e.caster))?.attack();
+    // Téléportation : traînée entre le départ et l'arrivée ; invocation : petit nuage.
+    if (spell.teleport && !document.hidden) this.effects.dashTrail(e.x, e.y, e.tx, e.ty, spell.color);
+    if (spell.summon && !document.hidden) this.effects.poof(e.tx, e.ty, spell.color);
+    if (spell.teleport && e.caster === this.room.sessionId) this.followServerUntil = this.time.now + 300;
 
     if (e.caster !== this.room.sessionId || e.slot === undefined) return;
     // Le serveur confirme notre sort : le temps de recharge démarre.

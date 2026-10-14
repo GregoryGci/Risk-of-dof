@@ -8,3 +8,4 @@ export * from './data/spells.ts';
 export * from './data/classes.ts';
 export * from './data/monsters.ts';
 export * from './data/items.ts';
+export * from './data/talents.ts';

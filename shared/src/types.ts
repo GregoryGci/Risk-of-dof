@@ -13,7 +13,9 @@ export type SpellEffect =
   /** Brûlure : dégâts par seconde pendant une durée (s). */
   | { type: 'burn'; dps: number; duration: number }
   /** Ralentit les cibles (facteur 0..1 appliqué à la vitesse) pendant une durée (s). */
-  | { type: 'slow'; factor: number; duration: number };
+  | { type: 'slow'; factor: number; duration: number }
+  /** Vol de vie : le lanceur récupère cette fraction des dégâts infligés. */
+  | { type: 'lifesteal'; fraction: number };
 
 /** Sort défini uniquement en données : la logique serveur est générique. */
 export interface SpellDef {
@@ -49,6 +51,27 @@ export interface SpellDef {
   heal?: [number, number];
   /** Dégâts multipliés par (1 + bonus × part de PV manquants du lanceur). */
   missingHpBonus?: number;
+  /** La zone ne frappe qu'après ce délai (s), annoncée au sol en attendant. */
+  delay?: number;
+  /** La zone frappe à l'arrivée du bond du lanceur (ex. Tempête de Puissance). */
+  zoneAtDashEnd?: boolean;
+  /**
+   * Objet posé au sol au point visé (ou sous le lanceur si `self`) :
+   * - piège : invisible aux monstres, explose (dégâts/effets du sort, rayon `blast`) quand un ennemi entre dans `radius` ;
+   * - glyphe : applique le sort à tout ce qui est dans `radius` toutes les `tick` secondes.
+   */
+  ground?: { kind: 'trap' | 'glyph'; radius: number; duration: number; tick?: number; blast?: number; max?: number; arm?: number; self?: boolean };
+  /** Invoque une créature alliée (voir data/monsters.ts, `ally: true`). */
+  summon?: { monster: string; max: number; duration: number };
+  /**
+   * Bonus temporaire sur le lanceur. `randomOne` : un seul des bonus listés, tiré au hasard.
+   * `invisible` : les monstres ignorent le lanceur.
+   */
+  buff?: { stats?: Partial<Record<StatKey, number>>; duration: number; randomOne?: boolean; invisible?: boolean; label?: string };
+  /** Téléporte le lanceur au point visé (limité par la portée). */
+  teleport?: boolean;
+  /** Pari : chance de multiplier les dégâts par `win`, sinon par `lose`. */
+  gamble?: { chance: number; win: number; lose: number };
   effects?: SpellEffect[];
 }
 
@@ -74,7 +97,11 @@ export type MonsterBehavior =
   /** Mord au contact et charge en ligne droite quand la cible est à portée de charge. */
   | { type: 'charger'; chargeRange: number; windup: number; chargeSpeed: number; chargeDuration: number; chargeCooldown: number; chargeDamage: number }
   /** Garde ses distances et tire un sort. */
-  | { type: 'ranged'; spell: string; preferredRange: number };
+  | { type: 'ranged'; spell: string; preferredRange: number }
+  /** Cible d'entraînement : immobile, inoffensive, increvable. */
+  | { type: 'dummy' }
+  /** Invocation alliée qui soigne les joueurs proches à intervalle régulier. */
+  | { type: 'healer'; heal: number; interval: number; radius: number };
 
 export interface MonsterDef {
   id: string;
@@ -88,6 +115,10 @@ export interface MonsterDef {
   behavior: MonsterBehavior;
   /** Boss : n'apparaît jamais dans les vagues normales, affiche une barre de vie en haut de l'écran. */
   boss?: boolean;
+  /** Invocation alliée des joueurs (jamais dans les vagues). */
+  ally?: boolean;
+  /** Alliée qui attire sur elle les monstres proches. */
+  taunt?: boolean;
   /** Invoque régulièrement des renforts (intervalle en s). */
   summon?: { monster: string; count: number; interval: number };
   /** Échelle d'affichage du placeholder. */
@@ -178,6 +209,20 @@ export interface HealEvent {
   x: number;
   y: number;
 }
+/** Une zone va frapper (télégraphe au sol pendant `duration` s). */
+export interface TelegraphEvent {
+  spell: string;
+  x: number;
+  y: number;
+  radius: number;
+  duration: number;
+}
+/** Bonus temporaire obtenu. */
+export interface BuffEvent {
+  target: string;
+  label: string;
+  duration: number;
+}
 export interface DamageEvent {
   /** Id de la cible (sessionId ou id de monstre). */
   target: string;
@@ -230,7 +275,12 @@ export interface PlayerView {
   alive: boolean;
   moving: boolean;
   kamas: number;
+  /** Kamas gagnés depuis le début de la partie (pour la bourse de fin de partie). */
+  kamasEarned: number;
   kills: number;
+  /** Sorts équipés (arbre de talents) : "id,id,id,id". */
+  spells: string;
+  invisible: boolean;
   /** Inventaire : "id:nombre,id:nombre" (voir parseInventory). */
   items: string;
 }
@@ -243,6 +293,15 @@ export interface MonsterView {
   maxHp: number;
   level: number;
   state: number;
+  ally: boolean;
+}
+export interface GroundView {
+  kind: string;
+  spell: string;
+  x: number;
+  y: number;
+  radius: number;
+  armed: boolean;
 }
 export interface ChestView {
   x: number;
@@ -259,6 +318,7 @@ export interface GameStateView {
   players: SyncMap<PlayerView>;
   monsters: SyncMap<MonsterView>;
   chests: SyncMap<ChestView>;
+  grounds: SyncMap<GroundView>;
   /** Numéro de la zone en cours (1, 2, 3...). */
   stage: number;
   zaapX: number;

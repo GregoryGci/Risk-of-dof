@@ -188,7 +188,7 @@ export class Effects {
   }
 
   /** Cercle au sol (disque plein + anneau), sans conteneur. */
-  private groundCircle(x: number, y: number, radius: number, color: number, fillAlpha: number, ringAlpha: number): { destroy(): void } {
+  groundCircle(x: number, y: number, radius: number, color: number, fillAlpha: number, ringAlpha: number): { destroy(): void } {
     const disc = this.groundEllipse(x, y, radius, color, fillAlpha);
     const ring = this.scene.add
       .image(x, y, 'ph_ring')
@@ -240,6 +240,47 @@ export class Effects {
       this.scene.tweens.add({ targets: plus, y: q.y - 50, alpha: 0, delay: Math.random() * 200, duration: 700, onComplete: () => plus.destroy() });
     }
     void p;
+  }
+
+  /** Zone à retardement : un disque se remplit au sol jusqu'à l'impact. */
+  telegraph(x: number, y: number, radius: number, duration: number, color: number): void {
+    const p = worldToScreen(x, y);
+    const outline = this.groundCircle(p.x, p.y, radius, color, 0.12, 0.95);
+    const fill = this.groundEllipse(p.x, p.y, radius, color, 0.35).setScale(0.05);
+    this.scene.tweens.add({ targets: fill, scale: 1, duration: duration * 1000, ease: 'Linear', onComplete: () => {
+      fill.destroy();
+      outline.destroy();
+    } });
+  }
+
+  /** Piège ou glyphe posé au sol : retourne un objet à mettre à jour puis détruire. */
+  groundMarker(x: number, y: number, radius: number, color: number, kind: string): { setArmed(armed: boolean): void; update(t: number): void; destroy(): void } {
+    const p = worldToScreen(x, y);
+    if (kind === 'trap') {
+      // Piège : petit symbole, la zone d'explosion en pointillé discret.
+      const zone = this.groundCircle(p.x, p.y, radius, color, 0.05, 0.35);
+      const core = this.scene.add.image(p.x, p.y - 4, 'ph_glow').setTint(color).setBlendMode(Phaser.BlendModes.ADD).setScale(0.45).setDepth(DEPTH_GROUND_FX + 2);
+      const rune = this.scene.add.image(p.x, p.y, 'ph_ring').setTint(color).setScale(0.22, 0.11).setDepth(DEPTH_GROUND_FX + 1);
+      return {
+        setArmed: (armed) => {
+          core.setAlpha(armed ? 1 : 0.4);
+          rune.setAlpha(armed ? 1 : 0.4);
+        },
+        update: (t) => core.setScale(0.4 + Math.sin(t / 200) * 0.06),
+        destroy: () => {
+          zone.destroy();
+          core.destroy();
+          rune.destroy();
+        },
+      };
+    }
+    // Glyphe : disque coloré qui pulse doucement.
+    const glyph = this.groundCircle(p.x, p.y, radius, color, 0.22, 0.9);
+    return {
+      setArmed: () => {},
+      update: () => {},
+      destroy: () => glyph.destroy(),
+    };
   }
 
   /** Colonne de lumière qui tombe du ciel (sorts de zone offensifs). */

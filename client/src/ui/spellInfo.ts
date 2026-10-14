@@ -20,8 +20,14 @@ export function spellShape(spell: SpellDef): string {
     if (spell.projectile.pierce) return 'Projectile perçant (touche toute la ligne)';
     return 'Projectile (touche le premier ennemi)';
   }
+  if (spell.ground?.kind === 'trap') return `Piège au sol (explosion de rayon ${spell.ground.blast ?? spell.ground.radius}${spell.ground.max ? `, ${spell.ground.max} max` : ''})`;
+  if (spell.ground?.kind === 'glyph') return `Glyphe au sol de rayon ${spell.ground.radius} pendant ${spell.ground.duration} s (effet toutes les ${spell.ground.tick ?? 0.5} s)`;
+  if (spell.summon) return `Invocation (${spell.summon.max} max, ${spell.summon.duration} s)`;
+  if (spell.buff) return `Bonus pendant ${spell.buff.duration} s${spell.buff.invisible ? ', invisible' : ''}${spell.buff.randomOne ? ' (un seul, au hasard)' : ''}`;
+  if (spell.teleport) return 'Téléportation';
   if (spell.melee) return `Corps à corps, cône de ${spell.melee.arc}°`;
-  if (spell.zone) return spell.zone.self ? `Zone autour de soi (rayon ${spell.zone.radius})` : `Zone au point visé (rayon ${spell.zone.radius})`;
+  if (spell.zone && spell.zoneAtDashEnd) return `Bond puis zone à l'arrivée (rayon ${spell.zone.radius})`;
+  if (spell.zone) return (spell.zone.self ? `Zone autour de soi (rayon ${spell.zone.radius})` : `Zone au point visé (rayon ${spell.zone.radius})`) + (spell.delay ? `, frappe après ${spell.delay} s` : '');
   return 'Déplacement';
 }
 
@@ -47,6 +53,13 @@ export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number
     else if (e.type === 'dash') lines.push(`${e.direction === 'back' ? 'Bond en arrière' : 'Bond en avant'} de ${cases(e.distance)}`);
     else if (e.type === 'burn') lines.push(`Brûle : ${e.dps} dégâts/s pendant ${e.duration} s`);
     else if (e.type === 'slow') lines.push(`Ralentit de ${pct(1 - e.factor)} pendant ${e.duration} s`);
+    else if (e.type === 'lifesteal') lines.push(`Vol de vie : ${pct(e.fraction)} des dégâts`);
+  }
+  if (spell.gamble) lines.push(`Pari : ${pct(spell.gamble.chance)} de chances de dégâts ×${String(spell.gamble.win).replace('.', ',')}, sinon ×${String(spell.gamble.lose).replace('.', ',')}`);
+  if (spell.buff?.stats) {
+    const names: Record<string, string> = { damage: 'dégâts', haste: 'vitesse de recharge', crit: 'critiques', critDamage: 'dégâts critiques', speed: 'vitesse', armor: 'armure', regen: 'régénération' };
+    const parts = Object.entries(spell.buff.stats).map(([k, v]) => (k === 'armor' ? `+${v} armure` : `+${pct(v ?? 0)} ${names[k] ?? k}`));
+    lines.push((spell.buff.randomOne ? 'Au hasard : ' : '') + parts.join(spell.buff.randomOne ? ' ou ' : ', '));
   }
   if (spell.missingHpBonus) lines.push(`Jusqu'à +${pct(spell.missingHpBonus)} de dégâts selon vos PV manquants`);
   lines.push(`Recharge : ${(spell.cooldown / 1000 / haste).toFixed(spell.cooldown < 1000 ? 2 : 1)} s`);

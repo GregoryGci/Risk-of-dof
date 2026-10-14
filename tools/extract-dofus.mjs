@@ -38,6 +38,10 @@ const ENTITIES = {
   iop: { kind: 'characters', sprite: 80 },
   eniripsa: { kind: 'characters', sprite: 70 },
   sacrieur: { kind: 'characters', sprite: 110 },
+  sram: { kind: 'characters', sprite: 40 },
+  sadida: { kind: 'characters', sprite: 100 },
+  ecaflip: { kind: 'characters', sprite: 60 },
+  feca: { kind: 'characters', sprite: 10 },
   bouftou: { kind: 'monsters', sprite: 1566 },
   tofu: { kind: 'monsters', sprite: 1558 },
   arakne: { kind: 'monsters', sprite: 1564 },
@@ -45,6 +49,13 @@ const ENTITIES = {
   bouftou_royal: { kind: 'monsters', sprite: 1574 },
   // Coffre au Trésor malveillant (boss du donjon des Forgerons) : utilisé pour les coffres.
   coffre: { kind: 'monsters', sprite: 1083 },
+  // Épouvantail d'entraînement (Incarnam), dans le salon.
+  // Son animation de repos est en fait son apparition : on garde seulement la dernière image.
+  epouvantail: { kind: 'monsters', sprite: 1219, idleLastFrame: true },
+  // Invocations du Sadida.
+  poupee_folle: { kind: 'monsters', sprite: 1180 },
+  poupee_bloqueuse: { kind: 'monsters', sprite: 1184 },
+  poupee_gonflable: { kind: 'monsters', sprite: 1182 },
 };
 
 /** Animation du jeu -> noms d'animation Dofus à essayer, dans l'ordre. */
@@ -107,7 +118,7 @@ function resolveClip(sprites, id) {
 // Extraction d'une entité
 // ---------------------------------------------------------------------------
 
-function extract(key, { kind, sprite }) {
+function extract(key, { kind, sprite, idleLastFrame }) {
   const swf = path.join(RETRO, 'clips/sprites', `${sprite}.swf`);
   const work = path.join(CACHE, `${key}_${sprite}`);
   fs.mkdirSync(work, { recursive: true });
@@ -158,7 +169,9 @@ function extract(key, { kind, sprite }) {
     let index = 0;
     for (let f = 1; f <= count; f += step) {
       const img = decodePng(fs.readFileSync(path.join(pdir, `${f}.png`)));
-      const b = opaqueBounds(img) ?? { x: 0, y: 0, w: 1, h: 1 };
+      // Image entièrement transparente (fréquent dans les animations Dofus) : on la saute.
+      const b = opaqueBounds(img);
+      if (!b) continue;
       frames.push({ name: `${w.anim}_${w.dir}_${index}`, img: crop(img, b), dx: b.x - ox, dy: b.y - oy });
       index++;
     }
@@ -220,6 +233,7 @@ function extract(key, { kind, sprite }) {
     for (const [dir, a] of Object.entries(byDir)) {
       const { flip, ...def } = a;
       if (anim !== 'idle' && anim !== 'run') def.repeat = 0;
+      if (anim === 'idle' && idleLastFrame) def.start = def.end;
       anims[anim][dir] = def;
     }
   }

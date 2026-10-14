@@ -6,6 +6,8 @@ import { loadManifest } from './assets/manifest.ts';
 import { AssetStore } from './assets/store.ts';
 import { GameScene } from './game/GameScene.ts';
 import { Hud, classButtonsHtml } from './ui/Hud.ts';
+import { TalentsPage } from './ui/Talents.ts';
+import { account } from './account.ts';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -54,6 +56,13 @@ classPicker.addEventListener('click', (e) => {
 });
 renderClassPicker();
 
+// Arbre de talents : depuis l'accueil, ou depuis le salon (les sorts équipés sont alors envoyés au serveur).
+let currentRoom: Room | null = null;
+const talents = new TalentsPage(null, classId, (cls) => {
+  if (currentRoom && cls === classId) currentRoom.send('loadout', { spells: account.loadout(cls) });
+});
+$('btn-talents').addEventListener('click', () => talents.open(classId));
+
 function setBusy(busy: boolean): void {
   btnCreate.disabled = busy;
   btnJoin.disabled = busy;
@@ -88,7 +97,7 @@ async function connect(join: () => Promise<Room>): Promise<void> {
   }
 }
 
-btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, { name: pseudo(), classId })));
+btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, { name: pseudo(), classId, spells: account.loadout(classId) })));
 
 function joinWithCode(): void {
   const code = codeInput.value.trim().toUpperCase();
@@ -96,7 +105,7 @@ function joinWithCode(): void {
     errorEl.textContent = `Le code fait ${ROOM_CODE_LENGTH} lettres.`;
     return;
   }
-  connect(() => client.joinById(code, { name: pseudo(), classId }));
+  connect(() => client.joinById(code, { name: pseudo(), classId, spells: account.loadout(classId) }));
 }
 btnJoin.addEventListener('click', joinWithCode);
 codeInput.addEventListener('keydown', (e) => {
@@ -107,6 +116,7 @@ pseudoInput.addEventListener('keydown', (e) => {
 });
 
 async function startGame(room: Room): Promise<void> {
+  currentRoom = room;
   const store = new AssetStore(await manifestPromise);
   const hud = new Hud(store, {
     onStart: () => room.send('start'),
@@ -118,7 +128,7 @@ async function startGame(room: Room): Promise<void> {
       classId = id;
       localStorage.setItem('rod.classe', id);
       renderClassPicker();
-      room.send('class', { classId: id });
+      room.send('class', { classId: id, spells: account.loadout(id) });
     },
   });
 
@@ -140,6 +150,7 @@ async function startGame(room: Room): Promise<void> {
 
   // Retour à l'accueil quand on quitte ou que la connexion tombe.
   room.onLeave((code) => {
+    currentRoom = null;
     hud.hide();
     game?.destroy(true);
     game = null;
