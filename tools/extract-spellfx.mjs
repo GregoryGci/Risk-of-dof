@@ -11,6 +11,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { packAtlas, readClipFrames, svgOrigin } from './atlas.mjs';
+import { updateManifest } from './manifest.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'client/public/assets/dofus');
@@ -104,5 +105,8 @@ manifest.spellAnims = {};
 for (const [key, m] of Object.entries(mapping)) {
   if (manifest.spellfx[m.sprite]) manifest.spellAnims[key] = { anim: String(m.sprite), type: Number(m.spriteInfos.split(',')[0]) };
 }
-fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
+updateManifest((fresh) => {
+  fresh.spellfx = { ...fresh.spellfx, ...manifest.spellfx };
+  fresh.spellAnims = manifest.spellAnims;
+});
 console.log(`\n${Object.keys(manifest.spellAnims).length} sorts avec animation officielle.`);

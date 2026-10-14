@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { findSpellIcons } from './find-spell-icons.mjs';
 import { decodePng, encodePng } from './png.mjs';
+import { updateManifest } from './manifest.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'client/public/assets/dofus');
@@ -51,4 +52,6 @@ for (const [key, { up, b }] of Object.entries(icons)) {
   manifest.spells[key] = `spells/${key}.png`;
   console.log(`${key} <- icône ${up}`);
 }
-fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
+updateManifest((fresh) => {
+  fresh.spells = { ...fresh.spells, ...manifest.spells };
+});

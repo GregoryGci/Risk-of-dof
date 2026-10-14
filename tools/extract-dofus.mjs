@@ -16,6 +16,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { blit, crop, decodePng, encodePng, opaqueBounds } from './png.mjs';
+import { updateManifest } from './manifest.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'client/public/assets/dofus');
@@ -266,7 +267,10 @@ for (const [key, entity] of Object.entries(ENTITIES)) {
     const { kind, def } = extract(key, entity);
     manifest[kind] ??= {};
     manifest[kind][key] = def;
-    fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
+    updateManifest((fresh) => {
+      fresh[kind] ??= {};
+      fresh[kind][key] = def;
+    });
   } catch (e) {
     console.error(`  ÉCHEC ${key} : ${e.message}`);
   }

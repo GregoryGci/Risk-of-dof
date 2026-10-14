@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readDofusItems } from './dofus-items.mjs';
+import { updateManifest } from './manifest.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'client/public/assets/dofus');
@@ -52,4 +53,6 @@ for (const id of Object.keys(found)) {
   manifest.items[id] = `items/${id}.png`;
   console.log(`${id} <- ${found[id]}`);
 }
-fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
+updateManifest((fresh) => {
+  fresh.items = { ...fresh.items, ...manifest.items };
+});
