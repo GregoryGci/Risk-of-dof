@@ -7,7 +7,7 @@
         0.544,
         0.7818
       ],
-      "scale": 0.7669,
+      "scale": 1.0225,
       "anims": {
         "idle": {
           "0": {
@@ -105,7 +105,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "iop": {
       "image": "sprites/iop.png",
@@ -114,7 +115,7 @@
         0.45,
         0.9314
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "0": {
@@ -212,7 +213,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "eniripsa": {
       "image": "sprites/eniripsa.png",
@@ -221,7 +223,7 @@
         0.5414,
         0.8594
       ],
-      "scale": 0.6762,
+      "scale": 0.9016,
       "anims": {
         "idle": {
           "0": {
@@ -319,7 +321,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "sacrieur": {
       "image": "sprites/sacrieur.png",
@@ -328,7 +331,7 @@
         0.5664,
         0.9053
       ],
-      "scale": 0.7607,
+      "scale": 1.0143,
       "anims": {
         "idle": {
           "0": {
@@ -426,7 +429,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "sram": {
       "image": "sprites/sram.png",
@@ -435,7 +439,7 @@
         0.5403,
         0.8173
       ],
-      "scale": 0.7662,
+      "scale": 1.0216,
       "anims": {
         "idle": {
           "0": {
@@ -533,7 +537,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "sadida": {
       "image": "sprites/sadida.png",
@@ -542,7 +547,7 @@
         0.4959,
         0.8189
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "0": {
@@ -640,7 +645,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "ecaflip": {
       "image": "sprites/ecaflip.png",
@@ -649,7 +655,7 @@
         0.5033,
         0.9091
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "0": {
@@ -747,7 +753,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "feca": {
       "image": "sprites/feca.png",
@@ -756,7 +763,7 @@
         0.4277,
         0.7818
       ],
-      "scale": 0.7607,
+      "scale": 1.0143,
       "anims": {
         "idle": {
           "0": {
@@ -854,7 +861,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "osamodas": {
       "image": "sprites/osamodas.png",
@@ -863,7 +871,7 @@
         0.425,
         0.8148
       ],
-      "scale": 0.7607,
+      "scale": 1.0143,
       "anims": {
         "idle": {
           "0": {
@@ -961,7 +969,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "enutrof": {
       "image": "sprites/enutrof.png",
@@ -970,7 +979,7 @@
         0.4881,
         0.8106
       ],
-      "scale": 0.7607,
+      "scale": 1.0143,
       "anims": {
         "idle": {
           "0": {
@@ -1068,7 +1077,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "xelor": {
       "image": "sprites/xelor.png",
@@ -1077,7 +1087,7 @@
         0.4908,
         0.8372
       ],
-      "scale": 0.6762,
+      "scale": 0.9016,
       "anims": {
         "idle": {
           "0": {
@@ -1175,7 +1185,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "pandawa": {
       "image": "sprites/pandawa.png",
@@ -1184,7 +1195,7 @@
         0.5603,
         0.8964
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "0": {
@@ -1282,7 +1293,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     }
   },
   "monsters": {
@@ -1293,7 +1305,7 @@
         0.4706,
         0.6667
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -1355,7 +1367,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "tofu": {
       "image": "sprites/tofu.png",
@@ -1364,7 +1377,7 @@
         0.5,
         0.8108
       ],
-      "scale": 0.593,
+      "scale": 0.7907,
       "anims": {
         "idle": {
           "1": {
@@ -1426,7 +1439,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "arakne": {
       "image": "sprites/arakne.png",
@@ -1435,7 +1449,7 @@
         0.4309,
         0.7869
       ],
-      "scale": 0.3804,
+      "scale": 0.5072,
       "anims": {
         "idle": {
           "1": {
@@ -1497,7 +1511,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "tournesol": {
       "image": "sprites/tournesol.png",
@@ -1506,7 +1521,7 @@
         0.4862,
         0.8761
       ],
-      "scale": 0.3381,
+      "scale": 0.4508,
       "anims": {
         "idle": {
           "1": {
@@ -1568,7 +1583,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "bouftou_royal": {
       "image": "sprites/bouftou_royal.png",
@@ -1577,7 +1593,7 @@
         0.4751,
         0.8723
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -1639,7 +1655,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "coffre": {
       "image": "sprites/coffre.png",
@@ -1648,7 +1665,7 @@
         0.4867,
         0.7762
       ],
-      "scale": 0.8466,
+      "scale": 1.1288,
       "anims": {
         "idle": {
           "1": {
@@ -1710,7 +1727,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "poupee_folle": {
       "image": "sprites/poupee_folle.png",
@@ -1719,7 +1737,7 @@
         0.4917,
         0.8378
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -1781,7 +1799,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "poupee_bloqueuse": {
       "image": "sprites/poupee_bloqueuse.png",
@@ -1790,7 +1809,7 @@
         0.4917,
         0.8378
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -1836,7 +1855,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "poupee_gonflable": {
       "image": "sprites/poupee_gonflable.png",
@@ -1845,7 +1865,7 @@
         0.4917,
         0.8378
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -1907,7 +1927,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "epouvantail": {
       "image": "sprites/epouvantail.png",
@@ -1916,7 +1937,7 @@
         0.518,
         0.8431
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -1957,7 +1978,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "tournesol_affame": {
       "image": "sprites/tournesol_affame.png",
@@ -1966,7 +1988,7 @@
         0.5075,
         0.5255
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -2028,7 +2050,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "scarabosse_dore": {
       "image": "sprites/scarabosse_dore.png",
@@ -2037,7 +2060,7 @@
         0.5385,
         0.7764
       ],
-      "scale": 0.9383,
+      "scale": 1.2511,
       "anims": {
         "idle": {
           "1": {
@@ -2099,7 +2122,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "craqueleur_legendaire": {
       "image": "sprites/craqueleur_legendaire.png",
@@ -2108,7 +2132,7 @@
         0.4467,
         0.7675
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -2170,7 +2194,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "bworkette": {
       "image": "sprites/bworkette.png",
@@ -2179,7 +2204,7 @@
         0.5634,
         0.7933
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -2241,7 +2266,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "marchand": {
       "image": "sprites/marchand.png",
@@ -2250,7 +2276,7 @@
         0.6275,
         0.9184
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -2260,7 +2286,8 @@
             "frameRate": 40
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "osa_tofu": {
       "image": "sprites/osa_tofu.png",
@@ -2269,7 +2296,7 @@
         0.5,
         0.8108
       ],
-      "scale": 0.593,
+      "scale": 0.7907,
       "anims": {
         "idle": {
           "1": {
@@ -2331,7 +2358,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "osa_bouftou": {
       "image": "sprites/osa_bouftou.png",
@@ -2340,7 +2368,7 @@
         0.4706,
         0.6667
       ],
-      "scale": 0.8453,
+      "scale": 1.1271,
       "anims": {
         "idle": {
           "1": {
@@ -2402,7 +2430,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     },
     "coffre_anime": {
       "image": "sprites/coffre_anime.png",
@@ -2411,7 +2440,7 @@
         0.4867,
         0.7762
       ],
-      "scale": 0.8466,
+      "scale": 1.1288,
       "anims": {
         "idle": {
           "1": {
@@ -2473,7 +2502,8 @@
             "repeat": 0
           }
         }
-      }
+      },
+      "shrunk": 0.75
     }
   },
   "tiles": {
@@ -2741,7 +2771,7 @@
         0.4946,
         0.4918
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -2749,7 +2779,8 @@
           "end": 36,
           "frameRate": 12
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "103": {
       "image": "spellfx/103.png",
@@ -2758,7 +2789,7 @@
         0.485,
         0.495
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "baton": {
           "prefix": "baton_",
@@ -2772,7 +2803,8 @@
           "end": 14,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "112": {
       "image": "spellfx/112.png",
@@ -2781,7 +2813,7 @@
         0.6023,
         0.9341
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -2795,7 +2827,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "211": {
       "image": "spellfx/211.png",
@@ -2804,7 +2837,7 @@
         -0.0067,
         0.5654
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -2812,7 +2845,8 @@
           "end": 21,
           "frameRate": 13
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "306": {
       "image": "spellfx/306.png",
@@ -2821,7 +2855,7 @@
         0.2073,
         0.7626
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -2841,7 +2875,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "308": {
       "image": "spellfx/308.png",
@@ -2850,7 +2885,7 @@
         0.5313,
         0.9946
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -2858,7 +2893,8 @@
           "end": 32,
           "frameRate": 15
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "402": {
       "image": "spellfx/402.png",
@@ -2867,7 +2903,7 @@
         0.4945,
         0.7137
       ],
-      "scale": 0.6038,
+      "scale": 1.3928,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -2875,7 +2911,8 @@
           "end": 30,
           "frameRate": 15
         }
-      }
+      },
+      "shrunk": 0.433
     },
     "404": {
       "image": "spellfx/404.png",
@@ -2884,7 +2921,7 @@
         6.75,
         1.5556
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "tige": {
           "prefix": "tige_",
@@ -2892,7 +2929,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "405": {
       "image": "spellfx/405.png",
@@ -2901,7 +2939,7 @@
         0.3684,
         0.6059
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -2915,7 +2953,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "407": {
       "image": "spellfx/407.png",
@@ -2924,7 +2963,7 @@
         0.2176,
         0.9942
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -2932,7 +2971,8 @@
           "end": 29,
           "frameRate": 20
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "410": {
       "image": "spellfx/410.png",
@@ -2941,7 +2981,7 @@
         0.2477,
         0.8559
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -2949,7 +2989,8 @@
           "end": 28,
           "frameRate": 20
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "412": {
       "image": "spellfx/412.png",
@@ -2958,7 +2999,7 @@
         0.4891,
         0.7837
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -2966,7 +3007,8 @@
           "end": 31,
           "frameRate": 15
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "501": {
       "image": "spellfx/501.png",
@@ -2975,7 +3017,7 @@
         0.507,
         0.7059
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "effet": {
           "prefix": "effet_",
@@ -2995,7 +3037,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "507": {
       "image": "spellfx/507.png",
@@ -3004,7 +3047,7 @@
         0.4625,
         0.7123
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "pierres": {
           "prefix": "pierres_",
@@ -3030,7 +3073,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "509": {
       "image": "spellfx/509.png",
@@ -3039,7 +3083,7 @@
         0.4496,
         0.7185
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3047,7 +3091,8 @@
           "end": 36,
           "frameRate": 20
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "510": {
       "image": "spellfx/510.png",
@@ -3056,7 +3101,7 @@
         0.0582,
         0.617
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3064,7 +3109,8 @@
           "end": 32,
           "frameRate": 30
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "601": {
       "image": "spellfx/601.png",
@@ -3073,7 +3119,7 @@
         0.4375,
         0.5556
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "shoot": {
           "prefix": "shoot_",
@@ -3087,7 +3133,8 @@
           "end": 1,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "603": {
       "image": "spellfx/603.png",
@@ -3096,7 +3143,7 @@
         0.5287,
         0.4571
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3104,7 +3151,8 @@
           "end": 36,
           "frameRate": 10
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "605": {
       "image": "spellfx/605.png",
@@ -3113,7 +3161,7 @@
         0.4955,
         1.9346
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3121,7 +3169,8 @@
           "end": 32,
           "frameRate": 15
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "607": {
       "image": "spellfx/607.png",
@@ -3130,7 +3179,7 @@
         0.4158,
         2.3448
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3138,7 +3187,8 @@
           "end": 29,
           "frameRate": 15
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "613": {
       "image": "spellfx/613.png",
@@ -3147,7 +3197,7 @@
         0.5082,
         0.9944
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3155,7 +3205,8 @@
           "end": 19,
           "frameRate": 15
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "616": {
       "image": "spellfx/616.png",
@@ -3164,7 +3215,7 @@
         0.722,
         0.9507
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3172,7 +3223,8 @@
           "end": 13,
           "frameRate": 10
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "702": {
       "image": "spellfx/702.png",
@@ -3181,7 +3233,7 @@
         -26.75,
         -3.2727
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3189,7 +3241,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "704": {
       "image": "spellfx/704.png",
@@ -3198,7 +3251,7 @@
         0.5114,
         0.7957
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3206,7 +3259,8 @@
           "end": 33,
           "frameRate": 15
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "705": {
       "image": "spellfx/705.png",
@@ -3215,7 +3269,7 @@
         0.5693,
         0.8721
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3223,7 +3277,8 @@
           "end": 34,
           "frameRate": 20
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "707": {
       "image": "spellfx/707.png",
@@ -3232,7 +3287,7 @@
         0.5133,
         0.2842
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3240,7 +3295,8 @@
           "end": 23,
           "frameRate": 40
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "802": {
       "image": "spellfx/802.png",
@@ -3249,7 +3305,7 @@
         0.4714,
         0.7886
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3257,7 +3313,8 @@
           "end": 31,
           "frameRate": 15
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "804": {
       "image": "spellfx/804.png",
@@ -3266,7 +3323,7 @@
         0.2062,
         0.62
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3274,7 +3331,8 @@
           "end": 37,
           "frameRate": 12
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "805": {
       "image": "spellfx/805.png",
@@ -3283,7 +3341,7 @@
         0.4516,
         0.7843
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "duplicate": {
           "prefix": "duplicate_",
@@ -3291,7 +3349,8 @@
           "end": 24,
           "frameRate": 20
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "807": {
       "image": "spellfx/807.png",
@@ -3300,7 +3359,7 @@
         0.4981,
         0.9042
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3308,7 +3367,8 @@
           "end": 23,
           "frameRate": 30
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "808": {
       "image": "spellfx/808.png",
@@ -3317,7 +3377,7 @@
         0.5215,
         0.9002
       ],
-      "scale": 0.6038,
+      "scale": 1.1839,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3331,7 +3391,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.51
     },
     "809": {
       "image": "spellfx/809.png",
@@ -3340,7 +3401,7 @@
         0.2732,
         0.5756
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3360,7 +3421,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "811": {
       "image": "spellfx/811.png",
@@ -3369,7 +3431,7 @@
         0.5,
         0.8876
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3377,7 +3439,8 @@
           "end": 37,
           "frameRate": 20
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "901": {
       "image": "spellfx/901.png",
@@ -3386,7 +3449,7 @@
         0.7586,
         0.5538
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "shoot": {
           "prefix": "shoot_",
@@ -3400,7 +3463,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "902": {
       "image": "spellfx/902.png",
@@ -3409,7 +3473,7 @@
         0.5301,
         0.6027
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "shoot": {
           "prefix": "shoot_",
@@ -3429,7 +3493,8 @@
           "end": 20,
           "frameRate": 30
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "903": {
       "image": "spellfx/903.png",
@@ -3438,7 +3503,7 @@
         -0.0364,
         0.5146
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3446,7 +3511,8 @@
           "end": 35,
           "frameRate": 30
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "905": {
       "image": "spellfx/905.png",
@@ -3455,7 +3521,7 @@
         0.4531,
         0.7179
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "shoot": {
           "prefix": "shoot_",
@@ -3475,7 +3541,8 @@
           "end": 20,
           "frameRate": 30
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "909": {
       "image": "spellfx/909.png",
@@ -3484,7 +3551,7 @@
         0.2298,
         0.5625
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3498,7 +3565,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "910": {
       "image": "spellfx/910.png",
@@ -3507,7 +3575,7 @@
         0.4988,
         0.5212
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "shoot": {
           "prefix": "shoot_",
@@ -3521,7 +3589,8 @@
           "end": 0,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "912": {
       "image": "spellfx/912.png",
@@ -3530,7 +3599,7 @@
         -0.0267,
         0.6145
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3538,7 +3607,8 @@
           "end": 17,
           "frameRate": 30
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "1001": {
       "image": "spellfx/1001.png",
@@ -3547,7 +3617,7 @@
         0.5122,
         0.5826
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3555,7 +3625,8 @@
           "end": 36,
           "frameRate": 15
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "1011": {
       "image": "spellfx/1011.png",
@@ -3564,7 +3635,7 @@
         0.5056,
         0.5902
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3572,7 +3643,8 @@
           "end": 31,
           "frameRate": 30
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "1052": {
       "image": "spellfx/1052.png",
@@ -3581,7 +3653,7 @@
         0.0092,
         0.4697
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3589,7 +3661,8 @@
           "end": 35,
           "frameRate": 15
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "1053": {
       "image": "spellfx/1053.png",
@@ -3598,7 +3671,7 @@
         0.4785,
         0.5821
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "spire": {
           "prefix": "spire_",
@@ -3618,7 +3691,8 @@
           "end": 3,
           "frameRate": 60
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "1100": {
       "image": "spellfx/1100.png",
@@ -3627,7 +3701,7 @@
         0.5166,
         1.3178
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3635,7 +3709,8 @@
           "end": 22,
           "frameRate": 20
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "1208": {
       "image": "spellfx/1208.png",
@@ -3644,7 +3719,7 @@
         0.5283,
         0.6642
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3652,7 +3727,8 @@
           "end": 14,
           "frameRate": 20
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "1213": {
       "image": "spellfx/1213.png",
@@ -3661,7 +3737,7 @@
         0.5241,
         0.8438
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3669,7 +3745,8 @@
           "end": 33,
           "frameRate": 12
         }
-      }
+      },
+      "shrunk": 0.6
     },
     "2112": {
       "image": "spellfx/2112.png",
@@ -3678,7 +3755,7 @@
         0.5036,
         0.9153
       ],
-      "scale": 0.6038,
+      "scale": 1.0063,
       "anims": {
         "main": {
           "prefix": "main_",
@@ -3686,7 +3763,8 @@
           "end": 30,
           "frameRate": 20
         }
-      }
+      },
+      "shrunk": 0.6
     }
   },
   "spellAnims": {

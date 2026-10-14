@@ -18,9 +18,10 @@ export const CLASSES: Record<string, ClassDef> = {
     name: 'Iop',
     description: 'Guerrier : dégâts de zone au corps à corps et un coup unique dévastateur.',
     color: 0xe07a2a,
-    maxHp: 180,
+    maxHp: 250,
     speed: 4.6,
-    regen: 1.5,
+    regen: 2.5,
+    armor: 3,
     spells: ['pression', 'epee_de_iop', 'tempete_de_puissance', 'colere_de_iop'],
   },
   eniripsa: {
@@ -121,6 +122,7 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 170,
     speed: 4.4,
     regen: 1.5,
+    armor: 2,
     spells: ['poing_enflamme', 'karcham', 'ivresse', 'lait_de_bambou'],
   },
 };

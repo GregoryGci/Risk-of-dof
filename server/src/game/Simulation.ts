@@ -1086,6 +1086,7 @@ export class Simulation {
   private applyStats(p: PlayerRt): void {
     p.stats = sumStats(p.inventory);
     for (const [k, v] of Object.entries(p.meta)) p.stats[k as StatKey] += v;
+    p.stats.armor += p.def.armor ?? 0;
     for (const b of p.buffs) for (const [k, v] of Object.entries(b.stats)) p.stats[k as StatKey] += v ?? 0;
     p.state.invisible = p.buffs.some((b) => b.invisible);
     const oldMax = p.state.maxHp;

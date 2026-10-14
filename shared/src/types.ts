@@ -103,6 +103,8 @@ export interface ClassDef {
   speed: number;
   /** Régénération de PV par seconde. */
   regen: number;
+  /** Armure de base (réduit les dégâts subis, comme l'armure des objets). */
+  armor?: number;
   /** Les 4 sorts : clic gauche, clic droit, Espace, R. */
   spells: [string, string, string, string];
 }
