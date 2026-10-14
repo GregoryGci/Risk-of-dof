@@ -90,7 +90,7 @@ export class GameScene extends Phaser.Scene {
   private playerClass = new Map<string, string>();
   private myClass = '';
   private monsters = new Map<string, EntityView>();
-  private chests = new Map<string, { image: Phaser.GameObjects.Image; opened: boolean }>();
+  private chests = new Map<string, { image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite; opened: boolean }>();
   private zaap?: { image: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Image };
 
   /** Position prédite du joueur local (cases). */
@@ -445,7 +445,19 @@ export class GameScene extends Phaser.Scene {
     let nearest = Infinity;
     state.chests.forEach((c: ChestView, id: string) => {
       let view = this.chests.get(id);
-      if (!view || view.opened !== c.opened) {
+      const chestSprite = this.store.chestSprite(this);
+      if (chestSprite && (!view || view.opened !== c.opened)) {
+        // Coffre animé : on garde le même sprite, l'ouverture joue l'animation de « mort » (il crache ses pièces).
+        if (!view) {
+          const p = worldToScreen(c.x, c.y);
+          const sprite = this.add.sprite(p.x, p.y, chestSprite.key).setOrigin(chestSprite.origin[0], chestSprite.origin[1]).setScale(chestSprite.scale).setDepth(p.y);
+          view = { image: sprite, opened: false };
+          this.chests.set(id, view);
+        }
+        const anim = this.store.resolveAnim(this, chestSprite, c.opened ? 'death' : 'idle', 1);
+        if (anim) (view.image as Phaser.GameObjects.Sprite).setFlipX(anim.flipX).play(anim.key);
+        view.opened = c.opened;
+      } else if (!view || view.opened !== c.opened) {
         view?.image.destroy();
         const v = this.store.objectVisual(c.opened ? 'coffre_ouvert' : 'coffre', 0);
         const p = worldToScreen(c.x, c.y);

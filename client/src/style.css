@@ -557,8 +557,8 @@ input[type='text']:focus {
   pointer-events: none !important;
 }
 #minimap {
-  width: 260px;
-  height: 133px;
+  width: 360px;
+  height: 184px;
 }
 
 #objective {

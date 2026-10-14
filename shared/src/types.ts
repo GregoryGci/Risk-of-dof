@@ -109,6 +109,7 @@ export type StatKey =
   | 'speed' // vitesse de déplacement (+%)
   | 'regen' // PV par seconde
   | 'crit' // chance de coup critique
+  | 'critDamage' // dégâts des coups critiques (+ au multiplicateur ×1,5)
   | 'armor' // chaque point réduit les dégâts subis de 8 %
   | 'killHeal' // PV rendus par monstre vaincu
   | 'kamas'; // kamas gagnés (+%)

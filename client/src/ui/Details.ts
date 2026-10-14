@@ -73,7 +73,7 @@ export class Details {
     </section>`;
     html += `<section><h3>${escapeHtml(me.name)} — ${escapeHtml(CLASSES[me.classId]?.name ?? '')}</h3>
       <div>PV <b>${Math.ceil(me.hp)} / ${me.maxHp}</b> — régénération <b>${(cls.regen + stats.regen).toFixed(1)}/s</b></div>
-      <div>Dégâts <b>+${Math.round(stats.damage * 100)} %</b> — critique <b>${Math.round((0.05 + stats.crit) * 100)} %</b></div>
+      <div>Dégâts <b>+${Math.round(stats.damage * 100)} %</b> — critique <b>${Math.round((0.05 + stats.crit) * 100)} %</b> — dégâts critiques <b>×${(1.5 + stats.critDamage).toFixed(2).replace('.', ',')}</b></div>
       <div>Vitesse de recharge <b>+${Math.round(stats.haste * 100)} %</b> — déplacement <b>+${Math.round(stats.speed * 100)} %</b></div>
       <div>Dégâts subis <b>-${Math.round((1 - Math.pow(0.92, stats.armor)) * 100)} %</b> — PV par victime <b>${stats.killHeal}</b> — kamas <b>+${Math.round(stats.kamas * 100)} %</b></div>
     </section>`;

@@ -104,6 +104,8 @@ interface Projectile {
   remaining: number;
   damageMult: number;
   critChance: number;
+  /** Multiplicateur des coups critiques (1,5 de base + bonus d'objets). */
+  critMult: number;
   /** Cibles déjà touchées (sorts perçants). */
   hit: Set<string>;
 }
@@ -335,7 +337,7 @@ export class Simulation {
     p.readyAt[slot] = this.now + cooldown / 1000;
     let damageMult = 1 + p.stats.damage;
     if (spell.missingHpBonus) damageMult *= 1 + spell.missingHpBonus * (1 - p.state.hp / p.state.maxHp);
-    const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, BASE_CRIT_CHANCE + p.stats.crit, slot, cooldown);
+    const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, BASE_CRIT_CHANCE + p.stats.crit, slot, cooldown, CRIT_MULT + p.stats.critDamage);
     p.state.dir = dirFromVector(dir.x, dir.y);
 
     // Effets sur le lanceur (bond en arrière / en avant).
@@ -351,7 +353,7 @@ export class Simulation {
    * Lance un sort depuis (x, y) vers (tx, ty) et prévient les clients.
    * Retourne la direction normalisée du tir.
    */
-  cast(spell: SpellDef, x: number, y: number, tx: number, ty: number, owner: string, fromPlayer: boolean, damageMult: number, critChance = 0, slot?: number, cooldown?: number): { x: number; y: number } {
+  cast(spell: SpellDef, x: number, y: number, tx: number, ty: number, owner: string, fromPlayer: boolean, damageMult: number, critChance = 0, slot?: number, cooldown?: number, critMult = CRIT_MULT): { x: number; y: number } {
     let dx = tx - x;
     let dy = ty - y;
     const d = Math.hypot(dx, dy);
@@ -363,7 +365,7 @@ export class Simulation {
       dy /= d;
     }
     const id = this.nextProjectileId++;
-    const pr: Projectile = { id, spell, owner, fromPlayer, x, y, dx, dy, remaining: 0, damageMult, critChance, hit: new Set() };
+    const pr: Projectile = { id, spell, owner, fromPlayer, x, y, dx, dy, remaining: 0, damageMult, critChance, critMult, hit: new Set() };
     const event: CastEvent = { id, caster: owner, spell: spell.id, x, y, tx: x + dx, ty: y + dy };
     if (slot !== undefined) {
       event.slot = slot;
@@ -551,7 +553,7 @@ export class Simulation {
     const m = this.monsters.get(targetId);
     if (!m) return;
     const crit = Math.random() < pr.critChance;
-    if (crit) amount *= CRIT_MULT;
+    if (crit) amount *= pr.critMult;
     for (const e of pr.spell.effects ?? []) {
       if (e.type === 'knockback') {
         const duration = 0.18;

@@ -30,12 +30,13 @@ export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number
   const damage = 1 + (stats?.damage ?? 0);
   const haste = 1 + (stats?.haste ?? 0);
   const crit = BASE_CRIT + (stats?.crit ?? 0);
+  const critMult = 1.5 + (stats?.critDamage ?? 0);
   const lines: string[] = [];
 
   if (spell.heal) lines.push(`<span class="heal">Soin ${spell.heal[0]} à ${spell.heal[1]} PV</span> aux alliés touchés`);
   else if (spell.damage[1] > 0) {
     const [a, b] = spell.damage.map((d) => Math.round(d * damage));
-    lines.push(`<span class="dmg">Dégâts ${a} à ${b}</span> — critique ${pct(crit)} (×1,5)`);
+    lines.push(`<span class="dmg">Dégâts ${a} à ${b}</span> — critique ${pct(crit)} (×${critMult.toFixed(2).replace('.', ',')})`);
   }
   lines.push(spellShape(spell));
   if (spell.range > 0) lines.push(`Portée : ${cases(spell.range)}`);

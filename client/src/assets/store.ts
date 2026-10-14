@@ -147,6 +147,13 @@ export class AssetStore {
     return { key: ph, origin: ENTITY_PLACEHOLDER_ORIGIN, scale: getMonster(type).scale ?? 1, sprite: null };
   }
 
+  /** Sprite animé du coffre (Coffre au Trésor malveillant) s'il a été extrait, sinon null. */
+  chestSprite(scene: Phaser.Scene): EntityVisual | null {
+    const def = this.manifest.monsters?.coffre;
+    if (!def || !scene.textures.exists('mon_coffre')) return null;
+    return { key: 'mon_coffre', origin: def.origin ?? [0.5, 0.9], scale: (def.scale ?? 1) * 0.8, sprite: def };
+  }
+
   /** Image de projectile fournie pour ce sort, ou null (flèche placeholder). */
   projectile(scene: Phaser.Scene, spellId: string): ImageVisual | null {
     const def = this.manifest.projectiles?.[spellId];

@@ -43,6 +43,8 @@ const ENTITIES = {
   arakne: { kind: 'monsters', sprite: 1564 },
   tournesol: { kind: 'monsters', sprite: 1569 },
   bouftou_royal: { kind: 'monsters', sprite: 1574 },
+  // Coffre au Trésor malveillant (boss du donjon des Forgerons) : utilisé pour les coffres.
+  coffre: { kind: 'monsters', sprite: 1083 },
 };
 
 /** Animation du jeu -> noms d'animation Dofus à essayer, dans l'ordre. */
@@ -55,7 +57,7 @@ const ANIMS = {
 };
 
 /** Suffixes de direction Dofus -> directions du jeu (0 = Est, sens horaire). Les directions Ouest sont en miroir. */
-const DIRS = { S: 0, R: 1, F: 2, B: 6, L: 7 };
+const DIRS = { S: 0, R: 1, F: 2, B: 6, L: 5 };
 
 function ffdec(args) {
   execFileSync('java', ['-jar', FFDEC, ...args], { stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 });

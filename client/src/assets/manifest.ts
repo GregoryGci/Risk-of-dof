@@ -38,7 +38,7 @@ export interface SpriteDef {
   anims?: Record<string, Record<string, AnimDef>>;
   /**
    * Directions absentes de la spritesheet -> direction source affichée en miroir.
-   * Défaut Dofus : { "3": 1, "4": 0, "5": 7 } (l'Ouest est le miroir de l'Est).
+   * Défaut Dofus : { "3": 1, "4": 0, "7": 5 } (l'Ouest est le miroir de l'Est, le Nord-Est celui du Nord-Ouest).
    */
   mirror?: Record<string, number>;
 }
@@ -70,7 +70,7 @@ export interface Manifest {
   ui?: Record<string, string>;
 }
 
-export const DEFAULT_MIRROR: Record<string, number> = { '3': 1, '4': 0, '5': 7 };
+export const DEFAULT_MIRROR: Record<string, number> = { '3': 1, '4': 0, '7': 5 };
 
 /**
  * Charge le manifeste. Retourne un manifeste vide s'il n'existe pas
