@@ -3,10 +3,5 @@ dist
 *.log
 .vite
 
-# Assets Ankama extraits localement : usage privé, jamais versionnés
-client/public/assets/dofus/*
-!client/public/assets/dofus/README.md
-!client/public/assets/dofus/manifest.example.json
-
 # Projet Unity personnel (hors jeu web), jamais versionné
 My project/

@@ -1,0 +1,2997 @@
+{
+  "characters": {
+    "cra": {
+      "image": "sprites/cra.png",
+      "atlas": "sprites/cra.json",
+      "origin": [
+        0.544,
+        0.7818
+      ],
+      "scale": 0.7669,
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "iop": {
+      "image": "sprites/iop.png",
+      "atlas": "sprites/iop.json",
+      "origin": [
+        0.45,
+        0.9314
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "eniripsa": {
+      "image": "sprites/eniripsa.png",
+      "atlas": "sprites/eniripsa.json",
+      "origin": [
+        0.5414,
+        0.8594
+      ],
+      "scale": 0.6762,
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "sacrieur": {
+      "image": "sprites/sacrieur.png",
+      "atlas": "sprites/sacrieur.json",
+      "origin": [
+        0.5664,
+        0.9053
+      ],
+      "scale": 0.7607,
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "sram": {
+      "image": "sprites/sram.png",
+      "atlas": "sprites/sram.json",
+      "origin": [
+        0.5403,
+        0.8173
+      ],
+      "scale": 0.7662,
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "sadida": {
+      "image": "sprites/sadida.png",
+      "atlas": "sprites/sadida.json",
+      "origin": [
+        0.4959,
+        0.8189
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 30,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "ecaflip": {
+      "image": "sprites/ecaflip.png",
+      "atlas": "sprites/ecaflip.json",
+      "origin": [
+        0.5033,
+        0.9091
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 12,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 30,
+            "frameRate": 15,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "feca": {
+      "image": "sprites/feca.png",
+      "atlas": "sprites/feca.json",
+      "origin": [
+        0.4277,
+        0.7818
+      ],
+      "scale": 0.7607,
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 15,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      }
+    }
+  },
+  "monsters": {
+    "bouftou": {
+      "image": "sprites/bouftou.png",
+      "atlas": "sprites/bouftou.json",
+      "origin": [
+        0.4706,
+        0.6667
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 40
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "tofu": {
+      "image": "sprites/tofu.png",
+      "atlas": "sprites/tofu.json",
+      "origin": [
+        0.5,
+        0.8108
+      ],
+      "scale": 0.593,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 15,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 15,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "arakne": {
+      "image": "sprites/arakne.png",
+      "atlas": "sprites/arakne.json",
+      "origin": [
+        0.4309,
+        0.7869
+      ],
+      "scale": 0.3804,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 40
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "tournesol": {
+      "image": "sprites/tournesol.png",
+      "atlas": "sprites/tournesol.json",
+      "origin": [
+        0.4862,
+        0.8761
+      ],
+      "scale": 0.3381,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "bouftou_royal": {
+      "image": "sprites/bouftou_royal.png",
+      "atlas": "sprites/bouftou_royal.json",
+      "origin": [
+        0.4751,
+        0.8723
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "coffre": {
+      "image": "sprites/coffre.png",
+      "atlas": "sprites/coffre.json",
+      "origin": [
+        0.4867,
+        0.7762
+      ],
+      "scale": 0.8466,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 50
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 50
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 50
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 50
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 17,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 17,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "poupee_folle": {
+      "image": "sprites/poupee_folle.png",
+      "atlas": "sprites/poupee_folle.json",
+      "origin": [
+        0.4917,
+        0.8378
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "poupee_bloqueuse": {
+      "image": "sprites/poupee_bloqueuse.png",
+      "atlas": "sprites/poupee_bloqueuse.json",
+      "origin": [
+        0.4917,
+        0.8378
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 20
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 8,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "poupee_gonflable": {
+      "image": "sprites/poupee_gonflable.png",
+      "atlas": "sprites/poupee_gonflable.json",
+      "origin": [
+        0.4917,
+        0.8378
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "epouvantail": {
+      "image": "sprites/epouvantail.png",
+      "atlas": "sprites/epouvantail.json",
+      "origin": [
+        0.518,
+        0.8431
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 27,
+            "end": 27,
+            "frameRate": 13
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 27,
+            "end": 27,
+            "frameRate": 13
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "tournesol_affame": {
+      "image": "sprites/tournesol_affame.png",
+      "atlas": "sprites/tournesol_affame.json",
+      "origin": [
+        0.5075,
+        0.5255
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "scarabosse_dore": {
+      "image": "sprites/scarabosse_dore.png",
+      "atlas": "sprites/scarabosse_dore.json",
+      "origin": [
+        0.5385,
+        0.7764
+      ],
+      "scale": 0.9383,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 40,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "craqueleur_legendaire": {
+      "image": "sprites/craqueleur_legendaire.png",
+      "atlas": "sprites/craqueleur_legendaire.json",
+      "origin": [
+        0.4467,
+        0.7675
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 30,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 7,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 8,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "bworkette": {
+      "image": "sprites/bworkette.png",
+      "atlas": "sprites/bworkette.json",
+      "origin": [
+        0.5634,
+        0.7933
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 18,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "marchand": {
+      "image": "sprites/marchand.png",
+      "atlas": "sprites/marchand.json",
+      "origin": [
+        0.6275,
+        0.9184
+      ],
+      "scale": 0.8453,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        }
+      }
+    }
+  },
+  "tiles": {
+    "herbe": [
+      "tiles/g502.png",
+      "tiles/g502.png",
+      "tiles/g509.png",
+      "tiles/g504.png",
+      "tiles/g502.png",
+      "tiles/g509.png"
+    ],
+    "fleurs": [
+      "tiles/g503.png",
+      "tiles/g510.png"
+    ],
+    "chemin": [
+      "tiles/g81.png",
+      "tiles/g81.png",
+      "tiles/g81.png",
+      "tiles/g80.png",
+      "tiles/g81.png",
+      "tiles/g82.png"
+    ],
+    "ble": [
+      "tiles/g485.png",
+      "tiles/g486.png",
+      "tiles/g485.png",
+      "tiles/g484.png"
+    ]
+  },
+  "objects": {
+    "arbre": [
+      {
+        "image": "objects/o1_40.png",
+        "origin": [
+          0.5636,
+          0.8719
+        ]
+      },
+      {
+        "image": "objects/o1_43.png",
+        "origin": [
+          0.5305,
+          0.8518
+        ]
+      },
+      {
+        "image": "objects/o1_44.png",
+        "origin": [
+          0.4784,
+          0.8087
+        ]
+      },
+      {
+        "image": "objects/o1_210.png",
+        "origin": [
+          0.495,
+          0.8798
+        ]
+      },
+      {
+        "image": "objects/o1_215.png",
+        "origin": [
+          0.3931,
+          0.9507
+        ]
+      },
+      {
+        "image": "objects/o1_219.png",
+        "origin": [
+          0.5023,
+          1.0004
+        ]
+      }
+    ],
+    "buisson": [
+      {
+        "image": "objects/o1_207.png",
+        "origin": [
+          0.4884,
+          0.7918
+        ]
+      },
+      {
+        "image": "objects/o1_216.png",
+        "origin": [
+          0.5068,
+          0.6983
+        ]
+      }
+    ],
+    "rocher": [
+      {
+        "image": "objects/o1_193.png",
+        "origin": [
+          0.4217,
+          0.8075
+        ]
+      }
+    ],
+    "souche": [
+      {
+        "image": "objects/o1_201.png",
+        "origin": [
+          0.5286,
+          0.6046
+        ]
+      }
+    ],
+    "foin": [
+      {
+        "image": "objects/o1_205.png",
+        "origin": [
+          0.4818,
+          0.8778
+        ]
+      }
+    ],
+    "coffre": [
+      {
+        "image": "objects/o1_418.png",
+        "origin": [
+          0.6648,
+          0.8623
+        ]
+      }
+    ],
+    "coffre_ouvert": [
+      {
+        "image": "objects/o1_423.png",
+        "origin": [
+          0.5328,
+          0.6739
+        ]
+      }
+    ],
+    "zaap": [
+      {
+        "image": "objects/o4_7000.png",
+        "origin": [
+          0.5724,
+          0.7857
+        ]
+      }
+    ],
+    "cawotte": [
+      {
+        "image": "objects/cawotte.png",
+        "origin": [
+          0.5,
+          0.85
+        ],
+        "scale": 1.6
+      }
+    ]
+  },
+  "spells": {
+    "fleche_magique": "spells/fleche_magique.png",
+    "fleche_enflammee": "spells/fleche_enflammee.png",
+    "fleche_de_recul": "spells/fleche_de_recul.png",
+    "fleche_explosive": "spells/fleche_explosive.png",
+    "pression": "spells/pression.png",
+    "epee_celeste": "spells/epee_celeste.png",
+    "bond": "spells/bond.png",
+    "colere_de_iop": "spells/colere_de_iop.png",
+    "mot_blessant": "spells/mot_blessant.png",
+    "mot_curatif": "spells/mot_curatif.png",
+    "mot_de_frayeur": "spells/mot_de_frayeur.png",
+    "mot_de_reconstitution": "spells/mot_de_reconstitution.png",
+    "pied_du_sacrieur": "spells/pied_du_sacrieur.png",
+    "attirance": "spells/attirance.png",
+    "assaut": "spells/assaut.png",
+    "punition": "spells/punition.png",
+    "fleche_punitive": "spells/fleche_punitive.png",
+    "fleche_glacee": "spells/fleche_glacee.png",
+    "fleche_d_immobilisation": "spells/fleche_d_immobilisation.png",
+    "epee_de_iop": "spells/epee_de_iop.png",
+    "tempete_de_puissance": "spells/tempete_de_puissance.png",
+    "intimidation": "spells/intimidation.png",
+    "mot_interdit": "spells/mot_interdit.png",
+    "mot_de_regeneration": "spells/mot_de_regeneration.png",
+    "mot_d_envol": "spells/mot_d_envol.png",
+    "mot_stimulant": "spells/mot_stimulant.png",
+    "absorption": "spells/absorption.png",
+    "chatiment_agile": "spells/chatiment_agile.png",
+    "sournoiserie": "spells/sournoiserie.png",
+    "piege_sournois": "spells/piege_sournois.png",
+    "invisibilite": "spells/invisibilite.png",
+    "piege_de_masse": "spells/piege_de_masse.png",
+    "attaque_mortelle": "spells/attaque_mortelle.png",
+    "piege_empoisonne": "spells/piege_empoisonne.png",
+    "fourvoiement": "spells/fourvoiement.png",
+    "ronce": "spells/ronce.png",
+    "la_folle": "spells/la_folle.png",
+    "la_bloqueuse": "spells/la_bloqueuse.png",
+    "vent_empoisonne": "spells/vent_empoisonne.png",
+    "ronce_apaisante": "spells/ronce_apaisante.png",
+    "la_gonflable": "spells/la_gonflable.png",
+    "ronces_multiples": "spells/ronces_multiples.png",
+    "pile_ou_face": "spells/pile_ou_face.png",
+    "roue_de_la_fortune": "spells/roue_de_la_fortune.png",
+    "bond_du_felin": "spells/bond_du_felin.png",
+    "rekop": "spells/rekop.png",
+    "trefle": "spells/trefle.png",
+    "perception": "spells/perception.png",
+    "attaque_naturelle": "spells/attaque_naturelle.png",
+    "glyphe_agressif": "spells/glyphe_agressif.png",
+    "teleportation": "spells/teleportation.png",
+    "glyphe_enflamme": "spells/glyphe_enflamme.png",
+    "bulle": "spells/bulle.png",
+    "bouclier_feca": "spells/bouclier_feca.png",
+    "odorat": "spells/odorat.png",
+    "treve": "spells/treve.png"
+  },
+  "sounds": {
+    "crit": "sounds/critique.mp3",
+    "item": "sounds/evenement.mp3",
+    "boss": "sounds/evenement.mp3",
+    "stage": "sounds/evenement.mp3"
+  },
+  "items": {
+    "amulette_aventurier": "items/amulette_aventurier.png",
+    "kwaklame": "items/kwaklame.png",
+    "anneau_agilite": "items/anneau_agilite.png",
+    "sandales_tofuesques": "items/sandales_tofuesques.png",
+    "ceinture_aventurier": "items/ceinture_aventurier.png",
+    "chapeau_aventurier": "items/chapeau_aventurier.png",
+    "cape_tofu_fou": "items/cape_tofu_fou.png",
+    "bottes_petit_bouftou": "items/bottes_petit_bouftou.png",
+    "larme_bouftou": "items/larme_bouftou.png",
+    "sac_aventurier": "items/sac_aventurier.png",
+    "anneau_vampyre": "items/anneau_vampyre.png",
+    "vieux_trefle": "items/vieux_trefle.png",
+    "dofus_emeraude": "items/dofus_emeraude.png",
+    "dofus_pourpre": "items/dofus_pourpre.png",
+    "dofus_turquoise": "items/dofus_turquoise.png",
+    "dofus_vulbis": "items/dofus_vulbis.png",
+    "gelano": "items/gelano.png",
+    "baton_maitre_bouftous": "items/baton_maitre_bouftous.png",
+    "cape_vampyre": "items/cape_vampyre.png",
+    "trefle_5_feuilles": "items/trefle_5_feuilles.png",
+    "dofus_des_glaces": "items/dofus_des_glaces.png",
+    "arc_boisaille": "items/arc_boisaille.png"
+  },
+  "spellfx": {
+    "103": {
+      "image": "spellfx/103.png",
+      "atlas": "spellfx/103.json",
+      "origin": [
+        0.485,
+        0.495
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "baton": {
+          "prefix": "baton_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        },
+        "effet": {
+          "prefix": "effet_",
+          "start": 0,
+          "end": 14,
+          "frameRate": 60
+        }
+      }
+    },
+    "112": {
+      "image": "spellfx/112.png",
+      "atlas": "spellfx/112.json",
+      "origin": [
+        0.6023,
+        0.9341
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 23,
+          "frameRate": 30
+        },
+        "bulle": {
+          "prefix": "bulle_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        }
+      }
+    },
+    "402": {
+      "image": "spellfx/402.png",
+      "atlas": "spellfx/402.json",
+      "origin": [
+        0.4945,
+        0.7137
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 30,
+          "frameRate": 15
+        }
+      }
+    },
+    "404": {
+      "image": "spellfx/404.png",
+      "atlas": "spellfx/404.json",
+      "origin": [
+        6.75,
+        1.5556
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "tige": {
+          "prefix": "tige_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        }
+      }
+    },
+    "405": {
+      "image": "spellfx/405.png",
+      "atlas": "spellfx/405.json",
+      "origin": [
+        0.3684,
+        0.6059
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 38,
+          "frameRate": 15
+        },
+        "shoot": {
+          "prefix": "shoot_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        }
+      }
+    },
+    "407": {
+      "image": "spellfx/407.png",
+      "atlas": "spellfx/407.json",
+      "origin": [
+        0.2176,
+        0.9942
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 29,
+          "frameRate": 20
+        }
+      }
+    },
+    "410": {
+      "image": "spellfx/410.png",
+      "atlas": "spellfx/410.json",
+      "origin": [
+        0.2477,
+        0.8559
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 28,
+          "frameRate": 20
+        }
+      }
+    },
+    "412": {
+      "image": "spellfx/412.png",
+      "atlas": "spellfx/412.json",
+      "origin": [
+        0.4891,
+        0.7837
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 31,
+          "frameRate": 15
+        }
+      }
+    },
+    "601": {
+      "image": "spellfx/601.png",
+      "atlas": "spellfx/601.json",
+      "origin": [
+        0.4375,
+        0.5556
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "shoot": {
+          "prefix": "shoot_",
+          "start": 0,
+          "end": 35,
+          "frameRate": 15
+        },
+        "move": {
+          "prefix": "move_",
+          "start": 0,
+          "end": 1,
+          "frameRate": 60
+        }
+      }
+    },
+    "603": {
+      "image": "spellfx/603.png",
+      "atlas": "spellfx/603.json",
+      "origin": [
+        0.5287,
+        0.4571
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 36,
+          "frameRate": 10
+        }
+      }
+    },
+    "605": {
+      "image": "spellfx/605.png",
+      "atlas": "spellfx/605.json",
+      "origin": [
+        0.4955,
+        1.9346
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 32,
+          "frameRate": 15
+        }
+      }
+    },
+    "607": {
+      "image": "spellfx/607.png",
+      "atlas": "spellfx/607.json",
+      "origin": [
+        0.4158,
+        2.3448
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 29,
+          "frameRate": 15
+        }
+      }
+    },
+    "613": {
+      "image": "spellfx/613.png",
+      "atlas": "spellfx/613.json",
+      "origin": [
+        0.5082,
+        0.9944
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 19,
+          "frameRate": 15
+        }
+      }
+    },
+    "616": {
+      "image": "spellfx/616.png",
+      "atlas": "spellfx/616.json",
+      "origin": [
+        0.722,
+        0.9507
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 13,
+          "frameRate": 10
+        }
+      }
+    },
+    "702": {
+      "image": "spellfx/702.png",
+      "atlas": "spellfx/702.json",
+      "origin": [
+        -26.75,
+        -3.2727
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        }
+      }
+    },
+    "704": {
+      "image": "spellfx/704.png",
+      "atlas": "spellfx/704.json",
+      "origin": [
+        0.5114,
+        0.7957
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 33,
+          "frameRate": 15
+        }
+      }
+    },
+    "705": {
+      "image": "spellfx/705.png",
+      "atlas": "spellfx/705.json",
+      "origin": [
+        0.5693,
+        0.8721
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 34,
+          "frameRate": 20
+        }
+      }
+    },
+    "707": {
+      "image": "spellfx/707.png",
+      "atlas": "spellfx/707.json",
+      "origin": [
+        0.5133,
+        0.2842
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 23,
+          "frameRate": 40
+        }
+      }
+    },
+    "802": {
+      "image": "spellfx/802.png",
+      "atlas": "spellfx/802.json",
+      "origin": [
+        0.4714,
+        0.7886
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 31,
+          "frameRate": 15
+        }
+      }
+    },
+    "804": {
+      "image": "spellfx/804.png",
+      "atlas": "spellfx/804.json",
+      "origin": [
+        0.2062,
+        0.62
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 37,
+          "frameRate": 12
+        }
+      }
+    },
+    "805": {
+      "image": "spellfx/805.png",
+      "atlas": "spellfx/805.json",
+      "origin": [
+        0.4516,
+        0.7843
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "duplicate": {
+          "prefix": "duplicate_",
+          "start": 0,
+          "end": 24,
+          "frameRate": 20
+        }
+      }
+    },
+    "807": {
+      "image": "spellfx/807.png",
+      "atlas": "spellfx/807.json",
+      "origin": [
+        0.4981,
+        0.9042
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 23,
+          "frameRate": 30
+        }
+      }
+    },
+    "808": {
+      "image": "spellfx/808.png",
+      "atlas": "spellfx/808.json",
+      "origin": [
+        0.5215,
+        0.9002
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 34,
+          "frameRate": 12
+        },
+        "pierres": {
+          "prefix": "pierres_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        }
+      }
+    },
+    "809": {
+      "image": "spellfx/809.png",
+      "atlas": "spellfx/809.json",
+      "origin": [
+        0.2732,
+        0.5756
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 34,
+          "frameRate": 10
+        },
+        "shoot": {
+          "prefix": "shoot_",
+          "start": 0,
+          "end": 4,
+          "frameRate": 12
+        },
+        "pierres": {
+          "prefix": "pierres_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        }
+      }
+    },
+    "811": {
+      "image": "spellfx/811.png",
+      "atlas": "spellfx/811.json",
+      "origin": [
+        0.5,
+        0.8876
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 37,
+          "frameRate": 20
+        }
+      }
+    },
+    "901": {
+      "image": "spellfx/901.png",
+      "atlas": "spellfx/901.json",
+      "origin": [
+        0.7586,
+        0.5538
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "shoot": {
+          "prefix": "shoot_",
+          "start": 0,
+          "end": 28,
+          "frameRate": 20
+        },
+        "move": {
+          "prefix": "move_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        }
+      }
+    },
+    "902": {
+      "image": "spellfx/902.png",
+      "atlas": "spellfx/902.json",
+      "origin": [
+        0.5301,
+        0.6027
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "shoot": {
+          "prefix": "shoot_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        },
+        "move": {
+          "prefix": "move_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        },
+        "fumee": {
+          "prefix": "fumee_",
+          "start": 0,
+          "end": 20,
+          "frameRate": 30
+        }
+      }
+    },
+    "903": {
+      "image": "spellfx/903.png",
+      "atlas": "spellfx/903.json",
+      "origin": [
+        -0.0364,
+        0.5146
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 35,
+          "frameRate": 30
+        }
+      }
+    },
+    "905": {
+      "image": "spellfx/905.png",
+      "atlas": "spellfx/905.json",
+      "origin": [
+        0.4531,
+        0.7179
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "shoot": {
+          "prefix": "shoot_",
+          "start": 0,
+          "end": 17,
+          "frameRate": 20
+        },
+        "move": {
+          "prefix": "move_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        },
+        "fumee": {
+          "prefix": "fumee_",
+          "start": 0,
+          "end": 20,
+          "frameRate": 30
+        }
+      }
+    },
+    "909": {
+      "image": "spellfx/909.png",
+      "atlas": "spellfx/909.json",
+      "origin": [
+        0.2298,
+        0.5625
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 20,
+          "frameRate": 30
+        },
+        "cercle": {
+          "prefix": "cercle_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        }
+      }
+    },
+    "910": {
+      "image": "spellfx/910.png",
+      "atlas": "spellfx/910.json",
+      "origin": [
+        0.4988,
+        0.5212
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "shoot": {
+          "prefix": "shoot_",
+          "start": 0,
+          "end": 12,
+          "frameRate": 20
+        },
+        "move": {
+          "prefix": "move_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        }
+      }
+    },
+    "912": {
+      "image": "spellfx/912.png",
+      "atlas": "spellfx/912.json",
+      "origin": [
+        -0.0267,
+        0.6145
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 17,
+          "frameRate": 30
+        }
+      }
+    },
+    "1001": {
+      "image": "spellfx/1001.png",
+      "atlas": "spellfx/1001.json",
+      "origin": [
+        0.5122,
+        0.5826
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 36,
+          "frameRate": 15
+        }
+      }
+    },
+    "1011": {
+      "image": "spellfx/1011.png",
+      "atlas": "spellfx/1011.json",
+      "origin": [
+        0.5056,
+        0.5902
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 31,
+          "frameRate": 30
+        }
+      }
+    },
+    "1052": {
+      "image": "spellfx/1052.png",
+      "atlas": "spellfx/1052.json",
+      "origin": [
+        0.0092,
+        0.4697
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 35,
+          "frameRate": 15
+        }
+      }
+    },
+    "1053": {
+      "image": "spellfx/1053.png",
+      "atlas": "spellfx/1053.json",
+      "origin": [
+        0.4785,
+        0.5821
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "spire": {
+          "prefix": "spire_",
+          "start": 0,
+          "end": 0,
+          "frameRate": 60
+        },
+        "shoot": {
+          "prefix": "shoot_",
+          "start": 0,
+          "end": 15,
+          "frameRate": 20
+        },
+        "move": {
+          "prefix": "move_",
+          "start": 0,
+          "end": 3,
+          "frameRate": 60
+        }
+      }
+    },
+    "1100": {
+      "image": "spellfx/1100.png",
+      "atlas": "spellfx/1100.json",
+      "origin": [
+        0.5166,
+        1.3178
+      ],
+      "scale": 0.6038,
+      "anims": {
+        "main": {
+          "prefix": "main_",
+          "start": 0,
+          "end": 22,
+          "frameRate": 20
+        }
+      }
+    }
+  },
+  "spellAnims": {
+    "fleche_magique": {
+      "anim": "902",
+      "type": 31
+    },
+    "fleche_enflammee": {
+      "anim": "909",
+      "type": 51
+    },
+    "fleche_de_recul": {
+      "anim": "903",
+      "type": 21
+    },
+    "fleche_explosive": {
+      "anim": "910",
+      "type": 31
+    },
+    "fleche_punitive": {
+      "anim": "912",
+      "type": 51
+    },
+    "fleche_glacee": {
+      "anim": "905",
+      "type": 31
+    },
+    "fleche_d_immobilisation": {
+      "anim": "901",
+      "type": 31
+    },
+    "epee_de_iop": {
+      "anim": "805",
+      "type": 40
+    },
+    "tempete_de_puissance": {
+      "anim": "811",
+      "type": 11
+    },
+    "colere_de_iop": {
+      "anim": "809",
+      "type": 21
+    },
+    "intimidation": {
+      "anim": "804",
+      "type": 21
+    },
+    "epee_celeste": {
+      "anim": "808",
+      "type": 11
+    },
+    "bond": {
+      "anim": "807",
+      "type": 51
+    },
+    "epee_du_jugement": {
+      "anim": "809",
+      "type": 21
+    },
+    "mot_blessant": {
+      "anim": "704",
+      "type": 11
+    },
+    "mot_curatif": {
+      "anim": "702",
+      "type": 11
+    },
+    "mot_de_frayeur": {
+      "anim": "707",
+      "type": 11
+    },
+    "mot_de_reconstitution": {
+      "anim": "702",
+      "type": 11
+    },
+    "mot_interdit": {
+      "anim": "704",
+      "type": 11
+    },
+    "mot_de_regeneration": {
+      "anim": "702",
+      "type": 11
+    },
+    "mot_stimulant": {
+      "anim": "705",
+      "type": 11
+    },
+    "attirance": {
+      "anim": "1052",
+      "type": 51
+    },
+    "assaut": {
+      "anim": "1053",
+      "type": 31
+    },
+    "sournoiserie": {
+      "anim": "405",
+      "type": 21
+    },
+    "piege_sournois": {
+      "anim": "407",
+      "type": 0
+    },
+    "invisibilite": {
+      "anim": "402",
+      "type": 10
+    },
+    "piege_de_masse": {
+      "anim": "410",
+      "type": 0
+    },
+    "attaque_mortelle": {
+      "anim": "412",
+      "type": 51
+    },
+    "piege_empoisonne": {
+      "anim": "407",
+      "type": 0
+    },
+    "fourvoiement": {
+      "anim": "404",
+      "type": 10
+    },
+    "ronce": {
+      "anim": "1001",
+      "type": 11
+    },
+    "la_folle": {
+      "anim": "1100",
+      "type": 11
+    },
+    "la_bloqueuse": {
+      "anim": "1100",
+      "type": 11
+    },
+    "vent_empoisonne": {
+      "anim": "1011",
+      "type": 10
+    },
+    "ronce_apaisante": {
+      "anim": "1001",
+      "type": 11
+    },
+    "la_gonflable": {
+      "anim": "1100",
+      "type": 11
+    },
+    "ronces_multiples": {
+      "anim": "1001",
+      "type": 11
+    },
+    "pile_ou_face": {
+      "anim": "601",
+      "type": 31
+    },
+    "roue_de_la_fortune": {
+      "anim": "603",
+      "type": 10
+    },
+    "bond_du_felin": {
+      "anim": "807",
+      "type": 51
+    },
+    "rekop": {
+      "anim": "616",
+      "type": 51
+    },
+    "tout_ou_rien": {
+      "anim": "613",
+      "type": 10
+    },
+    "trefle": {
+      "anim": "605",
+      "type": 10
+    },
+    "perception": {
+      "anim": "607",
+      "type": 10
+    },
+    "attaque_naturelle": {
+      "anim": "103",
+      "type": 30
+    },
+    "bulle": {
+      "anim": "112",
+      "type": 51
+    },
+    "bouclier_feca": {
+      "anim": "802",
+      "type": 11
+    }
+  }
+}
