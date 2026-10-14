@@ -12,6 +12,9 @@ function $(id: string): HTMLElement {
   return document.getElementById(id)!;
 }
 
+/** Fenêtre du DPS instantané de l'addon. */
+const DPS_WINDOW_MS = 5000;
+
 /** 1234 -> « 1,2 k » pour l'addon de dégâts. */
 function fmt(n: number): string {
   return n >= 10000 ? `${(n / 1000).toFixed(0)} k` : n >= 1000 ? `${(n / 1000).toFixed(1)} k` : String(Math.round(n));
@@ -54,6 +57,8 @@ export class Hud {
   /** Dernier HTML écrit par zone : on ne touche au DOM que si ça change. */
   private cache: Record<string, string> = {};
   private meter: 'dps' | 'heal' | 'taken' = 'dps';
+  /** Historique des dégâts infligés par joueur, pour le DPS glissant. */
+  private dpsSamples = new Map<string, { t: number; v: number }[]>();
   private roomCode = '';
   /** Bonus d'objets du joueur local (pour les infobulles). */
   private stats: Record<StatKey, number> = sumStats(new Map());
@@ -328,18 +333,25 @@ export class Hud {
       $('boss-bar').style.width = `${bossPct}%`;
     }
 
-    // Addon de dégâts : classement des joueurs (DPS sur la durée de la partie, soins et dégâts subis en total).
+    // Addon de dégâts : DPS instantané (dégâts des 5 dernières secondes, par seconde), soins et dégâts subis en total.
+    const now = performance.now();
     const rows: { name: string; slot: number; value: number }[] = [];
-    state.players.forEach((p: PlayerView) => {
-      const total = this.meter === 'dps' ? p.dmgDealt : this.meter === 'heal' ? p.healDone : p.dmgTaken;
-      rows.push({ name: p.name, slot: p.slot, value: total });
+    state.players.forEach((p: PlayerView, id: string) => {
+      let samples = this.dpsSamples.get(id);
+      if (!samples || (samples.length > 0 && p.dmgDealt < samples[samples.length - 1].v)) this.dpsSamples.set(id, (samples = []));
+      if (samples.length === 0 || now - samples[samples.length - 1].t >= 200) samples.push({ t: now, v: p.dmgDealt });
+      while (samples.length > 2 && now - samples[1].t >= DPS_WINDOW_MS) samples.shift();
+      const first = samples[0];
+      const dps = (p.dmgDealt - first.v) / Math.max(1, (now - first.t) / 1000);
+      const value = this.meter === 'dps' ? dps : this.meter === 'heal' ? p.healDone : p.dmgTaken;
+      rows.push({ name: p.name, slot: p.slot, value });
     });
+    for (const id of this.dpsSamples.keys()) if (!state.players.get(id)) this.dpsSamples.delete(id);
     rows.sort((a, b) => b.value - a.value);
     const best = Math.max(1, rows[0]?.value ?? 1);
-    const seconds = Math.max(1, state.time);
     let meter = '';
     for (const r of rows) {
-      const shown = this.meter === 'dps' ? `${fmt(r.value / seconds)} <small>(${fmt(r.value)})</small>` : fmt(r.value);
+      const shown = this.meter === 'dps' ? `${fmt(r.value)} /s` : fmt(r.value);
       meter += `<div class="meter-row"><div class="fill" style="width:${(r.value / best) * 100}%;background:${cssColor(PLAYER_COLORS[r.slot % PLAYER_COLORS.length])}"></div><span>${escapeHtml(r.name)}</span><span>${shown}</span></div>`;
     }
     this.setHtml('meter-body', meter);
