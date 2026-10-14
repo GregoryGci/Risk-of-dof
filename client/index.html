@@ -23,7 +23,7 @@
         <div id="class-picker"></div>
         <div id="class-desc" class="class-desc"></div>
 
-        <button id="btn-talents" class="btn">Arbre de talents</button>
+        <button id="btn-talents" class="btn">Progression (talents et stats)</button>
         <button id="btn-create" class="btn btn-primary">Créer une partie</button>
 
         <div class="separator"><span>ou</span></div>
@@ -48,7 +48,7 @@
     <div id="talents" class="overlay hidden">
       <div class="panel details-panel talents-panel">
         <div class="details-head">
-          <h2>Arbre de talents</h2>
+          <h2>Progression</h2>
           <button id="talents-close" class="btn">Fermer</button>
         </div>
         <div id="talents-body"></div>
@@ -78,6 +78,8 @@
       </div>
 
       <!-- Haut droite : kamas + victimes -->
+      <!-- Haut droite : kamas, victimes, mini-carte -->
+      <div id="hud-right">
       <div id="hud-stats" class="panel small">
         <div class="stat"><span class="kama-icon"></span><span id="kamas">0</span></div>
         <div class="stat"><span class="skull-icon">☠</span><span id="kills">0</span></div>
@@ -85,18 +87,23 @@
 
       <!-- Mini-carte -->
       <div id="hud-minimap" class="panel small"><canvas id="minimap"></canvas></div>
+      </div>
 
       <!-- Bas : PV + barre de sorts -->
       <div id="hud-bottom">
-        <div id="hp-orb">
-          <div id="hp-fill"></div>
-          <div id="hp-text">120</div>
+        <!-- Objets possédés, juste au-dessus de la barre -->
+        <div id="inventory"></div>
+        <div id="hud-bar" class="panel">
+          <!-- Cœur de PV : la forme vient d'un masque, le contour du conteneur. -->
+          <div id="hp-heart">
+            <div id="hp-orb"><div id="hp-fill"></div></div>
+            <div id="hp-text">120</div>
+          </div>
+          <div id="spellbar"></div>
         </div>
-        <div id="spellbar" class="panel"></div>
       </div>
 
-      <!-- Objets possédés, aide d'interaction, annonce d'objet -->
-      <div id="inventory"></div>
+      <!-- Aide d'interaction, annonce d'objet -->
       <div id="prompt" class="panel small hidden"></div>
       <div id="toast" class="panel small hidden"></div>
 

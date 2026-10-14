@@ -1,5 +1,5 @@
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, kamas, équipe, bandeaux.
-import { CLASSES, ITEMS, sumStats, type StatKey, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
+import { CLASSES, GAME_MODES, ITEMS, getMode, orbReward, sumStats, type StatKey, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import { spellIconSvg } from './icons.ts';
@@ -30,6 +30,7 @@ export interface HudCallbacks {
   onRestart(): void;
   onQuit(): void;
   onClass(classId: string): void;
+  onMode(mode: number): void;
   /** Survol d'un sort de la barre (null = plus rien de survolé). */
   onSpellHover(slot: number | null): void;
 }
@@ -65,6 +66,7 @@ export class Hud {
         const data = (e.target as HTMLElement).dataset;
         if (data.action === 'start') this.callbacks.onStart();
         if (data.class) this.callbacks.onClass(data.class);
+        if (data.mode !== undefined) this.callbacks.onMode(Number(data.mode));
       },
       { signal },
     );
@@ -173,6 +175,8 @@ export class Hud {
     }
     const spell = getSpell(this.spellIds[slot]);
     tip.innerHTML = `<div class="tip-name">${escapeHtml(spell.name)} <small>${SLOT_KEYS[slot] ?? ''}</small></div><div class="tip-desc">${escapeHtml(spell.description)}</div>${spellDetailsHtml(spell, this.stats)}`;
+    // Toujours juste au-dessus de la barre du bas, quelle que soit sa hauteur (objets sur plusieurs lignes).
+    tip.style.bottom = `${$('hud-bottom').offsetHeight + 18}px`;
     tip.classList.remove('hidden');
   }
 
@@ -216,7 +220,7 @@ export class Hud {
 
   /** Éclat de l'orbe de PV quand le joueur local est touché. */
   hitFlash(): void {
-    const orb = $('hp-orb');
+    const orb = $('hp-heart');
     orb.classList.remove('hit');
     void orb.offsetWidth;
     orb.classList.add('hit');
@@ -237,6 +241,7 @@ export class Hud {
     // Aide d'interaction (coffre à portée)
     this.setHtml('prompt', prompt);
     $('prompt').classList.toggle('hidden', prompt === '');
+    if (prompt) $('prompt').style.bottom = `${$('hud-bottom').offsetHeight + 18}px`;
 
     // Inventaire
     if (me && this.cache.items !== me.items) {
@@ -247,7 +252,7 @@ export class Hud {
         const item = ITEMS[id];
         const url = this.store.itemIconUrl(id);
         const style = url ? `background-image:url('${url}')` : `background:radial-gradient(circle at 35% 30%, #fff8, ${cssColor(item.color)} 55%, #0008)`;
-        html += `<div class="item${item.rare ? ' rare' : ''}" title="${escapeHtml(item.name)} — ${escapeHtml(item.description)}"><div class="item-icon" style="${style}"></div>${count > 1 ? `<span>x${count}</span>` : ''}</div>`;
+        html += `<div class="item${item.rarity !== 'commun' ? ` ${item.rarity}` : ''}" title="${escapeHtml(item.name)} — ${escapeHtml(item.description)}"><div class="item-icon" style="${style}"></div>${count > 1 ? `<span>x${count}</span>` : ''}</div>`;
       }
       $('inventory').innerHTML = html;
     }
@@ -322,6 +327,8 @@ export class Hud {
         `${state.players.size} joueur${state.players.size > 1 ? 's' : ''} — choisissez votre classe et entraînez-vous.<br>` +
         classButtonsHtml(me?.classId ?? '') +
         `<div class="class-desc">${escapeHtml(CLASSES[me?.classId ?? '']?.description ?? '')}</div>` +
+        `<div class="mode-picker">${GAME_MODES.map((m) => `<button class="btn mode-btn${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" ${host ? '' : 'disabled'} title="${escapeHtml(m.description)}">${m.name}</button>`).join('')}</div>` +
+        `<div class="class-desc">Difficulté : ${escapeHtml(getMode(state.mode).description)}</div>` +
         (host ? `<button class="btn btn-primary" data-action="start">Lancer la partie</button>` : `En attente de ${escapeHtml(hostName)}…`);
     } else if (me && !me.alive && state.phase !== PHASE_LOST) {
       const target = spectating ? state.players.get(spectating) : undefined;
@@ -338,9 +345,11 @@ export class Hud {
       $('gameover').classList.toggle('hidden', !lost);
       if (lost) {
         // Fin de partie : les kamas gagnés (et un bonus par zone atteinte) vont dans la bourse de l'arbre de talents.
-        const reward = me ? me.kamasEarned + (state.stage - 1) * 100 : 0;
-        const credited = account.creditRun(`${this.roomCode}-${state.seed}`, reward);
-        $('gameover-reward').innerHTML = reward > 0 ? `+${reward} kamas dans votre bourse${credited ? '' : ' (déjà comptés)'} — total <b>${account.bank}</b><br><small>Dépensez-les dans l'arbre de talents, à l'accueil.</small>` : '';
+        const mode = getMode(state.mode);
+        const reward = me ? Math.round((me.kamasEarned + (state.stage - 1) * 100) * mode.reward) : 0;
+        const orbs = orbReward(state.stage, state.time, me?.kills ?? 0, mode.reward);
+        const credited = account.creditRun(`${this.roomCode}-${state.seed}`, reward, orbs);
+        $('gameover-reward').innerHTML = reward > 0 || orbs > 0 ? `+${reward} kamas et +${orbs} orbes (difficulté ${mode.name})${credited ? '' : ' — déjà comptés'}<br><small>Bourse ${account.bank} K · ${account.orbs} orbes — dépensez-les dans la progression, à l'accueil.</small>` : '';
         $('gameover-stats').textContent = `Vous avez tenu ${formatTime(state.time)} — difficulté ${tier.name} — ${state.kills} monstres vaincus`;
         let rows = '';
         state.players.forEach((p: PlayerView) => {

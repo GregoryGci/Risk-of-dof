@@ -143,14 +143,20 @@ export type StatKey =
   | 'critDamage' // dégâts des coups critiques (+ au multiplicateur ×1,5)
   | 'armor' // chaque point réduit les dégâts subis de 8 %
   | 'killHeal' // PV rendus par monstre vaincu
-  | 'kamas'; // kamas gagnés (+%)
+  | 'kamas' // kamas gagnés (+%)
+  | 'lifesteal' // fraction des dégâts infligés rendue en PV
+  | 'luck' // chance d'obtenir des objets rares ou épiques dans les coffres
+  | 'multishot'; // projectiles (ou frappes) en plus sur l'attaque de base
+
+export type ItemRarity = 'commun' | 'rare' | 'epique';
 
 export interface ItemDef {
   id: string;
+  /** Nom de l'objet Dofus : sert aussi à retrouver son icône officielle. */
   name: string;
   description: string;
   color: number;
-  rare: boolean;
+  rarity: ItemRarity;
   stats: Partial<Record<StatKey, number>>;
 }
 
@@ -329,6 +335,8 @@ export interface GameStateView {
   zaapCharge: number;
   /** Vrai quand le joueur seul a mis la partie en pause (touche Tab). */
   paused: boolean;
+  /** Difficulté choisie par l'hôte : 0 = Piou, 1 = Prespic, 2 = Bworker. */
+  mode: number;
   /** Prix actuel d'un coffre (kamas). */
   chestCost: number;
 }

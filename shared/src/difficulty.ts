@@ -38,3 +38,33 @@ export function difficultyTier(difficulty: number): { index: number; name: strin
   const progress = next ? (difficulty - cur.min) / (next.min - cur.min) : 1;
   return { index, name: cur.name, color: cur.color, progress };
 }
+
+/** Modes de difficulté choisis par l'hôte dans le salon. */
+export interface GameMode {
+  id: number;
+  name: string;
+  description: string;
+  /** PV, dégâts et quantité des monstres. */
+  hp: number;
+  damage: number;
+  spawn: number;
+  /** Multiplicateur des récompenses de fin de partie (bourse et orbes). */
+  reward: number;
+}
+
+export const GAME_MODES: GameMode[] = [
+  { id: 0, name: 'Piou', description: 'Facile : moins de monstres, moins coriaces.', hp: 0.8, damage: 0.75, spawn: 0.85, reward: 1 },
+  { id: 1, name: 'Prespic', description: 'Normal.', hp: 1.1, damage: 1.1, spawn: 1.1, reward: 1.5 },
+  { id: 2, name: 'Bworker', description: 'Difficile : bien plus de monstres, plus résistants et qui frappent fort.', hp: 1.5, damage: 1.45, spawn: 1.4, reward: 2.2 },
+];
+
+export function getMode(id: number): GameMode {
+  return GAME_MODES[id] ?? GAME_MODES[0];
+}
+
+/** Gardien du Zaap selon la zone : la liste tourne en boucle (de plus en plus forts avec la difficulté). */
+export const BOSS_SEQUENCE = ['bouftou_royal', 'tournesol_affame', 'scarabosse_dore', 'craqueleur_legendaire', 'bworkette'];
+
+export function bossForStage(stage: number): string {
+  return BOSS_SEQUENCE[(stage - 1) % BOSS_SEQUENCE.length];
+}

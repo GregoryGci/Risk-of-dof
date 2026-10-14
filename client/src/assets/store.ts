@@ -47,21 +47,27 @@ export class AssetStore {
   preload(scene: Phaser.Scene): void {
     const m = this.manifest;
     scene.load.setPath(ASSET_ROOT);
+    // Version des fichiers = empreinte du manifeste : après une nouvelle extraction, le navigateur
+    // ne réutilise pas d'anciennes images en cache.
+    let hash = 0;
+    for (const ch of JSON.stringify(m)) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+    const version = (hash >>> 0).toString(36);
+    const v = (file: string) => `${file}?v=${version}`;
     scene.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
       console.warn(`[assets] introuvable : ${file.src} -> placeholder`);
     });
 
     const loadSprite = (key: string, def: SpriteDef) => {
-      if (def.atlas) scene.load.atlas(key, def.image, def.atlas);
-      else if (def.frameWidth && def.frameHeight) scene.load.spritesheet(key, def.image, { frameWidth: def.frameWidth, frameHeight: def.frameHeight });
-      else scene.load.image(key, def.image);
+      if (def.atlas) scene.load.atlas(key, v(def.image), v(def.atlas));
+      else if (def.frameWidth && def.frameHeight) scene.load.spritesheet(key, v(def.image), { frameWidth: def.frameWidth, frameHeight: def.frameHeight });
+      else scene.load.image(key, v(def.image));
     };
     for (const [id, def] of Object.entries(m.characters ?? {})) loadSprite(`char_${id}`, def);
     for (const [id, def] of Object.entries(m.monsters ?? {})) loadSprite(`mon_${id}`, def);
-    for (const [type, files] of Object.entries(m.tiles ?? {})) asArray(files).forEach((f, i) => scene.load.image(`tile_${type}_${i}`, f));
-    for (const [id, defs] of Object.entries(m.objects ?? {})) asArray(defs).forEach((d, i) => scene.load.image(`obj_${id}_${i}`, d.image));
-    for (const [id, def] of Object.entries(m.projectiles ?? {})) scene.load.image(`proj_${id}`, def.image);
-    for (const [id, def] of Object.entries(m.spellfx ?? {})) scene.load.atlas(`fx_${id}`, def.image, def.atlas);
+    for (const [type, files] of Object.entries(m.tiles ?? {})) asArray(files).forEach((f, i) => scene.load.image(`tile_${type}_${i}`, v(f)));
+    for (const [id, defs] of Object.entries(m.objects ?? {})) asArray(defs).forEach((d, i) => scene.load.image(`obj_${id}_${i}`, v(d.image)));
+    for (const [id, def] of Object.entries(m.projectiles ?? {})) scene.load.image(`proj_${id}`, v(def.image));
+    for (const [id, def] of Object.entries(m.spellfx ?? {})) scene.load.atlas(`fx_${id}`, v(def.image), v(def.atlas));
     for (const [name, file] of Object.entries(m.sounds ?? {})) scene.load.audio(`snd_${name}`, file);
   }
 

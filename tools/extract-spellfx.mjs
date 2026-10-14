@@ -66,7 +66,11 @@ for (const anim of animIds) {
     const pngDir = path.join(work, 'png');
     const svgDir = path.join(work, 'svg');
     if (!fs.existsSync(pngDir)) ffdec(['-zoom', String(ZOOM), '-selectid', selection, '-format', 'sprite:png', '-export', 'sprite', pngDir, swf]);
-    if (!fs.existsSync(svgDir)) ffdec(['-zoom', String(ZOOM), '-selectid', selection, '-format', 'sprite:svg', '-export', 'sprite', svgDir, swf]);
+    // SVG : seule la première image sert (origine du clip) ; exporter tout peut prendre des heures.
+    if (!fs.existsSync(path.join(svgDir, '.ok'))) {
+      ffdec(['-zoom', String(ZOOM), '-select', '1', '-selectid', selection, '-format', 'sprite:svg', '-export', 'sprite', svgDir, swf]);
+      fs.writeFileSync(path.join(svgDir, '.ok'), '');
+    }
     const dirOf = (root, id) => {
       const d = fs.readdirSync(root).find((n) => n === `DefineSprite_${id}` || n.startsWith(`DefineSprite_${id}_`));
       return d ? path.join(root, d) : null;

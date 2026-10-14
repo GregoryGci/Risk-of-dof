@@ -9,3 +9,4 @@ export * from './data/classes.ts';
 export * from './data/monsters.ts';
 export * from './data/items.ts';
 export * from './data/talents.ts';
+export * from './data/stats.ts';

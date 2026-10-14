@@ -60,7 +60,7 @@ renderClassPicker();
 let currentRoom: Room | null = null;
 const talents = new TalentsPage(null, classId, (cls) => {
   if (currentRoom && cls === classId) currentRoom.send('loadout', { spells: account.loadout(cls) });
-});
+}, () => currentRoom?.send('meta', { meta: account.statLevels }));
 $('btn-talents').addEventListener('click', () => talents.open(classId));
 
 function setBusy(busy: boolean): void {
@@ -97,7 +97,7 @@ async function connect(join: () => Promise<Room>): Promise<void> {
   }
 }
 
-btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, { name: pseudo(), classId, spells: account.loadout(classId) })));
+btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, { name: pseudo(), classId, spells: account.loadout(classId), meta: account.statLevels })));
 
 function joinWithCode(): void {
   const code = codeInput.value.trim().toUpperCase();
@@ -105,7 +105,7 @@ function joinWithCode(): void {
     errorEl.textContent = `Le code fait ${ROOM_CODE_LENGTH} lettres.`;
     return;
   }
-  connect(() => client.joinById(code, { name: pseudo(), classId, spells: account.loadout(classId) }));
+  connect(() => client.joinById(code, { name: pseudo(), classId, spells: account.loadout(classId), meta: account.statLevels }));
 }
 btnJoin.addEventListener('click', joinWithCode);
 codeInput.addEventListener('keydown', (e) => {
@@ -123,6 +123,7 @@ async function startGame(room: Room): Promise<void> {
     onRestart: () => room.send('restart'),
     onQuit: () => room.leave(),
     onSpellHover: () => {},
+    onMode: (mode) => room.send('mode', { mode }),
     onClass: (id) => {
       // Le choix fait dans le salon devient aussi le choix par défaut de l'accueil.
       classId = id;

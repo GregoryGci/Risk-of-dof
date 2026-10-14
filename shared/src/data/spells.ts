@@ -695,6 +695,31 @@ export const SPELLS: Record<string, SpellDef> = define({
   // =========================================================================
   // Monstres
   // =========================================================================
+  graine_geante: {
+    name: 'Graine Géante',
+    description: 'Grosse graine qui éclate en zone (Tournesol Affamé).',
+    icon: 'graine',
+    color: 0xf2a020,
+    element: 'terre',
+    cooldown: 1800,
+    range: 11,
+    damage: [18, 24],
+    projectile: { speed: 9, radius: 0.4 },
+    area: { radius: 1.6 },
+  },
+  boule_bworkette: {
+    name: 'Boule de Feu',
+    description: 'Boule de feu explosive de la Bworkette.',
+    icon: 'graine',
+    color: 0xff5020,
+    element: 'feu',
+    cooldown: 2000,
+    range: 10,
+    damage: [26, 34],
+    projectile: { speed: 10, radius: 0.45 },
+    area: { radius: 2 },
+    effects: [{ type: 'burn', dps: 6, duration: 3 }],
+  },
   graine_tournesol: {
     name: 'Graine',
     description: 'Projectile lent du Tournesol Sauvage.',

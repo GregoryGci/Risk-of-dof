@@ -5,6 +5,9 @@ import {
   INTERACT_RANGE,
   ITEMS,
   MAP_SIZE,
+  bossForStage,
+  getMode,
+  rollRarity,
   PHASE_LOBBY,
   PHASE_LOST,
   PHASE_PLAYING,
@@ -26,6 +29,7 @@ import {
   isBlocked,
   monsterDamageMultiplier,
   monsterHpMultiplier,
+  metaStats,
   resolveCollisions,
   sanitizeLoadout,
   stepMovement,
@@ -70,6 +74,8 @@ export interface PlayerRt {
   buffs: { stats: Partial<Record<StatKey, number>>; until: number; invisible: boolean }[];
   /** Prochain dash (Maj) disponible. */
   dashReadyAt: number;
+  /** Bonus permanents de l'arbre de stats. */
+  meta: Record<StatKey, number>;
 }
 
 /** Données serveur d'un monstre qui ne sont pas synchronisées. */
@@ -137,8 +143,6 @@ type Broadcast = (type: string, message: unknown) => void;
 const BASE_CRIT_CHANCE = 0.05;
 /** Chaque point d'armure multiplie les dégâts subis par ce facteur. */
 const ARMOR_FACTOR = 0.92;
-/** Chance qu'un coffre donne un objet rare. */
-const RARE_CHANCE = 0.15;
 const CRIT_MULT = 1.5;
 /** Délai sans dégât avant que la régénération reprenne (s). */
 const REGEN_DELAY = 4;
@@ -195,7 +199,7 @@ export class Simulation {
   // Cycle de vie
   // -------------------------------------------------------------------------
 
-  addPlayer(id: string, name: string, classId?: string, loadout?: unknown): void {
+  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, meta?: unknown): void {
     // Un nouveau joueur arrive : plus de pause possible.
     this.state.paused = false;
     const def = getClass(classId ?? '');
@@ -207,7 +211,7 @@ export class Simulation {
     let slot = 0;
     while (used.has(slot)) slot++;
     state.slot = slot;
-    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, inventory: new Map(), stats: sumStats(new Map()), spells: [], buffs: [], dashReadyAt: 0 };
+    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, inventory: new Map(), stats: sumStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, meta: metaStats(meta) };
     this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
@@ -229,6 +233,14 @@ export class Simulation {
     p.state.spells = p.spells.join(',');
   }
 
+  /** Arbre de stats mis à jour depuis le salon. */
+  setMeta(id: string, meta: unknown): void {
+    const p = this.players.get(id);
+    if (!p || this.state.phase !== PHASE_LOBBY) return;
+    p.meta = metaStats(meta);
+    this.resetPlayer(p);
+  }
+
   /** Changement des sorts équipés : possible uniquement dans le salon. */
   setLoadout(id: string, loadout: unknown): void {
     const p = this.players.get(id);
@@ -248,6 +260,13 @@ export class Simulation {
     // On garde sa place : inutile de renvoyer le joueur au point d'apparition.
     p.state.x = x;
     p.state.y = y;
+  }
+
+  /** L'hôte choisit la difficulté dans le salon. */
+  setMode(id: string, mode: unknown): void {
+    if (this.state.phase !== PHASE_LOBBY || id !== this.state.hostId) return;
+    const m = Number(mode);
+    if (Number.isInteger(m) && m >= 0 && m <= 2) this.state.mode = m;
   }
 
   /** Pause demandée par un joueur : seulement s'il est seul (on ne fige pas les autres). */
@@ -312,7 +331,8 @@ export class Simulation {
     this.state.zaapState = ZAAP_CHARGING;
     this.state.zaapCharge = 0;
     // Le gardien apparaît à côté du Zaap ; il est plus résistant quand les joueurs sont nombreux.
-    const def = getMonster('bouftou_royal');
+    // Gardien différent à chaque zone : Bouftou Royal, Tournesol Affamé, Scarabosse Doré...
+    const def = getMonster(bossForStage(this.state.stage));
     const diff = this.state.difficulty;
     let x = this.state.zaapX;
     let y = this.state.zaapY;
@@ -409,7 +429,23 @@ export class Simulation {
     p.readyAt[slot] = this.now + cooldown / 1000;
     let damageMult = 1 + p.stats.damage;
     if (spell.missingHpBonus) damageMult *= 1 + spell.missingHpBonus * (1 - p.state.hp / p.state.maxHp);
-    const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, BASE_CRIT_CHANCE + p.stats.crit, slot, cooldown, CRIT_MULT + p.stats.critDamage);
+    const critChance = BASE_CRIT_CHANCE + p.stats.crit;
+    const critMult = CRIT_MULT + p.stats.critDamage;
+    const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, critChance, slot, cooldown, critMult);
+    // Dofus des Glaces : l'attaque de base tire des projectiles en éventail, ou frappe de nouveau un instant après.
+    if (slot === 0 && p.stats.multishot > 0) {
+      for (let k = 1; k <= p.stats.multishot; k++) {
+        if (spell.projectile) {
+          const a = Math.atan2(ty - p.state.y, tx - p.state.x) + (k % 2 ? 1 : -1) * 0.18 * Math.ceil(k / 2);
+          const d = Math.max(1, Math.hypot(tx - p.state.x, ty - p.state.y));
+          this.cast(spell, p.state.x, p.state.y, p.state.x + Math.cos(a) * d, p.state.y + Math.sin(a) * d, id, true, damageMult * 0.7, critChance, undefined, undefined, critMult);
+        } else {
+          this.after(0.15 * k, () => {
+            if (p.state.alive) this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult * 0.6, critChance, undefined, undefined, critMult);
+          });
+        }
+      }
+    }
     p.state.dir = dirFromVector(dir.x, dir.y);
 
     // Effets sur le lanceur (bond en arrière / en avant).
@@ -741,6 +777,8 @@ export class Simulation {
         if (caster?.state.alive) this.healPlayer(caster, Math.min(amount, Math.max(0, m.state.hp)) * e.fraction);
       }
     }
+    const owner = this.players.get(pr.owner);
+    if (owner?.state.alive && owner.stats.lifesteal > 0) this.healPlayer(owner, Math.min(amount, Math.max(0, m.state.hp)) * owner.stats.lifesteal);
     this.damageMonster(m, amount, pr.owner, crit);
   }
 
@@ -904,6 +942,7 @@ export class Simulation {
   /** Recalcule les stats d'un joueur à partir de son inventaire. */
   private applyStats(p: PlayerRt): void {
     p.stats = sumStats(p.inventory);
+    for (const [k, v] of Object.entries(p.meta)) p.stats[k as StatKey] += v;
     for (const b of p.buffs) for (const [k, v] of Object.entries(b.stats)) p.stats[k as StatKey] += v ?? 0;
     p.state.invisible = p.buffs.some((b) => b.invisible);
     const oldMax = p.state.maxHp;
@@ -965,8 +1004,9 @@ export class Simulation {
 
     p.state.kamas -= this.state.chestCost;
     chest.opened = true;
-    const rare = Math.random() < RARE_CHANCE;
-    const pool = Object.values(ITEMS).filter((i) => i.rare === rare);
+    // La chance du joueur améliore la rareté (communs, rares, épiques).
+    const rarity = rollRarity(p.stats.luck);
+    const pool = Object.values(ITEMS).filter((i) => i.rarity === rarity);
     const item = pool[Math.floor(Math.random() * pool.length)];
     this.giveItem(p, item.id);
     this.broadcast('item', { player: id, item: item.id, x: chest.x, y: chest.y });
@@ -994,6 +1034,11 @@ export class Simulation {
 
   spawnMonster(def: MonsterDef, x: number, y: number, hpMult: number, damageMult: number, level: number): MonsterRt {
     const id = `m${this.nextMonsterId++}`;
+    if (!def.ally && def.behavior.type !== 'dummy') {
+      const mode = getMode(this.state.mode);
+      hpMult *= mode.hp;
+      damageMult *= mode.damage;
+    }
     const state = new MonsterState();
     state.type = def.id;
     state.x = x;
