@@ -3,6 +3,9 @@ dist
 *.log
 .vite
 artifacts/
+.env
+.env.*
+!.env.example
 
 # Projet Unity personnel (hors jeu web), jamais versionné
 My project/

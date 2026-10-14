@@ -22,7 +22,11 @@ function numberBefore(buf, key, before, window = 600) {
   return i < 0 ? null : buf.readDoubleBE(from + i + pattern.length);
 }
 
-/** Tous les objets du cache : nom -> { type, gfx }. */
+/**
+ * Tous les objets du cache : nom -> { type, gfx, variants }.
+ * Un même nom peut désigner plusieurs objets (« Nomoon » est un arc ET un familier) :
+ * `type`/`gfx` sont ceux du premier rencontré, `variants` les liste tous.
+ */
 export function readDofusItems() {
   const root = path.join(process.env.APPDATA ?? '', 'Dofus Retro/Pepper Data/Shockwave Flash/WritableRoot/#SharedObjects');
   const items = new Map();
@@ -38,7 +42,10 @@ export function readDofusItems() {
       const name = buf.toString('utf8', nPos + 6, nPos + 6 + nLen);
       const type = numberBefore(buf, 't', at);
       const gfx = numberBefore(buf, 'g', at);
-      if (type !== null && gfx !== null && !items.has(name)) items.set(name, { type, gfx });
+      if (type === null || gfx === null) continue;
+      const item = items.get(name);
+      if (!item) items.set(name, { type, gfx, variants: [{ type, gfx }] });
+      else if (!item.variants.some((v) => v.type === type && v.gfx === gfx)) item.variants.push({ type, gfx });
     }
   }
   return items;
@@ -48,5 +55,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const words = process.argv.slice(2).map((w) => w.toLowerCase());
   const items = readDofusItems();
   console.log(`${items.size} objets dans le cache`);
-  for (const [name, i] of items) if (words.every((w) => name.toLowerCase().includes(w))) console.log(`${name} -> clips/items/${i.type}/${i.gfx}.swf`);
+  for (const [name, i] of items) if (words.every((w) => name.toLowerCase().includes(w))) for (const v of i.variants) console.log(`${name} -> clips/items/${v.type}/${v.gfx}.swf`);
 }

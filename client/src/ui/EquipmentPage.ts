@@ -1,5 +1,6 @@
 import { EQUIPMENT_BASES, EQUIPMENT_RARITIES, EQUIPMENT_RARITY_NAMES, EQUIPMENT_SLOTS, EQUIPMENT_TIERS, FUSION_COST, fusionResult, SLOT_NAMES, equipmentStats, getClass, slotKind, statText, type EquipmentKind, type EquipmentSlot, type StatKey } from '@rod/shared';
 import { account } from '../account.ts';
+import {forgeCost,recycleValue,equipmentSet,setProgress,setThresholds,type EquipmentSet} from '@rod/shared';
 import { escapeHtml } from './Hud.ts';
 import { equipmentCard, equipmentIcon } from './equipmentHtml.ts';
 
@@ -29,6 +30,8 @@ export class EquipmentPage {
       if (button.dataset.action === 'equip' && this.canEdit() && account.equipGear(this.selected, this.target)) this.onChange();
       if (button.dataset.action === 'remove' && this.target && this.canEdit()) { account.unequipGear(this.target); this.onChange(); }
       if (button.dataset.action === 'fuse' && this.canEdit()) { const uid=account.fuseGear(this.selected); if (uid) { this.selected=uid; this.onChange(); } }
+      if(button.dataset.action==='forge' && this.canEdit()) {const uid=account.forgeGear(this.selected);if(uid){this.selected=uid;this.onChange();}}
+      if(button.dataset.action==='recycle' && this.canEdit() && account.recycleGear(this.selected))this.onChange();
       if (button.dataset.action === 'migration') account.dismissMigration();
       this.render();
     });
@@ -78,8 +81,8 @@ export class EquipmentPage {
       <div class="gear-dofus">${EQUIPMENT_SLOTS.filter(s => s.startsWith('dofus')).map(s => this.slot(s)).join('')}</div>
       <div class="gear-bonuses"><div class="section-caption">Caractéristiques de départ</div><div class="gear-stat-pair"><span>Points de vie</span><b>${cls.maxHp + bonuses.maxHp}</b></div>
         ${Object.entries(bonuses).filter(([k, v]) => v > 0 && k !== 'maxHp').map(([k,v]) => `<div class="gear-stat-pair"><span>${escapeHtml(statText(k as StatKey,v))}</span></div>`).join('') || '<p>Équipez vos trouvailles pour améliorer vos prochaines parties.</p>'}
-      </div></section>
-      <section class="gear-inventory"><div class="section-caption">Inventaire <span>${account.inventory.length} objets</span></div>
+      </div><div class="gear-panoplies"><div class="section-caption">Panoplies équipées</div>${setProgress(account.equipment).map(row=>`<div class="set-summary"><b>${escapeHtml(row.set.name)}</b><span>${row.count}/${row.set.members.length} pièces</span><small>${row.thresholds.filter(t=>t.pieces<=row.count).flatMap(t=>Object.entries(t.stats).map(([k,v])=>escapeHtml(statText(k as StatKey,v)))).join(' · ')||'Premier bonus à deux pièces distinctes'}</small></div>`).join('')||'<small>Aucune panoplie équipée.</small>'}</div></section>
+      <section class="gear-inventory"><div class="section-caption">Inventaire <span>${account.inventory.length} objets · ${account.fragments.toLocaleString('fr')} ◈</span></div>
         <div class="gear-filters"><input id="gear-search" type="text" placeholder="Rechercher un équipement…" aria-label="Rechercher un équipement" value="${escapeHtml(this.search)}"><select id="gear-filter" aria-label="Type d’équipement"><option value="">Tous les équipements</option>${KINDS.map((k,i) => `<option value="${k}" ${this.filter === k ? 'selected' : ''}>${KIND_NAMES[i]}</option>`).join('')}</select></div><div id="gear-grid" class="gear-grid"></div>
         <div class="gear-inspector">`;
     if (selected) {
@@ -96,13 +99,19 @@ export class EquipmentPage {
           const delta = Math.round((value - (currentStats[key] ?? 0)) * 1000) / 1000;
           return `<div><span>${value ? escapeHtml(statText(key, value)) : escapeHtml(statText(key, currentStats[key] ?? 0)) + ' (retiré)'}</span>${current && current.uid !== selected.uid && delta ? `<small class="${delta > 0 ? 'gain' : 'loss'}">${delta > 0 ? '↑' : '↓'} ${escapeHtml(statText(key, Math.abs(delta)))}</small>` : ''}</div>`;
         }).join('')}</div>
-        <div class="gear-actions"><select id="gear-target" aria-label="Emplacement">${slots.map(s => `<option value="${s}" ${this.target === s ? 'selected' : ''}>${SLOT_NAMES[s]}</option>`).join('')}</select>
+        ${this.renderSet(equipmentSet(selected.base))}<div class="gear-actions"><select id="gear-target" aria-label="Emplacement">${slots.map(s => `<option value="${s}" ${this.target === s ? 'selected' : ''}>${SLOT_NAMES[s]}</option>`).join('')}</select>
           ${current?.uid === selected.uid ? '<button class="btn" data-action="remove">Déséquiper</button>' : `<button class="btn btn-primary" data-action="equip" ${this.canEdit() ? '' : 'disabled'}>Équiper</button>`}</div>`;
       const next=fusionResult(selected);
       if (next) html+=`<div class="gear-fusion"><span>10 ${EQUIPMENT_RARITY_NAMES[selected.rarity].toLowerCase()} identiques → ${next.rarity==='legendaire' && selected.rarity==='legendaire' ? `légendaire tier ${next.forgeTier}` : EQUIPMENT_RARITY_NAMES[next.rarity].toLowerCase()}<small>${selected.quantity} / ${FUSION_COST} exemplaires · mêmes stats pour chaque exemplaire</small></span><button class="btn" data-action="fuse" ${selected.quantity<FUSION_COST || !this.canEdit() ? 'disabled' : ''}>Fusionner</button></div>`;
+      const cost=forgeCost(selected),worn=Object.values(account.equipment).filter(e=>e.uid===selected.uid).length;
+      html+=`<div class="gear-fusion"><span>Forge · ${account.fragments.toLocaleString('fr')} fragments<small>Une copie + des fragments → qualité ou tier supérieur. Dofus déjà découvert uniquement.</small></span>${next?`<button class="btn" data-action="forge" ${account.fragments<cost||!this.canEdit()?'disabled':''}>Améliorer · ${cost.toLocaleString('fr')} ◈</button>`:''}<button class="btn" data-action="recycle" ${selected.quantity<=worn||!this.canEdit()?'disabled':''}>Recycler 1 · +${recycleValue(selected)} ◈</button></div>`;
     } else html += `<p class="gear-inspector-empty">Sélectionnez un objet pour consulter ses effets et l’équiper.</p>`;
     html += `</div></section></div><footer class="gear-footer"><div><b>Palier ${tier.level} débloqué</b><span>${account.bestTier < 4 ? `Atteignez la zone ${EQUIPMENT_TIERS[account.bestTier + 1].stage} pour le palier ${EQUIPMENT_TIERS[account.bestTier + 1].level}.` : 'Tous les paliers sont débloqués.'}</span></div><div class="gear-rarity-legend">${EQUIPMENT_RARITIES.map(r => `<span><i class="${r}"></i>${EQUIPMENT_RARITY_NAMES[r]}</span>`).join('')}</div></footer>`;
     this.body.innerHTML = html;
     this.renderInventory();
+  }
+  private renderSet(set:EquipmentSet|undefined):string {
+    if(!set)return '';const count=setProgress(account.equipment).find(row=>row.set.id===set.id)?.count??0;
+    return `<details class="gear-set-detail" open><summary>${escapeHtml(set.name)} · ${count}/${set.members.length} pièces</summary><p>Chaque pièce distincte compte une fois. Les seuils se cumulent.</p>${setThresholds(set).map(t=>`<div class="set-threshold ${count>=t.pieces?'unlocked':'locked'}"><b>${count>=t.pieces?'✓':'◇'} ${t.pieces} pièces · ${count>=t.pieces?'actif':'à débloquer'}</b><small>${Object.entries(t.stats).map(([k,v])=>escapeHtml(statText(k as StatKey,v))).join(' · ')}</small></div>`).join('')}</details>`;
   }
 }

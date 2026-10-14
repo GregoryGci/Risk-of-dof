@@ -24,6 +24,7 @@ export class Controls {
 
     on(window, 'keydown', (e) => {
       if (e.target instanceof HTMLElement && e.target.closest('input,textarea,select,[contenteditable="true"]')) return;
+      if(e.target instanceof HTMLElement && e.target.closest('button,[role="button"]') && (e.code==='Space'||e.code==='Enter'))return;
       if (!e.repeat) this.pressed.add(e.code);
       this.keys.add(e.code);
       const slot = KEY_SLOTS[e.code];
@@ -56,6 +57,7 @@ export class Controls {
 
   releaseAll(): void {
     this.keys.clear();
+    this.pressed.clear();
     this.held.fill(false);
     this.keySlotPresses.clear();
     this.mousePresses.clear();

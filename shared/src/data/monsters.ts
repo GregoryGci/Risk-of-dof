@@ -1,6 +1,7 @@
 // Monstres. Les stats sont celles du niveau de difficulté 1, puis mises à l'échelle
 // par le serveur (voir difficulty.ts).
 import type { MonsterDef } from '../types.ts';
+import {DUNGEON_MONSTERS} from './dungeon-monsters.ts';
 
 export const MONSTERS: Record<string, MonsterDef> = {
   bouftou: {
@@ -279,7 +280,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
     melee: { damage: 7, range: 1, cooldown: 1.2 },
     behavior: { type: 'melee' },
     ally: true,
-    taunt: true,
+    taunt: false,
     cost: 0,
     minDifficulty: 999,
     weight: 0,
@@ -302,6 +303,14 @@ export const MONSTERS: Record<string, MonsterDef> = {
   },
 };
 
+for(const [id,spec] of Object.entries(DUNGEON_MONSTERS)) {
+  const base=MONSTERS[spec.template];
+  MONSTERS[id]={...base,id,name:spec.name,boss:!!spec.boss,ally:false,taunt:false,speed:spec.stationary?0:spec.speed??base.speed,
+    hp:spec.boss?1000:base.hp,melee:{...base.melee,damage:spec.damage??base.melee.damage},
+    summon:spec.boss&&spec.summon?{monster:spec.summon,count:2,interval:id==='milimilou'?14:12}:undefined,
+    behavior:spec.stationary?{type:'ranged',spell:'boule_bworkette',preferredRange:7}:base.behavior,
+    cost:spec.boss?999:base.cost,minDifficulty:spec.boss?999:1,weight:spec.boss?0:1,kamas:spec.boss?[120,200]:base.kamas};
+}
 export function getMonster(id: string): MonsterDef {
   const m = MONSTERS[id];
   if (!m) throw new Error(`Monstre inconnu : ${id}`);

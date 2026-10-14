@@ -1,6 +1,9 @@
 // Arbre de talents : sorts alternatifs à débloquer avec la bourse de kamas (gagnés en fin de partie).
 // Pour chaque classe et chaque emplacement (0 = clic gauche, 1 = clic droit, 2 = Espace, 3 = R),
 // la liste des sorts qu'on peut y équiper en plus du sort de base, avec leur prix.
+// Clic gauche (attaque de base) et R (ultime) n'acceptent que leurs propres variantes ; clic droit et Espace
+// puisent dans un même lot (sorts de base et alternatives de ces deux emplacements), sans doublon.
+// Le `slot` d'un talent de ce lot ne sert plus qu'à ranger les sorts dans la page des talents.
 import { getClass } from './classes.ts';
 
 export interface TalentDef {
@@ -62,15 +65,36 @@ export const TALENTS: Record<string, TalentDef[]> = {
   pandawa: [],
 };
 
-/** Sorts autorisés dans un emplacement d'une classe : le sort de base + ses alternatives. */
+/** Emplacements libres : n'importe quel sort du lot commun peut y aller. */
+export const FLEX_SLOTS: readonly number[] = [1, 2];
+export const isFlexSlot = (slot: number): boolean => FLEX_SLOTS.includes(slot);
+
+/** Lot commun des emplacements libres : sorts de base de ces emplacements, puis leurs alternatives. */
+export function flexSpells(classId: string): string[] {
+  const base = getClass(classId).spells;
+  const pool = [...FLEX_SLOTS.map((slot) => base[slot]), ...(TALENTS[classId] ?? []).filter((t) => isFlexSlot(t.slot)).map((t) => t.spell)];
+  return [...new Set(pool)];
+}
+
+/** Sorts autorisés dans un emplacement d'une classe : ses variantes, ou tout le lot commun pour un emplacement libre. */
 export function allowedSpells(classId: string, slot: number): string[] {
+  if (isFlexSlot(slot)) return flexSpells(classId);
   const base = getClass(classId).spells[slot];
   return [base, ...(TALENTS[classId] ?? []).filter((t) => t.slot === slot).map((t) => t.spell)];
 }
 
-/** Valide une liste de 4 sorts pour une classe ; chaque sort invalide est remplacé par le sort de base. */
+/**
+ * Valide une liste de 4 sorts pour une classe ; chaque sort invalide est remplacé par le sort de base.
+ * Un même sort ne peut pas occuper les deux emplacements libres : le doublon prend le premier sort libre du lot.
+ */
 export function sanitizeLoadout(classId: string, spells: unknown): string[] {
   const base = getClass(classId).spells;
   const list = Array.isArray(spells) ? spells : [];
-  return base.map((def, slot) => (typeof list[slot] === 'string' && allowedSpells(classId, slot).includes(list[slot]) ? list[slot] : def));
+  const out = base.map((def, slot) => (typeof list[slot] === 'string' && allowedSpells(classId, slot).includes(list[slot]) ? list[slot] : def));
+  const used = new Set<string>();
+  for (const slot of FLEX_SLOTS) {
+    if (used.has(out[slot])) out[slot] = [base[slot], ...flexSpells(classId)].find((s) => !used.has(s))!;
+    used.add(out[slot]);
+  }
+  return out;
 }

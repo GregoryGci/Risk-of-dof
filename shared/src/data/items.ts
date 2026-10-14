@@ -9,6 +9,7 @@ export interface ItemBase {
   color: number;
   /** Bonus de la version commune (multipliés selon la rareté). */
   stats: Partial<Record<StatKey, number>>;
+  rarities?:BonusRarity[];
 }
 
 /** Multiplicateur des bonus selon la rareté. */
@@ -32,12 +33,16 @@ export const RUN_BONUS_BASES: Record<string, ItemBase> = {
   chance: { name: 'Chance', description: 'Meilleures qualités de bonus de run', color: 0x7b9854, stats: { luck: 0.035 } },
   echos: { name: 'Échos', description: 'Attaque supplémentaire', color: 0x77a59c, stats: { multishot: 0.25 } },
   portee: { name: 'Allonge', description: 'Portée', color: 0xafa572, stats: { range: 0.4 } },
+  rebond: { name:'Ricochet',description:'Rebond de l’attaque de base',color:0xc99bec,stats:{bounce:1},rarities:['epique'] },
+  reserve: { name:'Seconde réserve',description:'Charge de compétence secondaire',color:0x91bada,stats:{secondaryCharge:1},rarities:['epique'] },
 };
 
 /** Libellé lisible d'une stat pour une valeur donnée (« +12 % de dégâts »...). */
 export function statText(key: StatKey, value: number): string {
   const pct = (v: number) => `${Math.round(v * 1000) / 10} %`;
   switch (key) {
+    case 'bounce':return `L’attaque de base rebondit sur ${Math.round(value)} ennemi${value>1?'s':''} supplémentaire${value>1?'s':''} à 4 cases`;
+    case 'secondaryCharge':return `+${Math.round(value)} charge${value>1?'s':''} du clic droit (recharge une par une)`;
     case 'maxHp':
       return `+${Math.round(value)} PV max`;
     case 'regen':
@@ -67,7 +72,7 @@ export function statText(key: StatKey, value: number): string {
     case 'lifesteal':
       return `+${pct(value)} de vol de vie`;
     case 'luck':
-      return `+${pct(value)} de chance (objets rares)`;
+      return `+${pct(value)} de chance pour la qualité des bonus de run`;
     default:
       return `${key} +${value}`;
   }
@@ -76,9 +81,9 @@ export function statText(key: StatKey, value: number): string {
 function buildItems(): Record<string, RunBonusDef> {
   const out: Record<string, RunBonusDef> = {};
   for (const [base, def] of Object.entries(RUN_BONUS_BASES)) {
-    for (const rarity of RARITIES) {
+    for (const rarity of def.rarities??RARITIES) {
       const stats: Partial<Record<StatKey, number>> = {};
-      for (const [k, v] of Object.entries(def.stats)) stats[k as StatKey] = (v ?? 0) * RARITY_MULT[rarity];
+      for (const [k, v] of Object.entries(def.stats)) stats[k as StatKey] = (v ?? 0) * (def.rarities?1:RARITY_MULT[rarity]);
       const id = `${base}.${rarity}`;
       const description = Object.entries(stats)
         .map(([k, v]) => statText(k as StatKey, v ?? 0))
@@ -106,9 +111,10 @@ export function rollRarity(luck: number, random = Math.random): BonusRarity {
 
 /** Un objet au hasard (base uniforme, rareté selon la chance). */
 export function rollRunBonus(luck: number, random = Math.random): RunBonusDef {
-  const bases = Object.keys(RUN_BONUS_BASES);
+  const rarity=rollRarity(luck,random);
+  const bases = Object.keys(RUN_BONUS_BASES).filter(base=>!!RUN_BONUSES[`${base}.${rarity}`]);
   const base = bases[Math.floor(random() * bases.length)];
-  return RUN_BONUSES[`${base}.${rollRarity(luck, random)}`];
+  return RUN_BONUSES[`${base}.${rarity}`];
 }
 
 /** Inventaire synchronisé sous forme de texte : "id:nombre,id:nombre". */
@@ -125,7 +131,7 @@ export function formatRunBonuses(inv: Map<string, number>): string {
 }
 
 export function emptyStats(): Record<StatKey, number> {
-  return { maxHp: 0, damage: 0, haste: 0, attackSpeed: 0, speed: 0, regen: 0, crit: 0, critDamage: 0, armor: 0, killHeal: 0, kamas: 0, lifesteal: 0, luck: 0, multishot: 0, range: 0, revive: 0 };
+  return { maxHp: 0, damage: 0, haste: 0, attackSpeed: 0, speed: 0, regen: 0, crit: 0, critDamage: 0, armor: 0, killHeal: 0, kamas: 0, lifesteal: 0, luck: 0, multishot: 0, range: 0, revive: 0,bounce:0,secondaryCharge:0 };
 }
 
 /** Somme des bonus de tous les objets possédés. */

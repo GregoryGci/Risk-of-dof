@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { EQUIPMENT_BASES, EQUIPMENT_RARITIES, equipmentReward, equipmentStats, equipmentTier, equippedStats, getClass, getMonster, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, createEquipment, sanitizeEquipped, sanitizeEquipment, monsterEquipmentDrops, makeRng, DROP_RARITY_CHANCES, fusionResult, rollRunBonus } from '@rod/shared';
+import { EQUIPMENT_BASES, EQUIPMENT_RARITIES, equipmentReward, equipmentStats, equipmentTier, equippedStats, getClass, getMonster, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, createEquipment, sanitizeEquipped, sanitizeEquipment, monsterEquipmentDrops, makeRng, DROP_RARITY_CHANCES, fusionResult, rollRunBonus, dropRarityWeights } from '@rod/shared';
 import { migrateAccount, equippedFromAccount } from '../client/src/progression.ts';
 import { Simulation } from '../server/src/game/Simulation.ts';
 import { GameState, PotionState } from '../server/src/state.ts';
@@ -28,7 +28,7 @@ test('sauvegardes malformées et slots impossibles ne donnent pas de bonus', () 
   const dofus = createEquipment('dofus_emeraude','rare');
   const wrong = sanitizeEquipped({ coiffe:ring, anneau1:ring, dofus1:dofus, dofus2:createEquipment('dofus_emeraude','legendaire') });
   assert.deepEqual(Object.keys(wrong),['anneau1','dofus1']);
-  assert.equal(equippedStats(wrong).haste,.08);
+  assert.equal(equippedStats(wrong).haste,equipmentStats(ring).haste);
   assert.equal(sanitizeEquipment({...ring,forgeTier:1.5}),undefined);
 });
 test('quatre raretés bornées et légendaire parfait pour toutes les lignes du catalogue', () => {
@@ -59,12 +59,12 @@ test('serveur : équipement figé pendant la run, récompense à la défaite, ch
   const hat=createEquipment('coiffe_bouftou','legendaire');
   sim.addPlayer('player','Test','iop',undefined,{coiffe:hat});
   const p=sim.players.get('player')!;
-  assert.equal(p.state.maxHp,getClass('iop').maxHp+18);
+  assert.equal(p.state.maxHp,getClass('iop').maxHp+equipmentStats(hat).maxHp!);
   sim.start();
   assert.equal(state.phase,PHASE_PLAYING);
   const runId=state.runId;
   sim.setEquipment('player',{});
-  assert.equal(p.state.maxHp,getClass('iop').maxHp+18);
+  assert.equal(p.state.maxHp,getClass('iop').maxHp+equipmentStats(hat).maxHp!);
   // La graine de carte change à chaque zone, l'identité de run reste stable.
   state.seed++;
   state.stage=4;
@@ -122,7 +122,7 @@ test('drops : Dofus uniquement sur boss à 3 %, distribution des raretés correc
   }
   assert.ok(Math.abs(gearCount/100000-.03)<.002);
   assert.ok(Math.abs(dofusCount/100000-.03)<.002);
-  for(const rarity of EQUIPMENT_RARITIES) assert.ok(Math.abs(rarities[rarity]/(gearCount+dofusCount)-DROP_RARITY_CHANCES[rarity])<.015);
+  for(const rarity of EQUIPMENT_RARITIES) assert.ok(Math.abs(rarities[rarity]/(gearCount+dofusCount)-(.5*DROP_RARITY_CHANCES[rarity]+.3*dropRarityWeights(1)[rarity]+.2*dropRarityWeights(3)[rarity]))<.015);
 });
 test('attaque automatique : vise un ennemi plutôt qu’une invocation et respecte la recharge',()=>{
   const state=new GameState();const events:{type:string;data:Record<string,unknown>}[]=[];

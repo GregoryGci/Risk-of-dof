@@ -27,6 +27,7 @@ function drive(sim:Simulation,p:PlayerRt):void {
   const basic=getSpell(p.spells[0]);
   let dx=0,dy=0;
   if(enemy) {
+    sim.classAction(p.id,{tx:enemy.state.x,ty:enemy.state.y,choice:0});
     const a=Math.atan2(enemy.state.y-p.state.y,enemy.state.x-p.state.x);
     const comfortable=basic.melee?basic.range*.7:Math.min(7,basic.range*.7);
     const direction=distance>comfortable?1:basic.melee?0:-1;

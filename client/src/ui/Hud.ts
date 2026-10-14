@@ -14,14 +14,12 @@ function $(id: string): HTMLElement {
   return document.getElementById(id)!;
 }
 
-/** Fenêtre du DPS instantané de l'addon. */
-const DPS_WINDOW_MS = 10000;
 /** Rafraîchissement de l'affichage de l'addon. */
 const METER_REFRESH_MS = 1000;
 
 /** 1234 -> « 1,2 k » pour l'addon de dégâts. */
 function fmt(n: number): string {
-  return n >= 10000 ? `${(n / 1000).toFixed(0)} k` : n >= 1000 ? `${(n / 1000).toFixed(1)} k` : String(Math.round(n));
+  return n >= 1e6 ? `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)} M` : n >= 10000 ? `${(n / 1000).toFixed(0)} k` : n >= 1000 ? `${(n / 1000).toFixed(1)} k` : String(Math.round(n));
 }
 
 export function escapeHtml(s: string): string {
@@ -62,10 +60,8 @@ export class Hud {
   private wasReady: boolean[] = [];
   /** Dernier HTML écrit par zone : on ne touche au DOM que si ça change. */
   private cache: Record<string, string> = {};
-  private meter: 'dps' | 'heal' | 'taken' = 'dps';
-  /** Historique des dégâts infligés par joueur, pour le DPS glissant. */
+  private meter: 'dmg' | 'heal' | 'taken' = 'dmg';
   private meterShownAt = 0;
-  private dpsSamples = new Map<string, { t: number; v: number }[]>();
   private roomCode = '';
   private solo=false;
   /** Bonus d'objets du joueur local (pour les infobulles). */
@@ -74,7 +70,7 @@ export class Hud {
   get playerStats(): Record<StatKey,number> { return this.stats; }
   collectDrop(drop:GearDrop): void {
     if (!account.claimDrops([drop])) return;
-    this.toast(`<span class="loot-toast-icon ${drop.gear.rarity}"><img src="assets/dofus/items/${drop.gear.base}.png" alt=""></span><span><b>${escapeHtml(EQUIPMENT_BASES[drop.gear.base].name)}</b><small>${EQUIPMENT_RARITY_NAMES[drop.gear.rarity]} · conservé pour les prochaines runs</small></span>`);
+    this.toast(`<span class="loot-toast-icon ${drop.gear.rarity}"><img src="assets/dofus/items/${drop.gear.base}.png" alt=""></span><span><b>${escapeHtml(EQUIPMENT_BASES[drop.gear.base].name)}</b><small>${EQUIPMENT_RARITY_NAMES[drop.gear.rarity]}</small></span>`);
   }
   private abort = new AbortController();
   private bottomHeight=0;
@@ -93,7 +89,7 @@ export class Hud {
       (e) => {
         const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-meter]');
         if (!btn) return;
-        this.meter = btn.dataset.meter as 'dps' | 'heal' | 'taken';
+        this.meter = btn.dataset.meter as 'dmg' | 'heal' | 'taken';
         document.querySelectorAll('#hud-meter [data-meter]').forEach((b) => b.classList.toggle('active', b === btn));
       },
       { signal },
@@ -113,6 +109,7 @@ export class Hud {
     );
     $('btn-restart').addEventListener('click', () => this.callbacks.onRestart(), { signal });
     $('btn-quit').addEventListener('click', () => this.callbacks.onQuit(), { signal });
+    $('details-menu').addEventListener('click', () => this.callbacks.onQuit(), { signal });
     $('gameover-gear').addEventListener('click', e => {
       const uid = (e.target as HTMLElement).closest<HTMLElement>('[data-gear]')?.dataset.gear;
       if (uid) this.callbacks.onEquipment(uid);
@@ -193,6 +190,13 @@ export class Hud {
   }
 
   private dashEl?: HTMLElement;
+  updateCharges(current:number,max:number):void {
+    const el=this.spellEls[1];if(!el)return;
+    let badge=el.querySelector<HTMLElement>('.spell-charges');
+    if(max<=1){badge?.remove();return;}
+    if(!badge){badge=document.createElement('span');badge.className='spell-charges';el.appendChild(badge);}
+    badge.textContent=`${current}/${max}`;badge.title='Charges du clic droit · se rechargent une par une';
+  }
   private dashReady = true;
 
   /** Emplacement du dash (Maj) en bout de barre, avec son temps de recharge. */
@@ -285,6 +289,9 @@ export class Hud {
 
   update(state: GameStateView, myId: string, spectating: string | null, prompt = ''): void {
     const me = state.players.get(myId);
+    if(me && this.cache.forgeGrants!==me.forgeGrants) {
+      this.cache.forgeGrants=me.forgeGrants;try{account.claimFragments(JSON.parse(me.forgeGrants));}catch{/* Patch en cours. */}
+    }
     if(this.cache.singlePlayer!==String(state.singlePlayer)) {
       this.cache.singlePlayer=String(state.singlePlayer);this.solo=state.singlePlayer;
       $('room-code').innerHTML=this.solo?'Aventure <b>SOLO</b>':`Partie <b>${escapeHtml(this.roomCode)}</b>`;
@@ -297,7 +304,7 @@ export class Hud {
         const drops=JSON.parse(me.runLoot) as GearDrop[];
         const gained=account.claimDrops(drops);
         const last=drops.at(-1);
-        if (gained && last) this.toast(`<span class="loot-toast-icon ${last.gear.rarity}"><img src="assets/dofus/items/${last.gear.base}.png" alt=""></span><span><b>${escapeHtml(EQUIPMENT_BASES[last.gear.base].name)}</b><small>${EQUIPMENT_RARITY_NAMES[last.gear.rarity]} · conservé pour les prochaines runs</small></span>`);
+        if (gained && last) this.toast(`<span class="loot-toast-icon ${last.gear.rarity}"><img src="assets/dofus/items/${last.gear.base}.png" alt=""></span><span><b>${escapeHtml(EQUIPMENT_BASES[last.gear.base].name)}</b><small>${EQUIPMENT_RARITY_NAMES[last.gear.rarity]}</small></span>`);
       } catch { /* Attend l'état complet. */ }
     }
 
@@ -348,10 +355,17 @@ export class Hud {
     // Objectif de la zone
     let objective = '';
     if (state.phase === PHASE_PLAYING) {
-      if (state.zaapState === ZAAP_IDLE) objective = `Zone ${state.stage} — trouvez et activez le <b>Zaap</b>`;
+      if(state.intermission)objective='<b>Halte marchande</b> — choisissez vos bonus puis confirmez « Prêt »';
+      else if (state.zaapState === ZAAP_IDLE) objective = `Zone ${state.stage} — trouvez et activez le <b>Zaap</b>`;
       else if (state.zaapState === ZAAP_CHARGING) objective = `Zone ${state.stage} — <b>Zaap ${Math.floor(state.zaapCharge * 100)} %</b>${state.zaapCharge >= 1 ? ' — vainquez le gardien' : ''}`;
       else objective = `Zone ${state.stage} — <b>Zaap prêt</b> : retournez-y`;
-      objective += ` <span class="zone-name">· ${zoneForStage(state.stage).name}</span>`;
+      objective += ` <span class="zone-name">· ${zoneForStage(state.stage).name}${state.intermission?'':` · Assaut ${state.zoneWave} · ${state.waves} au total`}</span>`;
+      if(me&&!state.intermission&&state.zaapState===ZAAP_IDLE&&state.stageTime>=45) {
+        const dx=state.zaapX-me.x,dy=state.zaapY-me.y;
+        const direction=Math.round(Math.atan2((dx+dy)*.5,dx-dy)/(Math.PI/4));
+        const arrow=['→','↘','↓','↙','←','↖','↑','↗'][(direction+8)%8];
+        objective+=` <span title="Direction indicative du Zaap">· Zaap ${arrow}</span>`;
+      }
     }
     this.setHtml('objective', objective);
 
@@ -362,7 +376,7 @@ export class Hud {
     state.monsters.forEach((m) => {
       const def = getMonster(m.type);
       if ((!def.boss && !m.elite) || (bossName && !def.boss)) return;
-      bossName = m.elite ? `${def.name} d'élite` : def.name;
+      bossName = m.rogue ? `${def.name} · Surprise · Butin ×3` : m.elite ? `${def.name} d'élite` : def.name;
       bossPct = Math.round((Math.max(0, m.hp) / (m.maxHp || 1)) * 1000) / 10;
       bossHp = `${Math.max(0, Math.ceil(m.hp))} / ${m.maxHp}`;
     });
@@ -374,20 +388,14 @@ export class Hud {
       $('boss-bar').style.width = `${bossPct}%`;
     }
 
-    // Addon de dégâts : DPS instantané (dégâts des 10 dernières secondes, par seconde), soins et dégâts subis en total.
+    // Addon de dégâts : totaux depuis le début de la run (dégâts infligés, soins, dégâts subis).
+    // Le total plutôt qu'un DPS glissant : on compare les classes sur toute la run, début comme fin de partie.
     const now = performance.now();
     const rows: { name: string; slot: number; value: number }[] = [];
-    state.players.forEach((p: PlayerView, id: string) => {
-      let samples = this.dpsSamples.get(id);
-      if (!samples || (samples.length > 0 && p.dmgDealt < samples[samples.length - 1].v)) this.dpsSamples.set(id, (samples = []));
-      if (samples.length === 0 || now - samples[samples.length - 1].t >= 200) samples.push({ t: now, v: p.dmgDealt });
-      while (samples.length > 2 && now - samples[1].t >= DPS_WINDOW_MS) samples.shift();
-      const first = samples[0];
-      const dps = (p.dmgDealt - first.v) / Math.max(1, (now - first.t) / 1000);
-      const value = this.meter === 'dps' ? dps : this.meter === 'heal' ? p.healDone : p.dmgTaken;
+    state.players.forEach((p: PlayerView) => {
+      const value = this.meter === 'dmg' ? p.dmgDealt : this.meter === 'heal' ? p.healDone : p.dmgTaken;
       rows.push({ name: p.name, slot: p.slot, value });
     });
-    for (const id of this.dpsSamples.keys()) if (!state.players.get(id)) this.dpsSamples.delete(id);
     // Affichage rafraîchi une fois par seconde (sauf changement d'onglet) : les chiffres restent lisibles.
     const meterKey = this.meter + rows.length;
     if (now - this.meterShownAt >= METER_REFRESH_MS || this.cache.meterKey !== meterKey) {
@@ -397,7 +405,7 @@ export class Hud {
       const best = Math.max(1, rows[0]?.value ?? 1);
       let meter = '';
       for (const r of rows) {
-        const shown = this.meter === 'dps' ? `${fmt(r.value)} /s` : fmt(r.value);
+        const shown = fmt(r.value);
         meter += `<div class="meter-row"><div class="fill" style="width:${(r.value / best) * 100}%;background:${cssColor(PLAYER_COLORS[r.slot % PLAYER_COLORS.length])}"></div><span>${escapeHtml(r.name)}</span><span>${shown}</span></div>`;
       }
       this.setHtml('meter-body', meter);
@@ -416,15 +424,17 @@ export class Hud {
     if (state.phase === PHASE_LOBBY) {
       const host = state.hostId === myId;
       const hostName = state.players.get(state.hostId)?.name ?? '';
+      // Format compact en haut de l'écran : le salon sert aussi à essayer classes et sorts, le personnage doit rester visible.
+      // Les descriptions (classe, difficulté) passent dans les infobulles des boutons.
       banner =
-        (state.singlePlayer ? 'Préparez votre prochaine aventure<br>' : `Code de la partie<span class="big-code">${escapeHtml(this.roomCode)}</span><br>`) +
-        `${state.players.size} joueur${state.players.size > 1 ? 's' : ''} — choisissez votre classe et entraînez-vous.<br>` +
-        classButtonsHtml(me?.classId ?? '') +
-        `<div class="class-desc">${escapeHtml(CLASSES[me?.classId ?? '']?.description ?? '')}</div>` +
-        `<div class="mode-picker">${GAME_MODES.map((m) => `<button class="btn mode-btn${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" ${host ? '' : 'disabled'} title="${escapeHtml(m.description)}">${m.name}</button>`).join('')}</div>` +
-        `<div class="class-desc">Difficulté : ${escapeHtml(getMode(state.mode).description)}</div>` +
-        `<div class="lobby-progression"><button class="btn" data-action="equipment">Équipement</button><button class="btn" data-action="talents">Sorts & talents</button></div>` +
-        (host ? `<button class="btn btn-primary" data-action="start">Lancer la partie</button>` : `En attente de ${escapeHtml(hostName)}…`);
+        `<div class="lobby-head">` +
+        (state.singlePlayer ? `<span class="lobby-title">Préparez votre aventure</span>` : `<span class="lobby-title">Code <span class="big-code">${escapeHtml(this.roomCode)}</span></span>`) +
+        `<span class="lobby-count">${state.players.size} joueur${state.players.size > 1 ? 's' : ''} · entraînez-vous</span>` +
+        `<div class="mode-picker">${GAME_MODES.map((m) => `<button class="btn mode-btn${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" ${host ? '' : 'disabled'} title="Difficulté : ${escapeHtml(m.description)}">${m.name}</button>`).join('')}</div>` +
+        `<button class="btn" data-action="equipment">Équipement</button><button class="btn" data-action="talents">Sorts & talents</button>` +
+        (host ? `<button class="btn btn-primary" data-action="start">Lancer la partie</button>` : `<span class="lobby-wait">En attente de ${escapeHtml(hostName)}…</span>`) +
+        `</div>` +
+        classButtonsHtml(me?.classId ?? '');
     } else if (me && !me.alive && state.phase !== PHASE_LOST) {
       const target = spectating ? state.players.get(spectating) : undefined;
       banner = `<b>Vous êtes mort.</b><br>` + (target ? `Spectateur de ${escapeHtml(target.name)} — cliquez pour changer.` : '');
@@ -432,6 +442,7 @@ export class Hud {
     this.setHtml('banner', banner);
     $('banner').classList.toggle('hidden', banner === '');
     $('banner').classList.toggle('low', state.phase !== PHASE_LOBBY);
+    $('banner').classList.toggle('lobby', state.phase === PHASE_LOBBY);
 
     // Défaite
     const lost = state.phase === PHASE_LOST;

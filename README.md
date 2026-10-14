@@ -7,6 +7,7 @@ difficulté qui monte avec le temps). Usage strictement privé, entre amis.
 ## Lancer le jeu
 
 Prérequis : [Node.js](https://nodejs.org) 20 ou plus.
+Utiliser Node.js **22** pour cette version et `npm.cmd` sous PowerShell.
 
 ```bash
 npm install     # une seule fois
@@ -14,6 +15,12 @@ npm run dev     # lance le serveur (port 2567) et le client (port 5173)
 ```
 
 Ouvrez ensuite <http://localhost:5173>.
+
+Un compte Supabase est désormais obligatoire. Après l'inscription et la confirmation de l'adresse e-mail, choisissez un pseudo et un avatar. La configuration est décrite dans [docs/SUPABASE.md](docs/SUPABASE.md). Les anciennes sauvegardes sont importées lors du premier compte utilisé sur l'appareil.
+
+L'accueil comporte **Single player → Multiplayer → Character → Classement → Historique → Settings**. Les chroniques affichent les runs en lignes avec les détails au clic ; la meilleure run est épinglée en tête de liste.
+
+La progression comporte **33 donjons**, des monstres/décors/musiques par zone, des panoplies et des équipements différenciés par niveau. Les drops proviennent de la zone courante et des deux précédentes, avec raretés antérieures ×3 ; les Dofus restent accessibles sur les boss de toutes les zones. Une surprise plus puissante peut remplacer le gardien toutes les trois zones, avec butin ×3.
 
 ## Tester à 2 en local
 
@@ -197,6 +204,25 @@ npm start           # serveur seul ; sert aussi client/dist s'il existe (un seul
 ```
 
 Sous PowerShell, utilisez `npm.cmd` si l'exécution de `npm.ps1` est restreinte.
+
+## Prototypes à essayer
+
+Les passifs et leurs ressources sont affichés sous les sorts. **F** active uniquement
+les mécaniques qui demandent une action. L'Ecaflip tire automatiquement ses cartes
+sur ses attaques ; le Pandawa porte et jette les ennemis ordinaires avec Karcham.
+
+Les minutes jouées et les gardiens donnent des **fragments de forge permanents**.
+Dans Équipement, améliorez une copie ou recyclez un doublon. Les fusions de dix
+copies restent disponibles ; les Dofus inédits se découvrent sur boss à 3 %
+(6 % pour l'Enutrof grâce à sa prospection).
+
+Après chaque gardien, choisissez l'une des trois bénédictions de stats de run.
+Les charges ont des annonces au sol ; le dash offre 120 ms d'esquive.
+Entre deux zones, une halte marchande arrête le temps et la difficulté : aucun
+monstre ni coffre, six offres personnelles, un reroll gratuit, puis départ lorsque
+tous les joueurs ont confirmé « Prêt ».
+
+[Commandes, coûts et vérifications des prototypes](docs/PROTOTYPES_GAMEPLAY.md).
 
 Le rapport des régions, des déplacements et des propositions pour les douze classes :
 [docs/AUDIT_ZONES_CLASSES.md](docs/AUDIT_ZONES_CLASSES.md).

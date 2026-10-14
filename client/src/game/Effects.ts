@@ -76,7 +76,7 @@ export class Effects {
     const shape = spell.projectile;
     if (!shape) {
       // Pas de projectile : seul un coup de mêlée a un effet visuel propre (les zones passent par « explode »).
-      if (spell.melee) this.slash(e, spell, spell.melee.arc);
+      if (spell.melee&&!this.store.spellFx(this.scene,spell.id)?.main) this.slash(e, spell, spell.melee.arc);
       this.store.playSound(this.scene, `cast_${spell.id}`);
       return;
     }
@@ -93,6 +93,8 @@ export class Effects {
     if (fx?.clips.has('move')) {
       // Projectile officiel : le clip « move » de l'animation Dofus, joué en boucle pendant le vol.
       sprite = this.scene.add.sprite(0, 0, fx.key).setOrigin(fx.origin[0], fx.origin[1]).setScale(fx.scale).play(`${fx.key}:move`);
+    } else if(spell.id==='roue_de_la_fortune'&&fx?.clips.has('duplicate')) {
+      sprite=this.scene.add.sprite(0,0,fx.key).setOrigin(fx.origin[0],fx.origin[1]).setScale(fx.scale).play({key:`${fx.key}:duplicate`,repeat:-1});
     } else if (custom) {
       sprite = this.scene.add.sprite(0, 0, custom.key).setOrigin(custom.origin[0], custom.origin[1]).setScale(custom.scale);
     } else {
@@ -291,6 +293,10 @@ export class Effects {
   /** Piège ou glyphe posé au sol : retourne un objet à mettre à jour puis détruire. */
   groundMarker(x: number, y: number, radius: number, color: number, kind: string): { setArmed(armed: boolean): void; update(t: number): void; destroy(): void } {
     const p = worldToScreen(x, y);
+    if(kind==='ore'||kind==='plant') {
+      const marker=this.scene.add.text(p.x,p.y-4,kind==='ore'?'◆':'✿',{fontFamily:'Georgia, serif',fontSize:kind==='ore'?'17px':'22px',color:kind==='ore'?'#f3d274':'#adcf78',stroke:'#203723',strokeThickness:2}).setOrigin(.5).setDepth(DEPTH_GROUND_FX+3);
+      return{setArmed:()=>{},update:t=>marker.setY(p.y-4-Math.sin(t/350)*1.5),destroy:()=>marker.destroy()};
+    }
     if (kind === 'trap') {
       // Piège : petit symbole, la zone d'explosion en pointillé discret.
       const zone = this.groundCircle(p.x, p.y, radius, color, 0.05, 0.35);

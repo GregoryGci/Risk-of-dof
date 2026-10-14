@@ -9,9 +9,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@colyseus/sdk": "^0.18.5",
     "@colyseus/schema": "^5.0.39",
+    "@colyseus/sdk": "^0.18.5",
     "@rod/shared": "*",
+    "@supabase/supabase-js": "^2.117.3",
     "phaser": "^3.90.0"
   },
   "devDependencies": {

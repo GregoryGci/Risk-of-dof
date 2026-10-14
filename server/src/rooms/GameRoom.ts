@@ -4,6 +4,8 @@ import { Room, type Client } from '@colyseus/core';
 import { MAX_PLAYERS, NAME_MAX_LENGTH, PATCH_MS, ROOM_CODE_LENGTH, TICK_RATE, type CastMessage, type InputMessage } from '@rod/shared';
 import { Simulation } from '../game/Simulation.ts';
 import { GameState } from '../state.ts';
+import {authenticate,recordScore,cloudScoresEnabled} from '../cloud.ts';
+import type {RunReward} from '@rod/shared';
 
 /** Codes des parties en cours, pour éviter les doublons. */
 const activeCodes = new Set<string>();
@@ -30,6 +32,8 @@ export class GameRoom extends Room<{ state: GameState }> {
   maxClients = MAX_PLAYERS;
   state = new GameState();
   private sim!: Simulation;
+  private accounts=new Map<string,string>();
+  async onAuth(_client:Client,options:{accessToken?:unknown}) {return await authenticate(options?.accessToken)??true;}
 
   onCreate(options?: { singlePlayer?: boolean }): void {
     if (options?.singlePlayer === true) { this.maxClients = 1; this.state.singlePlayer=true; }
@@ -39,7 +43,13 @@ export class GameRoom extends Room<{ state: GameState }> {
     // Un client bavard (ou bogué) est déconnecté plutôt que de saturer la salle.
     this.maxMessagesPerSecond = 120;
 
-    this.sim = new Simulation(this.state, (type, message) => this.broadcast(type, message));
+    this.sim = new Simulation(this.state, (type, message) => {
+      this.broadcast(type,message);
+      if(type==='runReward'){
+        const result=message as {player:string;reward:RunReward},userId=this.accounts.get(result.player),run=result.reward.summary;
+        if(userId&&run)void recordScore(userId,run).then(()=>this.clients.find(c=>c.sessionId===result.player)?.send('scoreSaved',{runId:run.runId}),()=>this.clients.find(c=>c.sessionId===result.player)?.send('scoreError',{message:'Le classement n’a pas pu enregistrer cette run. Votre historique reste sauvegardé.'}));
+      }
+    });
     this.setPatchRate(PATCH_MS);
     this.setSimulationInterval((deltaMs) => this.sim.update(deltaMs / 1000), 1000 / TICK_RATE);
 
@@ -51,8 +61,12 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage('pause', (client: Client, message: { paused?: boolean }) => this.sim.setPaused(client.sessionId, message?.paused));
     this.onMessage('equipment', (client: Client, message: { equipment?: unknown }) => this.sim.setEquipment(client.sessionId, message?.equipment));
     this.onMessage('buy', (client: Client, message: { index?: number }) => this.sim.buy(client.sessionId, message?.index));
+    this.onMessage('shopReroll',(client:Client)=>this.sim.rerollShop(client.sessionId));
+    this.onMessage('shopReady',(client:Client)=>this.sim.shopReady(client.sessionId));
     this.onMessage('mode', (client: Client, message: { mode?: number }) => this.sim.setMode(client.sessionId, message?.mode));
     this.onMessage('interact', (client: Client) => this.sim.interact(client.sessionId));
+    this.onMessage('boon',(client:Client,message:{choice?:unknown})=>this.sim.chooseBoon(client.sessionId,message?.choice));
+    this.onMessage('classAction',(client:Client,message:{tx?:unknown;ty?:unknown;choice?:unknown})=>this.sim.classAction(client.sessionId,message));
     this.onMessage('start', (client: Client) => {
       if (client.sessionId === this.state.hostId) this.sim.start();
     });
@@ -61,14 +75,17 @@ export class GameRoom extends Room<{ state: GameState }> {
     console.log(`[salle ${this.roomId}] créée`);
   }
 
-  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown }): void {
-    const name = cleanName(options?.name);
+  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown },auth?:{userId?:string}|boolean): void {
+    if(auth&&typeof auth==='object'&&auth.userId)this.accounts.set(client.sessionId,auth.userId);
+    client.send('cloudStatus',{ranked:this.accounts.has(client.sessionId)&&cloudScoresEnabled});
+    const name = cleanName(auth&&typeof auth==='object'&&'name' in auth?auth.name:options?.name);
     this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.equipment);
     if (!this.state.hostId) this.state.hostId = client.sessionId;
     console.log(`[salle ${this.roomId}] ${name} a rejoint (${this.state.players.size}/${this.maxClients})`);
   }
 
   onLeave(client: Client): void {
+    this.accounts.delete(client.sessionId);
     this.sim.removePlayer(client.sessionId);
     // Si l'hôte part, le plus ancien joueur restant prend le relais.
     if (this.state.hostId === client.sessionId) {

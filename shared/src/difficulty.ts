@@ -2,22 +2,26 @@
 import {ZONES,zoneForStage} from './data/zones.ts';
 
 /** Coefficient de difficulté (1 au départ, croît linéairement avec le temps). */
-export function difficultyAt(seconds: number, playerCount: number): number {
+export function difficultyAt(seconds: number, playerCount: number, stage=1, stageTime=seconds): number {
   const joueurs = 1 + 0.15 * Math.max(0, playerCount - 1);
-  return 1 + (seconds / 60) * 0.4 * joueurs;
+  return 1 + Math.pow(Math.max(0,stage-1),1.12)*1.5 + (seconds/60)*.12*joueurs + Math.floor(stageTime/25)*.09;
 }
 
 /** Crédits de spawn gagnés par seconde par le directeur. */
-export function spawnCreditsPerSecond(difficulty: number, playerCount: number): number {
-  return (0.4 + 0.45 * difficulty) * (0.7 + 0.3 * playerCount);
+export function spawnCreditsPerSecond(difficulty: number, playerCount: number,stage=1): number {
+  return (stage===1?.65+.5*difficulty:2.2+.9*difficulty) * (0.7 + 0.3 * playerCount);
 }
 
 export function monsterHpMultiplier(difficulty: number): number {
-  return 1 + 0.3 * (difficulty - 1);
+  return 1.05*Math.pow(difficulty,1.15);
 }
 export function monsterDamageMultiplier(difficulty: number): number {
-  return 1 + 0.2 * (difficulty - 1);
+  return 1.1*Math.pow(difficulty,.9);
 }
+/** Les mêlées restent lisibles au départ ; le scaling finit par rattraper le kite sans équipement. */
+export function monsterSpeedMultiplier(difficulty:number):number {return Math.min(1.95,1.05+difficulty*.055);}
+/** Budget cohérent des gardiens : les PV Retro bruts ne sont pas comparables entre donjons. */
+export function bossHpBudget(stage:number):number {return 400+stage*110;}
 
 /** Paliers affichés dans le HUD. */
 export const DIFFICULTY_TIERS = [

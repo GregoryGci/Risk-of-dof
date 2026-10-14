@@ -19,7 +19,17 @@ const WORK = path.join(os.tmpdir(), 'rod-extract/items');
 // Objets du jeu : id -> nom, lus dans shared/src/data/items.ts.
 const src = fs.readFileSync(path.join(ROOT, 'shared/src/data/equipment.ts'), 'utf8');
 const ours = {};
-for (const m of src.matchAll(/^ {2}(\w+): \{ name: (['"])(.+?)\2,/gm)) ours[m[1]] = m[3].replace(/\\'/g, "'");
+const kinds = {};
+for (const m of src.matchAll(/^ {2}(\w+): \{ name: (['"])(.+?)\2, kind: '(\w+)'/gm)) {
+  ours[m[1]] = m[3].replace(/\\'/g, "'");
+  kinds[m[1]] = m[4];
+}
+// Types d'objets Dofus par emplacement : départage les homonymes (« Nomoon » : arc ou familier).
+const DOFUS_TYPES = { amulette: [1], anneau: [9], ceinture: [10], bottes: [11], coiffe: [16], cape: [17], familier: [18], dofus: [23], bouclier: [82], arme: [2, 3, 4, 5, 6, 7, 8, 19, 20, 21, 22] };
+function pick(item, kind) {
+  const wanted = DOFUS_TYPES[kind];
+  return (wanted && item.variants.find((v) => wanted.includes(v.type))) ?? item;
+}
 
 const dofus = readDofusItems();
 const input = path.join(WORK, 'in');
@@ -29,11 +39,12 @@ const found = {};
 const DECOR = { potion_vie: 'Potion de Mini Soin Supérieure' };
 for (const [key, name] of Object.entries(DECOR)) ours[`decor_${key}`] = name;
 for (const [id, name] of Object.entries(ours)) {
-  const item = dofus.get(name);
-  if (!item) {
+  const entry = dofus.get(name);
+  if (!entry) {
     console.warn(`introuvable dans Dofus : ${name}`);
     continue;
   }
+  const item = pick(entry, kinds[id]);
   const swf = path.join(RETRO, 'clips/items', String(item.type), `${item.gfx}.swf`);
   if (!fs.existsSync(swf)) {
     console.warn(`icône absente : ${swf}`);

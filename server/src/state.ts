@@ -9,6 +9,19 @@ export const PlayerState = schema(
     equipment: t.string().default('{}'),
     rewards: t.string().default(''),
     runLoot: t.string().default('[]'),
+    forgeGrants: t.string().default('[]'),
+    boonChoices: t.string().default('[]'),
+    mechanic: t.string().default('{}'),
+    cooldowns: t.string().default('[0,0,0,0,0]'),
+    secondaryCharges: t.uint16().default(1),
+    secondaryMax: t.uint16().default(1),
+    shop: t.string().default(''),
+    shopRerolled: t.boolean().default(false),
+    shopReady: t.boolean().default(false),
+    inputSeq: t.uint32().default(0),
+    positionTime: t.float64().default(0),
+    motionEpoch: t.uint32().default(0),
+    forcedMotion:t.boolean().default(false),
     name: t.string().default(''),
     classId: t.string().default('cra'),
     /** Numéro du joueur dans la partie (0-3), sert pour la couleur. */
@@ -25,6 +38,8 @@ export const PlayerState = schema(
     kamas: t.uint32().default(0),
     kamasEarned: t.uint32().default(0),
     kills: t.uint16().default(0),
+    bossKills:t.uint16().default(0),
+    deathCause:t.string().default(''),
     /** Compteurs de la partie (addon de dégâts) : dégâts infligés, soins prodigués, dégâts subis. */
     dmgDealt: t.uint32().default(0),
     healDone: t.uint32().default(0),
@@ -53,6 +68,8 @@ export const MonsterState = schema(
     /** Invocation alliée des joueurs. */
     ally: t.boolean().default(false),
     elite: t.boolean().default(false),
+    carried: t.boolean().default(false),
+    rogue: t.boolean().default(false),
   },
   'MonsterState',
 );
@@ -79,6 +96,7 @@ export type PotionState = InstanceType<typeof PotionState>;
 /** Piège ou glyphe posé au sol. */
 export const GroundState = schema(
   {
+    owner:t.string().default(''),
     kind: t.string().default('glyph'),
     spell: t.string().default(''),
     x: t.float32().default(0),
@@ -93,12 +111,16 @@ export type GroundState = InstanceType<typeof GroundState>;
 export const GameState = schema(
   {
     singlePlayer: t.boolean().default(false),
+    intermission: t.boolean().default(false),
     runId: t.string().default(''),
     phase: t.uint8().default(PHASE_LOBBY),
     /** Graine de la carte : le client régénère la même carte que le serveur. */
     seed: t.uint32().default(1),
     /** Temps de jeu écoulé (s). */
     time: t.float32().default(0),
+    stageTime:t.float32().default(0),
+    waves:t.uint32().default(0),
+    zoneWave:t.uint16().default(0),
     difficulty: t.float32().default(1),
     hostId: t.string().default(''),
     kills: t.uint16().default(0),
@@ -110,7 +132,7 @@ export const GameState = schema(
     chestCost: t.uint16().default(35),
     stage: t.uint8().default(1),
     paused: t.boolean().default(false),
-    mode: t.uint8().default(0),
+    mode: t.uint8().default(1),
     merchantX: t.float32().default(0),
     merchantY: t.float32().default(0),
     shop: t.string().default(''),

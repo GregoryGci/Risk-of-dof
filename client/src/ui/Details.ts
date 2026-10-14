@@ -1,6 +1,6 @@
 // Panneau « détails de la partie » ouvert avec Tab : stats, objets et sorts détaillés.
 // Il libère la souris ; en solo, la partie est mise en pause.
-import { CLASSES, difficultyTier, getClass, getSpell, parseRunBonuses, playerItemStats, sumRunStats, statText, type StatKey, type GameStateView } from '@rod/shared';
+import { CLASSES, CLASS_MECHANICS, difficultyTier, getClass, getSpell, parseRunBonuses, playerItemStats, sumRunStats, statText, type StatKey, type GameStateView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { spellIconSvg } from './icons.ts';
 import { spellDetailsHtml } from './spellInfo.ts';
@@ -100,6 +100,13 @@ export class Details {
         <div class="spell-card-desc">${escapeHtml(spell.description)}</div>${spellDetailsHtml(spell, stats, slot)}</div>
       </div>`;
     });
+    // Mécanique de classe : sa description n'est affichée qu'ici, pas sous la barre de sorts.
+    const mechanic = CLASS_MECHANICS[me.classId];
+    if (mechanic) html += `<div class="spell-card mechanic-card">
+        <div class="spell-card-icon" style="background:#${mechanic.color.toString(16).padStart(6, '0')}"><img src="assets/dofus/portraits/${me.classId}.png" alt=""></div>
+        <div><div class="spell-card-name">${escapeHtml(mechanic.name)} <small>${mechanic.action ? `F — ${escapeHtml(mechanic.action)}` : 'Passif'}</small></div>
+        <div class="spell-card-desc">${escapeHtml(mechanic.hint)}</div></div>
+      </div>`;
     html += `</div>`;
 
     const run=sumRunStats(inventory);

@@ -47,7 +47,8 @@ function clipsOf(xml) {
 }
 
 const mapping = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/spell-sprites.json'), 'utf8'));
-const animIds = [...new Set(Object.values(mapping).filter((m) => m.swf).map((m) => m.sprite))];
+const requested=new Set(process.argv.slice(2).map(Number));
+const animIds = process.argv.includes('--links-only')?[]:[...new Set(Object.values(mapping).filter((m) => m.swf&&(!requested.size||requested.has(m.sprite))).map((m) => m.sprite))];
 fs.mkdirSync(path.join(OUT, 'spellfx'), { recursive: true });
 const manifestFile = path.join(OUT, 'manifest.json');
 const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
@@ -63,11 +64,14 @@ for (const anim of animIds) {
     const xml = fs.readFileSync(xmlFile, 'utf8');
     const frameRate = Number(/frameRate="([\d.]+)"/.exec(xml)?.[1] ?? 25);
     const clips = clipsOf(xml);
+    // Pression sélectionne son niveau par ActionScript : son conteneur racine
+    // reste vide dans un export statique. Le sprite 11 contient le niveau 6.
+    if(anim===806){clips.clear();clips.set('main','11');}
     if (clips.size === 0) throw new Error('aucun clip');
     const selection = [...new Set(clips.values())].join(',');
     const pngDir = path.join(work, 'png');
     const svgDir = path.join(work, 'svg');
-    if (!fs.existsSync(pngDir)) ffdec(['-zoom', String(ZOOM), '-selectid', selection, '-format', 'sprite:png', '-export', 'sprite', pngDir, swf]);
+    if (!fs.existsSync(pngDir)||[...clips.values()].some(id=>!fs.readdirSync(pngDir).some(n=>n===`DefineSprite_${id}`||n.startsWith(`DefineSprite_${id}_`)))) ffdec(['-zoom', String(ZOOM), '-selectid', selection, '-format', 'sprite:png', '-export', 'sprite', pngDir, swf]);
     // SVG : seule la première image sert (origine du clip) ; exporter tout peut prendre des heures.
     if (!fs.existsSync(path.join(svgDir, '.ok'))) {
       try {
@@ -117,7 +121,7 @@ for (const anim of animIds) {
 // Sort du jeu -> animation, avec le type Dofus (1er nombre de spriteInfos : 10 = sur le lanceur, 11 = sur la cible...).
 manifest.spellAnims = {};
 for (const [key, m] of Object.entries(mapping)) {
-  if (manifest.spellfx[m.sprite]) manifest.spellAnims[key] = { anim: String(m.sprite), type: Number(m.spriteInfos.split(',')[0]) };
+  if (manifest.spellfx[m.sprite]) manifest.spellAnims[key] = { anim: String(m.sprite), type: Number(m.spriteInfos.split(',')[0]),casterAnim:Number(m.spriteInfos.split(',')[1]) };
 }
 updateManifest((fresh) => {
   fresh.spellfx = { ...fresh.spellfx, ...manifest.spellfx };

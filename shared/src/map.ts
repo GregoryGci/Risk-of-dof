@@ -34,6 +34,7 @@ export interface GameMap {
   size: number;
   seed: number;
   zoneId: string;
+  bossArena?:{x:number;y:number;radius:number};
   /** Type de sol par case (index = y * size + x). */
   ground: Uint8Array;
   /** 0 = libre, sinon index d'obstacle + 1. */
@@ -122,6 +123,15 @@ export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
     if (libre(x, y)) obstacles[idx(x, y)] = epars[Math.floor(rng() * epars.length)];
   }
 
+  // Chaque famille de donjon a une structure propre, au-delà des couleurs.
+  if(zone.layout==='rooms')for(let cy=10;cy<size-7;cy+=13)for(let cx=10;cx<size-7;cx+=13){
+    for(let oy=-4;oy<=4;oy++)for(let ox=-4;ox<=4;ox++){const x=cx+ox,y=cy+oy;if(!inside(x,y))continue;ground[idx(x,y)]=Math.abs(ox)===4||Math.abs(oy)===4?2:1;
+      if((Math.abs(ox)===4&&Math.abs(oy)>1)||(Math.abs(oy)===4&&Math.abs(ox)>1))obstacles[idx(x,y)]=obstacleIndex('rocher');else obstacles[idx(x,y)]=0;}
+  }
+  if(zone.layout==='temple')for(let y=5;y<size-5;y++)for(let x=5;x<size-5;x++){const dx=Math.abs(x-center),dy=Math.abs(y-center);if(Math.floor(Math.max(dx,dy))%7<2)ground[idx(x,y)]=2;if(dx>5&&dy>5&&x%7===0&&y%7===0)obstacles[idx(x,y)]=obstacleIndex('totem');}
+  if(zone.layout==='cave')for(let branch=0;branch<8;branch++){const a=branch*Math.PI/4;for(let r=9;r<size/2-4;r++){const x=Math.round(center+Math.cos(a)*r),y=Math.round(center+Math.sin(a)*r);for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++)if(inside(x+ox,y+oy)){ground[idx(x+ox,y+oy)]=2;obstacles[idx(x+ox,y+oy)]=0;}}}
+  if(zone.layout==='marsh')for(let i=0;i<10;i++){const cx=5+rng()*(size-10),cy=5+rng()*(size-10);for(let y=Math.floor(cy-3);y<=cy+3;y++)for(let x=Math.floor(cx-3);x<=cx+3;x++)if(inside(x,y)&&Math.hypot(x-cx,y-cy)<3)ground[idx(x,y)]=3;}
+  if(zone.layout==='island')for(let y=2;y<size-2;y++)for(let x=2;x<size-2;x++)if(Math.hypot(x-center,y-center)>size*.38)ground[idx(x,y)]=1;
   // Lisière d'arbres tout autour de la carte.
   for (let i = 0; i < size; i++) {
     for (const [x, y] of [[i, 0], [i, size - 1], [0, i], [size - 1, i]]) {
@@ -143,7 +153,11 @@ export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
     if(ground[idx(x,y)]!==GROUND_CHEMIN) continue;
     for(let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++) obstacles[idx(x+ox,y+oy)]=0;
   }
-  return { size, seed, zoneId:zone.id, ground, obstacles };
+  const bossArena={x:size-10,y:size-11,radius:5.5};
+  // Corridor et salle de boss garantis praticables, aussi pour les gros gardiens.
+  for(let t=0;t<=1;t+=.0125){const cx=center+(bossArena.x-center)*t,cy=center+(bossArena.y-center)*t;for(let y=Math.floor(cy-2);y<=cy+2;y++)for(let x=Math.floor(cx-2);x<=cx+2;x++)if(inside(x,y)){obstacles[idx(x,y)]=0;ground[idx(x,y)]=2;}}
+  for(let y=Math.floor(bossArena.y-6);y<=bossArena.y+6;y++)for(let x=Math.floor(bossArena.x-6);x<=bossArena.x+6;x++)if(inside(x,y)&&Math.hypot(x-bossArena.x,y-bossArena.y)<=bossArena.radius){obstacles[idx(x,y)]=0;ground[idx(x,y)]=Math.hypot(x-bossArena.x,y-bossArena.y)>4.5?1:2;}
+  return { size, seed, zoneId:zone.id, ground, obstacles,bossArena };
 }
 
 /** Obstacle présent sur une case (ou null). */

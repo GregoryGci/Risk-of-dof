@@ -1,5 +1,8 @@
 # Régions, déplacements, progression et classes
 
+Cet audit décrit la version de sauvegarde `b32180e2`. Les propositions ont depuis
+été développées en prototypes locaux : voir [PROTOTYPES_GAMEPLAY.md](PROTOTYPES_GAMEPLAY.md).
+
 Audit du 14 octobre 2026. Les modifications sont locales, sans commit. Le jeu de développement reste disponible sur http://localhost:5175/.
 
 ## Ce qui est implémenté

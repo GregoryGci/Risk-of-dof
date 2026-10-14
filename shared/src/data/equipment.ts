@@ -6,6 +6,8 @@ import type { StatKey } from '../types.ts';
 import { emptyStats, sumRunStats } from './items.ts';
 import { makeRng } from '../rng.ts';
 import { getMode } from '../difficulty.ts';
+import {scaleEquipmentStats} from './equipment-scaling.ts';
+import {equipmentSet,setBonusStats} from './equipment-sets.ts';
 
 export type EquipmentRarity = 'normal' | 'rare' | 'epique' | 'legendaire';
 export type EquipmentKind = 'coiffe' | 'cape' | 'amulette' | 'anneau' | 'ceinture' | 'bottes' | 'arme' | 'bouclier' | 'familier' | 'dofus';
@@ -30,6 +32,8 @@ export interface EquipmentBase {
   name: string;
   kind: EquipmentKind;
   tier: number;
+  level?:number;
+  set?:string;
   /** Jet parfait, dans les unités des stats du jeu. */
   stats: Partial<Record<StatKey, number>>;
 }
@@ -117,6 +121,13 @@ export const EQUIPMENT_BASES: Record<string, EquipmentBase> = {
   dofus_ebene: { name: 'Dofus Ebène', kind: 'dofus', tier: 4, stats: { damage: 0.12, lifesteal: 0.008 } },
   dofus_ivoire: { name: 'Dofus Ivoire', kind: 'dofus', tier: 4, stats: { armor: 1.4 } },
 };
+// Le catalogue stocke désormais les jets parfaits recalibrés. Le client et le
+// serveur utilisent exactement cette même conversion ; rien ne vient des sauvegardes.
+for(const [id,base] of Object.entries(EQUIPMENT_BASES)) {
+  base.level=EQUIPMENT_TIERS[base.tier].level;
+  base.set=equipmentSet(id)?.id;
+  base.stats=scaleEquipmentStats(base.stats,base.level,base.tier,base.kind==='dofus');
+}
 export interface Equipment {
   uid: string;
   base: string;
@@ -127,7 +138,7 @@ export interface Equipment {
 export interface EquipmentStack extends Equipment { quantity: number }
 export interface GearDrop { claimId: string; gear: Equipment }
 export type EquippedGear = Partial<Record<EquipmentSlot, Equipment>>;
-export interface RunReward { runId: string; kamas: number; stage: number; tier: number; gear: EquipmentStack[]; drops: GearDrop[] }
+export interface RunReward { runId: string; kamas: number; stage: number; tier: number; gear: EquipmentStack[]; drops: GearDrop[]; forgeGrants?:import('./forge.ts').ForgeGrant[];summary?:import('./run-history.ts').RunSummary }
 
 export function slotKind(slot: EquipmentSlot): EquipmentKind {
   return slot.startsWith('anneau') ? 'anneau' : slot.startsWith('dofus') ? 'dofus' : slot as EquipmentKind;
@@ -174,7 +185,9 @@ export function equipmentStats(e: Equipment): Partial<Record<StatKey, number>> {
 }
 export function equippedStats(raw: unknown): Record<StatKey, number> {
   const stats = emptyStats();
-  for (const e of Object.values(sanitizeEquipped(raw))) for (const [k, v] of Object.entries(equipmentStats(e))) stats[k as StatKey] += v;
+  const equipment=sanitizeEquipped(raw);
+  for (const e of Object.values(equipment)) for (const [k, v] of Object.entries(equipmentStats(e))) stats[k as StatKey] += v;
+  for(const [k,v] of Object.entries(setBonusStats(equipment)))stats[k as StatKey]+=v;
   return stats;
 }
 export function parseEquipped(text: string): EquippedGear {
@@ -199,24 +212,39 @@ export function stackEquipment(equipment: Equipment[]): EquipmentStack[] {
   }
   return [...stacks.values()];
 }
-export function dropRarity(random = Math.random): EquipmentRarity {
+export function dropRarityWeights(boost=1):Record<EquipmentRarity,number> {
+  const factor=Math.min(5,Math.max(1,boost));return {normal:Math.max(0,1-.2*factor),rare:.16*factor,epique:.035*factor,legendaire:.005*factor};
+}
+export function dropRarity(random = Math.random,boost=1): EquipmentRarity {
   let roll = random();
-  for (const rarity of EQUIPMENT_RARITIES) { roll -= DROP_RARITY_CHANCES[rarity]; if (roll < 0) return rarity; }
+  const weights=dropRarityWeights(boost);
+  for (const rarity of EQUIPMENT_RARITIES) { roll -= weights[rarity]; if (roll < 0) return rarity; }
   return 'legendaire';
 }
+export function dropSources(stage:number):{zone:number;tier:number;weight:number;rarityBoost:number}[] {
+  const rows=[.6,.25,.15].map((weight,offset)=>({zone:stage-offset,tier:equipmentTier(Math.max(1,stage-offset)),weight,rarityBoost:offset?3:1})).filter(row=>row.zone>=1);
+  const total=rows.reduce((n,row)=>n+row.weight,0);return rows.map(row=>({...row,weight:row.weight/total}));
+}
 export function dropPool(stage: number, dofus: boolean): string[] {
-  const tier = equipmentTier(stage);
-  return Object.keys(EQUIPMENT_BASES).filter(id => EQUIPMENT_BASES[id].tier <= tier && (EQUIPMENT_BASES[id].kind === 'dofus') === dofus);
+  const tiers=new Set(dropSources(stage).map(s=>s.tier));
+  return Object.keys(EQUIPMENT_BASES).filter(id => dofus?EQUIPMENT_BASES[id].kind==='dofus':EQUIPMENT_BASES[id].kind!=='dofus'&&tiers.has(EQUIPMENT_BASES[id].tier));
+}
+/** Probabilité exacte d'un objet/rareté par ennemi éligible, pour les tableaux et simulations. */
+export function equipmentDropChance(stage:number,base:string,rarity:EquipmentRarity,multiplier=1):number {
+  const def=EQUIPMENT_BASES[base];if(!def)return 0;
+  if(def.kind==='dofus')return Math.min(1,DOFUS_DROP_CHANCE*multiplier)*DROP_RARITY_CHANCES[rarity]/dropPool(stage,true).length;
+  return Math.min(1,GEAR_DROP_CHANCE*multiplier)*dropSources(stage).filter(s=>s.tier===def.tier).reduce((n,s)=>n+s.weight*dropRarityWeights(s.rarityBoost)[rarity]/Object.values(EQUIPMENT_BASES).filter(b=>b.kind!=='dofus'&&b.tier===s.tier).length,0);
 }
 /** Deux tirages indépendants : équipement sur tout ennemi, Dofus sur boss uniquement. */
-export function monsterEquipmentDrops(stage: number, boss: boolean, random = Math.random): Equipment[] {
+export function monsterEquipmentDrops(stage: number, boss: boolean, random = Math.random, lootMultiplier = 1): Equipment[] {
   const items: Equipment[] = [];
   for (const dofus of [false,true]) {
     if (dofus && !boss) continue;
-    if (random() >= (dofus ? DOFUS_DROP_CHANCE : GEAR_DROP_CHANCE)) continue;
-    const pool = dropPool(stage,dofus);
+    if (random() >= Math.min(1,(dofus ? DOFUS_DROP_CHANCE : GEAR_DROP_CHANCE)*lootMultiplier)) continue;
+    let pool=dropPool(stage,dofus),rarityBoost=1;
+    if(!dofus){let roll=random();const sources=dropSources(stage),source=sources.find(s=>(roll-=s.weight)<0)??sources.at(-1)!;pool=pool.filter(id=>EQUIPMENT_BASES[id].tier===source.tier);rarityBoost=source.rarityBoost;}
     if (!pool.length) continue;
-    items.push(createEquipment(pool[Math.floor(random()*pool.length)],dropRarity(random)));
+    items.push(createEquipment(pool[Math.floor(random()*pool.length)],dropRarity(random,rarityBoost)));
   }
   return items;
 }

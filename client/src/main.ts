@@ -2,16 +2,22 @@
 import Phaser from 'phaser';
 import { Client, type Room } from '@colyseus/sdk';
 import { CLASSES, DEFAULT_CLASS, EQUIPMENT_TIERS, GAME_MODES, PHASE_PLAYING, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT, type GearDrop, type RunReward } from '@rod/shared';
-import { loadManifest } from './assets/manifest.ts';
+import { ASSET_ROOT, loadManifest } from './assets/manifest.ts';
 import { AssetStore } from './assets/store.ts';
 import { GameScene } from './game/GameScene.ts';
 import { Hud, escapeHtml } from './ui/Hud.ts';
 import { TalentsPage } from './ui/Talents.ts';
 import { EquipmentPage } from './ui/EquipmentPage.ts';
 import { EncyclopediaPage } from './ui/EncyclopediaPage.ts';
+import {HistoryPage} from './ui/HistoryPage.ts';
+import {AccountPage} from './ui/AccountPage.ts';
+import {LadderPage} from './ui/LadderPage.ts';
+import {cloud} from './cloud.ts';
 import { setupDialogNavigation } from './ui/dialogNavigation.ts';
 import { account } from './account.ts';
-import { settings, saveSettings } from './settings.ts';
+import { settings, saveSettings, VOLUMES, type VolumeKey } from './settings.ts';
+import { ambiance, music, MENU_TRACK } from './music.ts';
+import { applyCrosshair, crosshairUrl, CROSSHAIR_COLORS, CROSSHAIR_SHAPES } from './crosshair.ts';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 setupDialogNavigation();
@@ -40,12 +46,21 @@ function serverUrl(): string {
 const client = new Client(serverUrl());
 const manifestPromise = loadManifest();
 let game: Phaser.Game | null = null;
+/**
+ * Contexte audio unique pour toutes les parties : Phaser ferme le sien à chaque destruction du jeu,
+ * et ses écouteurs de visibilité tentaient ensuite de relancer un contexte fermé.
+ * Fourni par la config, il est seulement suspendu ; on le relance au début de chaque partie.
+ */
+const audioContext = new AudioContext();
+manifestPromise.then((m) => { music.setManifest(m); ambiance.setManifest(m); });
+music.play(MENU_TRACK);
+applyCrosshair();
 
 // Pseudo mémorisé et code pré-rempli par un lien d'invitation (?code=ABCD).
 pseudoInput.value = localStorage.getItem('rod.pseudo') ?? '';
 const invited = new URLSearchParams(location.search).get('code');
 if (invited) codeInput.value = invited.toUpperCase().slice(0, ROOM_CODE_LENGTH);
-let setupMode = 0;
+let setupMode = 1;
 let currentView = '';
 
 // Classe choisie, mémorisée d'une partie à l'autre.
@@ -66,6 +81,7 @@ classPicker.addEventListener('click', (e) => {
   if (!id || !CLASSES[id]) return;
   classId = id;
   localStorage.setItem('rod.classe', id);
+  cloud.changed();
   renderClassPicker();
 });
 renderClassPicker();
@@ -81,6 +97,12 @@ const equipmentPage = new EquipmentPage(() => {
   renderProfile();
 }, () => !currentRoom || currentRoom.state.phase !== PHASE_PLAYING);
 const encyclopedia = new EncyclopediaPage();
+const history=new HistoryPage();
+const accountPage=new AccountPage(),ladder=new LadderPage();
+$('btn-account').onclick=()=>accountPage.open();
+$('btn-ladder').onclick=()=>ladder.open();
+cloud.subscribe(()=>{if(cloud.busy)return;classId=localStorage.getItem('rod.classe')??DEFAULT_CLASS;if(!CLASSES[classId])classId=DEFAULT_CLASS;pseudoInput.value=localStorage.getItem('rod.pseudo')??'';renderClassPicker();applyCrosshair();});
+$('btn-history').onclick=()=>history.open();
 $('btn-encyclopedia').addEventListener('click', () => encyclopedia.open());
 $('equipment-collection').addEventListener('click', () => encyclopedia.open());
 $('btn-equipment').addEventListener('click', () => equipmentPage.open(classId));
@@ -89,7 +111,7 @@ $('btn-go-equipment').addEventListener('click', () => equipmentPage.open(classId
 function renderProfile(): void {
   const tier = EQUIPMENT_TIERS[account.bestTier];
   const count = Object.keys(account.equipment).length;
-  $('home-profile').innerHTML = `<img src="assets/dofus/portraits/${classId}.png" alt=""><div><b>${escapeHtml(pseudoInput.value.trim() || 'Aventurier')}</b><span>${CLASSES[classId].name} · ${count} équipements</span></div><span class="profile-bank">${account.bank.toLocaleString('fr')}<small>KAMAS</small></span>`;
+  $('home-profile').innerHTML = `<img src="assets/dofus/portraits/${account.profile.avatar||classId}.png" alt=""><div><b>${escapeHtml(account.profile.name||pseudoInput.value.trim() || 'Aventurier')}</b><span>${CLASSES[classId].name} · ${count} équipements</span></div><span class="profile-bank">${account.bank.toLocaleString('fr')}<small>KAMAS</small></span>`;
   $('home-progress').textContent = `PALIER ${tier.level} · ${account.inventory.length} ÉQUIPEMENTS`;
   $('equipment-summary').textContent = `${count} emplacements équipés · ${account.inventory.length} objets`;
   $('collection-summary').textContent = `${account.discovered.length} / ${account.catalogSize} découverts`;
@@ -104,7 +126,7 @@ function showView(view: string): void {
   menu.classList.toggle('has-view', !!view);
   for (const name of Object.keys(names)) $(`view-${name}`).classList.toggle('hidden', view !== name);
   document.querySelectorAll<HTMLElement>('.home-nav-button').forEach(b => { b.classList.toggle('active', b.dataset.view === view); b.setAttribute('aria-current', b.dataset.view === view ? 'page' : 'false'); });
-  $('identity-row').classList.toggle('hidden', view === 'settings');
+  $('identity-row').classList.add('hidden');
   $('menu-error').textContent = '';
   if (names[view]) { $('view-eyebrow').textContent = names[view][0]; $('view-title').textContent = names[view][1]; }
   renderProfile();
@@ -116,14 +138,57 @@ menu.addEventListener('click', e => {
   if (button?.dataset.view) showView(button.dataset.view);
 });
 $('view-close').addEventListener('click', () => { const prev = currentView; showView(''); document.querySelector<HTMLElement>(`.home-nav-button[data-view="${prev}"]`)?.focus(); });
-pseudoInput.addEventListener('input', () => { localStorage.setItem('rod.pseudo', pseudoInput.value); renderProfile(); });
+pseudoInput.addEventListener('input', () => { localStorage.setItem('rod.pseudo', pseudoInput.value); cloud.changed(); renderProfile(); });
+/** Réglages de volume : clé, titre, explication. */
+const VOLUME_ROWS: [VolumeKey, string, string][] = [
+  ['musicVolume', 'Musique', 'Musiques de Dofus 1.29 : une par région, une autre pendant le combat contre le gardien.'],
+  ['ambianceVolume', 'Ambiance', 'Bruits de la région (vent, oiseaux, forêt) et annonces : objet, gardien, nouvelle zone.'],
+  ['sfxVolume', 'Sorts et combat', 'Sons officiels des sorts, coups, critiques et explosions.'],
+];
+/** Son joué au relâchement d'un curseur de volume, pour entendre le réglage depuis le menu. */
+const VOLUME_PREVIEW: Partial<Record<VolumeKey, string>> = { ambianceVolume: 'item', sfxVolume: 'cast_pression' };
+function previewVolume(key: VolumeKey): void {
+  const sound = VOLUME_PREVIEW[key];
+  manifestPromise.then((m) => {
+    const file = sound && m.sounds?.[sound];
+    if (!file || settings[key] <= 0) return;
+    const audio = new Audio(ASSET_ROOT + file);
+    audio.volume = Math.min(1, 0.5 * settings[key]);
+    audio.play().catch(() => {});
+  });
+}
 function renderSettings(): void {
   $('home-settings').innerHTML = `<label class="home-setting"><div><b>Attaque automatique</b><span>L’attaque de base vise l’ennemi le plus proche à portée. Le clic gauche garde la visée manuelle.</span></div><input type="checkbox" name="autoAttack" ${settings.autoAttack ? 'checked' : ''}><i aria-hidden="true"></i></label>
-    <label class="home-setting"><div><b>Smart cast</b><span>Espace et R lancent aussitôt le sort vers la souris. Désactivé, un clic confirme votre cible.</span></div><input type="checkbox" name="smartCast" ${settings.smartCast ? 'checked' : ''}><i aria-hidden="true"></i></label>`;
+    <label class="home-setting"><div><b>Smart cast</b><span>Espace et R lancent aussitôt le sort vers la souris. Désactivé, un clic confirme votre cible.</span></div><input type="checkbox" name="smartCast" ${settings.smartCast ? 'checked' : ''}><i aria-hidden="true"></i></label>
+    ${VOLUME_ROWS.map(([key, name, help]) => `<div class="home-setting setting-wide"><div><b>${name}</b><span>${help}</span></div><input class="setting-range" type="range" name="${key}" min="0" max="100" step="5" value="${Math.round(settings[key] * 100)}" aria-label="Volume : ${name}"><output id="${key}-value">${Math.round(settings[key] * 100)} %</output></div>`).join('')}
+    <div class="home-setting setting-wide crosshair-setting"><div><b>Viseur</b><span>Forme et couleur du curseur en jeu.</span>
+      <div class="crosshair-options" role="radiogroup" aria-label="Forme du viseur">${Object.entries(CROSSHAIR_SHAPES).map(([id, name]) => `<label class="crosshair-choice" title="${name}"><input type="radio" name="crosshairShape" value="${id}" ${settings.crosshairShape === id ? 'checked' : ''}><img src="${crosshairUrl(id, settings.crosshairColor)}" alt="${name}"></label>`).join('')}</div>
+      <div class="crosshair-colors" role="radiogroup" aria-label="Couleur du viseur">${Object.entries(CROSSHAIR_COLORS).map(([id, c]) => `<label class="crosshair-color" title="${c.name}"><input type="radio" name="crosshairColor" value="${id}" aria-label="${c.name}" ${settings.crosshairColor === id ? 'checked' : ''}><i style="background:${c.hex}"></i></label>`).join('')}</div>
+    </div><div class="crosshair-preview" aria-hidden="true"><img src="${crosshairUrl(settings.crosshairShape, settings.crosshairColor)}" alt=""></div></div>`;
 }
 $('home-settings').addEventListener('change', e => {
   const input = e.target as HTMLInputElement;
   if (input.name === 'autoAttack' || input.name === 'smartCast') { settings[input.name] = input.checked; saveSettings(); }
+  if (input.name === 'crosshairShape' || input.name === 'crosshairColor') {
+    settings[input.name] = input.value;
+    saveSettings();
+    applyCrosshair();
+    renderSettings();
+    $('home-settings').querySelector<HTMLInputElement>(`input[name="${input.name}"][value="${input.value}"]`)?.focus();
+  }
+  if (isVolume(input.name)) { saveSettings(); previewVolume(input.name); }
+});
+const isVolume = (name: string): name is VolumeKey => (VOLUMES as readonly string[]).includes(name);
+// Le volume suit le curseur en direct ; il est mémorisé au relâchement (événement change).
+$('home-settings').addEventListener('input', e => {
+  const input = e.target as HTMLInputElement;
+  if (!isVolume(input.name)) return;
+  const volume = Number(input.value) / 100;
+  // Musique et ambiance tournent déjà : leur volume change en direct. Les bruitages lisent le réglage à chaque son.
+  if (input.name === 'musicVolume') music.setVolume(volume);
+  else if (input.name === 'ambianceVolume') ambiance.setVolume(volume);
+  else settings[input.name] = volume;
+  $(`${input.name}-value`).textContent = `${input.value} %`;
 });
 function renderModes(): void {
   $('setup-modes').innerHTML = GAME_MODES.map((m,i) => `<button class="setup-mode${setupMode === m.id ? ' active' : ''}" data-setup-mode="${m.id}" aria-pressed="${setupMode === m.id}" title="${escapeHtml(m.description)}"><span>${['Facile','Normal','Difficile'][i]}</span><b>${m.name}</b><small>${['Découvrez les champs','Avec une première tenue','Tenue de palier 80 conseillée'][i]}</small></button>`).join('');
@@ -143,7 +208,7 @@ function setBusy(busy: boolean): void {
 }
 
 function pseudo(): string {
-  const name = pseudoInput.value.trim().slice(0, NAME_MAX_LENGTH);
+  const name = (account.profile.name||pseudoInput.value.trim()).slice(0, NAME_MAX_LENGTH);
   localStorage.setItem('rod.pseudo', name);
   return name;
 }
@@ -161,6 +226,9 @@ async function connect(join: () => Promise<Room>): Promise<void> {
   errorEl.textContent = '';
   setBusy(true);
   try {
+    await cloud.ready;
+    if(!cloud.session||!account.profile.complete){accountPage.open();return;}
+    await cloud.flush();
     const room = await join();
     await startGame(room);
   } catch (e) {
@@ -171,7 +239,7 @@ async function connect(join: () => Promise<Room>): Promise<void> {
   }
 }
 
-const joinOptions = () => ({ name: pseudo(), classId, spells: account.loadout(classId), equipment: account.equipment });
+const joinOptions = () => ({ name: pseudo(), classId, spells: account.loadout(classId), equipment: account.equipment,accessToken:cloud.session?.access_token });
 btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, joinOptions())));
 btnSolo.addEventListener('click', () => connect(async () => {
   const room = await client.create(ROOM_NAME, { ...joinOptions(), singlePlayer: true });
@@ -197,12 +265,54 @@ pseudoInput.addEventListener('keydown', (e) => {
 });
 
 async function startGame(room: Room): Promise<void> {
+  // La réservation WebSocket peut précéder le premier snapshot Colyseus.
+  // Attendre ses données avant de choisir les assets et de lancer la scène.
+  if(!Number.isFinite(room.state?.stage)||!Number.isFinite(room.state?.seed)){
+    await new Promise<void>((resolve,reject)=>{
+      const receive=(state:{stage?:number;seed?:number})=>{if(!Number.isFinite(state.stage)||!Number.isFinite(state.seed))return;window.clearTimeout(timeout);room.onStateChange.remove(receive);resolve();};
+      const timeout=window.setTimeout(()=>{room.onStateChange.remove(receive);reject(new Error('La partie ne répond pas. Réessayez.'));},10000);
+      room.onStateChange(receive);
+    });
+  }
   currentRoom = room;
   const store = new AssetStore(await manifestPromise);
+
+  /**
+   * Retour à l'accueil, sans attendre le serveur : après une coupure, le SDK tente de se reconnecter
+   * et `room.leave()` ne répondait qu'à la fin de ces tentatives — le bouton semblait ne rien faire.
+   */
+  let closed = false;
+  const backToMenu = (error = ''): void => {
+    if (closed) return;
+    closed = true;
+    if (currentRoom === room) currentRoom = null;
+    // Plus aucun message du serveur ne doit atteindre la scène détruite.
+    room.removeAllListeners();
+    hud.hide();
+    equipmentPage.close();
+    encyclopedia.close();
+    talents.close();
+    // Détruit la scène : objets, minuteries, tweens, sons et écouteurs clavier/souris (événement SHUTDOWN).
+    game?.destroy(true);
+    game = null;
+    menu.classList.remove('hidden');
+    renderProfile();
+    errorEl.textContent = error;
+    music.play(MENU_TRACK);
+    ambiance.play('');
+  };
+  const quit = (): void => {
+    backToMenu();
+    // Départ propre si le serveur répond ; sinon on coupe la connexion sans relancer de reconnexion.
+    room.reconnection.enabled = false;
+    const force = window.setTimeout(() => { try { room.connection.close(); } catch { /* Déjà fermée. */ } }, 1500);
+    room.leave().then(() => window.clearTimeout(force), () => {});
+  };
+
   const hud = new Hud(store, {
     onStart: () => { room.send('equipment', { equipment: account.equipment }); room.send('start'); },
     onRestart: () => room.send('restart'),
-    onQuit: () => room.leave(),
+    onQuit: quit,
     onSpellHover: () => {},
     onMode: (mode) => room.send('mode', { mode }),
     onEquipment: (uid) => equipmentPage.open(classId, uid),
@@ -217,9 +327,14 @@ async function startGame(room: Room): Promise<void> {
   });
 
   room.onMessage('gearDrop',(message:{player:string;drop:GearDrop})=>{ if(message.player===room.sessionId) hud.collectDrop(message.drop); });
+  room.onMessage('forgeGrant',(message:{player:string;grant:import('@rod/shared').ForgeGrant})=>{if(message.player===room.sessionId)account.claimFragments([message.grant]);});
   room.onMessage('runReward',(message:{player:string;reward:RunReward})=>{ if(message.player===room.sessionId) { account.creditRun(message.reward); renderProfile(); } });
+  room.onMessage('scoreSaved',()=>hud.toast('Votre run est inscrite au classement.'));
+  room.onMessage('scoreError',(message:{message:string})=>hud.toast(escapeHtml(message.message)));
+  room.onMessage('cloudStatus',()=>{});
   menu.classList.add('hidden');
   hud.show(room.roomId);
+  audioContext.resume().catch(() => {});
 
   game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -230,22 +345,12 @@ async function startGame(room: Room): Promise<void> {
     // créer une texture en cours de partie (chiffre de dégâts, effet...) faisait disparaître les sprites
     // des personnages. Le sol est pré-dessiné dans une seule texture pour limiter le coût (MapView).
     render: { antialias: true, roundPixels: false, maxTextures: 1 },
+    audio: { context: audioContext },
     // La scène reçoit la salle, les assets et le HUD par son constructeur.
     scene: new GameScene({ room, store, hud }),
   });
 
-  // Retour à l'accueil quand on quitte ou que la connexion tombe.
-  room.onLeave((code) => {
-    currentRoom = null;
-    hud.hide();
-    equipmentPage.close();
-    encyclopedia.close();
-    talents.close();
-    game?.destroy(true);
-    game = null;
-    menu.classList.remove('hidden');
-    renderProfile();
-    // 1000 = départ volontaire ; tout autre code = coupure.
-    errorEl.textContent = code === 1000 || code === 4000 ? '' : 'Connexion au serveur perdue.';
-  });
+  // Retour à l'accueil quand le serveur ferme la partie ou que la connexion tombe pour de bon.
+  // 1000/4000 = départ volontaire ; tout autre code = coupure.
+  room.onLeave((code) => backToMenu(code === 1000 || code === 4000 ? '' : 'Connexion au serveur perdue.'));
 }

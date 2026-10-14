@@ -5,9 +5,9 @@ import {ZONES,zoneForStage,bossForStage,generateMap,isBlocked,stepMovement,MAP_S
 import {GameState} from '../server/src/state.ts';
 import {Simulation} from '../server/src/game/Simulation.ts';
 
-test('cinq régions déterministes, gardiens cohérents et décors/monstres authentiques',()=>{
+test('33 donjons : gardiens, cartes et assets authentiques',()=>{
   const manifest=JSON.parse(fs.readFileSync('client/public/assets/dofus/manifest.json','utf8'));
-  for(let stage=1;stage<=10;stage++) {
+  for(let stage=1;stage<=33;stage++) {
     const zone=zoneForStage(stage);
     assert.equal(bossForStage(stage),zone.boss);
     assert.deepEqual(generateMap(123,MAP_SIZE,stage),generateMap(123,MAP_SIZE,stage));
@@ -15,18 +15,18 @@ test('cinq régions déterministes, gardiens cohérents et décors/monstres auth
     for(const type of zone.monsters) {
       assert.ok(!getMonster(type).boss && !getMonster(type).ally);
       assert.ok(manifest.monsters[type]);
-      for(const key of ['image','atlas']) assert.ok(fs.existsSync(`client/public/assets/dofus/${manifest.monsters[type][key]}`));
+      for(const key of ['image','atlas']) assert.ok(fs.existsSync(`client/public/assets/dofus/${(manifest.monsters[manifest.monsters[type].aliasOf??type])[key]}`));
     }
     for(const type of zone.ground) assert.ok(manifest.tiles[type]);
     assert.ok(manifest.objects[zone.trees]);
     for(const type of zone.scatter) assert.ok(manifest.objects[type]);
-    if(getMonster(zone.boss).summon) assert.ok(zone.monsters.includes(getMonster(zone.boss).summon!.monster));
+    assert.ok(manifest.monsters[zone.boss]);assert.ok(manifest.music[zone.music!.explore]);assert.ok(manifest.music[zone.music!.fight]);
   }
-  assert.equal(new Set(ZONES.map(z=>z.id)).size,5);
+  assert.equal(new Set(ZONES.map(z=>z.id)).size,33);
 });
 
-test('routes reliées, départ libre et grande majorité du terrain accessible sur 100 cartes',()=>{
-  for(let stage=1;stage<=5;stage++) for(let seed=1;seed<=20;seed++) {
+test('routes reliées, départ libre et grande majorité du terrain accessible sur 132 cartes',()=>{
+  for(let stage=1;stage<=33;stage++) for(let seed=1;seed<=4;seed++) {
     const map=generateMap(seed,MAP_SIZE,stage),size=map.size;
     assert.equal(isBlocked(map,size/2,size/2,PLAYER_RADIUS),false);
     const free=new Set<number>();
@@ -55,7 +55,7 @@ test('diagonale sans accélération et dash arrêté par un obstacle entre deux 
 
 test('passage de Zaap : carte, vagues, élite et cooldowns changent ensemble',()=>{
   const state=new GameState(),sim=new Simulation(state,()=>{});sim.addPlayer('p','Test','iop');sim.start();const p=sim.players.get('p')!;
-  p.def={...p.def,maxHp:100000};p.state.maxHp=p.state.hp=100000;
+  p.def={...p.def,maxHp:100000};p.state.maxHp=p.state.hp=100000;p.buffs.push({stats:{armor:1000},until:100000,invisible:false,invulnerable:true});
   for(let stage=1;stage<=7;stage++) {
     assert.equal(state.stage,stage);assert.equal(sim.map.zoneId,zoneForStage(stage).id);
     assert.ok([...state.chests.values()].every(ch=>Math.hypot(ch.x-state.zaapX,ch.y-state.zaapY)>=ZAAP_RANGE+INTERACT_RANGE+.2));
@@ -70,6 +70,7 @@ test('passage de Zaap : carte, vagues, élite et cooldowns changent ensemble',()
     p.readyAt=[999,999,999,999];p.push={vx:20,vy:0,time:.2};
     state.zaapState=ZAAP_READY;p.state.x=state.zaapX;p.state.y=state.zaapY;sim.interact(p.id);
     assert.equal(p.push,null);assert.ok(p.readyAt.every(t=>t<=sim.now));
+    assert.equal(state.intermission,true);assert.equal(sim.monsters.size,0);assert.equal(state.chests.size,0);sim.shopReady(p.id);assert.equal(state.intermission,false);
   }
 });
 

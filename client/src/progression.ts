@@ -1,8 +1,14 @@
+import {sanitizeRunSummary,type RunSummary} from '@rod/shared';
+import {sanitizeProfile,type PlayerProfile} from '@rod/shared';
 import { EQUIPMENT_BASES, EQUIPMENT_SLOTS, createEquipment, sanitizeEquipment, sanitizeEquipped, slotKind, type EquipmentStack, type EquipmentSlot, type EquippedGear } from '@rod/shared';
 
 export interface AccountData {
+  profile:PlayerProfile;
+  history:RunSummary[];
   version: 3;
   bank: number;
+  fragments: number;
+  claimedFragments: string[];
   unlocked: string[];
   loadouts: Record<string, string[]>;
   credited: string[];
@@ -35,7 +41,7 @@ export function migrateAccount(raw: unknown): AccountData {
   const old = object(raw);
   const loadouts: Record<string, string[]> = {};
   for (const [cls, spells] of Object.entries(object(old.loadouts))) loadouts[cls] = strings(spells).slice(0, 4);
-  const data: AccountData = { version: 3, bank: integer(old.bank), unlocked: strings(old.unlocked), loadouts, credited: strings(old.credited), inventory: [], claimedDrops: strings(old.claimedDrops), discovered: strings(old.discovered).filter(id => !!EQUIPMENT_BASES[id]), equipped: {}, bestTier: integer(old.bestTier, 4), migrationNotice: old.migrationNotice === true };
+  const data: AccountData = { version: 3, profile:sanitizeProfile(old.profile), history: (Array.isArray(old.history)?old.history:[]).map(sanitizeRunSummary).filter((r):r is RunSummary=>!!r).slice(0,200), bank: integer(old.bank), fragments:integer(old.fragments), claimedFragments:strings(old.claimedFragments), unlocked: strings(old.unlocked), loadouts, credited: strings(old.credited), inventory: [], claimedDrops: strings(old.claimedDrops), discovered: strings(old.discovered).filter(id => !!EQUIPMENT_BASES[id]), equipped: {}, bestTier: integer(old.bestTier, 4), migrationNotice: old.migrationNotice === true };
   if (old.version === 2 || old.version === 3) {
     const ids = new Map<string,string>();
     for (const rawItem of Array.isArray(old.inventory) ? old.inventory : []) {

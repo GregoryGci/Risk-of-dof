@@ -392,13 +392,13 @@ export const SPELLS: Record<string, SpellDef> = define({
   // =========================================================================
   sournoiserie: {
     name: 'Sournoiserie',
-    description: 'Coup de dague rapide devant soi.',
+    description: 'Projectile à distance. Chaque ennemi mort a 10 % de chance de laisser un Piège Sournois à sa place.',
     color: 0x9a7ad0,
     element: 'terre',
     cooldown: 400,
-    range: 2,
+    range: 8,
     damage: [15, 20],
-    melee: { arc: 90 },
+    projectile: { speed: 23, radius: 0.3 },
   },
   piege_sournois: {
     name: 'Piège Sournois',
@@ -434,13 +434,13 @@ export const SPELLS: Record<string, SpellDef> = define({
   // Talents
   attaque_mortelle: {
     name: 'Attaque Mortelle',
-    description: 'Coup plus lent mais très puissant.',
+    description: 'Attaque à distance, plus lente mais très puissante.',
     color: 0x6a3a90,
     element: 'terre',
     cooldown: 900,
-    range: 2.2,
+    range: 8,
     damage: [32, 42],
-    melee: { arc: 80 },
+    projectile: { speed: 23, radius: 0.3 },
   },
   piege_empoisonne: {
     name: 'Piège Empoisonné',
@@ -499,7 +499,7 @@ export const SPELLS: Record<string, SpellDef> = define({
   },
   vent_empoisonne: {
     name: 'Vent Empoisonné',
-    description: 'Ultime : un nuage empoisonne gravement tous les ennemis de la zone.',
+    description: 'Empoisonne la zone visée et une zone de 3 cases autour de chacune de vos poupées pendant 5 s. Les zones superposées ne cumulent pas les dégâts.',
     color: 0x90e040,
     element: 'air',
     cooldown: 12000,
@@ -557,24 +557,24 @@ export const SPELLS: Record<string, SpellDef> = define({
     gamble: { chance: 0.5, win: 2.2, lose: 0.4 },
   },
   roue_de_la_fortune: {
-    name: 'Roue de la Fortune',
-    description: 'Un bonus au hasard pendant 6 s : dégâts, vitesse de recharge, critiques ou vitesse.',
+    name: 'Griffe Joueuse',
+    description: 'Une griffe traverse les ennemis en ligne et leur inflige 32 à 42 dégâts.',
     color: 0xffa040,
     element: 'feu',
-    cooldown: 10000,
-    range: 0,
-    damage: [0, 0],
-    buff: { stats: { damage: 0.6, haste: 0.6, crit: 0.5, speed: 0.5 }, duration: 6, randomOne: true },
+    cooldown: 5000,
+    range: 9,
+    damage: [32, 42],
+    projectile: { speed: 24, radius: 0.65, pierce:true },
   },
   odorat: {
     name: 'Odorat',
-    description: 'Vous et les alliés proches : +2 de portée et -30 % de temps de recharge pendant 5 s.',
+    description: 'Vous et les alliés à 4 cases gagnez un bonus aléatoire pendant 6 s : +60 % dégâts, +60 % vitesse de recharge, +50 % critiques ou +50 % vitesse.',
     color: 0xffd080,
     element: 'air',
     cooldown: 13000,
     range: 0,
     damage: [0, 0],
-    buff: { stats: { range: 2, haste: 0.3 }, duration: 5, zone: 4, label: 'Odorat' },
+    buff: { stats: { damage: 0.6, haste: 0.6, crit: 0.5, speed: 0.5 }, duration: 6, randomOne: true, zone: 4, label: 'Odorat' },
   },
   bond_du_felin: {
     name: 'Bond du Félin',
@@ -723,13 +723,13 @@ export const SPELLS: Record<string, SpellDef> = define({
   // =========================================================================
   fouet: {
     name: 'Fouet',
-    description: 'Coup de fouet qui porte un peu plus loin qu\'une arme de mêlée.',
+    description: 'Frappe à distance jusqu’à 8 cases et marque la cible pour vos Dragonnets pendant 6 s.',
     color: 0x7ad0c8,
     element: 'air',
     cooldown: 600,
-    range: 3,
+    range: 8,
     damage: [12, 16],
-    melee: { arc: 70 },
+    projectile: { speed: 28, radius: 0.3 },
   },
   invocation_de_tofu: {
     name: 'Invocation de Dragonnet',
@@ -742,14 +742,14 @@ export const SPELLS: Record<string, SpellDef> = define({
     summon: { monster: 'osa_tofu', max: 3, duration: 25 },
   },
   invocation_de_bouftou: {
-    name: 'Dragonnet Gardien',
-    description: 'Invoque un Dragonnet robuste qui attire les monstres sur lui (30 s).',
+    name: 'Frappe du Craqueleur',
+    description: 'Frappe le sol autour de vous dans un rayon de 3 cases : 45 à 60 dégâts de terre.',
     color: 0xe0d0b0,
     element: 'terre',
-    cooldown: 12000,
-    range: 5,
-    damage: [0, 0],
-    summon: { monster: 'osa_bouftou', max: 1, duration: 30 },
+    cooldown: 6500,
+    range: 0,
+    damage: [45, 60],
+    zone: { radius:3,self:true },
   },
   laisse_spirituelle: {
     name: 'Laisse Spirituelle',
@@ -789,7 +789,7 @@ export const SPELLS: Record<string, SpellDef> = define({
   },
   coffre_anime: {
     name: 'Coffre Animé',
-    description: 'Invoque un coffre vivant, très résistant, qui attire les monstres (25 s).',
+    description: 'Invoque un coffre pendant 25 s. Ses PV sont égaux à vos PV max au lancement ; il reçoit les dégâts à votre place jusqu’à sa destruction. Les dégâts excédentaires vous atteignent.',
     color: 0xb08040,
     element: 'terre',
     cooldown: 15000,
@@ -873,14 +873,12 @@ export const SPELLS: Record<string, SpellDef> = define({
   },
   karcham: {
     name: 'Karcham',
-    description: 'Empoigne les ennemis devant soi et les projette au loin.',
+    description: 'Porte un ennemi ordinaire pendant 3 s. Relancez pour le jeter à 5 cases : 28 dégâts en zone (36 en état ivre). Élites et boss ne peuvent pas être portés.',
     color: 0xa0c080,
     element: 'terre',
     cooldown: 5000,
     range: 2.3,
-    damage: [22, 28],
-    melee: { arc: 60 },
-    effects: [{ type: 'knockback', distance: 4.5 }],
+    damage: [0, 0],
   },
   ivresse: {
     name: 'Ivresse',
@@ -908,6 +906,15 @@ export const SPELLS: Record<string, SpellDef> = define({
   // =========================================================================
   // Monstres
   // =========================================================================
+  jardin_vivant: {
+    name:'Pousse vivante',description:'Les pousses du Sadida blessent doucement les ennemis.',color:0x94c969,element:'terre',cooldown:1000,range:8,damage:[3,4],ground:{kind:'glyph',radius:.7,duration:12,tick:1,max:6},
+  },
+  filon_enutrof: {
+    name:'Pépite',description:'Pépite du filon de combat.',color:0xe6ca7b,element:'terre',cooldown:1000,range:8,damage:[0,0],ground:{kind:'glyph',radius:.2,duration:12,tick:99,max:10},
+  },
+  impulsion_classe: {
+    name:'Impulsion',description:'Effet de mécanique de classe.',color:0xeacb8d,element:'neutre',cooldown:1000,range:12,damage:[1,1],zone:{radius:2},
+  },
   souffle_dragonnet: {
     name:'Souffle du Dragonnet',description:'Flamme de l’invocation alliée.',icon:'graine',color:0xff7340,element:'feu',cooldown:1100,range:6,damage:[13,16],projectile:{speed:12,radius:.2},
   },

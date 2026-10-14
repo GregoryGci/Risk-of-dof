@@ -14,6 +14,11 @@ import {
   monsterPlaceholderKey,
   tilePlaceholderKey,
 } from './placeholders.ts';
+import { settings } from '../settings.ts';
+
+/** Annonces de partie, réglées avec l'ambiance plutôt qu'avec les sorts. */
+const ANNOUNCE_SOUNDS = new Set(['item', 'boss', 'stage']);
+const SOUND_GAP_MS = 70;
 
 /** Ce qu'il faut pour afficher un personnage ou un monstre. */
 export interface EntityVisual {
@@ -35,6 +40,9 @@ function asArray<T>(v: T | T[]): T[] {
 }
 
 export class AssetStore {
+  private pendingMonsters=new Set<string>();
+  private failedMonsters=new Set<string>();
+  private assetVersion='';
   private tiles: Record<string, string[]> = {};
   private objects: Record<string, ImageVisual[]> = {};
 
@@ -44,7 +52,7 @@ export class AssetStore {
   // Chargement (appelé dans preload)
   // -------------------------------------------------------------------------
 
-  preload(scene: Phaser.Scene): void {
+  preload(scene: Phaser.Scene,monsterIds?:Iterable<string>): void {
     const m = this.manifest;
     scene.load.setPath(ASSET_ROOT);
     // Version des fichiers = empreinte du manifeste : après une nouvelle extraction, le navigateur
@@ -52,6 +60,7 @@ export class AssetStore {
     let hash = 0;
     for (const ch of JSON.stringify(m)) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
     const version = (hash >>> 0).toString(36);
+    this.assetVersion=version;
     const v = (file: string) => `${file}?v=${version}`;
     scene.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {
       console.warn(`[assets] introuvable : ${file.src} -> placeholder`);
@@ -63,7 +72,8 @@ export class AssetStore {
       else scene.load.image(key, v(def.image));
     };
     for (const [id, def] of Object.entries(m.characters ?? {})) loadSprite(`char_${id}`, def);
-    for (const [id, def] of Object.entries(m.monsters ?? {})) loadSprite(`mon_${id}`, def);
+    const needed=monsterIds?new Set([...monsterIds].map(id=>m.monsters?.[id]?.aliasOf??id)):undefined;
+    for (const [id, def] of Object.entries(m.monsters ?? {})) if(!def.aliasOf&&(!needed||needed.has(id)))loadSprite(`mon_${id}`, def);
     for (const [type, files] of Object.entries(m.tiles ?? {})) asArray(files).forEach((f, i) => scene.load.image(`tile_${type}_${i}`, v(f)));
     for (const [id, defs] of Object.entries(m.objects ?? {})) asArray(defs).forEach((d, i) => scene.load.image(`obj_${id}_${i}`, v(d.image)));
     for (const [id, def] of Object.entries(m.projectiles ?? {})) scene.load.image(`proj_${id}`, v(def.image));
@@ -160,12 +170,29 @@ export class AssetStore {
   }
 
   monster(scene: Phaser.Scene, type: string): EntityVisual {
-    const key = `mon_${type}`;
-    const def = this.manifest.monsters?.[type];
+    const canonical=this.manifest.monsters?.[type]?.aliasOf??type;
+    const key = `mon_${canonical}`;
+    const def = this.manifest.monsters?.[canonical];
     if (def && scene.textures.exists(key)) return { key, origin: def.origin ?? [0.5, 0.9], scale: def.scale ?? 1, sprite: def };
     let ph = monsterPlaceholderKey(type);
     if (!scene.textures.exists(ph)) ph = ensureGenericMonster(scene, type, getMonster(type).color);
     return { key: ph, origin: ENTITY_PLACEHOLDER_ORIGIN, scale: getMonster(type).scale ?? 1, sprite: null };
+  }
+  /** Charge uniquement les familles nécessaires, sans bloquer la simulation. */
+  loadMonsters(scene:Phaser.Scene,ids:Iterable<string>):void {
+    const names=[...new Set([...ids].map(id=>this.manifest.monsters?.[id]?.aliasOf??id))].filter(id=>this.manifest.monsters?.[id]&&!scene.textures.exists(`mon_${id}`)&&!this.pendingMonsters.has(id)&&!this.failedMonsters.has(id));
+    if(!names.length)return;
+    const v=(file:string)=>`${file}?v=${this.assetVersion}`;
+    for(const id of names){const def=this.manifest.monsters![id];this.pendingMonsters.add(id);if(def.atlas)scene.load.atlas(`mon_${id}`,v(def.image),v(def.atlas));else if(def.frameWidth&&def.frameHeight)scene.load.spritesheet(`mon_${id}`,v(def.image),{frameWidth:def.frameWidth,frameHeight:def.frameHeight});else scene.load.image(`mon_${id}`,v(def.image));}
+    scene.load.once(Phaser.Loader.Events.COMPLETE,()=>{for(const id of names){this.pendingMonsters.delete(id);if(scene.textures.exists(`mon_${id}`))this.createAnims(scene,`mon_${id}`,this.manifest.monsters![id]);else this.failedMonsters.add(id);}});
+    if(!scene.load.isLoading())scene.load.start();
+  }
+  releaseMonsters(scene:Phaser.Scene,keep:Iterable<string>):void {
+    const needed=new Set([...keep].map(id=>this.manifest.monsters?.[id]?.aliasOf??id));
+    for(const [id,def] of Object.entries(this.manifest.monsters??{})){if(def.aliasOf||needed.has(id)||!scene.textures.exists(`mon_${id}`))continue;
+      for(const [name,dirs] of Object.entries(def.anims??{}))for(const dir of Object.keys(dirs))scene.anims.remove(`mon_${id}:${name}:${dir}`);
+      scene.textures.remove(`mon_${id}`);
+    }
   }
 
   /** Sprite animé du coffre (Coffre au Trésor malveillant) s'il a été extrait, sinon null. */
@@ -179,7 +206,7 @@ export class AssetStore {
    * Animation officielle d'un sort, si elle a été extraite : clé de texture, clips disponibles
    * (`main` = effet complet, `move` = projectile en vol...) et type Dofus (10 = joué sur le lanceur).
    */
-  spellFx(scene: Phaser.Scene, spellId: string): { key: string; origin: [number, number]; scale: number; clips: Set<string>; main: string; type: number } | null {
+  spellFx(scene: Phaser.Scene, spellId: string): { key: string; origin: [number, number]; scale: number; clips: Set<string>; main: string; type: number;casterAnim?:number } | null {
     const link = this.manifest.spellAnims?.[spellId];
     const def = link ? this.manifest.spellfx?.[link.anim] : undefined;
     if (!link || !def || !scene.textures.exists(`fx_${link.anim}`)) return null;
@@ -187,7 +214,7 @@ export class AssetStore {
     // Clip principal : « main », sinon le plus long (certaines animations n'ont que des clips nommés).
     const names = Object.keys(def.anims);
     const main = def.anims.main ? 'main' : names.filter((n) => n !== 'move').sort((a, b) => (def.anims[b].end ?? 0) - (def.anims[a].end ?? 0))[0] ?? '';
-    return { key: `fx_${link.anim}`, origin: def.origin ?? [0.5, 0.5], scale: (def.scale ?? 1) * 1.4, clips: new Set(names), main, type: link.type };
+    return { key: `fx_${link.anim}`, origin: def.origin ?? [0.5, 0.5], scale: (def.scale ?? 1) * 1.4, clips: new Set(names), main, type: link.type,casterAnim:link.casterAnim };
   }
 
   /** Image de projectile fournie pour ce sort, ou null (flèche placeholder). */
@@ -215,11 +242,21 @@ export class AssetStore {
     return file ? ASSET_ROOT + file : null;
   }
 
-  /** Joue un son s'il est fourni ; silencieux sinon. */
+  /**
+   * Joue un son s'il est fourni ; silencieux sinon.
+   * Le volume suit le réglage de son canal : les annonces (objet, gardien, zone) vont avec l'ambiance,
+   * tout le reste avec les sorts et le combat. Un même son ne repart pas avant SOUND_GAP_MS,
+   * sinon une salve de coups devient un vacarme.
+   */
   playSound(scene: Phaser.Scene, name: string, volume = 0.5): void {
     const key = `snd_${name}`;
-    if (scene.cache.audio.exists(key)) scene.sound.play(key, { volume });
+    const channel = ANNOUNCE_SOUNDS.has(name) ? settings.ambianceVolume : settings.sfxVolume;
+    const now = performance.now();
+    if (channel <= 0 || now - (this.lastSoundAt.get(name) ?? -Infinity) < SOUND_GAP_MS || !scene.cache.audio.exists(key)) return;
+    this.lastSoundAt.set(name, now);
+    scene.sound.play(key, { volume: volume * channel });
   }
+  private lastSoundAt = new Map<string, number>();
 
   /**
    * Trouve l'animation à jouer pour (nom, direction).

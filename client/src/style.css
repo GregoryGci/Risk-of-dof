@@ -52,11 +52,8 @@ body {
 }
 #game canvas {
   display: block;
-  /* Viseur : anneau doré à contour noir, lisible sur tous les fonds. */
-  cursor:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><g fill='none' stroke-linecap='round'><circle cx='16' cy='16' r='8' stroke='black' stroke-width='4'/><circle cx='16' cy='16' r='8' stroke='%23ffcf6e' stroke-width='2'/><path d='M16 1v6M16 25v6M1 16h6M25 16h6' stroke='black' stroke-width='4'/><path d='M16 2v5M16 25v5M2 16h5M25 16h5' stroke='white' stroke-width='2'/></g><circle cx='16' cy='16' r='2' fill='%23ff4030' stroke='black' stroke-width='1'/></svg>")
-      16 16,
-    crosshair;
+  /* Viseur choisi dans les réglages (crosshair.ts), à contour noir pour rester lisible sur tous les fonds. */
+  cursor: var(--game-cursor, crosshair);
 }
 
 .hidden {
@@ -756,18 +753,64 @@ input[type='text']:focus {
   font-weight: bold;
 }
 
-/* Bandeau du salon / spectateur */
+/* Bandeau du salon / spectateur : en haut, compact, sans jamais atteindre le personnage.
+   Le personnage est au centre de l'écran et dépasse de 75 unités du monde au-dessus ; le zoom vaut
+   max(largeur / 1100, hauteur / 600) (GameScene.applyZoom), soit 75 × zoom = max(6.82vw, 12.5vh).
+   Le bas du bandeau s'arrête donc 12 px au-dessus de sa tête, quelle que soit la résolution ;
+   au-delà, le contenu défile. La barre de sorts, en bas, est hors d'atteinte. */
 #banner {
+  --banner-top: 92px;
   position: absolute;
-  top: 96px;
+  top: var(--banner-top);
   left: 50%;
   transform: translateX(-50%);
-  width: min(480px, 92vw);
+  /* Entre l'équipe (gauche) et la colonne mini-carte / addon de dégâts (droite). */
+  width: max-content;
+  max-width: clamp(300px, calc(100vw - 680px), 920px);
+  max-height: max(56px, calc(50vh - max(6.82vw, 12.5vh) - 12px - var(--banner-top)));
+  overflow-y: auto;
   text-align: center;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 #banner.low {
-  top: 160px;
+  /* Sous la barre du gardien. */
+  --banner-top: 156px;
+}
+#banner.lobby {
+  width: clamp(300px, calc(100vw - 680px), 920px);
+}
+.lobby-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+}
+.lobby-head .mode-picker {
+  margin: 0;
+  flex-wrap: nowrap;
+}
+.lobby-head .mode-btn {
+  flex: none;
+  padding: 4px 9px;
+}
+.lobby-head > .btn {
+  padding: 5px 10px;
+  font-size: 11px;
+}
+.lobby-title,
+.lobby-count,
+.lobby-wait {
+  font-size: 11px;
+  color: var(--encre-douce);
+}
+#banner.lobby .class-picker {
+  margin: 6px 0 0;
+  gap: 4px;
+}
+#banner.lobby .class-btn {
+  flex: 1 1 60px;
+  padding: 4px 3px;
 }
 #banner .big-code {
   display: inline-block;
@@ -939,10 +982,97 @@ input[type='text']:focus {
   color: var(--bois-fonce);
   font-size: 15px;
 }
+/* Variantes du clic gauche | lot commun (clic droit / Espace), deux fois plus large | variantes du R. */
 .talents-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
   gap: 10px;
+}
+.pool-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 8px;
+}
+.talents-slot h3 small {
+  font-size: 10px;
+  font-weight: normal;
+  color: var(--encre-douce);
+}
+.talent.draggable {
+  cursor: grab;
+}
+.talent.draggable:active {
+  cursor: grabbing;
+}
+.talent-action .btn + .btn,
+.talent-action .talent-state + .btn {
+  margin-left: 6px;
+}
+
+/* Barre de sorts de la page des talents : les emplacements libres reçoivent les sorts glissés. */
+.talents-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.bar-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgba(92, 67, 37, 0.35);
+  border-radius: 6px;
+  background: rgba(92, 67, 37, 0.08);
+  font-size: 11px;
+  min-width: 0;
+}
+.bar-slot .spell-card-icon {
+  width: 40px;
+  height: 40px;
+}
+.bar-slot small {
+  display: block;
+  color: var(--encre-douce);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 9px;
+}
+.bar-slot b {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar-slot.flex {
+  border: 2px dashed var(--or);
+  background: rgba(255, 236, 190, 0.45);
+  cursor: grab;
+}
+#talents-body.dragging .bar-slot.flex {
+  box-shadow: 0 0 0 3px rgba(197, 162, 100, 0.35);
+}
+.bar-slot.flex.drop-over {
+  border-style: solid;
+  background: rgba(168, 187, 131, 0.55);
+}
+@media (max-width: 1000px) {
+  .talents-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .talents-pool {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+@media (max-width: 700px) {
+  .talents-grid,
+  .pool-cards {
+    grid-template-columns: 1fr;
+  }
+  .talents-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .talent {
   margin-bottom: 8px;

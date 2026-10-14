@@ -171,6 +171,8 @@ export type StatKey =
   | 'multishot' // projectiles (ou frappes) en plus sur l'attaque de base
   | 'attackSpeed' // vitesse de l'attaque de base à distance (+%)
   | 'range' // portée des sorts (cases)
+  | 'bounce' // rebond de l’attaque de base
+  | 'secondaryCharge' // charges supplémentaires du clic droit
   | 'revive'; // résurrection automatique une fois par partie
 
 export type BonusRarity = 'commun' | 'rare' | 'epique';
@@ -194,6 +196,7 @@ export interface RunBonusDef {
 
 /** Client -> serveur. Le client n'envoie QUE ses intentions. */
 export interface InputMessage {
+  seq?:number;
   /** Active l'attaque de base automatique sur l'ennemi le plus proche à portée. */
   autoAttack?: boolean;
   /** Direction de déplacement en coordonnées monde (0,0 = immobile). */
@@ -301,12 +304,27 @@ export interface SyncMap<T> {
   forEach(cb: (value: T, key: string) => void): void;
 }
 export interface PlayerView {
+  bossKills:number;
+  deathCause:string;
   /** Tenue permanente validée, identique pendant toute la run. */
   equipment: string;
   /** Récompense de fin de run calculée par le serveur (JSON). */
   rewards: string;
   /** Drops permanents déjà obtenus dans cette run, crédités dès réception. */
   runLoot: string;
+  forgeGrants: string;
+  boonChoices: string;
+  mechanic:string;
+  cooldowns:string;
+  secondaryCharges:number;
+  secondaryMax:number;
+  shop:string;
+  shopRerolled:boolean;
+  shopReady:boolean;
+  inputSeq:number;
+  positionTime:number;
+  motionEpoch:number;
+  forcedMotion:boolean;
   name: string;
   classId: string;
   slot: number;
@@ -347,8 +365,11 @@ export interface MonsterView {
   ally: boolean;
   /** Monstre d'élite invoqué par une balise de défi. */
   elite: boolean;
+  carried:boolean;
+  rogue:boolean;
 }
 export interface GroundView {
+  owner:string;
   kind: string;
   spell: string;
   x: number;
@@ -368,6 +389,10 @@ export interface PotionView {
   y: number;
 }
 export interface GameStateView {
+  waves:number;
+  zoneWave:number;
+  intermission:boolean;
+  stageTime:number;
   singlePlayer: boolean;
   /** Identifiant de run, conservé à travers les changements de carte. */
   runId: string;

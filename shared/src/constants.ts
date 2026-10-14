@@ -19,7 +19,7 @@ export const TILE_H = 32;
 
 export const PLAYER_RADIUS = 0.35;
 /** Nombre maximum de monstres vivants en même temps. */
-export const MAX_MONSTERS = 70;
+export const MAX_MONSTERS = 160;
 
 /** Phases d'une partie. */
 export const PHASE_LOBBY = 0;
@@ -44,4 +44,4 @@ export const ZAAP_CHARGE_TIME = 45;
 
 /** Balises de défi par zone (font apparaître un élite) et offres du marchand. */
 export const CHALLENGE_COUNT = 2;
-export const SHOP_SIZE = 4;
+export const SHOP_SIZE = 6;

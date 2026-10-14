@@ -97,6 +97,13 @@
     "spriteInfos": "51,1,1",
     "swf": true
   },
+  "vitalite": {
+    "dofusId": 155,
+    "name": "Vitalité ",
+    "sprite": 801,
+    "spriteInfos": "10,1,1",
+    "swf": true
+  },
   "epee_du_jugement": {
     "dofusId": 152,
     "name": "Epée du Jugement",
@@ -315,10 +322,10 @@
     "swf": true
   },
   "roue_de_la_fortune": {
-    "dofusId": 106,
-    "name": "Roue de la Fortune",
-    "sprite": 603,
-    "spriteInfos": "10,1,1",
+    "dofusId": 110,
+    "name": "Griffe Joueuse",
+    "sprite": 604,
+    "spriteInfos": "41,0,1",
     "swf": true
   },
   "odorat": {
@@ -419,18 +426,11 @@
     "spriteInfos": "51,0,1",
     "swf": true
   },
-  "invocation_de_tofu": {
-    "dofusId": 34,
-    "name": "Invocation de Tofu",
-    "sprite": 1100,
-    "spriteInfos": "11,1,1",
-    "swf": true
-  },
   "invocation_de_bouftou": {
-    "dofusId": 35,
-    "name": "Invocation de Bouftou",
-    "sprite": 1100,
-    "spriteInfos": "11,1,1",
+    "dofusId": 36,
+    "name": "Frappe du Craqueleur",
+    "sprite": 212,
+    "spriteInfos": "51,1,1",
     "swf": true
   },
   "lancer_de_pieces": {

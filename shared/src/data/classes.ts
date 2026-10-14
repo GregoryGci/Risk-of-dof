@@ -47,7 +47,7 @@ export const CLASSES: Record<string, ClassDef> = {
   sram: {
     id: 'sram',
     name: 'Sram',
-    description: 'Assassin : pose des pièges, frappe dans le dos et disparaît.',
+    description: 'Assassin à distance : les ennemis morts peuvent laisser un piège ; il devient invisible pour se repositionner.',
     color: 0x7a4ab0,
     maxHp: 130,
     speed: 5,
@@ -67,7 +67,7 @@ export const CLASSES: Record<string, ClassDef> = {
   ecaflip: {
     id: 'ecaflip',
     name: 'Ecaflip',
-    description: 'Joueur : tout repose sur la chance, pour le meilleur et pour le pire.',
+    description: 'Joueur : ses attaques tirent des cartes. Une main de cinq cartes lui accorde un bonus selon sa combinaison.',
     color: 0xe0b030,
     maxHp: 150,
     speed: 4.7,
@@ -97,7 +97,7 @@ export const CLASSES: Record<string, ClassDef> = {
   enutrof: {
     id: 'enutrof',
     name: 'Enutrof',
-    description: 'Chasseur de trésors : malchance pour les ennemis, kamas pour lui.',
+    description: 'Chasseur de trésors : deux fois plus de chances de drop ; son coffre prend les coups à sa place.',
     color: 0xc8a040,
     maxHp: 140,
     speed: 4.2,

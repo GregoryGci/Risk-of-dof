@@ -84,6 +84,8 @@ const ENTITIES = {
   osa_bouftou: { kind: 'monsters', sprite: 1165 },
   coffre_anime: { kind: 'monsters', sprite: 1083 },
 };
+const extraFile=path.join(ROOT,'tools/dungeon-sprites.json');
+if(fs.existsSync(extraFile))for(const [id,spec] of Object.entries(JSON.parse(fs.readFileSync(extraFile,'utf8'))))ENTITIES[id]={kind:'monsters',sprite:spec.sprite,maxFrames:12};
 
 /** Animation du jeu -> noms d'animation Dofus à essayer, dans l'ordre. */
 const ANIMS = {
@@ -91,6 +93,8 @@ const ANIMS = {
   run: ['run', 'walk'],
   // « hit » n'est pas repris : il affiche une grande étoile rouge, trop envahissante en temps réel.
   attack: ['anim0'],
+  cast1: ['anim1'],
+  cast2: ['anim2'],
   death: ['die'],
 };
 
@@ -145,7 +149,7 @@ function resolveClip(sprites, id) {
 // Extraction d'une entité
 // ---------------------------------------------------------------------------
 
-function extract(key, { kind, sprite, idleLastFrame }) {
+function extract(key, { kind, sprite, idleLastFrame,maxFrames=MAX_FRAMES }) {
   const swf = path.join(RETRO, 'clips/sprites', `${sprite}.swf`);
   const work = path.join(CACHE, `${key}_${sprite}`);
   fs.mkdirSync(work, { recursive: true });
@@ -158,6 +162,7 @@ function extract(key, { kind, sprite, idleLastFrame }) {
   // Animations voulues -> clip à exporter.
   const wanted = [];
   for (const [anim, candidates] of Object.entries(ANIMS)) {
+    if(kind==='monsters'&&anim.startsWith('cast'))continue;
     for (const [letter, dir] of Object.entries(DIRS)) {
       const name = candidates.map((c) => c + letter).find((n) => exportsByName.has(n));
       if (!name) continue;
@@ -172,8 +177,9 @@ function extract(key, { kind, sprite, idleLastFrame }) {
   const pngDir = path.join(work, 'png');
   const svgDir = path.join(work, 'svg');
   const selection = ids.join(',');
-  if (!fs.existsSync(pngDir)) ffdec(['-zoom', String(ZOOM), '-selectid', selection, '-format', 'sprite:png', '-export', 'sprite', pngDir, swf]);
-  if (!fs.existsSync(svgDir)) ffdec(['-zoom', String(ZOOM), '-selectid', selection, '-format', 'sprite:svg', '-export', 'sprite', svgDir, swf]);
+  const missing=(dir)=>!fs.existsSync(dir)||ids.some(id=>!fs.readdirSync(dir).some(n=>n===`DefineSprite_${id}`||n.startsWith(`DefineSprite_${id}_`)));
+  if (missing(pngDir)) ffdec(['-zoom', String(ZOOM), '-selectid', selection, '-format', 'sprite:png', '-export', 'sprite', pngDir, swf]);
+  if (missing(svgDir)) ffdec(['-zoom', String(ZOOM), '-selectid', selection, '-format', 'sprite:svg', '-export', 'sprite', svgDir, swf]);
   const clipDir = (dir, id) => {
     const d = fs.readdirSync(dir).find((n) => n === `DefineSprite_${id}` || n.startsWith(`DefineSprite_${id}_`));
     return d ? path.join(dir, d) : null;
@@ -192,7 +198,7 @@ function extract(key, { kind, sprite, idleLastFrame }) {
     const ox = t ? Number(t[1]) : 0;
     const oy = t ? Number(t[2]) : 0;
     const count = fs.readdirSync(pdir).filter((n) => n.endsWith('.png')).length;
-    const step = Math.max(1, Math.ceil(count / MAX_FRAMES));
+    const step = Math.max(1, Math.ceil(count / maxFrames));
     let index = 0;
     for (let f = 1; f <= count; f += step) {
       const img = decodePng(fs.readFileSync(path.join(pdir, `${f}.png`)));
@@ -272,6 +278,7 @@ function extract(key, { kind, sprite, idleLastFrame }) {
       atlas: `sprites/${key}.json`,
       origin: [Number((left / W).toFixed(4)), Number((top / H).toFixed(4))],
       scale: Number(((clipScale * GAME_SCALE * DISPLAY_BOOST) / ZOOM).toFixed(4)),
+      sourceSprite:sprite,
       anims,
     },
   };
@@ -282,10 +289,15 @@ function extract(key, { kind, sprite, idleLastFrame }) {
 const only = process.argv.slice(2);
 const manifestFile = path.join(OUT, 'manifest.json');
 const manifest = fs.existsSync(manifestFile) ? JSON.parse(fs.readFileSync(manifestFile, 'utf8')) : {};
+const sharedSprites=new Map();
+for(const [id,spec] of Object.entries(ENTITIES)){const def=manifest[spec.kind]?.[id];if(def&&!def.aliasOf)sharedSprites.set(`${spec.kind}:${spec.sprite}`,{id,def});}
 for (const [key, entity] of Object.entries(ENTITIES)) {
   if (only.length > 0 && !only.includes(key)) continue;
   try {
+    const shared=sharedSprites.get(`${entity.kind}:${entity.sprite}`);
+    if(shared&&shared.id!==key){updateManifest(fresh=>{fresh[entity.kind]??={};fresh[entity.kind][key]={...shared.def,aliasOf:shared.id};});console.log(`[${key}] atlas partagé avec ${shared.id}`);continue;}
     const { kind, def } = extract(key, entity);
+    sharedSprites.set(`${entity.kind}:${entity.sprite}`,{id:key,def});
     manifest[kind] ??= {};
     manifest[kind][key] = def;
     updateManifest((fresh) => {

@@ -1,0 +1,362 @@
+{
+  "milimilou": {
+    "sprite": 1581,
+    "name": "Milimilou"
+  },
+  "batofu": {
+    "sprite": 1380,
+    "name": "Batofu"
+  },
+  "mob_eponge": {
+    "sprite": 1546,
+    "name": "Mob l’Éponge"
+  },
+  "coffre_forgerons": {
+    "sprite": 1083,
+    "name": "Coffre au Trésor"
+  },
+  "chafer_elite": {
+    "sprite": 1048,
+    "name": "Chafer d’Élite"
+  },
+  "shin_larve": {
+    "sprite": 1231,
+    "name": "Shin Larve"
+  },
+  "gelee_royale": {
+    "sprite": 1061,
+    "name": "Gelée Royale Bleue"
+  },
+  "wa_wabbit": {
+    "sprite": 1109,
+    "name": "Wa Wabbit"
+  },
+  "wobot_gardien": {
+    "sprite": 1058,
+    "name": "Wobot"
+  },
+  "bulbig": {
+    "sprite": 1273,
+    "name": "Bulbig"
+  },
+  "maitre_pandore": {
+    "sprite": 1295,
+    "name": "Maître Pandore"
+  },
+  "tanukoui_san": {
+    "sprite": 1283,
+    "name": "Tanukouï San"
+  },
+  "peki_peki": {
+    "sprite": 1297,
+    "name": "Péki Péki"
+  },
+  "maitre_corbac": {
+    "sprite": 1186,
+    "name": "Maître Corbac"
+  },
+  "blop_multicolore": {
+    "sprite": 1647,
+    "name": "Blop Multicolore Royal"
+  },
+  "abraknyde_ancestral": {
+    "sprite": 1458,
+    "name": "Abraknyde Ancestral"
+  },
+  "chene_mou": {
+    "sprite": 1157,
+    "name": "Chêne Mou"
+  },
+  "dragon_cochon": {
+    "sprite": 1037,
+    "name": "Dragon Cochon"
+  },
+  "minotoror": {
+    "sprite": 1088,
+    "name": "Minotoror"
+  },
+  "meulou": {
+    "sprite": 1134,
+    "name": "Meulou"
+  },
+  "bworker": {
+    "sprite": 1242,
+    "name": "Bworker"
+  },
+  "crocabulia": {
+    "sprite": 1451,
+    "name": "Crocabulia"
+  },
+  "rat_blanc": {
+    "sprite": 1544,
+    "name": "Rat Blanc"
+  },
+  "rat_noir": {
+    "sprite": 1538,
+    "name": "Rat Noir"
+  },
+  "sphincter_cell": {
+    "sprite": 1541,
+    "name": "Sphincter Cell"
+  },
+  "kimbo": {
+    "sprite": 1623,
+    "name": "Kimbo"
+  },
+  "minotot": {
+    "sprite": 1444,
+    "name": "Minotot"
+  },
+  "kralamoure": {
+    "sprite": 1635,
+    "name": "Kralamoure Géant"
+  },
+  "chafer": {
+    "sprite": 1014,
+    "name": "Chafer"
+  },
+  "chafer_archer": {
+    "sprite": 1190,
+    "name": "Chafer Archer"
+  },
+  "chafer_lancier": {
+    "sprite": 1189,
+    "name": "Chafer Lancier"
+  },
+  "tofu_noir": {
+    "sprite": 1462,
+    "name": "Tofu Noir"
+  },
+  "tofu_malefique": {
+    "sprite": 1072,
+    "name": "Tofu Maléfique"
+  },
+  "pichon_bleu": {
+    "sprite": 1487,
+    "name": "Pichon Bleu"
+  },
+  "pichon_orange": {
+    "sprite": 1488,
+    "name": "Pichon Orange"
+  },
+  "crabe": {
+    "sprite": 1009,
+    "name": "Crabe"
+  },
+  "forgeron_sombre": {
+    "sprite": 1074,
+    "name": "Forgeron Sombre"
+  },
+  "mineur_sombre": {
+    "sprite": 1073,
+    "name": "Mineur Sombre"
+  },
+  "bandit": {
+    "sprite": 1095,
+    "name": "Bandit du clan des Roublards"
+  },
+  "larve_bleue": {
+    "sprite": 1563,
+    "name": "Larve Bleue"
+  },
+  "larve_orange": {
+    "sprite": 1567,
+    "name": "Larve Orange"
+  },
+  "larve_verte": {
+    "sprite": 1568,
+    "name": "Larve Verte"
+  },
+  "gelee_bleue": {
+    "sprite": 1062,
+    "name": "Gelée Bleue"
+  },
+  "gelee_fraise": {
+    "sprite": 1066,
+    "name": "Gelée Fraise"
+  },
+  "gelee_menthe": {
+    "sprite": 1064,
+    "name": "Gelée Menthe"
+  },
+  "wabbit": {
+    "sprite": 1050,
+    "name": "Wabbit"
+  },
+  "tiwabbit": {
+    "sprite": 1053,
+    "name": "Tiwabbit"
+  },
+  "black_wabbit": {
+    "sprite": 1051,
+    "name": "Black Wabbit"
+  },
+  "bulbuisson": {
+    "sprite": 1266,
+    "name": "Bulbuisson"
+  },
+  "bulbiflore": {
+    "sprite": 1265,
+    "name": "Bulbiflore"
+  },
+  "bulbambou": {
+    "sprite": 1267,
+    "name": "Bulbambou"
+  },
+  "pandikaze": {
+    "sprite": 1260,
+    "name": "Pandikaze"
+  },
+  "pandule": {
+    "sprite": 1274,
+    "name": "Pandule"
+  },
+  "kitsou_nae": {
+    "sprite": 1268,
+    "name": "Kitsou Nae"
+  },
+  "kitsou_nufeu": {
+    "sprite": 1269,
+    "name": "Kitsou Nufeu"
+  },
+  "kitsou_nere": {
+    "sprite": 1270,
+    "name": "Kitsou Nere"
+  },
+  "yokai_firefoux": {
+    "sprite": 1276,
+    "name": "Yokai Firefoux"
+  },
+  "soryo_firefoux": {
+    "sprite": 1275,
+    "name": "Soryo Firefoux"
+  },
+  "corbac": {
+    "sprite": 1179,
+    "name": "Corbac"
+  },
+  "renarbo": {
+    "sprite": 1406,
+    "name": "Renarbo"
+  },
+  "buveur": {
+    "sprite": 1407,
+    "name": "Buveur"
+  },
+  "blop_reinette": {
+    "sprite": 1173,
+    "name": "Blop Reinette"
+  },
+  "blop_griotte": {
+    "sprite": 1172,
+    "name": "Blop Griotte"
+  },
+  "blop_indigo": {
+    "sprite": 1171,
+    "name": "Blop Indigo"
+  },
+  "abraknyde": {
+    "sprite": 1001,
+    "name": "Abraknyde"
+  },
+  "tronknyde": {
+    "sprite": 1160,
+    "name": "Tronknyde"
+  },
+  "abraknyde_sombre": {
+    "sprite": 1158,
+    "name": "Abraknyde Sombre"
+  },
+  "cochon_lait": {
+    "sprite": 1060,
+    "name": "Cochon de Lait"
+  },
+  "don_dorgan": {
+    "sprite": 1259,
+    "name": "Don Dorgan"
+  },
+  "gamino": {
+    "sprite": 1384,
+    "name": "Gamino"
+  },
+  "serpiplume": {
+    "sprite": 1409,
+    "name": "Serpiplume"
+  },
+  "deminoboule": {
+    "sprite": 1338,
+    "name": "Déminoboule"
+  },
+  "mominotor": {
+    "sprite": 1387,
+    "name": "Mominotor"
+  },
+  "milimulou": {
+    "sprite": 1107,
+    "name": "Milimulou"
+  },
+  "mulou": {
+    "sprite": 1069,
+    "name": "Mulou"
+  },
+  "cybwork": {
+    "sprite": 1243,
+    "name": "Cybwork"
+  },
+  "dragoeuf_guerrier": {
+    "sprite": 1480,
+    "name": "Dragoeuf Guerrier"
+  },
+  "dragoeuf_volant": {
+    "sprite": 1502,
+    "name": "Dragoeuf Volant"
+  },
+  "rat_egoutant": {
+    "sprite": 1226,
+    "name": "Rat d’Égoutant"
+  },
+  "rat_basher": {
+    "sprite": 1537,
+    "name": "Rat Basher"
+  },
+  "rat_croc": {
+    "sprite": 1436,
+    "name": "Rat Croc"
+  },
+  "rat_batteur": {
+    "sprite": 1534,
+    "name": "Rat Batteur"
+  },
+  "rat_klure": {
+    "sprite": 1536,
+    "name": "Rat Klure"
+  },
+  "rat_bajoie": {
+    "sprite": 1539,
+    "name": "Rat Bajoie"
+  },
+  "bitouf_aerien": {
+    "sprite": 1631,
+    "name": "Bitouf Aérien"
+  },
+  "kaskargo": {
+    "sprite": 1622,
+    "name": "Kaskargo"
+  },
+  "poolay": {
+    "sprite": 1600,
+    "name": "Poolay"
+  },
+  "tourbassingue": {
+    "sprite": 1626,
+    "name": "Tourbassingue"
+  },
+  "bourbassingue": {
+    "sprite": 1625,
+    "name": "Bourbassingue"
+  },
+  "roissingue": {
+    "sprite": 1624,
+    "name": "Roissingue"
+  }
+}

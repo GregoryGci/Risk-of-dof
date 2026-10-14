@@ -1,4 +1,5 @@
 /** Régions déterministes : le gardien, le terrain et sa population changent ensemble. */
+import {DUNGEONS,type DungeonLayout} from './dungeons.ts';
 export interface ZoneDef {
   id: string;
   name: string;
@@ -13,8 +14,11 @@ export interface ZoneDef {
   patches: number;
   fields: number;
   background: string;
+  layout?:DungeonLayout;
+  music?:{explore:string;fight:string};
+  ambiance?:string;
 }
-export const ZONES: readonly ZoneDef[] = [
+const BIOMES: readonly ZoneDef[] = [
   { id:'paturages', name:'Pâturages de Tainéla', boss:'bouftou_royal', monsters:['tofu','boufton','bouftou'],
     ground:['herbe','fleurs','chemin','ble'], tint:[0xffffff,0xffffff,0xffffff,0xffffff], minimap:['#7fb241','#8fbf55','#cdaa6e','#dcbb4c'],
     trees:'arbre',scatter:['buisson','souche','foin'],treeClusters:18,patches:20,fields:3,background:'#182b20' },
@@ -31,7 +35,16 @@ export const ZONES: readonly ZoneDef[] = [
     ground:['terre','herbe','chemin','terre'], tint:[0xc0b69f,0xb8c69e,0xc9b189,0xbeaa98], minimap:['#8c7864','#70854e','#b29973','#695849'],
     trees:'arbre_sec',scatter:['totem','rocher','souche'],treeClusters:14,patches:28,fields:0,background:'#2a211e' },
 ];
+export const ZONES:readonly ZoneDef[]=DUNGEONS.map(([id,name,boss,monsters,biome,layout,explore,fight],index)=>{
+  const template=BIOMES[biome],tints:[number,number,number,number]=[...template.tint];
+  if(id==='gelees'){tints[0]=0xdcefbf;tints[1]=0xf4bacb;tints[3]=0xb0dedc;}
+  if(id==='firefoux'||id==='crocabulia'){tints[0]=0xb15b42;tints[1]=0xcf855d;tints[3]=0x955042;}
+  const ground:ZoneDef['ground']=layout==='rooms'||layout==='temple'?['pierre','pierre','chemin','pierre']:layout==='cave'?['pierre','terre','chemin','pierre']:template.ground;
+  return {...template,id,name,boss,monsters,layout,ground,music:{explore,fight},ambiance:template.id,tint:tints,
+    treeClusters:layout==='grove'?template.treeClusters:8,fields:id==='champs'?15:0,patches:18+index%5*4,
+    trees:layout==='temple'?'totem':layout==='rooms'?'piton':template.trees};
+});
 export function zoneForStage(stage: number): ZoneDef {
-  return ZONES[(Math.max(1,Math.floor(stage))-1)%ZONES.length];
+  return ZONES[(Math.max(1,Math.floor(Number.isFinite(stage)?stage:1))-1)%ZONES.length];
 }
 export function getZone(id: string): ZoneDef { return ZONES.find(z=>z.id===id) ?? ZONES[0]; }

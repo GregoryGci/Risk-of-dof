@@ -22,6 +22,7 @@ export interface AnimDef {
 }
 
 export interface SpriteDef {
+  aliasOf?:string;
   /** Image de la spritesheet (chemin relatif à assets/dofus/). */
   image: string;
   /** Atlas JSON (TexturePacker / Phaser). Si absent : grille frameWidth x frameHeight. */
@@ -66,12 +67,16 @@ export interface Manifest {
   projectiles?: Record<string, ImageDef>;
   /** Sons par nom d'événement : cast_<idSort>, hit, death, explode, player_hit. */
   sounds?: Record<string, string>;
+  /** Musiques de Dofus 1.29 par nom de piste (ex. "loc_amakna"), voir tools/extract-music.mjs. */
+  music?: Record<string, string>;
+  /** Boucles d'ambiance par zone (ex. "paturages"), voir tools/extract-sounds.mjs. */
+  ambiance?: Record<string, string>;
   /** Divers : kama. */
   ui?: Record<string, string>;
   /** Animations officielles des sorts, par numéro d'animation Dofus (voir tools/extract-spellfx.mjs). */
   spellfx?: Record<string, { image: string; atlas: string; origin?: [number, number]; scale?: number; anims: Record<string, AnimDef> }>;
   /** Sort du jeu -> animation officielle ; `type` = 1er nombre de spriteInfos Dofus (10 = sur le lanceur). */
-  spellAnims?: Record<string, { anim: string; type: number }>;
+  spellAnims?: Record<string, { anim: string; type: number;casterAnim?:number }>;
 }
 
 export const DEFAULT_MIRROR: Record<string, number> = { '3': 1, '4': 0, '7': 5 };

@@ -13,13 +13,15 @@ export class Director {
   private credits = 0;
   private nextWaveIn = 0;
   private leashTimer = 0;
+  private wave=0;
 
   constructor(private sim: Simulation) {}
 
   reset(): void {
-    this.credits = 3;
+    this.credits = this.sim.state.stage===1?6:18;
     this.nextWaveIn = 2;
     this.leashTimer = 0;
+    this.wave=0;
   }
 
   update(dt: number): void {
@@ -27,11 +29,13 @@ export class Director {
     const diff = sim.state.difficulty;
     // Pendant la charge du Zaap, les monstres affluent.
     const rush = sim.state.zaapState === ZAAP_CHARGING ? 1.4 : 1;
-    this.credits += spawnCreditsPerSecond(diff, sim.players.size) * rush * getMode(sim.state.mode).spawn * dt;
+    this.credits += spawnCreditsPerSecond(diff, sim.players.size,sim.state.stage) * rush * getMode(sim.state.mode).spawn * dt;
 
     this.nextWaveIn -= dt;
     if (this.nextWaveIn <= 0) {
-      this.nextWaveIn = 2.5 + Math.random() * 2.5;
+      this.wave++;
+      sim.state.waves++;sim.state.zoneWave++;
+      this.nextWaveIn = this.wave%5===0 && sim.state.zaapState!==ZAAP_CHARGING ? 6 : 4+Math.random()*1.5;
       this.spawnWave();
     }
 
@@ -47,22 +51,26 @@ export class Director {
     const diff = sim.state.difficulty;
     const eligible = sim.zoneMonsters().filter((m) => m.minDifficulty <= diff && m.cost <= this.credits);
     if (eligible.length === 0) return;
-    const def = pickWeighted(eligible);
-    // Une vague = un groupe du même monstre.
-    const maxPack = def.cost <= 1.5 ? 4 : 3;
+    const fast=[...eligible].sort((a,b)=>b.speed-a.speed)[0];
+    const ranged=eligible.find(m=>m.behavior.type==='ranged');
+    const def = this.wave%4===1 ? fast : pickWeighted(eligible);
+    // Une vague mixte sur quatre : arrière-garde à distance, mêlée devant.
+    const maxPack = sim.state.stage===1?(this.wave<3?2:4):Math.min(18,8+Math.floor(diff*1.5));
     const count = Math.min(Math.floor(this.credits / def.cost), maxPack, MAX_MONSTERS - sim.monsters.size);
     if (count <= 0) return;
     const center = this.pickSpawnPoint(def.radius);
     if (!center) return;
 
     for (let i = 0; i < count; i++) {
+      const member=this.wave%4===2&&i===count-1&&ranged&&ranged.cost<=this.credits?ranged:def;
+      if(member.cost>this.credits)break;
       // Chaque membre du groupe est légèrement décalé.
       for (let attempt = 0; attempt < 8; attempt++) {
         const x = center.x + (Math.random() - 0.5) * 3;
         const y = center.y + (Math.random() - 0.5) * 3;
-        if (isBlocked(sim.map, x, y, def.radius)) continue;
-        sim.spawnMonster(def, x, y, monsterHpMultiplier(diff), monsterDamageMultiplier(diff), Math.round(diff));
-        this.credits -= def.cost;
+        if (isBlocked(sim.map, x, y, member.radius)) continue;
+        sim.spawnMonster(member, x, y, monsterHpMultiplier(diff), monsterDamageMultiplier(diff), Math.round(diff));
+        this.credits -= member.cost;
         break;
       }
     }

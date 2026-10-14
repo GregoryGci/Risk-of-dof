@@ -13,7 +13,7 @@ interface Target {
 }
 
 /** Distance sous laquelle une invocation qui provoque (Bloqueuse) attire les monstres. */
-const TAUNT_RANGE = 7;
+const TAUNT_RANGE = 2.5;
 /** Distance à laquelle une invocation repère les ennemis. */
 const ALLY_SIGHT = 9;
 
@@ -28,6 +28,7 @@ export function updateMonsters(sim: Simulation, dt: number): void {
 
 function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
   const s = m.state;
+  if(s.carried)return;
 
   // Brûlure : dégâts toutes les demi-secondes.
   if (sim.now < m.burnUntil && sim.now >= m.burnNextTick) {
@@ -86,17 +87,15 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
   const dist = target.dist;
   const tx = (target.x - s.x) / (dist || 1);
   const ty = (target.y - s.y) / (dist || 1);
-  const speed = m.def.speed * (sim.now < m.slowUntil ? m.slowFactor : 1);
+  const speed = m.def.speed * m.speedMult * (sim.now < m.slowUntil ? m.slowFactor : 1);
   const b = m.def.behavior;
 
   if (b.type === 'charger' && s.state === MSTATE_WINDUP) {
     // Prépare sa charge : immobile, regarde sa cible.
-    s.dir = dirFromVector(tx, ty);
+    s.dir = dirFromVector(m.chargeDx, m.chargeDy);
     if (sim.now >= m.phaseUntil) {
       s.state = MSTATE_CHARGE;
       m.phaseUntil = sim.now + b.chargeDuration;
-      m.chargeDx = tx;
-      m.chargeDy = ty;
       m.chargeHit.clear();
     }
     return;
@@ -114,7 +113,11 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
       if (Math.hypot(p.state.x - s.x, p.state.y - s.y) > m.def.radius + PLAYER_RADIUS + 0.1) continue;
       m.chargeHit.add(p.id);
       p.push = { vx: m.chargeDx * 9, vy: m.chargeDy * 9, time: 0.15 };
-      sim.damagePlayer(p, b.chargeDamage * m.damageMult);
+      sim.damagePlayer(p, b.chargeDamage * m.damageMult,`${m.def.name} · Charge`);
+    }
+    for(const ally of [...sim.monsters.values()]) {
+      if(!ally.state.ally||m.chargeHit.has(ally.id)||Math.hypot(ally.state.x-s.x,ally.state.y-s.y)>m.def.radius+ally.def.radius+.1)continue;
+      m.chargeHit.add(ally.id);sim.damageMonster(ally,b.chargeDamage*m.damageMult,'');
     }
     // Fin de charge : temps écoulé ou arrêté net par un obstacle.
     const moved = Math.hypot(s.x - before.x, s.y - before.y);
@@ -133,17 +136,19 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
   if (b.type === 'ranged') {
     const spell = getSpell(b.spell);
     if (s.state === MSTATE_WINDUP) {
-      s.dir = dirFromVector(tx, ty);
+      s.dir = dirFromVector((m.aimX??target.x)-s.x,(m.aimY??target.y)-s.y);
       if (sim.now >= m.phaseUntil) {
         s.state = MSTATE_NORMAL;
         m.specialReadyAt = sim.now + spell.cooldown / 1000;
-        sim.cast(spell, s.x, s.y, target.x, target.y, m.id, false, m.damageMult);
+        sim.cast(spell, s.x, s.y, m.aimX??target.x, m.aimY??target.y, m.id, false, m.damageMult);
       }
       return;
     }
     if (dist <= spell.range * 0.9 && sim.now >= m.specialReadyAt) {
       s.state = MSTATE_WINDUP;
       m.phaseUntil = sim.now + RANGED_WINDUP;
+      m.aimX=target.x;m.aimY=target.y;
+      if(m.def.boss||s.elite||spell.area)sim.broadcast('attackWarning',{x:s.x,y:s.y,tx:target.x,ty:target.y,width:.45,duration:RANGED_WINDUP,color:0xe78558,priority:!!m.def.boss||s.elite});
       return;
     }
     // Garde ses distances : approche si trop loin, recule si trop près.
@@ -158,6 +163,8 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
     if (b.type === 'charger' && dist <= b.chargeRange && dist > 2 && sim.now >= m.specialReadyAt) {
       s.state = MSTATE_WINDUP;
       m.phaseUntil = sim.now + b.windup;
+      m.chargeDx=tx;m.chargeDy=ty;
+      sim.broadcast('attackWarning',{x:s.x,y:s.y,tx:s.x+tx*b.chargeSpeed*b.chargeDuration,ty:s.y+ty*b.chargeSpeed*b.chargeDuration,width:m.def.radius,duration:b.windup,color:0xe76454,priority:!!m.def.boss||s.elite});
       return;
     }
     if (dist > m.def.melee.range * 0.7) {
@@ -194,9 +201,10 @@ function chooseTarget(sim: Simulation, m: MonsterRt): Target | null {
   for (const a of sim.monsters.values()) {
     if (!a.state.ally) continue;
     const d = Math.hypot(a.state.x - s.x, a.state.y - s.y);
+    if(d>TAUNT_RANGE)continue;
     // Une poupée qui provoque compte comme beaucoup plus proche qu'elle ne l'est.
-    const score = a.def.taunt && d <= TAUNT_RANGE ? d * 0.25 : d;
-    const bestScore = best ? (best.ally?.def.taunt && best.dist <= TAUNT_RANGE ? best.dist * 0.25 : best.dist) : Infinity;
+    const score = d*(a.def.taunt?.25:.5);
+    const bestScore = best ? (best.ally?best.dist*(best.ally.def.taunt?.25:.5):best.dist) : Infinity;
     if (score < bestScore) best = { x: a.state.x, y: a.state.y, dist: d, ally: a };
   }
   return best;
@@ -206,7 +214,7 @@ function tryMelee(sim: Simulation, m: MonsterRt, target: Target, dist: number): 
   if (dist > m.def.melee.range || sim.now < m.meleeReadyAt) return;
   m.meleeReadyAt = sim.now + m.def.melee.cooldown;
   sim.broadcast('atk', { id: m.id });
-  if (target.player) sim.damagePlayer(target.player, m.def.melee.damage * m.damageMult);
+  if (target.player) sim.damagePlayer(target.player, m.def.melee.damage * m.damageMult,m.def.name);
   else if (target.ally) sim.damageMonster(target.ally, m.def.melee.damage * m.damageMult, '');
 }
 
@@ -229,6 +237,7 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
     return;
   }
   const b = m.def.behavior;
+  if(sim.now<(m.attackHoldUntil??0))return;
   const speed = m.def.speed;
   const moveTo = (x: number, y: number, stopAt: number) => {
     const d = Math.hypot(x - s.x, y - s.y);
@@ -242,28 +251,32 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
 
   if (b.type === 'healer') {
     // Poupée soigneuse : reste près de son maître et soigne les joueurs autour d'elle.
-    moveTo(owner.state.x, owner.state.y, 2);
     if (sim.now >= m.healAt) {
       m.healAt = sim.now + b.interval;
       for (const p of sim.players.values()) {
         if (p.state.alive && Math.hypot(p.state.x - s.x, p.state.y - s.y) <= b.radius) sim.healPlayer(p, b.heal, sim.players.get(m.allyOwner ?? ''));
       }
       sim.broadcast('atk', { id: m.id });
+      m.attackHoldUntil=sim.now+.4;
+    } else {
+      moveTo(owner.state.x, owner.state.y, 2);
     }
     return;
   }
 
   // Monstre ennemi le plus proche, dans son champ de vision.
-  let enemy: MonsterRt | null = null;
-  let best = ALLY_SIGHT;
+  const commanded=sim.mechanics.allyTarget(m);
+  let enemy: MonsterRt | null = commanded??null;
+  let best = enemy?Math.hypot(enemy.state.x-s.x,enemy.state.y-s.y):ALLY_SIGHT;
   for (const e of sim.monsters.values()) {
-    if (e.state.ally) continue;
+    if (e.state.ally || e.state.carried || commanded) continue;
     const d = Math.hypot(e.state.x - s.x, e.state.y - s.y);
     if (d < best) {
       best = d;
       enemy = e;
     }
   }
+  if(m.def.id==='coffre_anime'&&Math.hypot(s.x-owner.state.x,s.y-owner.state.y)>3){moveTo(owner.state.x,owner.state.y,1.5);return;}
   if (!enemy) {
     // Rien à frapper : il suit son maître.
     moveTo(owner.state.x, owner.state.y, 2.5);
@@ -272,19 +285,23 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
   if (b.type === 'ranged') {
     const spell = getSpell(b.spell);
     s.dir = dirFromVector(enemy.state.x-s.x,enemy.state.y-s.y);
-    if (best > b.preferredRange) moveTo(enemy.state.x,enemy.state.y,b.preferredRange);
     if (best <= spell.range && sim.now >= m.specialReadyAt) {
+      m.attackHoldUntil=sim.now+.4;
       m.specialReadyAt=sim.now+spell.cooldown/1000;
       // Le maître reçoit les dégâts/kills ; seule l'invocation joue l'animation.
       sim.cast(spell,s.x,s.y,enemy.state.x,enemy.state.y,owner.id,true,m.damageMult,0,undefined,undefined,undefined,0,m.id);
+    } else if(best>spell.range) {
+      moveTo(enemy.state.x,enemy.state.y,b.preferredRange);
     }
     return;
   }
-  moveTo(enemy.state.x, enemy.state.y, m.def.melee.range * 0.8);
   if (best <= m.def.melee.range + enemy.def.radius && sim.now >= m.meleeReadyAt && m.def.melee.damage > 0) {
+    m.attackHoldUntil=sim.now+.35;
     m.meleeReadyAt = sim.now + m.def.melee.cooldown;
     sim.broadcast('atk', { id: m.id });
     sim.damageMonster(enemy, m.def.melee.damage * m.damageMult, owner.id);
+  } else if(best>m.def.melee.range+enemy.def.radius) {
+    moveTo(enemy.state.x, enemy.state.y, m.def.melee.range+enemy.def.radius);
   }
 }
 
@@ -293,31 +310,31 @@ function separate(sim: Simulation): void {
   const list = [...sim.monsters.values()];
   for (let i = 0; i < list.length; i++) {
     const a = list[i];
-    if (a.state.state === MSTATE_CHARGE || a.def.behavior.type === 'dummy') continue;
+    if (a.state.carried || a.state.state === MSTATE_CHARGE || a.def.behavior.type === 'dummy') continue;
     for (let j = i + 1; j < list.length; j++) {
       const b = list[j];
-      if (b.state.state === MSTATE_CHARGE || b.def.behavior.type === 'dummy') continue;
+      if (b.state.carried || b.state.state === MSTATE_CHARGE || b.def.behavior.type === 'dummy') continue;
       const dx = b.state.x - a.state.x;
       const dy = b.state.y - a.state.y;
       const min = a.def.radius + b.def.radius;
       const distanceSquared=dx*dx+dy*dy;
       if (distanceSquared >= min*min) continue;
+      const lockedA=a.state.ally&&sim.now<(a.attackHoldUntil??0),lockedB=b.state.ally&&sim.now<(b.attackHoldUntil??0);
+      if(lockedA&&lockedB)continue;
       const d = Math.sqrt(distanceSquared);
       if (d < 0.001) {
         // Exactement superposés : on décale arbitrairement.
-        a.state.x -= 0.05;
-        b.state.x += 0.05;
+        if(!lockedA)a.state.x -= lockedB?.1:.05;
+        if(!lockedB)b.state.x += lockedA?.1:.05;
         continue;
       }
       const push = (min - d) / 2;
-      a.state.x -= (dx / d) * push;
-      a.state.y -= (dy / d) * push;
-      b.state.x += (dx / d) * push;
-      b.state.y += (dy / d) * push;
+      if(!lockedA){a.state.x -= (dx / d) * push*(lockedB?2:1);a.state.y -= (dy / d) * push*(lockedB?2:1);}
+      if(!lockedB){b.state.x += (dx / d) * push*(lockedA?2:1);b.state.y += (dy / d) * push*(lockedA?2:1);}
     }
   }
   for(const m of list) {
-    if(m.def.behavior.type==='dummy') continue;
+    if(m.state.carried||m.def.behavior.type==='dummy') continue;
     const pos={x:m.state.x,y:m.state.y};
     resolveCollisions(sim.map,pos,m.def.radius);
     m.state.x=pos.x;m.state.y=pos.y;

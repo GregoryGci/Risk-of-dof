@@ -4,6 +4,7 @@ import {
   CHALLENGE_COUNT,
   CHEST_COUNT,
   MONSTERS,
+  ZONES,
   SHOP_SIZE,
   merchantPrice,
   rollRunBonus,
@@ -11,6 +12,7 @@ import {
   RUN_BONUSES,
   MAP_SIZE,
   bossForStage,
+  bossHpBudget,
   getMode,
   rollRarity,
   PHASE_LOBBY,
@@ -35,10 +37,13 @@ import {
   isBlocked,
   monsterDamageMultiplier,
   monsterHpMultiplier,
+  monsterSpeedMultiplier,
   equippedStats,
   sanitizeEquipped,
   equipmentReward,
   monsterEquipmentDrops,
+  minuteFragments,
+  bossFragments,
   type GearDrop,
   resolveCollisions,
   sanitizeLoadout,
@@ -56,6 +61,7 @@ import {
 import { ChestState, GameState, GroundState, MonsterState, PlayerState, PotionState } from '../state.ts';
 import { Director } from './director.ts';
 import { updateMonsters } from './monsters.ts';
+import {ClassMechanics} from './ClassMechanics.ts';
 import { randomUUID } from 'node:crypto';
 
 /** Déplacement forcé (bond, recul) : vitesse appliquée pendant `time` secondes. */
@@ -74,6 +80,8 @@ export interface PlayerRt {
   dy: number;
   /** Instant (horloge de simulation, s) où chaque sort redevient disponible. */
   readyAt: number[];
+  secondaryRefillAt:number;
+  dashGlyphActive:boolean;
   push: Push | null;
   lastHitAt: number;
   shieldUntil: number;
@@ -85,7 +93,7 @@ export interface PlayerRt {
   /** Sorts équipés dans les 4 emplacements (arbre de talents). */
   spells: string[];
   /** Bonus temporaires (sorts de soutien). */
-  buffs: { stats: Partial<Record<StatKey, number>>; until: number; invisible: boolean; invulnerable: boolean }[];
+  buffs: { stats: Partial<Record<StatKey, number>>; until: number; invisible: boolean; invulnerable: boolean; label?:string }[];
   /** Résurrection déjà utilisée / en attente pendant cette partie. */
   reviveUsed: boolean;
   revivePending: boolean;
@@ -93,6 +101,9 @@ export interface PlayerRt {
   bought: Set<number>;
   /** Prochain dash (Maj) disponible. */
   dashReadyAt: number;
+  dodgeUntil:number;
+  dodgeReported?:boolean;
+  pendingInputSeq:number;
   /** Bonus permanents de la tenue équipée, figés au lancement. */
   meta: Record<StatKey, number>;
   loot: GearDrop[];
@@ -106,6 +117,8 @@ export interface MonsterRt {
   state: MonsterState;
   def: MonsterDef;
   damageMult: number;
+  speedMult:number;
+  lootMultiplier:number;
   meleeReadyAt: number;
   push: Push | null;
   burnDps: number;
@@ -118,6 +131,9 @@ export interface MonsterRt {
   stunUntil: number;
   // Comportement (charge, tir)
   specialReadyAt: number;
+  attackHoldUntil?:number;
+  aimX?:number;
+  aimY?:number;
   phaseUntil: number;
   chargeDx: number;
   chargeDy: number;
@@ -135,7 +151,7 @@ export interface MonsterRt {
 }
 
 /** Piège ou glyphe posé au sol, avec les bonus de son lanceur au moment de la pose. */
-interface GroundRt {
+export interface GroundRt {
   id: string;
   state: GroundState;
   pr: Projectile;
@@ -146,7 +162,7 @@ interface GroundRt {
 }
 
 /** Un sort en cours : projectile en vol, ou coup instantané (mêlée, zone) le temps de son application. */
-interface Projectile {
+export interface Projectile {
   id: number;
   spell: SpellDef;
   owner: string;
@@ -162,6 +178,13 @@ interface Projectile {
   critMult: number;
   /** Cibles déjà touchées (sorts perçants). */
   hit: Set<string>;
+  slot?:number;
+  proc:boolean;
+  iopShield?:boolean;
+  shieldHits?:Set<string>;
+  cardRolled?:boolean;
+  bounced?:boolean;
+  areaHits?:Set<string>;
 }
 
 type Broadcast = (type: string, message: unknown) => void;
@@ -199,6 +222,11 @@ export class Simulation {
   grounds = new Map<string, GroundRt>();
   private nextGroundId = 1;
   private director = new Director(this);
+  private forgeMinute=0;
+  private startedAt='';
+  private partySize=1;
+  private boonQueues=new Map<string,string[][]>();
+  mechanics=new ClassMechanics(this);
 
   constructor(
     public state: GameState,
@@ -243,20 +271,23 @@ export class Simulation {
     let slot = 0;
     while (used.has(slot)) slot++;
     state.slot = slot;
-    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, bought: new Set(), history: [] };
+    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], secondaryRefillAt:0,dashGlyphActive:false,push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, dodgeUntil:0, pendingInputSeq:0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, bought: new Set(), history: [] };
     this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
     this.state.players.set(id, state);
+    if(this.state.intermission)this.rollShop(rt);
   }
 
   removePlayer(id: string): void {
+    this.mechanics.reset(id);this.boonQueues.delete(id);
     // Ses invocations et ses pièges partent avec lui.
     for (const m of [...this.monsters.values()]) if (m.allyOwner === id) this.removeMonster(m.id);
     for (const g of [...this.grounds.values()]) if (g.owner === id) this.removeGround(g.id);
     this.players.delete(id);
     this.state.players.delete(id);
     this.checkDefeat();
+    this.finishShoppingIfReady();
   }
 
   /** Sorts équipés, validés contre l'arbre de talents de la classe. */
@@ -316,14 +347,20 @@ export class Simulation {
     for (const id of [...this.grounds.keys()]) this.removeGround(id);
     this.state.phase = PHASE_PLAYING;
     this.state.runId = randomUUID();
+    this.startedAt=new Date().toISOString();this.partySize=this.players.size;
     this.state.time = 0;
     this.state.difficulty = 1;
     this.state.stage = 1;
-    for (const p of this.players.values()) { this.resetPlayer(p); this.resetMeters(p); p.state.rewards = ''; p.state.runLoot='[]'; p.loot=[]; }
+    this.state.waves=0;
+    this.state.intermission=false;
+    this.forgeMinute=0;
+    this.state.kills=0;
+    for (const p of this.players.values()) { this.resetPlayer(p); this.resetMeters(p); p.state.kills=0;p.state.kamas=0;p.state.kamasEarned=0;p.state.rewards = ''; p.state.runLoot='[]'; p.loot=[]; }
     this.setupStage();
   }
 
   private resetMeters(p: PlayerRt): void {
+    p.state.bossKills=0;p.state.deathCause='';
     p.state.dmgDealt = 0;
     p.state.healDone = 0;
     p.state.dmgTaken = 0;
@@ -336,32 +373,26 @@ export class Simulation {
 
   /** Prépare une zone : coffres neufs, Zaap éteint placé loin du point d'apparition. */
   private setupStage(): void {
+    this.state.stageTime=0;
+    this.state.zoneWave=0;
     this.state.potions.clear();
     this.potionExpires.clear();
     this.director.reset();
     this.timers = [];
     this.bossId = '';
+    if(this.map.bossArena){this.state.zaapX=this.map.bossArena.x;this.state.zaapY=this.map.bossArena.y;}
     for (const id of [...this.state.chests.keys()]) this.state.chests.delete(id);
     for (let i = 0; i < CHEST_COUNT; i++) this.spawnChest();
     for (let i = 0; i < CHALLENGE_COUNT; i++) this.spawnChest('challenge');
 
-    // Marchand à partir de la deuxième zone, près du point d'arrivée.
-    for (const p of this.players.values()) p.bought.clear();
-    for (const p of this.players.values()) p.state.bought = '';
-    if (this.state.stage >= 2) {
-      this.state.merchantX = MAP_SIZE / 2 + 3;
-      this.state.merchantY = MAP_SIZE / 2 - 3;
-      const offers = Array.from({ length: SHOP_SIZE }, () => rollRunBonus(0.15));
-      this.state.shop = offers.map((it) => `${it.id}:${merchantPrice(it, this.state.difficulty)}`).join(',');
-    } else {
-      this.state.merchantX = 0;
-      this.state.merchantY = 0;
-      this.state.shop = '';
-    }
+    this.state.intermission=false;
+    this.state.merchantX=0;this.state.merchantY=0;this.state.shop='';
+    for(const p of this.players.values()){p.bought.clear();p.state.bought='';p.state.shop='';p.state.shopReady=false;p.state.shopRerolled=false;}
 
     const c = MAP_SIZE / 2;
     this.state.zaapState = ZAAP_IDLE;
     this.state.zaapCharge = 0;
+    if(this.map.bossArena)return;
     for (let attempt = 0; attempt < 200; attempt++) {
       const x = 5 + Math.random() * (this.map.size - 10);
       const y = 5 + Math.random() * (this.map.size - 10);
@@ -377,15 +408,17 @@ export class Simulation {
 
   /** Zone suivante : nouvelle carte, les morts reviennent, la difficulté continue de monter. */
   private nextStage(): void {
+    if(this.state.intermission)return;
     for (const id of [...this.monsters.keys()]) this.removeMonster(id);
     for (const id of [...this.grounds.keys()]) this.removeGround(id);
     this.projectiles = [];
     this.state.seed = Math.floor(Math.random() * 0xffffffff);
-    this.state.stage++;
     this.map = generateMap(this.state.seed, undefined, this.state.stage);
     for (const p of this.players.values()) {
       p.push=null;
+      this.mechanics.reset(p.id);p.dodgeUntil=0;
       p.readyAt=[this.now,this.now,this.now,this.now];
+      p.secondaryRefillAt=0;p.state.secondaryCharges=p.state.secondaryMax;
       p.dashReadyAt=this.now;
       this.placeAtSpawn(p);
       if (!p.state.alive) {
@@ -393,8 +426,34 @@ export class Simulation {
         p.state.hp = p.state.maxHp * 0.5;
       }
     }
-    this.setupStage();
-    this.broadcast('stage', { stage: this.state.stage, name: zoneForStage(this.state.stage).name });
+    // L'étape marchande n'augmente ni le palier de loot ni la difficulté.
+    this.timers=[];this.bossId='';this.state.chests.clear();this.state.potions.clear();this.potionExpires.clear();
+    this.state.intermission=true;this.state.zaapX=0;this.state.zaapY=0;this.state.zaapState=ZAAP_IDLE;
+    this.state.merchantX=MAP_SIZE/2;this.state.merchantY=MAP_SIZE/2;
+    this.state.shop='personal';
+    for(const p of this.players.values()){p.bought.clear();p.state.bought='';p.state.shopRerolled=false;p.state.shopReady=false;this.rollShop(p);}
+    this.broadcast('merchant',{stage:this.state.stage});
+  }
+
+  private rollShop(p:PlayerRt,reroll=false):void {
+    const old=p.state.shop.split(','),excluded=reroll?new Set(old.map(o=>RUN_BONUSES[o.split(':')[0]]?.base)):new Set();
+    const bases=[...new Set(Object.values(RUN_BONUSES).map(b=>b.base))].filter(b=>!excluded.has(b)),offers:string[]=[];
+    for(let i=0;i<SHOP_SIZE;i++){if(reroll&&p.bought.has(i)){offers.push(old[i]);continue;}const base=bases.splice(Math.floor(Math.random()*bases.length),1)[0];const variants=Object.values(RUN_BONUSES).filter(b=>b.base===base),rarity=rollRarity(p.stats.luck+.15);const item=variants.find(b=>b.rarity===rarity)??variants[0];offers.push(`${item.id}:${merchantPrice(item,this.state.difficulty)}`);}
+    p.state.shop=offers.join(',');
+  }
+  rerollShop(id:string):void {
+    const p=this.players.get(id);if(!p?.state.alive||!this.state.intermission||this.state.paused||p.state.shopReady||p.state.shopRerolled)return;
+    p.state.shopRerolled=true;this.rollShop(p,true);
+  }
+  shopReady(id:string):void {
+    const p=this.players.get(id);if(!p?.state.alive||!this.state.intermission||this.state.paused)return;
+    p.state.shopReady=true;this.finishShoppingIfReady();
+  }
+  private finishShoppingIfReady():void {
+    if(!this.state.intermission||!this.players.size||[...this.players.values()].some(p=>!p.state.shopReady))return;
+    this.state.stage++;this.state.seed=Math.floor(Math.random()*0xffffffff);this.map=generateMap(this.state.seed,undefined,this.state.stage);
+    for(const p of this.players.values()){this.placeAtSpawn(p);p.dx=0;p.dy=0;p.readyAt=[this.now,this.now,this.now,this.now];p.secondaryRefillAt=0;p.state.secondaryCharges=p.state.secondaryMax;p.dashReadyAt=this.now;}
+    this.setupStage();this.broadcast('stage',{stage:this.state.stage,name:zoneForStage(this.state.stage).name});
   }
 
   private activateZaap(): void {
@@ -402,7 +461,11 @@ export class Simulation {
     this.state.zaapCharge = 0;
     // Le gardien apparaît à côté du Zaap ; il est plus résistant quand les joueurs sont nombreux.
     // Gardien différent à chaque zone : Bouftou Royal, Tournesol Affamé, Scarabosse Doré...
-    const def = getMonster(bossForStage(this.state.stage));
+    const normal = getMonster(bossForStage(this.state.stage));
+    const rogue = this.state.stage%3===0 && Math.random()<0.15;
+    const alternatives=ZONES.map(zone=>zone.boss).filter(id=>id!==normal.id);
+    const selected=rogue?getMonster(alternatives[Math.floor(Math.random()*alternatives.length)]):normal;
+    const def=rogue?{...selected,melee:{...selected.melee,damage:Math.max(selected.melee.damage,normal.melee.damage)}}:selected;
     const diff = this.state.difficulty;
     let x = this.state.zaapX;
     let y = this.state.zaapY;
@@ -416,8 +479,10 @@ export class Simulation {
       break;
     }
     const hpMult = monsterHpMultiplier(diff) * (1 + 0.5 * (this.players.size - 1));
-    this.bossId = this.spawnMonster(def, x, y, hpMult, monsterDamageMultiplier(diff), Math.round(diff)).id;
-    this.broadcast('boss', { name: def.name });
+    const boss=this.spawnMonster({...def,hp:bossHpBudget(this.state.stage)}, x, y, hpMult*(rogue?1.75:1), monsterDamageMultiplier(diff)*(rogue?1.4:1), Math.round(diff));
+    boss.state.rogue=rogue;boss.lootMultiplier=rogue?3:1;boss.speedMult*=rogue?1.1:1;
+    this.bossId=boss.id;
+    this.broadcast('boss', { name: def.name, rogue, lootMultiplier:boss.lootMultiplier });
   }
 
   /** Relance une partie après une défaite : nouvelle carte, tout le monde revit. */
@@ -438,8 +503,10 @@ export class Simulation {
       this.resetMeters(p);
     }
     this.state.phase = PHASE_LOBBY;
+    this.state.intermission=false;
     this.state.paused = false;
     this.state.time = 0;
+    this.state.waves=0;this.state.zoneWave=0;
     this.state.stage = 1;
     this.state.difficulty = 1;
     this.state.potions.clear();
@@ -453,6 +520,8 @@ export class Simulation {
   }
 
   private resetPlayer(p: PlayerRt): void {
+    this.mechanics.reset(p.id);p.dodgeUntil=0;
+    p.state.forgeGrants='[]';p.state.boonChoices='[]';this.boonQueues.delete(p.id);
     this.placeAtSpawn(p);
     this.applyStats(p);
     p.state.hp = p.state.maxHp;
@@ -462,6 +531,7 @@ export class Simulation {
     p.dy = 0;
     p.push = null;
     p.readyAt = [0, 0, 0, 0];
+    p.secondaryRefillAt=0;p.state.secondaryCharges=p.state.secondaryMax;p.dashGlyphActive=false;
     p.lastHitAt = -999;
     p.state.shield = 0;
     p.shieldUntil = 0;
@@ -475,6 +545,7 @@ export class Simulation {
 
   /** Les joueurs apparaissent en carré autour du centre de la carte. */
   private placeAtSpawn(p: PlayerRt): void {
+    p.state.motionEpoch++;
     const c = MAP_SIZE / 2;
     const offsets = [[-1, -1], [1, 1], [1, -1], [-1, 1]];
     const o = offsets[p.state.slot % offsets.length];
@@ -491,6 +562,7 @@ export class Simulation {
   setInput(id: string, msg: InputMessage): void {
     const p = this.players.get(id);
     if (!p || !msg) return;
+    if(msg.seq!==undefined){if(!Number.isInteger(msg.seq)||msg.seq<0||msg.seq>0xffffffff||msg.seq<p.pendingInputSeq)return;p.pendingInputSeq=msg.seq;}
     const dx = Number(msg.dx);
     const dy = Number(msg.dy);
     p.dx = Number.isFinite(dx) ? clamp(dx, -1, 1) : 0;
@@ -503,7 +575,7 @@ export class Simulation {
 
   playerCast(id: string, msg: CastMessage): void {
     const p = this.players.get(id);
-    if (!p || !msg || !p.state.alive || this.state.phase === PHASE_LOST || this.state.paused) return;
+    if (!p || !msg || !p.state.alive || this.state.phase === PHASE_LOST || this.state.paused || this.state.intermission) return;
     const slot = Number(msg.slot);
     const tx = Number(msg.tx);
     const ty = Number(msg.ty);
@@ -511,19 +583,28 @@ export class Simulation {
     if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
     // Le serveur est seul juge du temps de recharge.
     if (this.now < p.readyAt[slot]) return;
+    if(slot===1&&p.state.secondaryMax>1&&p.state.secondaryCharges===0)return;
 
-    const spell = getSpell(p.spells[slot]);
+    let spell = getSpell(p.spells[slot]);
     if (spell.revive && !this.deadAllyNear(p, tx, ty, spell.range + p.stats.range)) return;
+    const special=this.mechanics.beforeCast(p,spell,slot,tx,ty);spell=special.spell;
+    if(special.handled) {
+      const cooldown=special.cooldown??spell.cooldown;p.readyAt[slot]=this.now+cooldown/1000;
+      if(slot===1&&cooldown>250)this.consumeSecondary(p,cooldown);
+      this.broadcast('cast',{id:this.nextProjectileId++,caster:id,spell:spell.id,x:p.state.x,y:p.state.y,tx,ty,slot,cooldown});return;
+    }
     // Les objets de « hâte » raccourcissent la recharge, ceux de dégâts et de critique améliorent le tir.
     // Vitesse d'attaque : seulement l'attaque de base, et pas au corps à corps.
     const ranged = !spell.melee && !spell.zone?.self;
     const cooldown = spell.cooldown / (1 + p.stats.haste) / (slot === 0 && ranged ? 1 + p.stats.attackSpeed : 1);
     p.readyAt[slot] = this.now + cooldown / 1000;
-    let damageMult = 1 + p.stats.damage;
+    if(slot===1)this.consumeSecondary(p,cooldown);
+    let damageMult = (1 + p.stats.damage)*special.mult;
     if (spell.missingHpBonus) damageMult *= 1 + spell.missingHpBonus * (1 - p.state.hp / p.state.maxHp);
     const critChance = BASE_CRIT_CHANCE + p.stats.crit;
     const critMult = CRIT_MULT + p.stats.critDamage;
     const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, critChance, slot, cooldown, critMult, p.stats.range);
+    this.mechanics.afterCast(p,spell,slot,tx,ty);
     // Bonus Échos : projectiles en éventail, ou frappes supplémentaires un instant après.
     if (slot === 0 && p.stats.multishot > 0) {
       const extra = Math.ceil(p.stats.multishot);
@@ -554,12 +635,14 @@ export class Simulation {
   /** Dash (Maj) : petit bond rapide dans la direction demandée, commun à toutes les classes. */
   playerDash(id: string, msg: { dx?: number; dy?: number }): void {
     const p = this.players.get(id);
-    if (!p || !p.state.alive || this.state.phase === PHASE_LOST || this.now < p.dashReadyAt || p.push) return;
+    if (!p || !p.state.alive || this.state.paused || this.state.intermission || this.state.phase === PHASE_LOST || this.now < p.dashReadyAt || p.push) return;
     const dx = Number(msg?.dx);
     const dy = Number(msg?.dy);
     const len = Math.hypot(dx, dy);
     if (!Number.isFinite(len) || len < 0.01) return;
     p.dashReadyAt = this.now + DASH_COOLDOWN;
+    p.dodgeUntil=this.now+.12;p.dodgeReported=false;p.state.motionEpoch++;
+    p.dashGlyphActive=true;this.mechanics.beginDash(p);
     const v = DASH_DISTANCE / DASH_DURATION;
     p.push = { vx: (dx / len) * v, vy: (dy / len) * v, time: DASH_DURATION };
     this.broadcast('dash', { id, x: p.state.x, y: p.state.y, tx: p.state.x + (dx / len) * DASH_DISTANCE, ty: p.state.y + (dy / len) * DASH_DISTANCE, cooldown: DASH_COOLDOWN * 1000 });
@@ -582,7 +665,7 @@ export class Simulation {
       dy /= d;
     }
     const id = this.nextProjectileId++;
-    const pr: Projectile = { id, spell, owner, fromPlayer, x, y, dx, dy, remaining: 0, damageMult, critChance, critMult, hit: new Set() };
+    const pr: Projectile = { id, spell, owner, fromPlayer, x, y, dx, dy, remaining: 0, damageMult, critChance, critMult, hit: new Set(),slot,proc:slot===undefined };
     const event: CastEvent = { id, caster: visualCaster, spell: spell.id, x, y, tx: x + dx, ty: y + dy };
     if (slot !== undefined) {
       event.slot = slot;
@@ -590,9 +673,11 @@ export class Simulation {
     }
 
     const caster = fromPlayer ? this.players.get(owner) : undefined;
+    if(caster)this.mechanics.prepareProjectile(caster,pr);
+    if(spell.id==='vent_empoisonne'&&caster)pr.areaHits=new Set();
     if (spell.shield && caster) {
-      caster.state.shield = Math.round(caster.state.maxHp * spell.shield.maxHpFraction);
-      caster.shieldUntil = this.now + spell.shield.duration;
+      caster.state.shield = Math.max(caster.state.shield,Math.round(caster.state.maxHp * spell.shield.maxHpFraction));
+      caster.shieldUntil = Math.max(caster.shieldUntil,this.now + spell.shield.duration);
       event.tx = x;
       event.ty = y;
       this.broadcast('cast', event);
@@ -605,6 +690,7 @@ export class Simulation {
     const aimY = y + dy * reachTarget;
 
     if (spell.teleport && caster) {
+      caster.state.motionEpoch++;
       // Téléportation : on recule le long de la ligne jusqu'à une case libre.
       let reach = reachTarget;
       while (reach > 0.2 && isBlocked(this.map, x + dx * reach, y + dy * reach, PLAYER_RADIUS)) reach -= 0.25;
@@ -630,6 +716,7 @@ export class Simulation {
       return { x: dx, y: dy };
     }
     if (spell.rewind && caster) {
+      caster.state.motionEpoch++;
       // Vol du Temps : la position la plus ancienne de moins de `rewind` secondes.
       const snap = caster.history.find((h) => this.now - h.t <= spell.rewind!) ?? caster.history[0];
       if (snap) {
@@ -679,15 +766,16 @@ export class Simulation {
       event.ty = y + dy * spell.range;
       this.broadcast('cast', event);
       const cosHalf = Math.cos(((spell.melee.arc / 2) * Math.PI) / 180);
-      for (const t of this.enemiesOf(fromPlayer)) {
+      const targets=this.enemiesOf(fromPlayer).filter(t=>{
         const ex = t.x - x;
         const ey = t.y - y;
         const dist = Math.hypot(ex, ey);
-        if (dist > spell.range + t.radius) continue;
+        if (dist > spell.range + t.radius) return false;
         // Une cible collée au lanceur est toujours touchée, quel que soit l'angle.
-        if (dist > t.radius + 0.4 && (ex * dx + ey * dy) / dist < cosHalf) continue;
-        this.applyHit(pr, t.id, dx, dy);
-      }
+        return !(dist > t.radius + 0.4 && (ex * dx + ey * dy) / dist < cosHalf);
+      });
+      if(slot===0&&!pr.proc)for(const t of targets)pr.hit.add(t.id);
+      for(const t of targets)this.applyHit(pr,t.id,dx,dy);
     } else if (spell.zone) {
       // Zone instantanée : autour du lanceur, ou au point visé limité par la portée.
       const radius = spell.zone.radius;
@@ -714,6 +802,7 @@ export class Simulation {
         this.after(spell.delay, () => this.explode(pr, zx, zy, radius));
       } else {
         this.explode(pr, event.tx, event.ty, radius);
+        if(spell.id==='vent_empoisonne'&&caster)for(const ally of this.monsters.values())if(ally.allyOwner===caster.id){this.broadcast('cast',{...event,id:this.nextProjectileId++,caster:ally.id,x:ally.state.x,y:ally.state.y,tx:ally.state.x,ty:ally.state.y,slot:undefined,cooldown:undefined});this.explode(pr,ally.state.x,ally.state.y,radius);}
       }
       if (spell.buff && caster) this.applyBuff(caster, spell.buff);
     } else {
@@ -740,8 +829,8 @@ export class Simulation {
 
   /** Cibles hostiles à un lanceur : les monstres (hors invocations) pour un joueur, les joueurs vivants pour un monstre. */
   private enemiesOf(fromPlayer: boolean): { id: string; x: number; y: number; radius: number }[] {
-    if (fromPlayer) return [...this.monsters.values()].filter((m) => !m.state.ally).map((m) => ({ id: m.id, x: m.state.x, y: m.state.y, radius: m.def.radius }));
-    return [...this.players.values()].filter((p) => p.state.alive).map((p) => ({ id: p.id, x: p.state.x, y: p.state.y, radius: PLAYER_RADIUS }));
+    if (fromPlayer) return [...this.monsters.values()].filter((m) => !m.state.ally&&!m.state.carried).map((m) => ({ id: m.id, x: m.state.x, y: m.state.y, radius: m.def.radius }));
+    return [...[...this.players.values()].filter(p=>p.state.alive).map(p=>({id:p.id,x:p.state.x,y:p.state.y,radius:PLAYER_RADIUS})),...[...this.monsters.values()].filter(m=>m.state.ally).map(m=>({id:m.id,x:m.state.x,y:m.state.y,radius:m.def.radius}))];
   }
 
   // -------------------------------------------------------------------------
@@ -756,12 +845,17 @@ export class Simulation {
 
     this.runTimers();
     this.updatePlayers(dt);
+    if(this.state.intermission)return;
+    this.mechanics.update(dt);
     this.updateAutoAttacks();
     this.updatePotions();
     this.updateGrounds();
     if (this.state.phase === PHASE_PLAYING) {
       this.state.time += dt;
-      this.state.difficulty = difficultyAt(this.state.time, this.players.size);
+      this.state.stageTime+=dt;
+      const minute=Math.floor(this.state.time/60);
+      if(minute>this.forgeMinute){this.forgeMinute=minute;this.awardFragments(`minute:${minute}`,minuteFragments(this.state.stage));}
+      this.state.difficulty = difficultyAt(this.state.time, this.players.size,this.state.stage,this.state.stageTime);
       this.state.chestCost = chestCost(this.state.difficulty);
       // Le Zaap se charge tout seul une fois activé, mais ne s'ouvre que si son gardien est vaincu.
       if (this.state.zaapState === ZAAP_CHARGING) {
@@ -778,6 +872,8 @@ export class Simulation {
   private updatePlayers(dt: number): void {
     for (const p of this.players.values()) {
       const s = p.state;
+      this.updateSecondary(p);
+      s.cooldowns=JSON.stringify([...p.readyAt,p.dashReadyAt].map((at,i)=>Math.round(Math.max(0,(i===1&&s.secondaryMax>1?p.secondaryRefillAt:at)-this.now)*10)/10));
       if (s.shield > 0 && this.now >= p.shieldUntil) s.shield = 0;
       // Bonus temporaires expirés.
       if (p.buffs.some((b) => b.until <= this.now)) {
@@ -786,10 +882,13 @@ export class Simulation {
       }
       if (!s.alive) continue;
       const pos = { x: s.x, y: s.y };
+      if(p.push&&!s.forcedMotion)s.motionEpoch++;
+      s.forcedMotion=!!p.push;
       if (p.push) {
         stepMovement(this.map,pos,p.push.vx,p.push.vy,Math.hypot(p.push.vx,p.push.vy),dt,PLAYER_RADIUS);
+        if(p.dashGlyphActive)this.mechanics.dashStep(p,s.x,s.y,pos.x,pos.y);
         p.push.time -= dt;
-        if (p.push.time <= 0) p.push = null;
+        if (p.push.time <= 0){p.push = null;p.dashGlyphActive=false;}
         s.moving = false;
       } else {
         stepMovement(this.map, pos, p.dx, p.dy, s.speed, dt, PLAYER_RADIUS);
@@ -797,6 +896,7 @@ export class Simulation {
       }
       s.x = pos.x;
       s.y = pos.y;
+      s.inputSeq=p.pendingInputSeq;s.positionTime=this.now;
       if (p.history.length === 0 || this.now - p.history[p.history.length - 1].t >= 0.1) p.history.push({ t: this.now, x: s.x, y: s.y, hp: s.hp });
       while (p.history.length > 1 && this.now - p.history[1].t > 4) p.history.shift();
       if (s.hp < s.maxHp && this.now - p.lastHitAt > REGEN_DELAY) s.hp = Math.min(s.maxHp, s.hp + (p.def.regen + p.stats.regen) * dt);
@@ -813,7 +913,7 @@ export class Simulation {
       let nearest: MonsterRt | undefined;
       let nearestDist = Infinity;
       for (const m of this.monsters.values()) {
-        if (m.state.ally || m.state.hp <= 0) continue;
+        if (m.state.ally || m.state.carried || m.state.hp <= 0) continue;
         const dist = Math.hypot(m.state.x - p.state.x, m.state.y - p.state.y);
         if (dist > range + m.def.radius || dist >= nearestDist) continue;
         nearest = m;
@@ -912,15 +1012,14 @@ export class Simulation {
         if (!p.state.alive || Math.hypot(p.state.x - x, p.state.y - y) > radius + PLAYER_RADIUS) continue;
         const amount = Math.round(Math.min(p.state.maxHp - p.state.hp, min + Math.random() * (max - min)));
         if (amount <= 0) continue;
-        p.state.hp += amount;
-        const healer = this.creditOf(pr.owner);
-        if (healer) healer.state.healDone += amount;
-        this.broadcast('heal', { target: p.id, amount, x: p.state.x, y: p.state.y });
+        this.healPlayer(p,amount,this.creditOf(pr.owner)??null);
       }
       return;
     }
 
-    for (const t of this.enemiesOf(pr.fromPlayer)) {
+    const targets=this.enemiesOf(pr.fromPlayer).filter(t=>Math.hypot(t.x-x,t.y-y)<=radius+t.radius);
+    if(pr.slot===0&&!pr.proc)for(const t of targets)pr.hit.add(t.id);
+    for (const t of targets) {
       const d = Math.hypot(t.x - x, t.y - y);
       if (d > radius + t.radius) continue;
       // Recul depuis le centre de l'explosion.
@@ -931,12 +1030,15 @@ export class Simulation {
 
   /** Applique dégâts et effets d'un sort à une cible. (dirX, dirY) = sens du recul. */
   private applyHit(pr: Projectile, targetId: string, dirX: number, dirY: number): void {
+    if(pr.areaHits?.has(targetId))return;
+    pr.areaHits?.add(targetId);
     const [min, max] = pr.spell.damage;
     let amount = (min + Math.random() * (max - min)) * pr.damageMult;
 
     if (!pr.fromPlayer) {
       const p = this.players.get(targetId);
-      if (p) this.damagePlayer(p, amount);
+      if (p) this.damagePlayer(p, amount,`${this.monsters.get(pr.owner)?.def.name??'Monstre'} · ${pr.spell.name}`);
+      else {const ally=this.monsters.get(targetId);if(ally?.state.ally)this.damageMonster(ally,amount,'');}
       return;
     }
     const m = this.monsters.get(targetId);
@@ -965,7 +1067,7 @@ export class Simulation {
           if (dist > 0.01) m.push = { vx: ((px / dist) * travel) / duration, vy: ((py / dist) * travel) / duration, time: duration };
         }
       } else if (e.type === 'burn') {
-        m.burnDps = e.dps;
+        m.burnDps = e.dps*pr.damageMult;
         m.burnUntil = this.now + e.duration;
         m.burnNextTick = this.now + 0.5;
         m.burnOwner = pr.owner;
@@ -989,22 +1091,33 @@ export class Simulation {
     }
     const owner = this.players.get(pr.owner);
     if (owner?.state.alive && owner.stats.lifesteal > 0) this.healPlayer(owner, Math.min(amount, Math.max(0, m.state.hp)) * owner.stats.lifesteal);
-    this.damageMonster(m, amount, pr.owner, crit);
+    amount=this.mechanics.onHit(pr,m,amount);
+    if(pr.slot===0&&!pr.proc&&['sournoiserie','fouet','attaque_mortelle'].includes(pr.spell.id))this.broadcast('spellImpact',{spell:pr.spell.id,x:m.state.x,y:m.state.y,dx:dirX,dy:dirY});
+    if(this.monsters.has(m.id))this.damageMonster(m, amount, pr.owner, crit);
+    if(owner?.state.alive&&owner.stats.bounce>0&&pr.slot===0&&!pr.proc&&!pr.bounced) {
+      pr.bounced=true;
+      pr.hit.add(targetId);let from=m.state;
+      for(let i=0;i<owner.stats.bounce;i++) {
+        const next=[...this.monsters.values()].filter(e=>!e.state.ally&&!e.state.carried&&!pr.hit.has(e.id)&&Math.hypot(e.state.x-from.x,e.state.y-from.y)<=4).sort((a,b)=>Math.hypot(a.state.x-from.x,a.state.y-from.y)-Math.hypot(b.state.x-from.x,b.state.y-from.y))[0];
+        if(!next)break;pr.hit.add(next.id);this.broadcast('bounce',{spell:pr.spell.id,x:from.x,y:from.y,tx:next.state.x,ty:next.state.y});this.applyHit({...pr,proc:true,areaHits:undefined},next.id,dirX,dirY);from=next.state;
+      }
+    }
   }
 
   // -------------------------------------------------------------------------
   // Bonus, pièges et glyphes, invocations
   // -------------------------------------------------------------------------
 
-  healPlayer(p: PlayerRt, amount: number, source: PlayerRt | null | undefined = p): void {
+  healPlayer(p: PlayerRt, amount: number, source: PlayerRt | null | undefined = p, fuelMechanic=true): void {
     const gain = Math.min(p.state.maxHp - p.state.hp, Math.round(amount));
+    if(fuelMechanic&&source)this.mechanics.onHeal(source,amount,Math.max(0,gain));
     if (gain <= 0) return;
     p.state.hp += gain;
     if (source) source.state.healDone += gain;
     this.broadcast('heal', { target: p.id, amount: gain, x: p.state.x, y: p.state.y });
   }
 
-  private applyBuff(p: PlayerRt, buff: NonNullable<SpellDef['buff']>): void {
+  applyBuff(p: PlayerRt, buff: NonNullable<SpellDef['buff']>): void {
     let stats = buff.stats ?? {};
     let label = buff.label ?? '';
     if (buff.randomOne) {
@@ -1018,7 +1131,7 @@ export class Simulation {
     // Bonus de zone : tous les alliés vivants autour du lanceur en profitent.
     const targets = buff.zone ? [...this.players.values()].filter((o) => o.state.alive && Math.hypot(o.state.x - p.state.x, o.state.y - p.state.y) <= buff.zone!) : [p];
     for (const t of targets) {
-      t.buffs.push({ stats, until: this.now + buff.duration, invisible: !!buff.invisible, invulnerable: !!buff.invulnerable });
+      t.buffs.push({ stats, until: this.now + buff.duration, invisible: !!buff.invisible, invulnerable: !!buff.invulnerable,label });
       this.applyStats(t);
       if (label) this.broadcast('buff', { target: t.id, label, duration: buff.duration });
     }
@@ -1031,7 +1144,8 @@ export class Simulation {
     if (def.max && mine.length >= def.max) this.removeGround(mine[0].id);
     const id = `g${this.nextGroundId++}`;
     const state = new GroundState();
-    state.kind = def.kind;
+    state.owner=pr.owner;
+    state.kind = pr.spell.id==='filon_enutrof'?'ore':pr.spell.id==='jardin_vivant'?'plant':def.kind;
     state.spell = pr.spell.id;
     state.x = x;
     state.y = y;
@@ -1045,6 +1159,19 @@ export class Simulation {
     this.grounds.delete(id);
     this.state.grounds.delete(id);
   }
+  triggerGround(id:string,mult=1):void {
+    const g=this.grounds.get(id);if(!g||this.now<g.armedAt)return;
+    this.removeGround(id);this.explode({...g.pr,damageMult:g.pr.damageMult*mult,proc:true},g.state.x,g.state.y,g.state.radius);
+  }
+  pulseGround(id:string):void {
+    const g=this.grounds.get(id);if(!g||g.state.kind!=='glyph')return;
+    this.explode({...g.pr,proc:true},g.state.x,g.state.y,g.state.radius);
+  }
+  classAction(id:string,message:{tx?:unknown;ty?:unknown;choice?:unknown}):void {
+    const p=this.players.get(id),tx=Number(message?.tx),ty=Number(message?.ty),choice=Number(message?.choice??0);
+    if(!p?.state.alive||this.state.phase===PHASE_LOST||this.state.paused||this.state.intermission||!Number.isFinite(tx)||!Number.isFinite(ty)||!Number.isInteger(choice)||choice<0||choice>2)return;
+    this.mechanics.action(p,tx,ty,choice);
+  }
 
   private updateGrounds(): void {
     for (const g of [...this.grounds.values()]) {
@@ -1053,6 +1180,7 @@ export class Simulation {
         continue;
       }
       const def = g.pr.spell.ground!;
+      if(g.state.spell==='filon_enutrof')continue;
       const { x, y } = g.state;
       if (def.kind === 'trap') {
         if (this.now < g.armedAt) continue;
@@ -1074,15 +1202,19 @@ export class Simulation {
   private summonAlly(owner: PlayerRt, summon: NonNullable<SpellDef['summon']>, x: number, y: number): void {
     const def = getMonster(summon.monster);
     const mine = [...this.monsters.values()].filter((m) => m.allyOwner === owner.id && m.def.id === def.id);
-    if (mine.length >= summon.max) this.removeMonster(mine[0].id);
     // Point libre près du point visé.
-    let px = x;
-    let py = y;
+    let px = clamp(x,1+def.radius,this.map.size-1-def.radius);
+    let py = clamp(y,1+def.radius,this.map.size-1-def.radius);
     for (let attempt = 0; attempt < 12 && isBlocked(this.map, px, py, def.radius); attempt++) {
       const a = Math.random() * Math.PI * 2;
       px = x + Math.cos(a) * (0.5 + attempt * 0.2);
       py = y + Math.sin(a) * (0.5 + attempt * 0.2);
     }
+    if(isBlocked(this.map,px,py,def.radius)) {
+      const fallback={x:owner.state.x,y:owner.state.y};resolveCollisions(this.map,fallback,def.radius);px=fallback.x;py=fallback.y;
+      if(isBlocked(this.map,px,py,def.radius))return;
+    }
+    if (mine.length >= summon.max) this.removeMonster(mine[0].id);
     // Les poupées profitent des dégâts de leur maître et deviennent plus résistantes avec la difficulté.
     const ally = this.spawnMonster(def, px, py, 1 + 0.25 * (this.state.difficulty - 1), 1 + owner.stats.damage, 1);
     ally.state.ally = true;
@@ -1090,6 +1222,7 @@ export class Simulation {
     ally.expiresAt = this.now + summon.duration;
     ally.meleeReadyAt = this.now;
     ally.specialReadyAt = this.now;
+    if(def.id==='coffre_anime')ally.state.hp=ally.state.maxHp=owner.state.maxHp;
   }
 
   // -------------------------------------------------------------------------
@@ -1123,15 +1256,25 @@ export class Simulation {
       p.state.kamas += gain;
       p.state.kamasEarned += gain;
     }
-    const killer = this.players.get(ownerId);
+    const killer = dealer;
     if (killer) {
       killer.state.kills++;
       if (killer.state.alive && killer.stats.killHeal > 0) killer.state.hp = Math.min(killer.state.maxHp, killer.state.hp + killer.stats.killHeal);
     }
     this.state.kills++;
     if (this.state.phase===PHASE_PLAYING) {
+      if(m.def.boss) {
+        for(const p of this.players.values())p.state.bossKills++;
+        this.awardFragments(`boss:${m.id}`,bossFragments(this.state.stage));
+        for(const p of this.players.values()) {
+          const bases=[...new Set(Object.values(RUN_BONUSES).map(b=>b.base))],offers:string[]=[];
+          while(offers.length<3&&bases.length){const base=bases.splice(Math.floor(Math.random()*bases.length),1)[0],rarity=rollRarity(p.stats.luck+.15);offers.push((RUN_BONUSES[`${base}.${rarity}`]??RUN_BONUSES[`${base}.epique`]).id);}
+          const queue=this.boonQueues.get(p.id)??[];queue.push(offers);this.boonQueues.set(p.id,queue);
+          p.state.boonChoices=JSON.stringify(queue[0]);
+        }
+      }
       for (const p of this.players.values()) {
-        const drops = monsterEquipmentDrops(this.state.stage,!!m.def.boss);
+        const drops = monsterEquipmentDrops(this.state.stage,!!m.def.boss,Math.random,(p.def.id==='enutrof'?2:1)*m.lootMultiplier);
         if (!drops.length) continue;
         drops.forEach((gear,index)=>{
           const drop={claimId:`${this.state.runId}:${m.id}:${p.id}:${index}`,gear};
@@ -1161,12 +1304,16 @@ export class Simulation {
       this.potionExpires.set(id, this.now + POTION_LIFETIME);
     }
     this.removeMonster(m.id);
+    this.mechanics.onEnemyDeath(m);
   }
 
-  damagePlayer(p: PlayerRt, amount: number): void {
+  damagePlayer(p: PlayerRt, amount: number, source='Dégâts de combat'): void {
     if (!p.state.alive) return;
+    if(this.now<p.dodgeUntil){if(!p.dodgeReported){p.dodgeReported=true;this.broadcast('buff',{target:p.id,label:'Esquive !',duration:.5});}return;}
     // Trêve : aucun dégât.
     if (p.buffs.some((b) => b.invulnerable && b.until > this.now)) return;
+    const chest=[...this.monsters.values()].find(m=>m.allyOwner===p.id&&m.def.id==='coffre_anime'&&m.state.hp>0&&m.expiresAt>this.now);
+    if(chest){const intercepted=Math.min(Math.max(1,Math.round(amount)),chest.state.hp);this.damageMonster(chest,intercepted,'');amount-=intercepted;if(amount<=0)return;}
     amount = Math.max(1, Math.round(amount * Math.pow(ARMOR_FACTOR, p.stats.armor)));
     if (this.now >= p.shieldUntil) p.state.shield = 0;
     const absorbed = Math.min(p.state.shield, amount);
@@ -1178,6 +1325,8 @@ export class Simulation {
     this.broadcast('dmg', { target: p.id, amount, absorbed, x: p.state.x, y: p.state.y, player: true });
     if (p.state.hp > 0) return;
     p.state.alive = false;
+    p.state.deathCause=source;
+    this.mechanics.reset(p.id);
     p.state.moving = false;
     p.state.shield = 0;
     p.shieldUntil = 0;
@@ -1207,6 +1356,8 @@ export class Simulation {
       let seed = 2166136261;
       for (const c of `${this.state.runId}:${p.id}`) seed = Math.imul(seed ^ c.charCodeAt(0), 16777619);
       const reward=equipmentReward(this.state.runId, seed >>> 0, this.state.stage, this.state.mode, p.state.kamasEarned,p.loot);
+      reward.forgeGrants=JSON.parse(p.state.forgeGrants);
+      reward.summary={runId:this.state.runId,classId:p.def.id,name:p.state.name,startedAt:this.startedAt,duration:Math.floor(this.state.time),partySize:this.partySize,mode:this.state.mode,zone:this.state.stage,zoneName:zoneForStage(this.state.stage).name,waves:this.state.waves,kills:p.state.kills,teamKills:this.state.kills,bossKills:p.state.bossKills,damageDealt:p.state.dmgDealt,healing:p.state.healDone,damageTaken:p.state.dmgTaken,deathCause:p.state.deathCause,bonuses:sumRunStats(p.inventory),loot:[...p.loot.map(d=>d.gear),...reward.gear]};
       p.state.rewards = JSON.stringify(reward);
       this.broadcast('runReward',{player:p.id,reward});
     }
@@ -1217,7 +1368,7 @@ export class Simulation {
   // -------------------------------------------------------------------------
 
   /** Recalcule les stats d'un joueur à partir de son inventaire. */
-  private applyStats(p: PlayerRt): void {
+  applyStats(p: PlayerRt): void {
     p.stats = sumRunStats(p.inventory);
     for (const [k, v] of Object.entries(p.meta)) p.stats[k as StatKey] += v;
     p.stats.armor += p.def.armor ?? 0;
@@ -1230,6 +1381,23 @@ export class Simulation {
     if (p.state.alive && p.state.maxHp > oldMax && oldMax > 0) p.state.hp += p.state.maxHp - oldMax;
     p.state.hp = Math.min(p.state.hp, p.state.maxHp);
     p.state.bonuses = formatRunBonuses(p.inventory);
+    const max=1+Math.max(0,Math.floor(p.stats.secondaryCharge));
+    if(p.state.secondaryMax===1&&max>1&&p.readyAt[1]>this.now){p.secondaryRefillAt=p.readyAt[1];p.readyAt[1]=this.now;}
+    p.state.secondaryCharges=Math.min(max,p.state.secondaryCharges+Math.max(0,max-p.state.secondaryMax));
+    p.state.secondaryMax=max;
+  }
+
+  private consumeSecondary(p:PlayerRt,cooldown:number):void {
+    if(p.state.secondaryMax<=1){p.state.secondaryCharges=0;return;}
+    p.state.secondaryCharges--;
+    if(p.secondaryRefillAt<=this.now)p.secondaryRefillAt=this.now+cooldown/1000;
+    p.readyAt[1]=p.state.secondaryCharges>0?this.now:p.secondaryRefillAt;
+  }
+  private updateSecondary(p:PlayerRt):void {
+    if(p.state.secondaryMax<=1){p.state.secondaryCharges=this.now>=p.readyAt[1]?1:0;return;}
+    const period=getSpell(p.spells[1]).cooldown/1000/(1+p.stats.haste);
+    while(p.secondaryRefillAt>0&&this.now>=p.secondaryRefillAt&&p.state.secondaryCharges<p.state.secondaryMax){p.state.secondaryCharges++;p.secondaryRefillAt=p.state.secondaryCharges<p.state.secondaryMax?p.secondaryRefillAt+period:0;}
+    if(p.state.secondaryCharges===0)p.readyAt[1]=p.secondaryRefillAt;
   }
 
   giveItem(p: PlayerRt, itemId: string): void {
@@ -1262,7 +1430,7 @@ export class Simulation {
   /** Le joueur appuie sur « interagir » : ouvre le coffre le plus proche s'il a de quoi payer. */
   interact(id: string): void {
     const p = this.players.get(id);
-    if (!p || !p.state.alive || this.state.phase !== PHASE_PLAYING) return;
+    if (!p || !p.state.alive || this.state.phase !== PHASE_PLAYING || this.state.paused || this.state.intermission) return;
 
     // Zaap à portée : on l'active, ou on part pour la zone suivante s'il est prêt.
     if (Math.hypot(this.state.zaapX - p.state.x, this.state.zaapY - p.state.y) <= ZAAP_RANGE) {
@@ -1317,14 +1485,26 @@ export class Simulation {
 
   /** Population propre à la région, partagée par les vagues et les défis. */
   zoneMonsters(): MonsterDef[] { return zoneForStage(this.state.stage).monsters.map(getMonster); }
+  private awardFragments(reason:string,amount:number):void {
+    for(const p of this.players.values()) {
+      const grant={claimId:`${this.state.runId}:forge:${reason}`,amount};
+      const ledger=JSON.parse(p.state.forgeGrants);ledger.push(grant);p.state.forgeGrants=JSON.stringify(ledger);
+      this.broadcast('forgeGrant',{player:p.id,grant});
+    }
+  }
+  chooseBoon(id:string,choice:unknown):void {
+    const p=this.players.get(id),queue=this.boonQueues.get(id),index=Number(choice);
+    if(!p?.state.alive||this.state.paused||this.state.phase!==PHASE_PLAYING||!queue?.length||!Number.isInteger(index)||index<0||index>2)return;
+    this.giveItem(p,queue.shift()![index]);p.state.boonChoices=JSON.stringify(queue[0]??[]);
+    this.broadcast('buff',{target:id,label:'Bénédiction du gardien',duration:2});
+  }
 
   /** Achat chez le marchand (une fois par offre et par joueur, à côté du marchand). */
   buy(id: string, index: unknown): void {
     const p = this.players.get(id);
     const i = Number(index);
-    if (!p || !p.state.alive || !Number.isInteger(i) || p.bought.has(i) || !this.state.shop) return;
-    if (Math.hypot(this.state.merchantX - p.state.x, this.state.merchantY - p.state.y) > 3.5) return;
-    const offer = this.state.shop.split(',')[i];
+    if (!p || !p.state.alive || !this.state.intermission || this.state.paused || p.state.shopReady || !Number.isInteger(i) || i<0 || p.bought.has(i) || !p.state.shop) return;
+    const offer = p.state.shop.split(',')[i];
     if (!offer) return;
     const [itemId, price] = offer.split(':');
     if (!RUN_BONUSES[itemId] || p.state.kamas < Number(price)) return;
@@ -1335,7 +1515,7 @@ export class Simulation {
     this.broadcast('item', { player: id, item: itemId, x: p.state.x, y: p.state.y });
   }
 
-  private after(seconds: number, run: () => void): void {
+  after(seconds: number, run: () => void): void {
     this.timers.push({ at: this.now + seconds, run });
   }
 
@@ -1371,6 +1551,8 @@ export class Simulation {
       state,
       def,
       damageMult,
+      speedMult:def.ally||def.behavior.type==='dummy'?1:monsterSpeedMultiplier(this.state.difficulty),
+      lootMultiplier:1,
       // Petit délai avant la première attaque pour éviter les coups « à l'apparition ».
       meleeReadyAt: this.now + 0.5,
       push: null,

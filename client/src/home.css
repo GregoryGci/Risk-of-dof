@@ -105,3 +105,23 @@
 @media (max-height: 800px) and (min-width: 851px) { .home-layout { padding: 18px 0; min-height: calc(100dvh - 105px); } .home-brand h1 { font-size: 73px; } .home-brand p { font-size: 9px; } .brand-rule { margin: 10px 0 12px; } .home-nav-button { padding: 10px 13px; } .home-nav-button > span:nth-child(2) { font-size: 23px; } .home-profile { margin-top: 12px; padding-top: 12px; } .home-view { max-height: calc(100dvh - 115px); } .home-topline { padding-top: 22px; } .home-footer { padding-bottom: 14px; } }
 @media (max-width: 850px) { .home-layout { grid-template-columns: 1fr; min-height: calc(100dvh - 120px); width: min(540px, 88vw); gap: 24px; } .home-navigation { width: min(400px, 100%); margin: auto; } .home-brand h1 { font-size: 85px; } .home-topline > span:last-child { display: none; } .home-welcome { display: none; } .home-view { max-height: none; } .has-view .home-navigation { display: none; } .home-footer { font-size: 7px; gap: 10px; } .home-topline { font-size: 9px; } .home-class-picker { grid-template-columns: repeat(4, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .home-screen *, .gear-card { animation: none !important; transition: none !important; } }
+
+/* Réglages à commandes visibles (volume, viseur) : pas de bascule, la ligne n'est pas cliquable en entier. */
+.home-setting.setting-wide { cursor: default; flex-wrap: wrap; }
+/* Même typographie que les réglages en <label> (règle globale de style.css). */
+.home-setting.setting-wide > div:first-child { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: var(--encre-douce); }
+.home-setting .setting-range { position: static; width: 150px; height: auto; opacity: 1; accent-color: #617a42; cursor: pointer; }
+.home-setting output { min-width: 42px; font-size: 11px; color: #604c2e; text-align: right; }
+.crosshair-options, .crosshair-colors { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.crosshair-choice, .crosshair-color { position: relative; cursor: pointer; }
+.home-setting .crosshair-choice input, .home-setting .crosshair-color input { right: auto; left: 50%; top: 50%; }
+/* Vignettes sur fond d'herbe : le viseur s'y voit comme en jeu. */
+.crosshair-choice img { display: block; width: 40px; height: 40px; padding: 4px; border-radius: 4px; background: #4f7a32; border: 2px solid transparent; }
+.crosshair-choice input:checked + img { border-color: #3a2a12; box-shadow: 0 0 0 2px #f0d9a7; }
+.crosshair-choice input:focus-visible + img, .home-setting .crosshair-color input:focus-visible + i { outline: 2px solid #765a27; outline-offset: 3px; }
+.home-setting .crosshair-color i { display: block; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #3a2a12; box-shadow: inset 0 0 0 2px #0003; transition: none; }
+.home-setting .crosshair-color i::after { content: none; }
+.home-setting .crosshair-color input:checked + i { border-color: #3a2a12; box-shadow: 0 0 0 3px #f0d9a7, 0 0 0 5px #3a2a12; }
+.home-setting > .crosshair-preview { flex: 0 0 96px; height: 96px; display: grid; place-items: center; border-radius: 6px; border: 1px solid #a0895760;
+  background: radial-gradient(circle at 30% 30%, #7fb241, #4f7a32 60%, #3d5f27); }
+.crosshair-preview img { width: 64px; height: 64px; }
