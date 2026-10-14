@@ -49,6 +49,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage('dash', (client: Client, message: { dx?: number; dy?: number }) => this.sim.playerDash(client.sessionId, message));
     this.onMessage('pause', (client: Client, message: { paused?: boolean }) => this.sim.setPaused(client.sessionId, message?.paused));
     this.onMessage('meta', (client: Client, message: { meta?: unknown }) => this.sim.setMeta(client.sessionId, message?.meta));
+    this.onMessage('buy', (client: Client, message: { index?: number }) => this.sim.buy(client.sessionId, message?.index));
     this.onMessage('mode', (client: Client, message: { mode?: number }) => this.sim.setMode(client.sessionId, message?.mode));
     this.onMessage('interact', (client: Client) => this.sim.interact(client.sessionId));
     this.onMessage('start', (client: Client) => {

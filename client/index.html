@@ -23,7 +23,10 @@
         <div id="class-picker"></div>
         <div id="class-desc" class="class-desc"></div>
 
-        <button id="btn-talents" class="btn">Progression (talents et stats)</button>
+        <div class="row">
+          <button id="btn-talents" class="btn">Arbre de talents</button>
+          <button id="btn-stats" class="btn">Arbre de stats</button>
+        </div>
         <button id="btn-create" class="btn btn-primary">Créer une partie</button>
 
         <div class="separator"><span>ou</span></div>
@@ -39,7 +42,7 @@
         <div class="help">
           <b>Déplacement</b> ZQSD / WASD / flèches &nbsp;·&nbsp; <b>Visée</b> souris<br />
           <b>Sorts</b> clic gauche · clic droit · Espace · R (ultime)<br />
-          <b>E</b> Ouvrir un coffre (coûte des kamas) &nbsp;·&nbsp; <b>Tab</b> Détails / pause &nbsp;·&nbsp; <b>Maj</b> Dash
+          <b>E</b> Ouvrir un coffre (coûte des kamas) &nbsp;·&nbsp; <b>Tab</b> Détails · <b>Échap</b> Menu &nbsp;·&nbsp; <b>Maj</b> Dash
         </div>
       </div>
     </div>
@@ -48,10 +51,21 @@
     <div id="talents" class="overlay hidden">
       <div class="panel details-panel talents-panel">
         <div class="details-head">
-          <h2>Progression</h2>
+          <h2>Arbre de talents</h2>
           <button id="talents-close" class="btn">Fermer</button>
         </div>
         <div id="talents-body"></div>
+      </div>
+    </div>
+
+    <!-- Arbre de stats (fiche de caractéristiques) -->
+    <div id="stats" class="overlay hidden">
+      <div class="sheet">
+        <div class="sheet-head">
+          <span>Arbre de stats</span>
+          <button id="stats-close" class="sheet-close" title="Fermer">✕</button>
+        </div>
+        <div id="stats-body"></div>
       </div>
     </div>
 
@@ -115,9 +129,23 @@
         <div class="panel details-panel">
           <div class="details-head">
             <h2>Détails de la partie</h2>
-            <button id="details-close" class="btn">Reprendre (Tab)</button>
+            <div class="row">
+              <button id="details-menu" class="btn">Retour au menu</button>
+              <button id="details-close" class="btn btn-primary">Reprendre</button>
+            </div>
           </div>
           <div id="details-body"></div>
+        </div>
+      </div>
+
+      <!-- Marchand -->
+      <div id="shop" class="overlay hidden">
+        <div class="panel details-panel shop-panel">
+          <div class="details-head">
+            <h2>Marchand</h2>
+            <button id="shop-close" class="btn">Fermer</button>
+          </div>
+          <div id="shop-body"></div>
         </div>
       </div>
 
@@ -132,7 +160,7 @@
           <div id="gameover-players"></div>
           <p id="gameover-reward" class="subtitle"></p>
           <button id="btn-restart" class="btn btn-primary">Relancer une partie</button>
-          <button id="btn-quit" class="btn">Quitter</button>
+          <button id="btn-quit" class="btn">Retour au menu</button>
         </div>
       </div>
     </div>

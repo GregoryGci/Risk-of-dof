@@ -46,12 +46,14 @@ export const TALENTS: Record<string, TalentDef[]> = {
   ecaflip: [
     { slot: 0, spell: 'tout_ou_rien', cost: 350 },
     { slot: 1, spell: 'trefle', cost: 400 },
+    { slot: 2, spell: 'bond_du_felin', cost: 200 },
     { slot: 3, spell: 'perception', cost: 800 },
   ],
   feca: [
     { slot: 0, spell: 'bulle', cost: 300 },
     { slot: 1, spell: 'glyphe_paralysant', cost: 350 },
     { slot: 2, spell: 'bouclier_feca', cost: 300 },
+    { slot: 2, spell: 'teleportation', cost: 250 },
   ],
 };
 

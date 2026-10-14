@@ -41,3 +41,7 @@ export const ZAAP_CHARGING = 1;
 export const ZAAP_READY = 2;
 export const ZAAP_RANGE = 2.4;
 export const ZAAP_CHARGE_TIME = 45;
+
+/** Cawottes par zone (font apparaître un monstre d'élite) et offres du marchand. */
+export const CAWOTTE_COUNT = 2;
+export const SHOP_SIZE = 4;

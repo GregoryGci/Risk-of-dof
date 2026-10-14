@@ -81,10 +81,9 @@ export class TalentsPage {
   }
 
   private render(): void {
-    if (this.tab === 'stats') return this.renderStats();
     const cls = getClass(this.classId);
     const equipped = account.loadout(cls.id);
-    let html = this.tabs() + `<div class="talents-bank">Bourse : <b>${account.bank} kamas</b> <small>— gagnés à la fin de chaque partie</small></div>`;
+    let html = `<div class="talents-bank">Bourse : <b>${account.bank} kamas</b> <small>— gagnés à la fin de chaque partie</small></div>`;
     html += `<div class="talents-classes">${Object.values(CLASSES)
       .map((c) => `<button class="btn${c.id === cls.id ? ' active' : ''}" data-act="class" data-cls="${c.id}">${escapeHtml(c.name)}</button>`)
       .join('')}</div>`;

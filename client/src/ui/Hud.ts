@@ -1,5 +1,5 @@
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, kamas, équipe, bandeaux.
-import { CLASSES, GAME_MODES, ITEMS, getMode, orbReward, sumStats, type StatKey, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
+import { CLASSES, GAME_MODES, ITEMS, RARITY_NAMES, getMode, orbReward, sumStats, type StatKey, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import { spellIconSvg } from './icons.ts';
@@ -252,7 +252,7 @@ export class Hud {
         const item = ITEMS[id];
         const url = this.store.itemIconUrl(id);
         const style = url ? `background-image:url('${url}')` : `background:radial-gradient(circle at 35% 30%, #fff8, ${cssColor(item.color)} 55%, #0008)`;
-        html += `<div class="item${item.rarity !== 'commun' ? ` ${item.rarity}` : ''}" title="${escapeHtml(item.name)} — ${escapeHtml(item.description)}"><div class="item-icon" style="${style}"></div>${count > 1 ? `<span>x${count}</span>` : ''}</div>`;
+        html += `<div class="item${item.rarity !== 'commun' ? ` ${item.rarity}` : ''}" title="${escapeHtml(item.name)} (${RARITY_NAMES[item.rarity]}) — ${escapeHtml(item.description)}"><div class="item-icon" style="${style}"></div>${count > 1 ? `<span>x${count}</span>` : ''}</div>`;
       }
       $('inventory').innerHTML = html;
     }
@@ -292,20 +292,22 @@ export class Hud {
     }
     this.setHtml('objective', objective);
 
-    // Barre de vie du boss (premier monstre marqué « boss »)
+    // Barre de vie du boss, ou à défaut d'un monstre d'élite, avec les PV en nombre.
     let bossName = '';
     let bossPct = 0;
+    let bossHp = '';
     state.monsters.forEach((m) => {
       const def = getMonster(m.type);
-      if (!def.boss || bossName) return;
-      bossName = def.name;
+      if ((!def.boss && !m.elite) || (bossName && !def.boss)) return;
+      bossName = m.elite ? `${def.name} d'élite` : def.name;
       bossPct = Math.round((Math.max(0, m.hp) / (m.maxHp || 1)) * 1000) / 10;
+      bossHp = `${Math.max(0, Math.ceil(m.hp))} / ${m.maxHp}`;
     });
-    const bossKey = `${bossName}|${bossPct}`;
+    const bossKey = `${bossName}|${bossHp}`;
     if (this.cache.boss !== bossKey) {
       this.cache.boss = bossKey;
       $('boss').classList.toggle('hidden', bossName === '');
-      $('boss-name').textContent = bossName;
+      $('boss-name').innerHTML = bossName ? `${escapeHtml(bossName)} <small>${bossHp}</small>` : '';
       $('boss-bar').style.width = `${bossPct}%`;
     }
 

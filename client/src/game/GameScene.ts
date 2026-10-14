@@ -16,6 +16,7 @@ import {
   generateMap,
   getClass,
   getItem,
+  RARITY_NAMES,
   getMonster,
   getSpell,
   screenToWorld,
@@ -44,6 +45,7 @@ import type { Hud } from '../ui/Hud.ts';
 import { Minimap } from '../ui/Minimap.ts';
 import { Details } from '../ui/Details.ts';
 import { SpellPreview } from './SpellPreview.ts';
+import { ShopPanel } from '../ui/Shop.ts';
 import { settings } from '../settings.ts';
 import { Controls } from './Controls.ts';
 import { Effects } from './Effects.ts';
@@ -71,6 +73,8 @@ export class GameScene extends Phaser.Scene {
   private effects!: Effects;
   private minimap = new Minimap();
   private details!: Details;
+  private shop!: ShopPanel;
+  private merchant?: EntityView;
   private preview!: SpellPreview;
   /** Sort dont la zone est affichée (survol de son icône), ou null. */
   private previewSlot: number | null = null;
@@ -159,6 +163,8 @@ export class GameScene extends Phaser.Scene {
       },
     );
     this.hud.setSpellHover((slot) => (this.previewSlot = slot));
+    this.shop = new ShopPanel(this.store, (index) => this.room.send('buy', { index }));
+    document.getElementById('details-menu')!.addEventListener('click', () => this.room.leave());
 
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyZoom, this);
     this.applyZoom();
@@ -226,12 +232,13 @@ export class GameScene extends Phaser.Scene {
     if (this.controls.consumePress('Escape')) {
       // Échap annule d'abord un ciblage en cours, puis ferme le panneau.
       if (this.targeting !== null) this.targeting = null;
-      else this.details.toggle(false);
+      else if (this.shop.isOpen) this.shop.toggle(false);
+      else this.details.toggle();
     }
     // Pendant une pause, les temps de recharge affichés sont figés eux aussi.
     if (state.paused && this.lastFrameTime > 0) for (let i = 0; i < 4; i++) this.cdEnd[i] += time - this.lastFrameTime;
     this.lastFrameTime = time;
-    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !this.details.isOpen && !state.paused;
+    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !this.details.isOpen && !this.shop.isOpen && !state.paused;
 
     if (myState && (myState.classId !== this.myClass || myState.spells !== this.mySpellsKey)) {
       // Première frame, changement de classe ou de sorts équipés : la barre de sorts suit.
@@ -245,7 +252,8 @@ export class GameScene extends Phaser.Scene {
     this.syncPlayers(state, dt);
     this.syncMonsters(state, dt);
     this.syncGrounds(state, time);
-    const prompt = this.syncZaap(state, canAct) || this.syncChests(state, myState, canAct);
+    const prompt = this.syncZaap(state, canAct) || this.syncMerchant(state, canAct, dt) || this.syncChests(state, myState, canAct);
+    this.shop.update(state, this.room.sessionId);
     this.effects.update(dt);
     this.updateCamera(state, myState, dt);
 
@@ -421,7 +429,15 @@ export class GameScene extends Phaser.Scene {
     state.monsters.forEach((m: MonsterView, id: string) => {
       let view = this.monsters.get(id);
       if (!view) {
-        view = new EntityView(this, this.store, this.store.monster(this, m.type), m.x, m.y, { barWidth: getMonster(m.type).boss ? 70 : 30, barColor: m.ally ? 0x4ad04a : 0xd83a2a, barAlways: m.ally });
+        const visual = this.store.monster(this, m.type);
+        if (m.elite) visual.scale *= 1.6;
+        view = new EntityView(this, this.store, visual, m.x, m.y, {
+          barWidth: getMonster(m.type).boss || m.elite ? 70 : 30,
+          barColor: m.ally ? 0x4ad04a : m.elite ? 0xf0b030 : 0xd83a2a,
+          barAlways: m.ally || m.elite,
+          label: m.elite ? `${getMonster(m.type).name} d'élite` : undefined,
+          labelColor: '#ffcf6e',
+        });
         this.monsters.set(id, view);
       }
       // Sens du déplacement déduit de la position visée (pas de champ « moving » synchronisé).
@@ -493,11 +509,13 @@ export class GameScene extends Phaser.Scene {
    * Retourne le texte d'aide à afficher si un coffre est à portée.
    */
   private syncChests(state: GameStateView, myState: PlayerView | undefined, canAct: boolean): string {
-    let nearest = Infinity;
+    let nearestChest = Infinity;
+    let nearestCawotte = Infinity;
+    const chestSprite = this.store.chestSprite(this);
     state.chests.forEach((c: ChestView, id: string) => {
       let view = this.chests.get(id);
-      const chestSprite = this.store.chestSprite(this);
-      if (chestSprite && (!view || view.opened !== c.opened)) {
+      const cawotte = c.kind === 'cawotte';
+      if (!cawotte && chestSprite && (!view || view.opened !== c.opened)) {
         // Coffre animé : on garde le même sprite, l'ouverture joue l'animation de « mort » (il crache ses pièces).
         if (!view) {
           const p = worldToScreen(c.x, c.y);
@@ -510,14 +528,17 @@ export class GameScene extends Phaser.Scene {
         view.opened = c.opened;
       } else if (!view || view.opened !== c.opened) {
         view?.image.destroy();
-        const v = this.store.objectVisual(c.opened ? 'coffre_ouvert' : 'coffre', 0);
+        const v = this.store.objectVisual(cawotte ? 'cawotte' : c.opened ? 'coffre_ouvert' : 'coffre', 0);
         const p = worldToScreen(c.x, c.y);
         const image = this.add.image(p.x, p.y, v.key).setOrigin(v.origin[0], v.origin[1]).setScale(v.scale).setDepth(p.y);
-        if (c.opened) image.setAlpha(0.75);
+        if (c.opened) image.setAlpha(cawotte ? 0.3 : 0.75);
         view = { image, opened: c.opened };
         this.chests.set(id, view);
       }
-      if (!c.opened) nearest = Math.min(nearest, Math.hypot(c.x - this.me.x, c.y - this.me.y));
+      if (c.opened) return;
+      const d = Math.hypot(c.x - this.me.x, c.y - this.me.y);
+      if (cawotte) nearestCawotte = Math.min(nearestCawotte, d);
+      else nearestChest = Math.min(nearestChest, d);
     });
     for (const [id, view] of this.chests) {
       if (state.chests.get(id)) continue;
@@ -526,12 +547,49 @@ export class GameScene extends Phaser.Scene {
     }
 
     const pressed = this.controls.consumePress('KeyE');
-    if (!canAct || !myState || state.phase !== PHASE_PLAYING || nearest > INTERACT_RANGE) return '';
+    if (!canAct || !myState || state.phase !== PHASE_PLAYING) return '';
+    if (nearestCawotte <= INTERACT_RANGE && nearestCawotte <= nearestChest) {
+      if (pressed) this.room.send('interact');
+      return `<b>E</b> — Déterrer la Cawotte (un monstre d'élite surgit, chaque joueur qui le frappe gagne un objet)`;
+    }
+    if (nearestChest > INTERACT_RANGE) return '';
     const affordable = myState.kamas >= state.chestCost;
     if (pressed && affordable) this.room.send('interact');
     return affordable
       ? `<b>E</b> — Ouvrir le coffre (${state.chestCost} K)`
       : `Coffre : ${state.chestCost} K <span class="missing">(il vous manque ${state.chestCost - myState.kamas} K)</span>`;
+  }
+
+  /** Marchand de la zone : PNJ immobile ; E ouvre sa boutique. */
+  private syncMerchant(state: GameStateView, canAct: boolean, dt: number): string {
+    const present = state.phase === PHASE_PLAYING && state.merchantX > 0 && !!state.shop;
+    if (!present) {
+      this.merchant?.destroy();
+      this.merchant = undefined;
+      if (this.shop.isOpen) this.shop.toggle(false);
+      return '';
+    }
+    if (!this.merchant) {
+      this.merchant = new EntityView(this, this.store, this.store.monster(this, 'marchand'), state.merchantX, state.merchantY, {
+        label: 'Marchand',
+        labelColor: '#ffcf6e',
+        barWidth: 0,
+        barColor: 0,
+        barAlways: false,
+      });
+    }
+    this.merchant.setPosition(state.merchantX, state.merchantY);
+    this.merchant.update(dt);
+    const near = Math.hypot(state.merchantX - this.me.x, state.merchantY - this.me.y) <= 2.5;
+    if (!near) {
+      if (this.shop.isOpen) this.shop.toggle(false);
+      return '';
+    }
+    if (canAct && this.controls.consumePress('KeyE')) {
+      this.controls.releaseAll();
+      this.shop.toggle(true);
+    }
+    return '<b>E</b> — Parler au marchand';
   }
 
   // -------------------------------------------------------------------------
@@ -661,10 +719,11 @@ export class GameScene extends Phaser.Scene {
     if (!item || document.hidden) return;
     const mine = e.player === this.room.sessionId;
     const color = `#${item.color.toString(16).padStart(6, '0')}`;
-    this.effects.floatText(e.x, e.y, item.name, color, mine ? 16 : 12, 60);
+    const label = `${item.name} (${RARITY_NAMES[item.rarity]})`;
+    this.effects.floatText(e.x, e.y, label, color, mine ? 16 : 12, 60);
     this.effects.spark(worldToScreen(e.x, e.y).x, worldToScreen(e.x, e.y).y - 20, item.color);
     if (mine) {
-      this.hud.toast(`<b style="color:${color}">${item.name}</b> — ${item.description}`);
+      this.hud.toast(`<b style="color:${color}">${label}</b> — ${item.description}`);
       this.store.playSound(this, 'item');
     }
   }

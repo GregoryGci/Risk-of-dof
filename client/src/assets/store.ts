@@ -86,7 +86,7 @@ export class AssetStore {
     }
 
     // Décors.
-    for (const o of [...OBSTACLES, { id: 'coffre' }, { id: 'coffre_ouvert' }, { id: 'zaap' }]) {
+    for (const o of [...OBSTACLES, { id: 'coffre' }, { id: 'coffre_ouvert' }, { id: 'zaap' }, { id: 'cawotte' }]) {
       const defs = asArray<ImageDef>(m.objects?.[o.id] ?? []);
       const provided: ImageVisual[] = [];
       defs.forEach((d, i) => {
@@ -174,12 +174,15 @@ export class AssetStore {
    * Animation officielle d'un sort, si elle a été extraite : clé de texture, clips disponibles
    * (`main` = effet complet, `move` = projectile en vol...) et type Dofus (10 = joué sur le lanceur).
    */
-  spellFx(scene: Phaser.Scene, spellId: string): { key: string; origin: [number, number]; scale: number; clips: Set<string>; type: number } | null {
+  spellFx(scene: Phaser.Scene, spellId: string): { key: string; origin: [number, number]; scale: number; clips: Set<string>; main: string; type: number } | null {
     const link = this.manifest.spellAnims?.[spellId];
     const def = link ? this.manifest.spellfx?.[link.anim] : undefined;
     if (!link || !def || !scene.textures.exists(`fx_${link.anim}`)) return null;
     // Même agrandissement que les personnages, pour que les effets restent à leur échelle.
-    return { key: `fx_${link.anim}`, origin: def.origin ?? [0.5, 0.5], scale: (def.scale ?? 1) * 1.4, clips: new Set(Object.keys(def.anims)), type: link.type };
+    // Clip principal : « main », sinon le plus long (certaines animations n'ont que des clips nommés).
+    const names = Object.keys(def.anims);
+    const main = def.anims.main ? 'main' : names.filter((n) => n !== 'move').sort((a, b) => (def.anims[b].end ?? 0) - (def.anims[a].end ?? 0))[0] ?? '';
+    return { key: `fx_${link.anim}`, origin: def.origin ?? [0.5, 0.5], scale: (def.scale ?? 1) * 1.4, clips: new Set(names), main, type: link.type };
   }
 
   /** Image de projectile fournie pour ce sort, ou null (flèche placeholder). */
@@ -197,7 +200,8 @@ export class AssetStore {
   }
 
   itemIconUrl(id: string): string | null {
-    const file = this.manifest.items?.[id];
+    // Une icône par objet de base, partagée par ses trois raretés ("base.rareté").
+    const file = this.manifest.items?.[id.split('.')[0]];
     return file ? ASSET_ROOT + file : null;
   }
 

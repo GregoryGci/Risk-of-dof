@@ -24,6 +24,7 @@ export const STAT_UPGRADES: StatUpgrade[] = [
   { id: 'precision', name: 'Précision', stat: 'critDamage', perLevel: 0.05, maxLevel: 6, baseCost: 3 },
   { id: 'robustesse', name: 'Robustesse', stat: 'armor', perLevel: 0.25, maxLevel: 8, baseCost: 3 },
   { id: 'prospection', name: 'Prospection', stat: 'kamas', perLevel: 0.05, maxLevel: 5, baseCost: 2 },
+  { id: 'resurrection', name: 'Résurrection', stat: 'revive', perLevel: 1, maxLevel: 1, baseCost: 60 },
 ];
 
 export function upgradeCost(u: StatUpgrade, level: number): number {

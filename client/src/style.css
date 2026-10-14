@@ -997,3 +997,174 @@ input[type='text']:focus {
 .pip.on {
   background: var(--or);
 }
+
+/* --- Arbre de stats : fiche façon « Caractéristiques » de Dofus ---------------- */
+#stats {
+  z-index: 50;
+}
+.sheet {
+  width: 440px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: #e7dfc0;
+  border: 3px solid #fff;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 2px var(--bois-fonce),
+    var(--ombre);
+}
+.sheet-head,
+.sheet-section,
+.sheet-capital {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #5a4a35;
+  color: #fff;
+  font-weight: bold;
+}
+.sheet-head {
+  font-size: 19px;
+  border-radius: 10px 10px 0 0;
+}
+.sheet-section {
+  font-size: 16px;
+}
+.sheet-close {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(180deg, #ff9a3a, #e2651a);
+  border: 2px solid #fff;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.sheet-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 42px 1.3fr 28px 62px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-size: 14px;
+  color: #4a3e2c;
+}
+.sheet-row:nth-child(even) {
+  background: #d8cfa9;
+}
+.sheet-row.maxed .sheet-name {
+  color: #2f7a24;
+}
+.sheet-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.sheet-name {
+  font-weight: bold;
+}
+.sheet-level {
+  text-align: right;
+  color: #6a5a40;
+}
+.sheet-bonus {
+  font-size: 12px;
+}
+.sheet-plus {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(180deg, #ff9a3a, #e2651a);
+  border: 2px solid #fff;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.sheet-plus:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.sheet-plus.off {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #4f9f34;
+  font-size: 13px;
+}
+.sheet-cost {
+  font-size: 11px;
+  color: #6a5a40;
+  text-align: right;
+}
+.sheet-capital {
+  font-size: 17px;
+}
+.sheet-help {
+  margin: 0;
+  padding: 10px 14px 14px;
+  font-size: 12px;
+  color: #5a4a35;
+}
+
+/* --- Marchand ---------------------------------------------------------------------- */
+#shop {
+  pointer-events: auto;
+}
+.shop-panel {
+  width: min(560px, 92vw);
+  min-width: 0;
+}
+.shop-kamas {
+  margin: 8px 0;
+}
+.shop-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.shop-offer {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border: 2px solid var(--commun);
+  border-radius: 6px;
+  background: rgba(255, 252, 235, 0.6);
+}
+.shop-offer.rare {
+  border-color: var(--rare);
+}
+.shop-offer.epique {
+  border-color: var(--epique);
+}
+.shop-offer .item-icon {
+  width: 42px;
+  height: 42px;
+}
+.rarity {
+  font-size: 11px;
+  font-weight: bold;
+}
+.rarity.commun {
+  color: var(--commun);
+}
+.rarity.rare {
+  color: var(--rare);
+}
+.rarity.epique {
+  color: var(--epique);
+}

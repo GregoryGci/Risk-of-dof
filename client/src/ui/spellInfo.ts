@@ -1,6 +1,6 @@
 // Description lisible d'un sort, générée à partir de ses données (shared/src/data/spells.ts).
 // Les valeurs tiennent compte des objets du joueur (dégâts, vitesse de recharge, critiques).
-import type { SpellDef, StatKey } from '@rod/shared';
+import { statText, type SpellDef, type StatKey } from '@rod/shared';
 
 const BASE_CRIT = 0.05;
 
@@ -23,7 +23,7 @@ export function spellShape(spell: SpellDef): string {
   if (spell.ground?.kind === 'trap') return `Piège au sol (explosion de rayon ${spell.ground.blast ?? spell.ground.radius}${spell.ground.max ? `, ${spell.ground.max} max` : ''})`;
   if (spell.ground?.kind === 'glyph') return `Glyphe au sol de rayon ${spell.ground.radius} pendant ${spell.ground.duration} s (effet toutes les ${spell.ground.tick ?? 0.5} s)`;
   if (spell.summon) return `Invocation (${spell.summon.max} max, ${spell.summon.duration} s)`;
-  if (spell.buff) return `Bonus pendant ${spell.buff.duration} s${spell.buff.invisible ? ', invisible' : ''}${spell.buff.randomOne ? ' (un seul, au hasard)' : ''}`;
+  if (spell.buff) return `${spell.buff.zone ? `Bonus pour vous et les alliés à ${spell.buff.zone} cases` : 'Bonus'} pendant ${spell.buff.duration} s${spell.buff.invisible ? ', invisible' : ''}${spell.buff.invulnerable ? ', aucun dégât subi' : ''}${spell.buff.randomOne ? ' (un seul, au hasard)' : ''}`;
   if (spell.teleport) return 'Téléportation';
   if (spell.melee) return `Corps à corps, cône de ${spell.melee.arc}°`;
   if (spell.zone && spell.zoneAtDashEnd) return `Bond puis zone à l'arrivée (rayon ${spell.zone.radius})`;
@@ -57,8 +57,7 @@ export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number
   }
   if (spell.gamble) lines.push(`Pari : ${pct(spell.gamble.chance)} de chances de dégâts ×${String(spell.gamble.win).replace('.', ',')}, sinon ×${String(spell.gamble.lose).replace('.', ',')}`);
   if (spell.buff?.stats) {
-    const names: Record<string, string> = { damage: 'dégâts', haste: 'vitesse de recharge', crit: 'critiques', critDamage: 'dégâts critiques', speed: 'vitesse', armor: 'armure', regen: 'régénération' };
-    const parts = Object.entries(spell.buff.stats).map(([k, v]) => (k === 'armor' ? `+${v} armure` : `+${pct(v ?? 0)} ${names[k] ?? k}`));
+    const parts = Object.entries(spell.buff.stats).map(([k, v]) => statText(k as StatKey, v ?? 0));
     lines.push((spell.buff.randomOne ? 'Au hasard : ' : '') + parts.join(spell.buff.randomOne ? ' ou ' : ', '));
   }
   if (spell.missingHpBonus) lines.push(`Jusqu'à +${pct(spell.missingHpBonus)} de dégâts selon vos PV manquants`);

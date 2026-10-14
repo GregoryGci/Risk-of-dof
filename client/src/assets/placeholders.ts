@@ -229,6 +229,15 @@ function makeObjects(scene: Phaser.Scene): void {
     g.fillStyle(0xf0c040, 1);
     for (const [x, y] of [[48, 10], [18, 40], [78, 40], [20, 78], [76, 78]]) g.fillCircle(x, y, 3);
   });
+  make(scene, 'ph_obj_cawotte', 40, 60, (g) => {
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(20, 54, 30, 9);
+    g.fillStyle(0xe8701a, 1);
+    g.fillTriangle(10, 22, 30, 22, 20, 56);
+    g.fillStyle(0x3d9a2a, 1);
+    g.fillTriangle(14, 22, 20, 4, 22, 22);
+    g.fillTriangle(18, 22, 28, 6, 26, 22);
+  });
   make(scene, 'ph_obj_souche', 40, 32, (g) => {
     g.fillStyle(0x000000, 0.25);
     g.fillEllipse(20, 27, 36, 9);

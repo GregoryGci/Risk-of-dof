@@ -24,6 +24,7 @@ export const PlayerState = schema(
     /** Sorts équipés (arbre de talents) : "id,id,id,id". */
     spells: t.string().default(''),
     invisible: t.boolean().default(false),
+    bought: t.string().default(''),
     /** Inventaire encodé en texte (voir formatInventory). */
     items: t.string().default(''),
   },
@@ -43,6 +44,7 @@ export const MonsterState = schema(
     state: t.uint8().default(0),
     /** Invocation alliée des joueurs. */
     ally: t.boolean().default(false),
+    elite: t.boolean().default(false),
   },
   'MonsterState',
 );
@@ -50,6 +52,7 @@ export type MonsterState = InstanceType<typeof MonsterState>;
 
 export const ChestState = schema(
   {
+    kind: t.string().default('chest'),
     x: t.float32().default(0),
     y: t.float32().default(0),
     opened: t.boolean().default(false),
@@ -90,6 +93,9 @@ export const GameState = schema(
     stage: t.uint8().default(1),
     paused: t.boolean().default(false),
     mode: t.uint8().default(0),
+    merchantX: t.float32().default(0),
+    merchantY: t.float32().default(0),
+    shop: t.string().default(''),
     zaapX: t.float32().default(0),
     zaapY: t.float32().default(0),
     zaapState: t.uint8().default(0),

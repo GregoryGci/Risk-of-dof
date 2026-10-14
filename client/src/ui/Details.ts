@@ -1,6 +1,6 @@
 // Panneau « détails de la partie » ouvert avec Tab : stats, objets et sorts détaillés.
 // Il libère la souris ; en solo, la partie est mise en pause.
-import { CLASSES, ITEMS, difficultyTier, getClass, getSpell, parseInventory, sumStats, type GameStateView } from '@rod/shared';
+import { CLASSES, ITEMS, RARITY_NAMES, difficultyTier, getClass, getSpell, parseInventory, sumStats, type GameStateView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { spellIconSvg } from './icons.ts';
 import { spellDetailsHtml } from './spellInfo.ts';
@@ -102,7 +102,7 @@ export class Details {
       const color = `#${item.color.toString(16).padStart(6, '0')}`;
       const icon = url ? `background-image:url('${url}')` : `background:radial-gradient(circle at 35% 30%, #fff8, ${color} 55%, #0008)`;
       html += `<div class="item-row${item.rarity !== 'commun' ? ` ${item.rarity}` : ''}"><div class="item-icon" style="${icon}"></div>
-        <div><b style="color:${color}">${escapeHtml(item.name)}</b> ×${count}<br><small>${escapeHtml(item.description)}</small></div></div>`;
+        <div><b style="color:${color}">${escapeHtml(item.name)}</b> <span class="rarity ${item.rarity}">${RARITY_NAMES[item.rarity]}</span> ×${count}<br><small>${escapeHtml(item.description)}</small></div></div>`;
     }
     html += `</div>`;
 

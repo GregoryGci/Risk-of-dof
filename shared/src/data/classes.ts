@@ -71,7 +71,7 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 150,
     speed: 4.7,
     regen: 1.2,
-    spells: ['pile_ou_face', 'roue_de_la_fortune', 'bond_du_felin', 'rekop'],
+    spells: ['pile_ou_face', 'roue_de_la_fortune', 'odorat', 'rekop'],
   },
   feca: {
     id: 'feca',
@@ -81,7 +81,7 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 160,
     speed: 4.4,
     regen: 1.5,
-    spells: ['attaque_naturelle', 'glyphe_agressif', 'teleportation', 'glyphe_enflamme'],
+    spells: ['attaque_naturelle', 'glyphe_agressif', 'treve', 'glyphe_enflamme'],
   },
 };
 

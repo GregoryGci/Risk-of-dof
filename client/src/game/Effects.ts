@@ -49,13 +49,13 @@ export class Effects {
    */
   playSpellFx(spellId: string, x: number, y: number, dirX = 1, dirY = 0): boolean {
     const fx = this.store.spellFx(this.scene, spellId);
-    if (!fx?.clips.has('main')) return false;
+    if (!fx?.main) return false;
     const p = worldToScreen(x, y);
     const s = worldToScreen(dirX, dirY);
     const sprite = this.scene.add.sprite(p.x, p.y, fx.key).setOrigin(fx.origin[0], fx.origin[1]).setScale(fx.scale).setDepth(p.y + 25);
     // Les animations sont dessinées vers la droite : miroir quand le sort part vers la gauche.
     if (s.x < 0) sprite.setFlipX(true);
-    sprite.play(`${fx.key}:main`);
+    sprite.play(`${fx.key}:${fx.main}`);
     sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => sprite.destroy());
     // Garde-fou : on ne laisse jamais traîner un effet.
     this.scene.time.delayedCall(4000, () => sprite.active && sprite.destroy());

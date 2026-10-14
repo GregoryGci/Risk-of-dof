@@ -53,6 +53,8 @@ const ENTITIES = {
   scarabosse_dore: { kind: 'monsters', sprite: 1455 },
   craqueleur_legendaire: { kind: 'monsters', sprite: 1152 },
   bworkette: { kind: 'monsters', sprite: 1241 },
+  // Marchand entre deux zones (Vendeur Ecaflip).
+  marchand: { kind: 'monsters', sprite: 9025 },
   // Coffre au Trésor malveillant (boss du donjon des Forgerons) : utilisé pour les coffres.
   coffre: { kind: 'monsters', sprite: 1083 },
   // Épouvantail d'entraînement (Incarnam), dans le salon.

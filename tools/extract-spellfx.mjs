@@ -22,7 +22,8 @@ const WORK = path.join(os.tmpdir(), 'rod-extract/spellfx');
 const ZOOM = 2;
 const GAME_SCALE = 64 / 53;
 
-const ffdec = (args) => execFileSync('java', ['-jar', FFDEC, ...args], { stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 });
+// Délai maximal par export : certains clips (Mot Curatif...) font tourner JPEXS pendant des heures.
+const ffdec = (args, timeout = 240000) => execFileSync('java', ['-jar', FFDEC, ...args], { stdio: 'pipe', maxBuffer: 64 * 1024 * 1024, timeout });
 
 /** Clips à exporter : le clip placé sur la scène principale + les clips nommés (move, shoot...). */
 function clipsOf(xml) {
@@ -69,7 +70,12 @@ for (const anim of animIds) {
     if (!fs.existsSync(pngDir)) ffdec(['-zoom', String(ZOOM), '-selectid', selection, '-format', 'sprite:png', '-export', 'sprite', pngDir, swf]);
     // SVG : seule la première image sert (origine du clip) ; exporter tout peut prendre des heures.
     if (!fs.existsSync(path.join(svgDir, '.ok'))) {
-      ffdec(['-zoom', String(ZOOM), '-select', '1', '-selectid', selection, '-format', 'sprite:svg', '-export', 'sprite', svgDir, swf]);
+      try {
+        ffdec(['-zoom', String(ZOOM), '-select', '1', '-selectid', selection, '-format', 'sprite:svg', '-export', 'sprite', svgDir, swf], 90000);
+      } catch {
+        console.warn(`animation ${anim} : SVG trop long, effet centré sur sa cible`);
+      }
+      fs.mkdirSync(svgDir, { recursive: true });
       fs.writeFileSync(path.join(svgDir, '.ok'), '');
     }
     const dirOf = (root, id) => {
@@ -81,9 +87,17 @@ for (const anim of animIds) {
     const anims = {};
     for (const [name, id] of clips) {
       const pdir = dirOf(pngDir, id);
-      const sdir = dirOf(svgDir, id);
-      if (!pdir || !sdir) continue;
-      const [ox, oy] = svgOrigin(path.join(sdir, '1.svg'));
+      const sdir = fs.existsSync(svgDir) ? dirOf(svgDir, id) : null;
+      if (!pdir) continue;
+      // Origine lue dans le SVG ; à défaut, centre de la première image.
+      let ox;
+      let oy;
+      if (sdir && fs.existsSync(path.join(sdir, '1.svg'))) [ox, oy] = svgOrigin(path.join(sdir, '1.svg'));
+      else {
+        const first = fs.readFileSync(path.join(pdir, '1.png'));
+        ox = first.readUInt32BE(16) / 2;
+        oy = first.readUInt32BE(20) / 2;
+      }
       const { frames: clipFrames, step } = readClipFrames(pdir, ox, oy, `${name}_`);
       if (clipFrames.length === 0) continue;
       frames.push(...clipFrames);

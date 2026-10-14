@@ -560,6 +560,16 @@ export const SPELLS: Record<string, SpellDef> = define({
     damage: [0, 0],
     buff: { stats: { damage: 0.6, haste: 0.6, crit: 0.5, speed: 0.5 }, duration: 6, randomOne: true },
   },
+  odorat: {
+    name: 'Odorat',
+    description: 'Vous et les alliés proches : +2 de portée et -30 % de temps de recharge pendant 5 s.',
+    color: 0xffd080,
+    element: 'air',
+    cooldown: 13000,
+    range: 0,
+    damage: [0, 0],
+    buff: { stats: { range: 2, haste: 0.3 }, duration: 5, zone: 4, label: 'Odorat' },
+  },
   bond_du_felin: {
     name: 'Bond du Félin',
     description: 'Saute vers la direction visée.',
@@ -636,6 +646,16 @@ export const SPELLS: Record<string, SpellDef> = define({
     range: 8,
     damage: [7, 9],
     ground: { kind: 'glyph', radius: 2.5, duration: 5, tick: 0.5, max: 2 },
+  },
+  treve: {
+    name: 'Trêve',
+    description: 'Vous et les alliés proches ne subissez aucun dégât pendant 2 s.',
+    color: 0xe0f0ff,
+    element: 'eau',
+    cooldown: 15000,
+    range: 0,
+    damage: [0, 0],
+    buff: { duration: 2, zone: 4, invulnerable: true, label: 'Trêve' },
   },
   teleportation: {
     name: 'Téléportation',

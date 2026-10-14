@@ -7,6 +7,7 @@ import { AssetStore } from './assets/store.ts';
 import { GameScene } from './game/GameScene.ts';
 import { Hud, classButtonsHtml } from './ui/Hud.ts';
 import { TalentsPage } from './ui/Talents.ts';
+import { StatsPage } from './ui/StatsPage.ts';
 import { account } from './account.ts';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -62,6 +63,8 @@ const talents = new TalentsPage(null, classId, (cls) => {
   if (currentRoom && cls === classId) currentRoom.send('loadout', { spells: account.loadout(cls) });
 }, () => currentRoom?.send('meta', { meta: account.statLevels }));
 $('btn-talents').addEventListener('click', () => talents.open(classId));
+const statsPage = new StatsPage(() => currentRoom?.send('meta', { meta: account.statLevels }));
+$('btn-stats').addEventListener('click', () => statsPage.open());
 
 function setBusy(busy: boolean): void {
   btnCreate.disabled = busy;

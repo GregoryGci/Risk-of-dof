@@ -24,6 +24,9 @@ const dofus = readDofusItems();
 const input = path.join(WORK, 'in');
 fs.mkdirSync(input, { recursive: true });
 const found = {};
+// Décors tirés d'icônes d'objets (clé -> nom Dofus), affichés en grand sur la carte.
+const DECOR = { cawotte: 'Cawotte' };
+for (const [key, name] of Object.entries(DECOR)) ours[`decor_${key}`] = name;
 for (const [id, name] of Object.entries(ours)) {
   const item = dofus.get(name);
   if (!item) {
@@ -46,13 +49,23 @@ fs.mkdirSync(path.join(OUT, 'items'), { recursive: true });
 const manifestFile = path.join(OUT, 'manifest.json');
 const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
 manifest.items ??= {};
+const objects = {};
 for (const id of Object.keys(found)) {
   const png = path.join(output, `${id}.swf`, '1.png');
   if (!fs.existsSync(png)) continue;
+  if (id.startsWith('decor_')) {
+    const key = id.slice(6);
+    fs.mkdirSync(path.join(OUT, 'objects'), { recursive: true });
+    fs.copyFileSync(png, path.join(OUT, 'objects', `${key}.png`));
+    objects[key] = [{ image: `objects/${key}.png`, origin: [0.5, 0.85], scale: 1.6 }];
+    console.log(`décor ${key} <- ${found[id]}`);
+    continue;
+  }
   fs.copyFileSync(png, path.join(OUT, 'items', `${id}.png`));
   manifest.items[id] = `items/${id}.png`;
   console.log(`${id} <- ${found[id]}`);
 }
 updateManifest((fresh) => {
   fresh.items = { ...fresh.items, ...manifest.items };
+  fresh.objects = { ...fresh.objects, ...objects };
 });

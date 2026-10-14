@@ -67,7 +67,17 @@ export interface SpellDef {
    * Bonus temporaire sur le lanceur. `randomOne` : un seul des bonus listés, tiré au hasard.
    * `invisible` : les monstres ignorent le lanceur.
    */
-  buff?: { stats?: Partial<Record<StatKey, number>>; duration: number; randomOne?: boolean; invisible?: boolean; label?: string };
+  buff?: {
+    stats?: Partial<Record<StatKey, number>>;
+    duration: number;
+    randomOne?: boolean;
+    invisible?: boolean;
+    /** Aucun dégât subi pendant la durée. */
+    invulnerable?: boolean;
+    /** Rayon : tous les alliés dans la zone (lanceur compris) reçoivent le bonus. */
+    zone?: number;
+    label?: string;
+  };
   /** Téléporte le lanceur au point visé (limité par la portée). */
   teleport?: boolean;
   /** Pari : chance de multiplier les dégâts par `win`, sinon par `lose`. */
@@ -146,12 +156,18 @@ export type StatKey =
   | 'kamas' // kamas gagnés (+%)
   | 'lifesteal' // fraction des dégâts infligés rendue en PV
   | 'luck' // chance d'obtenir des objets rares ou épiques dans les coffres
-  | 'multishot'; // projectiles (ou frappes) en plus sur l'attaque de base
+  | 'multishot' // projectiles (ou frappes) en plus sur l'attaque de base
+  | 'attackSpeed' // vitesse de l'attaque de base à distance (+%)
+  | 'range' // portée des sorts (cases)
+  | 'revive'; // résurrection automatique une fois par partie
 
 export type ItemRarity = 'commun' | 'rare' | 'epique';
 
 export interface ItemDef {
+  /** "base.rareté" */
   id: string;
+  /** Objet de base (même icône pour les trois raretés). */
+  base: string;
   /** Nom de l'objet Dofus : sert aussi à retrouver son icône officielle. */
   name: string;
   description: string;
@@ -287,6 +303,8 @@ export interface PlayerView {
   /** Sorts équipés (arbre de talents) : "id,id,id,id". */
   spells: string;
   invisible: boolean;
+  /** Offres du marchand déjà achetées par ce joueur : "0,2". */
+  bought: string;
   /** Inventaire : "id:nombre,id:nombre" (voir parseInventory). */
   items: string;
 }
@@ -300,6 +318,8 @@ export interface MonsterView {
   level: number;
   state: number;
   ally: boolean;
+  /** Monstre d'élite (apparu en déterrant une Cawotte). */
+  elite: boolean;
 }
 export interface GroundView {
   kind: string;
@@ -310,6 +330,8 @@ export interface GroundView {
   armed: boolean;
 }
 export interface ChestView {
+  /** 'chest' = coffre payant, 'cawotte' = fait apparaître un monstre d'élite (gratuit). */
+  kind: string;
   x: number;
   y: number;
   opened: boolean;
@@ -335,6 +357,10 @@ export interface GameStateView {
   zaapCharge: number;
   /** Vrai quand le joueur seul a mis la partie en pause (touche Tab). */
   paused: boolean;
+  /** Marchand de la zone (0, 0 = pas de marchand) et ses offres : "id:prix,id:prix". */
+  merchantX: number;
+  merchantY: number;
+  shop: string;
   /** Difficulté choisie par l'hôte : 0 = Piou, 1 = Prespic, 2 = Bworker. */
   mode: number;
   /** Prix actuel d'un coffre (kamas). */

@@ -1,7 +1,12 @@
 // Simulation autoritaire d'une partie : joueurs, sorts, projectiles, dégâts.
 // L'IA des monstres est dans monsters.ts, le spawn dans director.ts.
 import {
+  CAWOTTE_COUNT,
   CHEST_COUNT,
+  MONSTERS,
+  SHOP_SIZE,
+  merchantPrice,
+  rollItem,
   INTERACT_RANGE,
   ITEMS,
   MAP_SIZE,
@@ -71,7 +76,12 @@ export interface PlayerRt {
   /** Sorts équipés dans les 4 emplacements (arbre de talents). */
   spells: string[];
   /** Bonus temporaires (sorts de soutien). */
-  buffs: { stats: Partial<Record<StatKey, number>>; until: number; invisible: boolean }[];
+  buffs: { stats: Partial<Record<StatKey, number>>; until: number; invisible: boolean; invulnerable: boolean }[];
+  /** Résurrection de l'arbre de stats déjà utilisée / en attente pendant cette partie. */
+  reviveUsed: boolean;
+  revivePending: boolean;
+  /** Offres du marchand déjà achetées dans cette zone. */
+  bought: Set<number>;
   /** Prochain dash (Maj) disponible. */
   dashReadyAt: number;
   /** Bonus permanents de l'arbre de stats. */
@@ -106,6 +116,8 @@ export interface MonsterRt {
   allyOwner: string;
   expiresAt: number;
   healAt: number;
+  /** Monstre d'élite : joueurs qui l'ont frappé (chacun reçoit un objet à sa mort). */
+  hitBy: Set<string>;
 }
 
 /** Piège ou glyphe posé au sol, avec les bonus de son lanceur au moment de la pose. */
@@ -211,7 +223,7 @@ export class Simulation {
     let slot = 0;
     while (used.has(slot)) slot++;
     state.slot = slot;
-    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, inventory: new Map(), stats: sumStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, meta: metaStats(meta) };
+    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, inventory: new Map(), stats: sumStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, meta: metaStats(meta), reviveUsed: false, revivePending: false, bought: new Set() };
     this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
@@ -294,6 +306,21 @@ export class Simulation {
     this.bossId = '';
     for (const id of [...this.state.chests.keys()]) this.state.chests.delete(id);
     for (let i = 0; i < CHEST_COUNT; i++) this.spawnChest();
+    for (let i = 0; i < CAWOTTE_COUNT; i++) this.spawnChest('cawotte');
+
+    // Marchand à partir de la deuxième zone, près du point d'arrivée.
+    for (const p of this.players.values()) p.bought.clear();
+    for (const p of this.players.values()) p.state.bought = '';
+    if (this.state.stage >= 2) {
+      this.state.merchantX = MAP_SIZE / 2 + 3;
+      this.state.merchantY = MAP_SIZE / 2 - 3;
+      const offers = Array.from({ length: SHOP_SIZE }, () => rollItem(0.15));
+      this.state.shop = offers.map((it) => `${it.id}:${merchantPrice(it, this.state.difficulty)}`).join(',');
+    } else {
+      this.state.merchantX = 0;
+      this.state.merchantY = 0;
+      this.state.shop = '';
+    }
 
     const c = MAP_SIZE / 2;
     this.state.zaapState = ZAAP_IDLE;
@@ -383,6 +410,8 @@ export class Simulation {
     p.lastHitAt = -999;
     p.buffs = [];
     p.state.invisible = false;
+    p.reviveUsed = false;
+    p.revivePending = false;
     this.applyStats(p);
   }
 
@@ -425,23 +454,27 @@ export class Simulation {
 
     const spell = getSpell(p.spells[slot]);
     // Les objets de « hâte » raccourcissent la recharge, ceux de dégâts et de critique améliorent le tir.
-    const cooldown = spell.cooldown / (1 + p.stats.haste);
+    // Vitesse d'attaque : seulement l'attaque de base, et pas au corps à corps.
+    const ranged = !spell.melee && !spell.zone?.self;
+    const cooldown = spell.cooldown / (1 + p.stats.haste) / (slot === 0 && ranged ? 1 + p.stats.attackSpeed : 1);
     p.readyAt[slot] = this.now + cooldown / 1000;
     let damageMult = 1 + p.stats.damage;
     if (spell.missingHpBonus) damageMult *= 1 + spell.missingHpBonus * (1 - p.state.hp / p.state.maxHp);
     const critChance = BASE_CRIT_CHANCE + p.stats.crit;
     const critMult = CRIT_MULT + p.stats.critDamage;
-    const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, critChance, slot, cooldown, critMult);
+    const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, critChance, slot, cooldown, critMult, p.stats.range);
     // Dofus des Glaces : l'attaque de base tire des projectiles en éventail, ou frappe de nouveau un instant après.
     if (slot === 0 && p.stats.multishot > 0) {
-      for (let k = 1; k <= p.stats.multishot; k++) {
+      const extra = Math.ceil(p.stats.multishot);
+      const share = Math.min(1, p.stats.multishot / extra);
+      for (let k = 1; k <= extra; k++) {
         if (spell.projectile) {
           const a = Math.atan2(ty - p.state.y, tx - p.state.x) + (k % 2 ? 1 : -1) * 0.18 * Math.ceil(k / 2);
           const d = Math.max(1, Math.hypot(tx - p.state.x, ty - p.state.y));
-          this.cast(spell, p.state.x, p.state.y, p.state.x + Math.cos(a) * d, p.state.y + Math.sin(a) * d, id, true, damageMult * 0.7, critChance, undefined, undefined, critMult);
+          this.cast(spell, p.state.x, p.state.y, p.state.x + Math.cos(a) * d, p.state.y + Math.sin(a) * d, id, true, damageMult * share, critChance, undefined, undefined, critMult, p.stats.range);
         } else {
           this.after(0.15 * k, () => {
-            if (p.state.alive) this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult * 0.6, critChance, undefined, undefined, critMult);
+            if (p.state.alive) this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult * share, critChance, undefined, undefined, critMult, p.stats.range);
           });
         }
       }
@@ -475,7 +508,8 @@ export class Simulation {
    * Lance un sort depuis (x, y) vers (tx, ty) et prévient les clients.
    * Retourne la direction normalisée du tir.
    */
-  cast(spell: SpellDef, x: number, y: number, tx: number, ty: number, owner: string, fromPlayer: boolean, damageMult: number, critChance = 0, slot?: number, cooldown?: number, critMult = CRIT_MULT): { x: number; y: number } {
+  cast(spell: SpellDef, x: number, y: number, tx: number, ty: number, owner: string, fromPlayer: boolean, damageMult: number, critChance = 0, slot?: number, cooldown?: number, critMult = CRIT_MULT, rangeBonus = 0): { x: number; y: number } {
+    const range = spell.range + rangeBonus;
     let dx = tx - x;
     let dy = ty - y;
     const d = Math.hypot(dx, dy);
@@ -496,7 +530,7 @@ export class Simulation {
 
     const caster = fromPlayer ? this.players.get(owner) : undefined;
     // Point visé, limité par la portée.
-    const reachTarget = Math.min(d, spell.range);
+    const reachTarget = Math.min(d, range);
     const aimX = x + dx * reachTarget;
     const aimY = y + dy * reachTarget;
 
@@ -536,7 +570,7 @@ export class Simulation {
 
     if (spell.projectile) {
       // Un tir en cloche s'arrête au point visé, les autres vont au bout de leur portée.
-      pr.remaining = spell.projectile.toTarget ? Math.min(d, spell.range) : spell.range;
+      pr.remaining = spell.projectile.toTarget ? Math.min(d, range) : range;
       event.tx = x + dx * pr.remaining;
       event.ty = y + dy * pr.remaining;
       this.projectiles.push(pr);
@@ -804,9 +838,13 @@ export class Simulation {
       const names: Partial<Record<StatKey, string>> = { damage: 'dégâts', haste: 'vitesse de recharge', crit: 'critiques', speed: 'vitesse', critDamage: 'dégâts critiques', armor: 'armure' };
       label = `+${Math.round((stats[k] ?? 0) * 100)} % ${names[k] ?? k}`;
     }
-    p.buffs.push({ stats, until: this.now + buff.duration, invisible: !!buff.invisible });
-    this.applyStats(p);
-    if (label) this.broadcast('buff', { target: p.id, label, duration: buff.duration });
+    // Bonus de zone : tous les alliés vivants autour du lanceur en profitent.
+    const targets = buff.zone ? [...this.players.values()].filter((o) => o.state.alive && Math.hypot(o.state.x - p.state.x, o.state.y - p.state.y) <= buff.zone!) : [p];
+    for (const t of targets) {
+      t.buffs.push({ stats, until: this.now + buff.duration, invisible: !!buff.invisible, invulnerable: !!buff.invulnerable });
+      this.applyStats(t);
+      if (label) this.broadcast('buff', { target: t.id, label, duration: buff.duration });
+    }
   }
 
   private placeGround(pr: Projectile, x: number, y: number): void {
@@ -883,6 +921,7 @@ export class Simulation {
   damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false): void {
     amount = Math.max(1, Math.round(amount));
     m.state.hp -= amount;
+    if (m.state.elite && this.players.has(ownerId)) m.hitBy.add(ownerId);
     if (m.def.behavior.type === 'dummy') m.phaseUntil = this.now;
     this.broadcast('dmg', { target: m.id, amount, x: m.state.x, y: m.state.y, player: false, crit });
     if (m.def.behavior.type === 'dummy') {
@@ -910,12 +949,24 @@ export class Simulation {
       if (killer.state.alive && killer.stats.killHeal > 0) killer.state.hp = Math.min(killer.state.maxHp, killer.state.hp + killer.stats.killHeal);
     }
     this.state.kills++;
+    if (m.state.elite) {
+      // Récompense d'élite : un objet pour chaque joueur qui l'a frappé.
+      for (const pid of m.hitBy) {
+        const p = this.players.get(pid);
+        if (!p) continue;
+        const item = rollItem(p.stats.luck + 0.05);
+        this.giveItem(p, item.id);
+        this.broadcast('item', { player: pid, item: item.id, x: m.state.x, y: m.state.y });
+      }
+    }
     this.broadcast('death', { id: m.id, player: false, x: m.state.x, y: m.state.y, kamas });
     this.removeMonster(m.id);
   }
 
   damagePlayer(p: PlayerRt, amount: number): void {
     if (!p.state.alive) return;
+    // Trêve : aucun dégât.
+    if (p.buffs.some((b) => b.invulnerable && b.until > this.now)) return;
     amount = Math.max(1, Math.round(amount * Math.pow(ARMOR_FACTOR, p.stats.armor)));
     p.state.hp = Math.max(0, p.state.hp - amount);
     p.lastHitAt = this.now;
@@ -925,13 +976,25 @@ export class Simulation {
     p.state.moving = false;
     p.push = null;
     this.broadcast('death', { id: p.id, player: true, x: p.state.x, y: p.state.y });
+    if (p.stats.revive > 0 && !p.reviveUsed) {
+      // Résurrection de l'arbre de stats : une fois par partie, après un court instant.
+      p.reviveUsed = true;
+      p.revivePending = true;
+      this.after(2.5, () => {
+        p.revivePending = false;
+        if (this.state.phase !== PHASE_PLAYING || p.state.alive || !this.players.has(p.id)) return this.checkDefeat();
+        p.state.alive = true;
+        p.state.hp = p.state.maxHp * 0.5;
+        this.broadcast('buff', { target: p.id, label: 'Résurrection !', duration: 2 });
+      });
+    }
     this.checkDefeat();
   }
 
   /** Partie perdue quand plus aucun joueur n'est en vie. */
   private checkDefeat(): void {
     if (this.state.phase !== PHASE_PLAYING || this.players.size === 0) return;
-    for (const p of this.players.values()) if (p.state.alive) return;
+    for (const p of this.players.values()) if (p.state.alive || p.revivePending) return;
     this.state.phase = PHASE_LOST;
   }
 
@@ -959,7 +1022,7 @@ export class Simulation {
     this.applyStats(p);
   }
 
-  private spawnChest(): void {
+  private spawnChest(kind = 'chest'): void {
     for (let attempt = 0; attempt < 40; attempt++) {
       const x = 3 + Math.random() * (this.map.size - 6);
       const y = 3 + Math.random() * (this.map.size - 6);
@@ -972,6 +1035,7 @@ export class Simulation {
       });
       if (tooClose) continue;
       const chest = new ChestState();
+      chest.kind = kind;
       chest.x = x;
       chest.y = y;
       this.state.chests.set(`c${this.nextChestId++}`, chest);
@@ -1000,20 +1064,56 @@ export class Simulation {
       }
     });
     const chest = this.state.chests.get(bestId);
+    if (chest?.kind === 'cawotte') return this.digCawotte(bestId, chest.x, chest.y);
     if (!chest || p.state.kamas < this.state.chestCost) return;
 
     p.state.kamas -= this.state.chestCost;
     chest.opened = true;
     // La chance du joueur améliore la rareté (communs, rares, épiques).
-    const rarity = rollRarity(p.stats.luck);
-    const pool = Object.values(ITEMS).filter((i) => i.rarity === rarity);
-    const item = pool[Math.floor(Math.random() * pool.length)];
+    const item = rollItem(p.stats.luck);
     this.giveItem(p, item.id);
     this.broadcast('item', { player: id, item: item.id, x: chest.x, y: chest.y });
 
     // Le coffre vide disparaît, un nouveau apparaît ailleurs un peu plus tard.
     this.after(4, () => this.state.chests.delete(bestId));
     this.after(25, () => this.spawnChest());
+  }
+
+  /** Cawotte déterrée (gratuit) : un monstre d'élite surgit à côté. */
+  private digCawotte(id: string, x: number, y: number): void {
+    const chest = this.state.chests.get(id);
+    if (!chest || chest.opened) return;
+    chest.opened = true;
+    this.after(3, () => this.state.chests.delete(id));
+    const diff = this.state.difficulty;
+    const pool = Object.values(MONSTERS).filter((m) => !m.boss && !m.ally && m.weight > 0 && m.minDifficulty <= diff);
+    const def = pool[Math.floor(Math.random() * pool.length)];
+    let ex = x + 1.5;
+    let ey = y;
+    for (let k = 0; k < 12 && isBlocked(this.map, ex, ey, def.radius); k++) {
+      ex = x + Math.cos(k) * 2;
+      ey = y + Math.sin(k) * 2;
+    }
+    const elite = this.spawnMonster(def, ex, ey, monsterHpMultiplier(diff) * 12, monsterDamageMultiplier(diff) * 1.6, Math.round(diff) + 5);
+    elite.state.elite = true;
+    this.broadcast('boss', { name: `${def.name} d'élite` });
+  }
+
+  /** Achat chez le marchand (une fois par offre et par joueur, à côté du marchand). */
+  buy(id: string, index: unknown): void {
+    const p = this.players.get(id);
+    const i = Number(index);
+    if (!p || !p.state.alive || !Number.isInteger(i) || p.bought.has(i) || !this.state.shop) return;
+    if (Math.hypot(this.state.merchantX - p.state.x, this.state.merchantY - p.state.y) > 3.5) return;
+    const offer = this.state.shop.split(',')[i];
+    if (!offer) return;
+    const [itemId, price] = offer.split(':');
+    if (!ITEMS[itemId] || p.state.kamas < Number(price)) return;
+    p.state.kamas -= Number(price);
+    p.bought.add(i);
+    p.state.bought = [...p.bought].join(',');
+    this.giveItem(p, itemId);
+    this.broadcast('item', { player: id, item: itemId, x: p.state.x, y: p.state.y });
   }
 
   private after(seconds: number, run: () => void): void {
@@ -1070,6 +1170,7 @@ export class Simulation {
       allyOwner: '',
       expiresAt: Infinity,
       healAt: 0,
+      hitBy: new Set(),
     };
     this.monsters.set(id, rt);
     this.state.monsters.set(id, state);
