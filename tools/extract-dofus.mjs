@@ -47,6 +47,11 @@ const ENTITIES = {
   arakne: { kind: 'monsters', sprite: 1564 },
   tournesol: { kind: 'monsters', sprite: 1569 },
   bouftou_royal: { kind: 'monsters', sprite: 1574 },
+  // Gardiens des zones suivantes.
+  tournesol_affame: { kind: 'monsters', sprite: 1459 },
+  scarabosse_dore: { kind: 'monsters', sprite: 1455 },
+  craqueleur_legendaire: { kind: 'monsters', sprite: 1152 },
+  bworkette: { kind: 'monsters', sprite: 1241 },
   // Coffre au Trésor malveillant (boss du donjon des Forgerons) : utilisé pour les coffres.
   coffre: { kind: 'monsters', sprite: 1083 },
   // Épouvantail d'entraînement (Incarnam), dans le salon.

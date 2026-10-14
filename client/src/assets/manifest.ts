@@ -68,6 +68,10 @@ export interface Manifest {
   sounds?: Record<string, string>;
   /** Divers : kama. */
   ui?: Record<string, string>;
+  /** Animations officielles des sorts, par numéro d'animation Dofus (voir tools/extract-spellfx.mjs). */
+  spellfx?: Record<string, { image: string; atlas: string; origin?: [number, number]; scale?: number; anims: Record<string, AnimDef> }>;
+  /** Sort du jeu -> animation officielle ; `type` = 1er nombre de spriteInfos Dofus (10 = sur le lanceur). */
+  spellAnims?: Record<string, { anim: string; type: number }>;
 }
 
 export const DEFAULT_MIRROR: Record<string, number> = { '3': 1, '4': 0, '7': 5 };

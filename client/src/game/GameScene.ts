@@ -588,6 +588,12 @@ export class GameScene extends Phaser.Scene {
     // Onglet en arrière-plan : la boucle de rendu est en pause, on n'empile pas d'effets.
     if (!document.hidden) this.effects.spawnProjectile(e);
     const spell = getSpell(e.spell);
+    // Animation officielle Dofus : sur le lanceur pour les bonus (type 10), au point visé sinon.
+    // Les projectiles l'ont déjà en vol (clip « move ») ; les zones à retardement la jouent à l'impact.
+    if (!document.hidden && !spell.projectile && !spell.delay) {
+      const onCaster = this.store.spellFx(this, spell.id)?.type === 10 || !!spell.buff;
+      this.effects.playSpellFx(spell.id, onCaster ? e.x : e.tx, onCaster ? e.y : e.ty, e.tx - e.x, e.ty - e.y);
+    }
     // Bond : traînée le long du trajet (vu par tout le monde).
     const dash = spell.effects?.find((f) => f.type === 'dash');
     if (dash && dash.type === 'dash' && !document.hidden) {
@@ -613,14 +619,18 @@ export class GameScene extends Phaser.Scene {
     if (document.hidden) return;
     const spell = getSpell(e.spell);
     this.effects.explosion(e.x, e.y, e.radius, spell.color);
+    // Zones à retardement et impacts de projectiles explosifs : l'animation officielle joue à l'impact.
+    if (spell.delay || spell.projectile) this.effects.playSpellFx(spell.id, e.x, e.y);
     if (spell.heal) {
       this.effects.healBurst(e.x, e.y, e.radius);
       return;
     }
-    if (spell.zone) this.effects.beam(e.x, e.y, spell.color);
-    // Secousse proportionnelle à la proximité.
+    // Pas de colonne de lumière ni de secousse pour les petites zones répétées (attaque de base du Sacrieur...).
+    const big = e.radius >= 2.5 && spell.cooldown >= 3000;
+    if (spell.zone && big) this.effects.beam(e.x, e.y, spell.color);
+    // Secousse légère, seulement pour les grosses explosions proches.
     const d = Math.hypot(e.x - this.me.x, e.y - this.me.y);
-    if (d < 12) this.cameras.main.shake(160, 0.006 * (1 - d / 12));
+    if (big && d < 10) this.cameras.main.shake(140, 0.0035 * (1 - d / 10));
   }
 
   private onDamage(e: DamageEvent): void {
@@ -630,7 +640,7 @@ export class GameScene extends Phaser.Scene {
       this.effects.floatText(e.x, e.y, `-${e.amount}`, '#ff5040', 15);
       if (e.target === this.room.sessionId) {
         this.hud.hitFlash();
-        this.cameras.main.shake(110, 0.004);
+        this.cameras.main.shake(90, 0.002);
         this.store.playSound(this, 'player_hit');
         // Un coup peut nous projeter : on suit le serveur un court instant.
         this.followServerUntil = Math.max(this.followServerUntil, this.time.now + 200);

@@ -61,6 +61,7 @@ export class AssetStore {
     for (const [type, files] of Object.entries(m.tiles ?? {})) asArray(files).forEach((f, i) => scene.load.image(`tile_${type}_${i}`, f));
     for (const [id, defs] of Object.entries(m.objects ?? {})) asArray(defs).forEach((d, i) => scene.load.image(`obj_${id}_${i}`, d.image));
     for (const [id, def] of Object.entries(m.projectiles ?? {})) scene.load.image(`proj_${id}`, def.image);
+    for (const [id, def] of Object.entries(m.spellfx ?? {})) scene.load.atlas(`fx_${id}`, def.image, def.atlas);
     for (const [name, file] of Object.entries(m.sounds ?? {})) scene.load.audio(`snd_${name}`, file);
   }
 
@@ -92,6 +93,15 @@ export class AssetStore {
     // Animations des spritesheets fournies.
     for (const [id, def] of Object.entries(m.characters ?? {})) this.createAnims(scene, `char_${id}`, def);
     for (const [id, def] of Object.entries(m.monsters ?? {})) this.createAnims(scene, `mon_${id}`, def);
+    // Animations de sorts : une animation Phaser par clip (main, move...), jouée une fois sauf le vol.
+    for (const [id, def] of Object.entries(m.spellfx ?? {})) {
+      const key = `fx_${id}`;
+      if (!scene.textures.exists(key)) continue;
+      for (const [name, a] of Object.entries(def.anims)) {
+        const animKey = `${key}:${name}`;
+        if (!scene.anims.exists(animKey)) scene.anims.create({ key: animKey, frames: this.animFrames(scene, key, a), frameRate: a.frameRate ?? 30, repeat: name === 'move' ? -1 : 0 });
+      }
+    }
   }
 
   private createAnims(scene: Phaser.Scene, key: string, def: SpriteDef): void {
@@ -152,6 +162,18 @@ export class AssetStore {
     const def = this.manifest.monsters?.coffre;
     if (!def || !scene.textures.exists('mon_coffre')) return null;
     return { key: 'mon_coffre', origin: def.origin ?? [0.5, 0.9], scale: (def.scale ?? 1) * 0.8, sprite: def };
+  }
+
+  /**
+   * Animation officielle d'un sort, si elle a été extraite : clé de texture, clips disponibles
+   * (`main` = effet complet, `move` = projectile en vol...) et type Dofus (10 = joué sur le lanceur).
+   */
+  spellFx(scene: Phaser.Scene, spellId: string): { key: string; origin: [number, number]; scale: number; clips: Set<string>; type: number } | null {
+    const link = this.manifest.spellAnims?.[spellId];
+    const def = link ? this.manifest.spellfx?.[link.anim] : undefined;
+    if (!link || !def || !scene.textures.exists(`fx_${link.anim}`)) return null;
+    // Même agrandissement que les personnages, pour que les effets restent à leur échelle.
+    return { key: `fx_${link.anim}`, origin: def.origin ?? [0.5, 0.5], scale: (def.scale ?? 1) * 1.4, clips: new Set(Object.keys(def.anims)), type: link.type };
   }
 
   /** Image de projectile fournie pour ce sort, ou null (flèche placeholder). */

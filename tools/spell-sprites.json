@@ -1,0 +1,401 @@
+{
+  "fleche_magique": {
+    "dofusId": 161,
+    "name": "Flèche Magique",
+    "sprite": 902,
+    "spriteInfos": "31,2,1",
+    "swf": true
+  },
+  "fleche_enflammee": {
+    "dofusId": 165,
+    "name": "Flèche Enflammée",
+    "sprite": 909,
+    "spriteInfos": "51,2,1",
+    "swf": true
+  },
+  "fleche_de_recul": {
+    "dofusId": 169,
+    "name": "Flèche de Recul",
+    "sprite": 903,
+    "spriteInfos": "21,2,1",
+    "swf": true
+  },
+  "fleche_explosive": {
+    "dofusId": 179,
+    "name": "Flèche Explosive",
+    "sprite": 910,
+    "spriteInfos": "31,2,1",
+    "swf": true
+  },
+  "fleche_punitive": {
+    "dofusId": 171,
+    "name": "Flèche Punitive",
+    "sprite": 912,
+    "spriteInfos": "51,2,1",
+    "swf": true
+  },
+  "fleche_glacee": {
+    "dofusId": 163,
+    "name": "Flèche Glacée",
+    "sprite": 905,
+    "spriteInfos": "31,2,1",
+    "swf": true
+  },
+  "fleche_d_immobilisation": {
+    "dofusId": 170,
+    "name": "Flèche d'Immobilisation",
+    "sprite": 901,
+    "spriteInfos": "31,2,1",
+    "swf": true
+  },
+  "pression": {
+    "dofusId": 141,
+    "name": "Pression",
+    "sprite": 806,
+    "spriteInfos": "21,2,1",
+    "swf": true
+  },
+  "epee_de_iop": {
+    "dofusId": 160,
+    "name": "Epée de Iop",
+    "sprite": 805,
+    "spriteInfos": "40,0,1",
+    "swf": true
+  },
+  "tempete_de_puissance": {
+    "dofusId": 156,
+    "name": "Tempête de Puissance",
+    "sprite": 811,
+    "spriteInfos": "11,2,1",
+    "swf": true
+  },
+  "colere_de_iop": {
+    "dofusId": 159,
+    "name": "Colère de Iop",
+    "sprite": 809,
+    "spriteInfos": "21,2,1",
+    "swf": true
+  },
+  "intimidation": {
+    "dofusId": 143,
+    "name": "Intimidation",
+    "sprite": 804,
+    "spriteInfos": "21,2,1",
+    "swf": true
+  },
+  "epee_celeste": {
+    "dofusId": 157,
+    "name": "Epée Céleste",
+    "sprite": 808,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "bond": {
+    "dofusId": 142,
+    "name": "Bond",
+    "sprite": 807,
+    "spriteInfos": "51,1,1",
+    "swf": true
+  },
+  "epee_du_jugement": {
+    "dofusId": 152,
+    "name": "Epée du Jugement",
+    "sprite": 809,
+    "spriteInfos": "21,0,1",
+    "swf": true
+  },
+  "mot_blessant": {
+    "dofusId": 122,
+    "name": "Mot Blessant",
+    "sprite": 704,
+    "spriteInfos": "11,6,0",
+    "swf": true
+  },
+  "mot_curatif": {
+    "dofusId": 121,
+    "name": "Mot Curatif",
+    "sprite": 702,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "mot_de_frayeur": {
+    "dofusId": 128,
+    "name": "Mot de Frayeur",
+    "sprite": 707,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "mot_de_reconstitution": {
+    "dofusId": 140,
+    "name": "Mot de Reconstitution",
+    "sprite": 702,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "mot_interdit": {
+    "dofusId": 125,
+    "name": "Mot Interdit",
+    "sprite": 704,
+    "spriteInfos": "11,6,1",
+    "swf": true
+  },
+  "mot_de_regeneration": {
+    "dofusId": 131,
+    "name": "Mot de Régénération",
+    "sprite": 702,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "mot_d_envol": {
+    "dofusId": 137,
+    "name": "Mot d'Envol",
+    "sprite": 0,
+    "spriteInfos": "10,7,1",
+    "swf": false
+  },
+  "mot_stimulant": {
+    "dofusId": 126,
+    "name": "Mot Stimulant",
+    "sprite": 705,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "pied_du_sacrieur": {
+    "dofusId": 432,
+    "name": "Pied du Sacrieur",
+    "sprite": 0,
+    "spriteInfos": "0,0,1",
+    "swf": false
+  },
+  "attirance": {
+    "dofusId": 434,
+    "name": "Attirance",
+    "sprite": 1052,
+    "spriteInfos": "51,1,1",
+    "swf": true
+  },
+  "assaut": {
+    "dofusId": 436,
+    "name": "Assaut",
+    "sprite": 1053,
+    "spriteInfos": "31,6,1",
+    "swf": true
+  },
+  "punition": {
+    "dofusId": 446,
+    "name": "Punition",
+    "sprite": 0,
+    "spriteInfos": "0,6,1",
+    "swf": false
+  },
+  "absorption": {
+    "dofusId": 442,
+    "name": "Absorption",
+    "sprite": 0,
+    "spriteInfos": "20,0,1",
+    "swf": false
+  },
+  "chatiment_agile": {
+    "dofusId": 437,
+    "name": "Châtiment Agile",
+    "sprite": 1051,
+    "spriteInfos": "10,1,1",
+    "swf": true
+  },
+  "folie_sanguinaire": {
+    "dofusId": 450,
+    "name": "Folie sanguinaire",
+    "sprite": 0,
+    "spriteInfos": "0,1,1",
+    "swf": false
+  },
+  "sournoiserie": {
+    "dofusId": 61,
+    "name": "Sournoiserie",
+    "sprite": 405,
+    "spriteInfos": "21,0,1",
+    "swf": true
+  },
+  "piege_sournois": {
+    "dofusId": 65,
+    "name": "Piège Sournois",
+    "sprite": 407,
+    "spriteInfos": "0,1,1",
+    "swf": true
+  },
+  "invisibilite": {
+    "dofusId": 72,
+    "name": "Invisibilité ",
+    "sprite": 402,
+    "spriteInfos": "10,1,1",
+    "swf": true
+  },
+  "piege_de_masse": {
+    "dofusId": 79,
+    "name": "Piège de Masse",
+    "sprite": 410,
+    "spriteInfos": "0,1,1",
+    "swf": true
+  },
+  "attaque_mortelle": {
+    "dofusId": 76,
+    "name": "Attaque Mortelle",
+    "sprite": 412,
+    "spriteInfos": "51,2,1",
+    "swf": true
+  },
+  "piege_empoisonne": {
+    "dofusId": 71,
+    "name": "Piège Empoisonné ",
+    "sprite": 407,
+    "spriteInfos": "0,1,1",
+    "swf": true
+  },
+  "fourvoiement": {
+    "dofusId": 68,
+    "name": "Fourvoiement",
+    "sprite": 404,
+    "spriteInfos": "10,2,1",
+    "swf": true
+  },
+  "ronce": {
+    "dofusId": 183,
+    "name": "Ronce",
+    "sprite": 1001,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "la_folle": {
+    "dofusId": 182,
+    "name": "La Folle",
+    "sprite": 1100,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "la_bloqueuse": {
+    "dofusId": 193,
+    "name": "La Bloqueuse",
+    "sprite": 1100,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "vent_empoisonne": {
+    "dofusId": 196,
+    "name": "Vent Empoisonné ",
+    "sprite": 1011,
+    "spriteInfos": "10,1,1",
+    "swf": true
+  },
+  "ronce_apaisante": {
+    "dofusId": 192,
+    "name": "Ronce Apaisante",
+    "sprite": 1001,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "la_gonflable": {
+    "dofusId": 190,
+    "name": "La Gonflable",
+    "sprite": 1100,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "ronces_multiples": {
+    "dofusId": 191,
+    "name": "Ronces Multiples",
+    "sprite": 1001,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "pile_ou_face": {
+    "dofusId": 102,
+    "name": "Pile ou Face",
+    "sprite": 601,
+    "spriteInfos": "31,1,1",
+    "swf": true
+  },
+  "roue_de_la_fortune": {
+    "dofusId": 106,
+    "name": "Roue de la Fortune",
+    "sprite": 603,
+    "spriteInfos": "10,1,1",
+    "swf": true
+  },
+  "bond_du_felin": {
+    "dofusId": 105,
+    "name": "Bond du Félin",
+    "sprite": 807,
+    "spriteInfos": "51,1,1",
+    "swf": true
+  },
+  "rekop": {
+    "dofusId": 114,
+    "name": "Rekop",
+    "sprite": 616,
+    "spriteInfos": "51,0,1",
+    "swf": true
+  },
+  "tout_ou_rien": {
+    "dofusId": 119,
+    "name": "Tout ou rien",
+    "sprite": 613,
+    "spriteInfos": "10,1,1",
+    "swf": true
+  },
+  "trefle": {
+    "dofusId": 104,
+    "name": "Trèfle",
+    "sprite": 605,
+    "spriteInfos": "10,1,1",
+    "swf": true
+  },
+  "perception": {
+    "dofusId": 113,
+    "name": "Perception",
+    "sprite": 607,
+    "spriteInfos": "10,1,1",
+    "swf": true
+  },
+  "attaque_naturelle": {
+    "dofusId": 3,
+    "name": "Attaque Naturelle",
+    "sprite": 103,
+    "spriteInfos": "30,1,1",
+    "swf": true
+  },
+  "glyphe_agressif": {
+    "dofusId": 17,
+    "name": "Glyphe Agressif",
+    "sprite": 0,
+    "spriteInfos": "0,1,1",
+    "swf": false
+  },
+  "teleportation": {
+    "dofusId": 11,
+    "name": "Téléportation",
+    "sprite": 0,
+    "spriteInfos": "0,9,1",
+    "swf": false
+  },
+  "glyphe_enflamme": {
+    "dofusId": 10,
+    "name": "Glyphe Enflammé ",
+    "sprite": 0,
+    "spriteInfos": "0,1,1",
+    "swf": false
+  },
+  "bulle": {
+    "dofusId": 19,
+    "name": "Bulle",
+    "sprite": 112,
+    "spriteInfos": "51,1,1",
+    "swf": true
+  },
+  "bouclier_feca": {
+    "dofusId": 7,
+    "name": "Bouclier Féca",
+    "sprite": 802,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  }
+}

@@ -24,7 +24,7 @@ interface ProjectileView {
   dy: number;
   total: number;
   travelled: number;
-  sprite: Phaser.GameObjects.Image;
+  sprite: Phaser.GameObjects.Sprite;
   glow: Phaser.GameObjects.Image;
   /** Marqueur au sol du point d'impact (tirs en cloche). */
   marker?: { destroy(): void };
@@ -43,6 +43,25 @@ export class Effects {
   // Projectiles
   // -------------------------------------------------------------------------
 
+  /**
+   * Joue l'animation officielle complète d'un sort (clip « main ») à un endroit, une seule fois.
+   * Retourne faux si le sort n'en a pas.
+   */
+  playSpellFx(spellId: string, x: number, y: number, dirX = 1, dirY = 0): boolean {
+    const fx = this.store.spellFx(this.scene, spellId);
+    if (!fx?.clips.has('main')) return false;
+    const p = worldToScreen(x, y);
+    const s = worldToScreen(dirX, dirY);
+    const sprite = this.scene.add.sprite(p.x, p.y, fx.key).setOrigin(fx.origin[0], fx.origin[1]).setScale(fx.scale).setDepth(p.y + 25);
+    // Les animations sont dessinées vers la droite : miroir quand le sort part vers la gauche.
+    if (s.x < 0) sprite.setFlipX(true);
+    sprite.play(`${fx.key}:main`);
+    sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => sprite.destroy());
+    // Garde-fou : on ne laisse jamais traîner un effet.
+    this.scene.time.delayedCall(4000, () => sprite.active && sprite.destroy());
+    return true;
+  }
+
   spawnProjectile(e: CastEvent): void {
     const spell = getSpell(e.spell);
     const shape = spell.projectile;
@@ -58,13 +77,20 @@ export class Effects {
     const dy = (e.ty - e.y) / total;
 
     const custom = this.store.projectile(this.scene, spell.id);
+    const fx = this.store.spellFx(this.scene, spell.id);
     // Les flèches ont leur image ; les autres projectiles (mots, graines) sont des orbes colorés.
     const isSeed = !spell.icon.startsWith('fleche');
-    const sprite = custom
-      ? this.scene.add.image(0, 0, custom.key).setOrigin(custom.origin[0], custom.origin[1]).setScale(custom.scale)
-      : this.scene.add.image(0, 0, isSeed ? 'ph_seed' : 'ph_arrow').setTint(spell.color);
-    if (!custom && !isSeed) sprite.setScale(shape.pierce ? 1.35 : 1);
-    const glow = this.scene.add.image(0, 0, 'ph_glow').setTint(spell.color).setBlendMode(Phaser.BlendModes.ADD).setScale(0.7).setAlpha(0.9);
+    let sprite: Phaser.GameObjects.Sprite;
+    if (fx?.clips.has('move')) {
+      // Projectile officiel : le clip « move » de l'animation Dofus, joué en boucle pendant le vol.
+      sprite = this.scene.add.sprite(0, 0, fx.key).setOrigin(fx.origin[0], fx.origin[1]).setScale(fx.scale).play(`${fx.key}:move`);
+    } else if (custom) {
+      sprite = this.scene.add.sprite(0, 0, custom.key).setOrigin(custom.origin[0], custom.origin[1]).setScale(custom.scale);
+    } else {
+      sprite = this.scene.add.sprite(0, 0, isSeed ? 'ph_seed' : 'ph_arrow').setTint(spell.color);
+      if (!isSeed) sprite.setScale(shape.pierce ? 1.35 : 1);
+    }
+    const glow = this.scene.add.image(0, 0, 'ph_glow').setTint(spell.color).setBlendMode(Phaser.BlendModes.ADD).setScale(0.7).setAlpha(fx ? 0.45 : 0.9);
 
     // Orientation à l'écran de la direction monde.
     const s = worldToScreen(dx, dy);
