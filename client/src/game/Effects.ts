@@ -143,13 +143,23 @@ export class Effects {
       const p = worldToScreen(e.x + Math.cos(a) * spell.range, e.y + Math.sin(a) * spell.range);
       points.push({ x: p.x - origin.x, y: p.y - origin.y });
     }
-    const g = this.scene.add.graphics({ x: origin.x, y: origin.y - 6 }).setDepth(DEPTH_GROUND_FX + 1);
-    g.fillStyle(spell.color, 0.5);
+    // Éventail coloré + bord blanc épais, au-dessus des personnages pour rester bien visible.
+    const g = this.scene.add.graphics({ x: origin.x, y: origin.y - 6 }).setDepth(origin.y + 30).setBlendMode(Phaser.BlendModes.ADD);
+    g.fillStyle(spell.color, 0.55);
     g.fillPoints(points, true);
-    g.lineStyle(3, 0xffffff, 0.9);
+    g.lineStyle(6, 0xffffff, 0.95);
     g.strokePoints(points.slice(1), false);
-    g.setScale(0.5);
-    this.scene.tweens.add({ targets: g, scale: 1, alpha: 0, duration: 200, ease: 'Cubic.easeOut', onComplete: () => g.destroy() });
+    g.lineStyle(3, spell.color, 1);
+    g.strokePoints(points.slice(1), false);
+    g.setScale(0.55);
+    this.scene.tweens.add({ targets: g, scale: 1.08, alpha: 0, duration: 320, ease: 'Cubic.easeOut', onComplete: () => g.destroy() });
+    // Étincelles au bout de l'arc.
+    for (let i = 0; i < 8; i++) {
+      const a = angle + (Math.random() - 0.5) * half * 2;
+      const end = worldToScreen(e.x + Math.cos(a) * spell.range * 1.1, e.y + Math.sin(a) * spell.range * 1.1);
+      const dot = this.scene.add.image(origin.x, origin.y - 14, 'ph_dot').setTint(i % 2 ? spell.color : 0xffffff).setDepth(origin.y + 31).setScale(1.4);
+      this.scene.tweens.add({ targets: dot, x: end.x, y: end.y - 14, alpha: 0, scale: 0.3, duration: 260, ease: 'Quad.easeOut', onComplete: () => dot.destroy() });
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -162,6 +172,39 @@ export class Effects {
     const w = radius * TILE_W * Math.SQRT2;
     const h = radius * TILE_H * Math.SQRT2;
     return this.scene.add.ellipse(x, y, w, h, color, alpha).setDepth(DEPTH_GROUND_FX);
+  }
+
+  /** Traînée de poussière le long d'un bond (Bond, Assaut, Flèche de Recul). */
+  dashTrail(x0: number, y0: number, x1: number, y1: number, color: number): void {
+    const steps = 10;
+    for (let i = 0; i <= steps; i++) {
+      const p = worldToScreen(x0 + ((x1 - x0) * i) / steps, y0 + ((y1 - y0) * i) / steps);
+      const dot = this.scene.add.image(p.x, p.y - 8, 'ph_glow').setTint(i % 2 ? color : 0xffffff).setBlendMode(Phaser.BlendModes.ADD).setScale(0.45).setAlpha(0).setDepth(p.y + 5);
+      this.scene.tweens.add({ targets: dot, alpha: { from: 0.8, to: 0 }, scale: 0.15, delay: i * 18, duration: 360, onComplete: () => dot.destroy() });
+    }
+  }
+
+  /** Soin : anneau vert et « + » qui montent. */
+  healBurst(x: number, y: number, radius: number): void {
+    const p = worldToScreen(x, y);
+    for (let i = 0; i < 10; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const d = Math.random() * radius;
+      const q = worldToScreen(x + Math.cos(a) * d, y + Math.sin(a) * d);
+      const plus = this.scene.add
+        .text(q.x, q.y - 10, '+', { fontFamily: 'Verdana, sans-serif', fontSize: '18px', fontStyle: 'bold', color: '#8cff9a', stroke: '#0a3a10', strokeThickness: 3, resolution: 2 })
+        .setOrigin(0.5)
+        .setDepth(q.y + 40);
+      this.scene.tweens.add({ targets: plus, y: q.y - 50, alpha: 0, delay: Math.random() * 200, duration: 700, onComplete: () => plus.destroy() });
+    }
+    void p;
+  }
+
+  /** Colonne de lumière qui tombe du ciel (sorts de zone offensifs). */
+  beam(x: number, y: number, color: number): void {
+    const p = worldToScreen(x, y);
+    const beam = this.scene.add.image(p.x, p.y - 90, 'ph_glow').setTint(color).setBlendMode(Phaser.BlendModes.ADD).setScale(0.9, 5).setDepth(p.y + 45).setAlpha(0.9);
+    this.scene.tweens.add({ targets: beam, scaleX: 0.2, alpha: 0, duration: 380, ease: 'Cubic.easeIn', onComplete: () => beam.destroy() });
   }
 
   explosion(x: number, y: number, radius: number, color: number): void {

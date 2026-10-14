@@ -1,8 +1,9 @@
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, kamas, équipe, bandeaux.
-import { CLASSES, ITEMS, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
+import { CLASSES, ITEMS, sumStats, type StatKey, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseInventory, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import { spellIconSvg } from './icons.ts';
+import { spellDetailsHtml } from './spellInfo.ts';
 
 const SLOT_KEYS = ['Clic G', 'Clic D', 'Espace', 'R'];
 
@@ -28,6 +29,8 @@ export interface HudCallbacks {
   onRestart(): void;
   onQuit(): void;
   onClass(classId: string): void;
+  /** Survol d'un sort de la barre (null = plus rien de survolé). */
+  onSpellHover(slot: number | null): void;
 }
 
 /** Boutons de choix de classe (accueil et salon). */
@@ -44,6 +47,9 @@ export class Hud {
   /** Dernier HTML écrit par zone : on ne touche au DOM que si ça change. */
   private cache: Record<string, string> = {};
   private roomCode = '';
+  /** Bonus d'objets du joueur local (pour les infobulles). */
+  private stats: Record<StatKey, number> = sumStats(new Map());
+  private spellIds: string[] = [];
   private abort = new AbortController();
 
   constructor(
@@ -101,6 +107,7 @@ export class Hud {
 
   /** Construit la barre de sorts à partir des données de la classe. */
   setSpells(spellIds: string[]): void {
+    this.spellIds = spellIds;
     const bar = $('spellbar');
     bar.innerHTML = '';
     this.spellEls = [];
@@ -112,7 +119,9 @@ export class Hud {
       const el = document.createElement('div');
       el.className = 'spell ready';
       const stats = [spell.heal ? `Soin ${spell.heal[0]}-${spell.heal[1]}` : spell.damage[1] > 0 ? `Dégâts ${spell.damage[0]}-${spell.damage[1]}` : '', spell.range > 0 ? `Portée ${spell.range}` : '', `Recharge ${spell.cooldown / 1000}s`];
-      el.title = `${spell.name} — ${spell.description}\n${stats.filter(Boolean).join(' · ')}`;
+      void stats;
+      el.addEventListener('mouseenter', () => this.showTip(slot));
+      el.addEventListener('mouseleave', () => this.showTip(null));
       el.innerHTML = `<div class="spell-icon">${url ? `<img alt="">` : spellIconSvg(spell)}<div class="spell-cd"></div></div><div class="spell-key">${SLOT_KEYS[slot] ?? ''}</div>`;
       if (url) {
         // Icône fournie ; si elle ne se charge pas, on retombe sur le placeholder.
@@ -125,6 +134,24 @@ export class Hud {
       this.cdEls.push(el.querySelector<HTMLElement>('.spell-cd')!);
       this.wasReady.push(true);
     });
+  }
+
+  /** La scène s'abonne au survol des sorts (remplace le rappel donné à la construction). */
+  setSpellHover(fn: (slot: number | null) => void): void {
+    this.callbacks.onSpellHover = fn;
+  }
+
+  /** Infobulle détaillée d'un sort + aperçu de sa zone en jeu. */
+  showTip(slot: number | null): void {
+    const tip = $('spell-tip');
+    this.callbacks.onSpellHover(slot);
+    if (slot === null || !this.spellIds[slot]) {
+      tip.classList.add('hidden');
+      return;
+    }
+    const spell = getSpell(this.spellIds[slot]);
+    tip.innerHTML = `<div class="tip-name">${escapeHtml(spell.name)} <small>${SLOT_KEYS[slot] ?? ''}</small></div><div class="tip-desc">${escapeHtml(spell.description)}</div>${spellDetailsHtml(spell, this.stats)}`;
+    tip.classList.remove('hidden');
   }
 
   /** Met à jour les voiles de recharge. `cdEnd`/`cdTotal` en ms (horloge `now`). */
@@ -192,6 +219,7 @@ export class Hud {
     // Inventaire
     if (me && this.cache.items !== me.items) {
       this.cache.items = me.items;
+      this.stats = sumStats(parseInventory(me.items));
       let html = '';
       for (const [id, count] of parseInventory(me.items)) {
         const item = ITEMS[id];

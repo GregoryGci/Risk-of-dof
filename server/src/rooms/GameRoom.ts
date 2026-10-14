@@ -45,6 +45,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage('input', (client: Client, message: InputMessage) => this.sim.setInput(client.sessionId, message));
     this.onMessage('cast', (client: Client, message: CastMessage) => this.sim.playerCast(client.sessionId, message));
     this.onMessage('class', (client: Client, message: { classId?: string }) => this.sim.setClass(client.sessionId, message?.classId));
+    this.onMessage('pause', (client: Client, message: { paused?: boolean }) => this.sim.setPaused(client.sessionId, message?.paused));
     this.onMessage('interact', (client: Client) => this.sim.interact(client.sessionId));
     this.onMessage('start', (client: Client) => {
       if (client.sessionId === this.state.hostId) this.sim.start();

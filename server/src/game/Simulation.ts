@@ -148,6 +148,8 @@ export class Simulation {
   // -------------------------------------------------------------------------
 
   addPlayer(id: string, name: string, classId?: string): void {
+    // Un nouveau joueur arrive : plus de pause possible.
+    this.state.paused = false;
     const def = getClass(classId ?? '');
     const state = new PlayerState();
     state.name = name;
@@ -180,6 +182,12 @@ export class Simulation {
     // On garde sa place : inutile de renvoyer le joueur au point d'apparition.
     p.state.x = x;
     p.state.y = y;
+  }
+
+  /** Pause demandée par un joueur : seulement s'il est seul (on ne fige pas les autres). */
+  setPaused(id: string, paused: unknown): void {
+    if (!this.players.has(id)) return;
+    this.state.paused = paused === true && this.players.size === 1;
   }
 
   /** L'hôte lance la partie depuis le salon. */
@@ -411,7 +419,7 @@ export class Simulation {
   update(dt: number): void {
     // Garde-fou si le serveur a eu un gros ralentissement.
     dt = Math.min(dt, 0.1);
-    if (this.state.phase === PHASE_LOST) return;
+    if (this.state.phase === PHASE_LOST || this.state.paused) return;
     this.now += dt;
 
     this.runTimers();

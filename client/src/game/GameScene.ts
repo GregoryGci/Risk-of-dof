@@ -39,6 +39,8 @@ import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import type { Hud } from '../ui/Hud.ts';
 import { Minimap } from '../ui/Minimap.ts';
+import { Details } from '../ui/Details.ts';
+import { SpellPreview } from './SpellPreview.ts';
 import { Controls } from './Controls.ts';
 import { Effects } from './Effects.ts';
 import { EntityView } from './EntityView.ts';
@@ -64,6 +66,13 @@ export class GameScene extends Phaser.Scene {
   private controls!: Controls;
   private effects!: Effects;
   private minimap = new Minimap();
+  private details!: Details;
+  private preview!: SpellPreview;
+  /** Sort dont la zone est affichée (survol de son icône), ou null. */
+  private previewSlot: number | null = null;
+  /** Dernière direction de visée (normalisée), pour orienter l'aperçu. */
+  private aimDir = { x: 1, y: 0 };
+  private lastFrameTime = 0;
 
   private map!: GameMap;
   private mapView?: MapView;
@@ -103,6 +112,15 @@ export class GameScene extends Phaser.Scene {
     this.store = this.ctx.store;
     this.hud = this.ctx.hud;
     this.store.preload(this);
+
+    // Écran de chargement : les spritesheets Dofus pèsent quelques Mo.
+    const { width, height } = this.scale;
+    const label = this.add
+      .text(width / 2, height / 2, 'Chargement… 0 %', { fontFamily: 'Georgia, serif', fontSize: '22px', color: '#ffb04a', stroke: '#000000', strokeThickness: 4 })
+      .setOrigin(0.5)
+      .setScrollFactor(0);
+    this.load.on(Phaser.Loader.Events.PROGRESS, (p: number) => label.setText(`Chargement… ${Math.round(p * 100)} %`));
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => label.destroy());
   }
 
   create(): void {
@@ -110,6 +128,17 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(0x1a2611);
     this.controls = new Controls(this.game.canvas);
     this.effects = new Effects(this, this.store);
+    this.preview = new SpellPreview(this);
+    this.details = new Details(
+      this.store,
+      (slot) => (this.previewSlot = slot),
+      (open) => {
+        // Le panneau libère la souris : on arrête de bouger et de tirer, et on demande la pause (effective en solo).
+        this.controls.releaseAll();
+        this.room.send('pause', { paused: open });
+      },
+    );
+    this.hud.setSpellHover((slot) => (this.previewSlot = slot));
 
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyZoom, this);
     this.applyZoom();
@@ -120,8 +149,14 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('explode', (e: ExplodeEvent) => this.onExplode(e));
     this.room.onMessage('dmg', (e: DamageEvent) => this.onDamage(e));
     this.room.onMessage('death', (e: DeathEvent) => this.onDeath(e));
-    this.room.onMessage('boss', (e: { name: string }) => this.hud.toast(`<b style="color:#ff6a5a">${e.name}</b> garde le Zaap !`));
-    this.room.onMessage('stage', (e: { stage: number }) => this.hud.toast(`<b>Zone ${e.stage}</b>`));
+    this.room.onMessage('boss', (e: { name: string }) => {
+      this.hud.toast(`<b style="color:#ff6a5a">${e.name}</b> garde le Zaap !`);
+      this.store.playSound(this, 'boss');
+    });
+    this.room.onMessage('stage', (e: { stage: number }) => {
+      this.hud.toast(`<b>Zone ${e.stage}</b>`);
+      this.store.playSound(this, 'stage');
+    });
     this.room.onMessage('heal', (e: HealEvent) => {
       if (!document.hidden) this.effects.floatText(e.x, e.y, `+${e.amount}`, '#6ee67a', 15);
     });
@@ -153,7 +188,13 @@ export class GameScene extends Phaser.Scene {
     if (!this.mapView || this.map.seed !== state.seed) this.rebuildMap(state.seed);
 
     const myState = state.players.get(this.room.sessionId);
-    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST;
+    // Tab (ou Échap pour fermer) : panneau de détails.
+    if (this.controls.consumePress('Tab')) this.details.toggle();
+    if (this.controls.consumePress('Escape')) this.details.toggle(false);
+    // Pendant une pause, les temps de recharge affichés sont figés eux aussi.
+    if (state.paused && this.lastFrameTime > 0) for (let i = 0; i < 4; i++) this.cdEnd[i] += time - this.lastFrameTime;
+    this.lastFrameTime = time;
+    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !this.details.isOpen && !state.paused;
 
     if (myState && myState.classId !== this.myClass) {
       // Première frame ou changement de classe : la barre de sorts suit.
@@ -169,6 +210,11 @@ export class GameScene extends Phaser.Scene {
     this.updateCamera(state, myState, dt);
 
     this.minimap.draw(state, this.room.sessionId);
+    this.details.update(state, this.room.sessionId, time);
+    // Aperçu de la zone d'effet du sort survolé, depuis la position du joueur dans la direction visée.
+    const hovered = this.previewSlot !== null && myState ? getClass(myState.classId).spells[this.previewSlot] : undefined;
+    if (hovered) this.preview.draw(getSpell(hovered), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y);
+    else this.preview.hide();
     this.hud.updateCooldowns(time, this.cdEnd, this.cdTotal);
     this.hud.update(state, this.room.sessionId, myState && !myState.alive ? this.spectating : null, prompt);
   }
@@ -200,7 +246,11 @@ export class GameScene extends Phaser.Scene {
     }
     const move = canAct ? this.controls.moveDir() : { x: 0, y: 0 };
     const aim = this.aimPoint();
-    const dir = dirFromVector(aim.x - this.me.x, aim.y - this.me.y);
+    // La direction n'est mise à jour que si la souris est sur le jeu (pas sur le HUD).
+    const overCanvas = (this.input.activePointer.event?.target as HTMLElement | undefined)?.tagName === 'CANVAS';
+    const aimLen = Math.hypot(aim.x - this.me.x, aim.y - this.me.y);
+    if (overCanvas && aimLen > 0.2) this.aimDir = { x: (aim.x - this.me.x) / aimLen, y: (aim.y - this.me.y) / aimLen };
+    const dir = dirFromVector(this.aimDir.x, this.aimDir.y);
 
     // Envoi des entrées : seulement quand elles changent, plus un rappel périodique.
     const changed = move.x !== this.lastInput.dx || move.y !== this.lastInput.dy || dir !== this.lastInput.dir;
@@ -419,6 +469,13 @@ export class GameScene extends Phaser.Scene {
     // Onglet en arrière-plan : la boucle de rendu est en pause, on n'empile pas d'effets.
     if (!document.hidden) this.effects.spawnProjectile(e);
     const spell = getSpell(e.spell);
+    // Bond : traînée le long du trajet (vu par tout le monde).
+    const dash = spell.effects?.find((f) => f.type === 'dash');
+    if (dash && dash.type === 'dash' && !document.hidden) {
+      const len = Math.hypot(e.tx - e.x, e.ty - e.y) || 1;
+      const sign = dash.direction === 'back' ? -1 : 1;
+      this.effects.dashTrail(e.x, e.y, e.x + ((e.tx - e.x) / len) * dash.distance * sign, e.y + ((e.ty - e.y) / len) * dash.distance * sign, spell.color);
+    }
     (this.players.get(e.caster) ?? this.monsters.get(e.caster))?.attack();
 
     if (e.caster !== this.room.sessionId || e.slot === undefined) return;
@@ -426,7 +483,6 @@ export class GameScene extends Phaser.Scene {
     const now = this.time.now;
     this.cdTotal[e.slot] = e.cooldown ?? spell.cooldown;
     this.cdEnd[e.slot] = now + this.cdTotal[e.slot];
-    const dash = spell.effects?.find((f) => f.type === 'dash');
     if (dash && dash.type === 'dash') this.followServerUntil = now + dash.duration * 1000 + 180;
   }
 
@@ -434,7 +490,11 @@ export class GameScene extends Phaser.Scene {
     if (document.hidden) return;
     const spell = getSpell(e.spell);
     this.effects.explosion(e.x, e.y, e.radius, spell.color);
-    if (spell.heal) return;
+    if (spell.heal) {
+      this.effects.healBurst(e.x, e.y, e.radius);
+      return;
+    }
+    if (spell.zone) this.effects.beam(e.x, e.y, spell.color);
     // Secousse proportionnelle à la proximité.
     const d = Math.hypot(e.x - this.me.x, e.y - this.me.y);
     if (d < 12) this.cameras.main.shake(160, 0.006 * (1 - d / 12));
@@ -454,7 +514,10 @@ export class GameScene extends Phaser.Scene {
       }
     } else {
       this.monsters.get(e.target)?.flash();
-      if (e.crit) this.effects.floatText(e.x, e.y, `${e.amount} !`, '#ffb020', 19, 44);
+      if (e.crit) {
+        this.effects.floatText(e.x, e.y, `${e.amount} !`, '#ffb020', 19, 44);
+        this.store.playSound(this, 'crit', 0.4);
+      }
       else this.effects.floatText(e.x, e.y, String(e.amount), '#ffffff', 13);
       this.store.playSound(this, 'hit', 0.3);
     }

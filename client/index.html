@@ -38,7 +38,7 @@
         <div class="help">
           <b>Déplacement</b> ZQSD / WASD / flèches &nbsp;·&nbsp; <b>Visée</b> souris<br />
           <b>Sorts</b> clic gauche · clic droit · Espace · R (ultime)<br />
-          <b>E</b> Ouvrir un coffre (coûte des kamas)
+          <b>E</b> Ouvrir un coffre (coûte des kamas) &nbsp;·&nbsp; <b>Tab</b> Détails / pause
         </div>
       </div>
     </div>
@@ -87,6 +87,20 @@
       <div id="inventory"></div>
       <div id="prompt" class="panel small hidden"></div>
       <div id="toast" class="panel small hidden"></div>
+
+      <!-- Infobulle des sorts -->
+      <div id="spell-tip" class="panel hidden"></div>
+
+      <!-- Détails de la partie (Tab) -->
+      <div id="details" class="overlay hidden">
+        <div class="panel details-panel">
+          <div class="details-head">
+            <h2>Détails de la partie</h2>
+            <button id="details-close" class="btn">Reprendre (Tab)</button>
+          </div>
+          <div id="details-body"></div>
+        </div>
+      </div>
 
       <!-- Bandeau central (salon, spectateur) -->
       <div id="banner" class="panel hidden"></div>

@@ -625,3 +625,152 @@ input[type='text']:focus {
 #banner.low {
   top: 170px;
 }
+
+/* --- Infobulle de sort -------------------------------------------------- */
+#spell-tip {
+  position: absolute;
+  bottom: 118px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 330px;
+  font-size: 12px;
+  line-height: 1.55;
+  pointer-events: none !important;
+  z-index: 15;
+}
+#spell-tip .tip-name,
+.spell-card-name {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--orange-clair);
+}
+#spell-tip .tip-desc,
+.spell-card-desc {
+  font-style: italic;
+  color: var(--beige);
+  margin-bottom: 3px;
+}
+.dmg {
+  color: #ff8a6a;
+  font-weight: bold;
+}
+.heal {
+  color: #7ef08a;
+  font-weight: bold;
+}
+
+/* --- Panneau Tab --------------------------------------------------------- */
+/* Ancré à droite : le personnage reste visible pour l'aperçu des zones de sorts. */
+#details {
+  pointer-events: auto;
+  background: linear-gradient(90deg, rgba(5, 8, 3, 0) 30%, rgba(5, 8, 3, 0.6));
+  justify-content: flex-end;
+  padding-right: 14px;
+}
+.details-panel {
+  width: min(560px, 50vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  user-select: text;
+}
+.details-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.details-panel h2 {
+  margin: 0;
+  font-family: Georgia, serif;
+  color: var(--orange-clair);
+}
+.details-panel h3 {
+  margin: 12px 0 6px;
+  font-family: Georgia, serif;
+  color: var(--orange-clair);
+  border-bottom: 1px solid rgba(217, 201, 160, 0.25);
+}
+.details-panel h3 small {
+  font-family: Verdana, sans-serif;
+  font-size: 10px;
+  color: var(--beige-fonce);
+}
+.details-panel section div,
+.spell-card div {
+  line-height: 1.6;
+}
+.details-panel b {
+  color: var(--texte);
+}
+.details-status {
+  margin-top: 4px;
+  color: #7cc4ff;
+  font-weight: bold;
+}
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 18px;
+}
+.details-spells {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.spell-card {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid rgba(217, 201, 160, 0.3);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.18);
+  cursor: help;
+  font-size: 12px;
+}
+.spell-card:hover {
+  border-color: var(--orange-clair);
+  background: rgba(232, 121, 28, 0.12);
+}
+.spell-card-icon {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border: 2px solid var(--beige-fonce);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.spell-card-icon img,
+.spell-card-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.details-items {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  font-size: 12px;
+}
+.item-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.item-row .item-icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
+}
+.item-row.rare .item-icon {
+  box-shadow: 0 0 6px var(--orange);
+}
+.details-items .empty {
+  grid-column: 1 / -1;
+  color: var(--beige-fonce);
+}
+#hud-paused {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+}

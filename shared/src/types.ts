@@ -266,6 +266,8 @@ export interface GameStateView {
   zaapState: number;
   /** Charge du Zaap, de 0 à 1. */
   zaapCharge: number;
+  /** Vrai quand le joueur seul a mis la partie en pause (touche Tab). */
+  paused: boolean;
   /** Prix actuel d'un coffre (kamas). */
   chestCost: number;
 }

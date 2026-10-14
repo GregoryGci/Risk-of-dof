@@ -26,7 +26,7 @@ export class Controls {
       const slot = KEY_SLOTS[e.code];
       if (slot !== undefined) this.held[slot] = true;
       // Espace et flèches ne doivent pas faire défiler la page.
-      if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+      if (e.code === 'Space' || e.code === 'Tab' || e.code.startsWith('Arrow')) e.preventDefault();
     });
     on(window, 'keyup', (e) => {
       this.keys.delete(e.code);

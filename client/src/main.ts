@@ -112,6 +112,7 @@ async function startGame(room: Room): Promise<void> {
     onStart: () => room.send('start'),
     onRestart: () => room.send('restart'),
     onQuit: () => room.leave(),
+    onSpellHover: () => {},
     onClass: (id) => {
       // Le choix fait dans le salon devient aussi le choix par défaut de l'accueil.
       classId = id;
