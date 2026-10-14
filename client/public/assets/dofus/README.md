@@ -1,5 +1,10 @@
 # Assets Dofus Retro
 
+> **Extraction automatique** : si Dofus Retro et JPEXS (FFDec) sont installés, `node tools/extract-dofus.mjs`
+> extrait les personnages et monstres, et `node tools/extract-objects.mjs` les décors, directement dans ce
+> dossier, manifeste compris. Les numéros de sprites sont dans `clips/sprites/sprites.xml` de l'installation ;
+> `node tools/contact-sheet.mjs` aide à repérer tiles et décors à l'œil. Ces fichiers ne sont jamais versionnés.
+
 Déposez vos assets ici. **Tant que ce dossier ne contient pas de `manifest.json`, le jeu
 utilise des placeholders géométriques** (c'est le cas actuellement).
 
