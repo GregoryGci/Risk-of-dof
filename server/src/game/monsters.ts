@@ -242,7 +242,7 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
     if (sim.now >= m.healAt) {
       m.healAt = sim.now + b.interval;
       for (const p of sim.players.values()) {
-        if (p.state.alive && Math.hypot(p.state.x - s.x, p.state.y - s.y) <= b.radius) sim.healPlayer(p, b.heal);
+        if (p.state.alive && Math.hypot(p.state.x - s.x, p.state.y - s.y) <= b.radius) sim.healPlayer(p, b.heal, sim.players.get(m.allyOwner ?? ''));
       }
       sim.broadcast('atk', { id: m.id });
     }

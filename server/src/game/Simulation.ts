@@ -296,7 +296,19 @@ export class Simulation {
     this.state.time = 0;
     this.state.difficulty = 1;
     this.state.stage = 1;
+    for (const p of this.players.values()) this.resetMeters(p);
     this.setupStage();
+  }
+
+  private resetMeters(p: PlayerRt): void {
+    p.state.dmgDealt = 0;
+    p.state.healDone = 0;
+    p.state.dmgTaken = 0;
+  }
+
+  /** Joueur à créditer pour une action : le joueur lui-même, ou le maître d'une invocation. */
+  private creditOf(ownerId: string): PlayerRt | undefined {
+    return this.players.get(ownerId) ?? this.players.get(this.monsters.get(ownerId)?.allyOwner ?? '');
   }
 
   /** Prépare une zone : coffres neufs, Zaap éteint placé loin du point d'apparition. */
@@ -392,6 +404,7 @@ export class Simulation {
       p.state.kamas = 0;
       p.state.kamasEarned = 0;
       p.state.kills = 0;
+      this.resetMeters(p);
     }
     this.state.phase = PHASE_LOBBY;
     this.start();
@@ -749,6 +762,8 @@ export class Simulation {
         const amount = Math.round(Math.min(p.state.maxHp - p.state.hp, min + Math.random() * (max - min)));
         if (amount <= 0) continue;
         p.state.hp += amount;
+        const healer = this.creditOf(pr.owner);
+        if (healer) healer.state.healDone += amount;
         this.broadcast('heal', { target: p.id, amount, x: p.state.x, y: p.state.y });
       }
       return;
@@ -820,10 +835,11 @@ export class Simulation {
   // Bonus, pièges et glyphes, invocations
   // -------------------------------------------------------------------------
 
-  healPlayer(p: PlayerRt, amount: number): void {
+  healPlayer(p: PlayerRt, amount: number, source: PlayerRt | undefined = p): void {
     const gain = Math.round(Math.min(p.state.maxHp - p.state.hp, amount));
     if (gain <= 0) return;
     p.state.hp += gain;
+    if (source) source.state.healDone += gain;
     this.broadcast('heal', { target: p.id, amount: gain, x: p.state.x, y: p.state.y });
   }
 
@@ -920,6 +936,8 @@ export class Simulation {
 
   damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false): void {
     amount = Math.max(1, Math.round(amount));
+    const dealer = m.state.ally ? undefined : this.creditOf(ownerId);
+    if (dealer) dealer.state.dmgDealt += Math.min(amount, Math.max(0, m.def.behavior.type === 'dummy' ? amount : m.state.hp));
     m.state.hp -= amount;
     if (m.state.elite && this.players.has(ownerId)) m.hitBy.add(ownerId);
     if (m.def.behavior.type === 'dummy') m.phaseUntil = this.now;
@@ -968,6 +986,7 @@ export class Simulation {
     // Trêve : aucun dégât.
     if (p.buffs.some((b) => b.invulnerable && b.until > this.now)) return;
     amount = Math.max(1, Math.round(amount * Math.pow(ARMOR_FACTOR, p.stats.armor)));
+    p.state.dmgTaken += Math.min(amount, Math.max(0, Math.round(p.state.hp)));
     p.state.hp = Math.max(0, p.state.hp - amount);
     p.lastHitAt = this.now;
     this.broadcast('dmg', { target: p.id, amount, x: p.state.x, y: p.state.y, player: true });

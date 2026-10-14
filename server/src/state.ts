@@ -21,6 +21,10 @@ export const PlayerState = schema(
     kamas: t.uint32().default(0),
     kamasEarned: t.uint32().default(0),
     kills: t.uint16().default(0),
+    /** Compteurs de la partie (addon de dégâts) : dégâts infligés, soins prodigués, dégâts subis. */
+    dmgDealt: t.uint32().default(0),
+    healDone: t.uint32().default(0),
+    dmgTaken: t.uint32().default(0),
     /** Sorts équipés (arbre de talents) : "id,id,id,id". */
     spells: t.string().default(''),
     invisible: t.boolean().default(false),

@@ -101,6 +101,16 @@
 
       <!-- Mini-carte -->
       <div id="hud-minimap" class="panel small"><canvas id="minimap"></canvas></div>
+
+      <!-- Addon de dégâts : DPS, soins, dégâts subis -->
+      <div id="hud-meter" class="panel small">
+        <div class="meter-tabs">
+          <button data-meter="dps" class="active">DPS</button>
+          <button data-meter="heal">Soins</button>
+          <button data-meter="taken">Subis</button>
+        </div>
+        <div id="meter-body"></div>
+      </div>
       </div>
 
       <!-- Bas : PV + barre de sorts -->

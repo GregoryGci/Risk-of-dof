@@ -12,6 +12,11 @@ function $(id: string): HTMLElement {
   return document.getElementById(id)!;
 }
 
+/** 1234 -> « 1,2 k » pour l'addon de dégâts. */
+function fmt(n: number): string {
+  return n >= 10000 ? `${(n / 1000).toFixed(0)} k` : n >= 1000 ? `${(n / 1000).toFixed(1)} k` : String(Math.round(n));
+}
+
 export function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 }
@@ -48,6 +53,7 @@ export class Hud {
   private wasReady: boolean[] = [];
   /** Dernier HTML écrit par zone : on ne touche au DOM que si ça change. */
   private cache: Record<string, string> = {};
+  private meter: 'dps' | 'heal' | 'taken' = 'dps';
   private roomCode = '';
   /** Bonus d'objets du joueur local (pour les infobulles). */
   private stats: Record<StatKey, number> = sumStats(new Map());
@@ -59,6 +65,17 @@ export class Hud {
     private callbacks: HudCallbacks,
   ) {
     const signal = this.abort.signal;
+    // Onglets de l'addon de dégâts.
+    $('hud-meter').addEventListener(
+      'click',
+      (e) => {
+        const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-meter]');
+        if (!btn) return;
+        this.meter = btn.dataset.meter as 'dps' | 'heal' | 'taken';
+        document.querySelectorAll('#hud-meter [data-meter]').forEach((b) => b.classList.toggle('active', b === btn));
+      },
+      { signal },
+    );
     // Boutons du bandeau (recréés dynamiquement) : délégation d'événement.
     $('banner').addEventListener(
       'click',
@@ -310,6 +327,22 @@ export class Hud {
       $('boss-name').innerHTML = bossName ? `${escapeHtml(bossName)} <small>${bossHp}</small>` : '';
       $('boss-bar').style.width = `${bossPct}%`;
     }
+
+    // Addon de dégâts : classement des joueurs (DPS sur la durée de la partie, soins et dégâts subis en total).
+    const rows: { name: string; slot: number; value: number }[] = [];
+    state.players.forEach((p: PlayerView) => {
+      const total = this.meter === 'dps' ? p.dmgDealt : this.meter === 'heal' ? p.healDone : p.dmgTaken;
+      rows.push({ name: p.name, slot: p.slot, value: total });
+    });
+    rows.sort((a, b) => b.value - a.value);
+    const best = Math.max(1, rows[0]?.value ?? 1);
+    const seconds = Math.max(1, state.time);
+    let meter = '';
+    for (const r of rows) {
+      const shown = this.meter === 'dps' ? `${fmt(r.value / seconds)} <small>(${fmt(r.value)})</small>` : fmt(r.value);
+      meter += `<div class="meter-row"><div class="fill" style="width:${(r.value / best) * 100}%;background:${cssColor(PLAYER_COLORS[r.slot % PLAYER_COLORS.length])}"></div><span>${escapeHtml(r.name)}</span><span>${shown}</span></div>`;
+    }
+    this.setHtml('meter-body', meter);
 
     // Équipe
     let team = '';

@@ -862,8 +862,8 @@ input[type='text']:focus {
 .details-items {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  font-size: 12px;
+  gap: 8px;
+  font-size: 13px;
 }
 .item-row {
   display: flex;
@@ -872,8 +872,8 @@ input[type='text']:focus {
 }
 .item-row .item-icon {
   flex: none;
-  width: 30px;
-  height: 30px;
+  width: 52px;
+  height: 52px;
   border: 2px solid var(--commun);
   background-color: var(--parchemin);
 }
@@ -1167,4 +1167,58 @@ input[type='text']:focus {
 }
 .rarity.epique {
   color: var(--epique);
+}
+
+/* --- Addon de dégâts (sous la mini-carte) ------------------------------------------ */
+#hud-meter {
+  width: 300px;
+  padding: 6px 8px 8px;
+  pointer-events: auto;
+}
+.meter-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.meter-tabs button {
+  flex: 1;
+  padding: 2px 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--encre-douce);
+  background: rgba(90, 74, 53, 0.12);
+  border: 1px solid rgba(90, 74, 53, 0.35);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.meter-tabs button.active {
+  color: #fff;
+  background: #5a4a35;
+}
+.meter-row {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  height: 20px;
+  margin-top: 3px;
+  padding: 0 6px;
+  font-size: 12px;
+  line-height: 20px;
+  border-radius: 3px;
+  background: rgba(90, 74, 53, 0.12);
+  overflow: hidden;
+}
+.meter-row .fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  opacity: 0.55;
+}
+.meter-row span {
+  position: relative;
+  font-weight: bold;
+}
+.meter-row small {
+  font-weight: normal;
+  color: var(--encre-douce);
 }

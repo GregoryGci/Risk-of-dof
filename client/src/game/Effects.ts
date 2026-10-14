@@ -55,10 +55,17 @@ export class Effects {
     const sprite = this.scene.add.sprite(p.x, p.y, fx.key).setOrigin(fx.origin[0], fx.origin[1]).setScale(fx.scale).setDepth(p.y + 25);
     // Les animations sont dessinées vers la droite : miroir quand le sort part vers la gauche.
     if (s.x < 0) sprite.setFlipX(true);
-    sprite.play(`${fx.key}:${fx.main}`);
+    // Les animations Dofus sont faites pour le tour par tour (2-3 s) : on les accélère pour coller au rythme
+    // du sort (attaque de base très courte, gros sort un peu plus long).
+    const spell = getSpell(spellId);
+    const maxSeconds = spell.buff ? 1.2 : spell.cooldown < 1500 ? 0.4 : 0.9;
+    const key = `${fx.key}:${fx.main}`;
+    const anim = this.scene.anims.get(key);
+    const natural = anim ? anim.frames.length / anim.frameRate : maxSeconds;
+    sprite.play(natural > maxSeconds && anim ? { key, frameRate: anim.frames.length / maxSeconds } : key);
     sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => sprite.destroy());
     // Garde-fou : on ne laisse jamais traîner un effet.
-    this.scene.time.delayedCall(4000, () => sprite.active && sprite.destroy());
+    this.scene.time.delayedCall(Math.min(natural, maxSeconds) * 1000 + 300, () => sprite.active && sprite.destroy());
     return true;
   }
 

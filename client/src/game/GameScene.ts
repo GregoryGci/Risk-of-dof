@@ -648,7 +648,8 @@ export class GameScene extends Phaser.Scene {
     const spell = getSpell(e.spell);
     // Animation officielle Dofus : sur le lanceur pour les bonus (type 10), au point visé sinon.
     // Les projectiles l'ont déjà en vol (clip « move ») ; les zones à retardement la jouent à l'impact.
-    if (!document.hidden && !spell.projectile && !spell.delay) {
+    // Pièges : l'animation joue quand ils se déclenchent (événement « explode »), pas à la pose.
+    if (!document.hidden && !spell.projectile && !spell.delay && spell.ground?.kind !== 'trap') {
       const onCaster = this.store.spellFx(this, spell.id)?.type === 10 || !!spell.buff;
       this.effects.playSpellFx(spell.id, onCaster ? e.x : e.tx, onCaster ? e.y : e.ty, e.tx - e.x, e.ty - e.y);
     }
@@ -678,7 +679,7 @@ export class GameScene extends Phaser.Scene {
     const spell = getSpell(e.spell);
     this.effects.explosion(e.x, e.y, e.radius, spell.color);
     // Zones à retardement et impacts de projectiles explosifs : l'animation officielle joue à l'impact.
-    if (spell.delay || spell.projectile) this.effects.playSpellFx(spell.id, e.x, e.y);
+    if (spell.delay || spell.projectile || spell.ground?.kind === 'trap') this.effects.playSpellFx(spell.id, e.x, e.y);
     if (spell.heal) {
       this.effects.healBurst(e.x, e.y, e.radius);
       return;

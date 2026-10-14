@@ -299,6 +299,9 @@ export interface PlayerView {
   kamas: number;
   /** Kamas gagnés depuis le début de la partie (pour la bourse de fin de partie). */
   kamasEarned: number;
+  dmgDealt: number;
+  healDone: number;
+  dmgTaken: number;
   kills: number;
   /** Sorts équipés (arbre de talents) : "id,id,id,id". */
   spells: string;
