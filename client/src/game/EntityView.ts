@@ -19,8 +19,27 @@ export interface EntityViewOptions {
   barAlways: boolean;
 }
 
+/** Élément d'une entité, positionné par rapport aux pieds (décalage local + décalage de profondeur). */
+interface Part {
+  obj: Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.Depth & Phaser.GameObjects.GameObject;
+  ox: number;
+  oy: number;
+  dz: number;
+}
+
+/**
+ * Les éléments ne sont PAS regroupés dans un Container Phaser : en WebGL (Phaser 3.90),
+ * un sprite d'atlas placé dans un conteneur devenait invisible dès qu'une texture était créée
+ * en cours de partie. Chaque élément est donc placé individuellement.
+ */
 export class EntityView {
-  container: Phaser.GameObjects.Container;
+  private parts: Part[] = [];
+  /** Position écran des pieds. */
+  private sx = 0;
+  private sy = 0;
+  /** Décalage local du corps (sautillement et bond des placeholders). */
+  private bodyX = 0;
+  private bodyY = 0;
   private body: Phaser.GameObjects.Sprite;
   private shadow: Phaser.GameObjects.Image;
   private label?: Phaser.GameObjects.Text;
@@ -70,7 +89,9 @@ export class EntityView {
     this.barBg.setVisible(opts.barAlways);
     this.barFill.setVisible(opts.barAlways);
 
-    const children: Phaser.GameObjects.GameObject[] = [this.shadow, this.body, this.barBg, this.barFill];
+    // Ombre sous le corps, barres et nom juste au-dessus.
+    this.parts.push({ obj: this.shadow, ox: 0, oy: 0, dz: -0.2 }, { obj: this.body, ox: 0, oy: 0, dz: 0 });
+    this.parts.push({ obj: this.barBg, ox: 0, oy: this.headY, dz: 0.2 }, { obj: this.barFill, ox: -opts.barWidth / 2, oy: this.headY, dz: 0.3 });
     if (opts.label) {
       this.label = scene.add
         .text(0, this.headY - 6, opts.label, {
@@ -83,9 +104,8 @@ export class EntityView {
           resolution: 2,
         })
         .setOrigin(0.5, 1);
-      children.push(this.label);
+      this.parts.push({ obj: this.label, ox: 0, oy: this.headY - 6, dz: 0.4 });
     }
-    this.container = scene.add.container(0, 0, children);
     this.place();
     this.playAnim('idle');
   }
@@ -125,8 +145,13 @@ export class EntityView {
   setDead(dead: boolean): void {
     if (dead === this.dead) return;
     this.dead = dead;
-    this.body.setAngle(dead ? 90 : 0);
-    this.body.setAlpha(dead ? 0.45 : 1);
+    // Vrai sprite : animation de mort Dofus (reste sur la dernière image). Placeholder : couché sur le côté.
+    const hasDeathAnim = !!this.visual.sprite?.anims?.death;
+    this.anim = '';
+    if (dead && hasDeathAnim) this.playAnim('death');
+    else if (!dead) this.playAnim('idle');
+    this.body.setAngle(dead && !hasDeathAnim ? 90 : 0);
+    this.body.setAlpha(dead ? 0.7 : 1);
     this.shadow.setVisible(!dead);
     if (this.label) this.label.setAlpha(dead ? 0.5 : 1);
     if (dead) {
@@ -143,7 +168,7 @@ export class EntityView {
       this.mark = this.scene.add
         .text(0, this.headY - 2, '!', { fontFamily: 'Verdana, sans-serif', fontSize: '20px', fontStyle: 'bold', color: '#ff3020', stroke: '#000000', strokeThickness: 4, resolution: 2 })
         .setOrigin(0.5, 1);
-      this.container.add(this.mark);
+      this.parts.push({ obj: this.mark, ox: 0, oy: this.headY - 2, dz: 0.5 });
     }
     this.mark?.setVisible(warn);
   }
@@ -203,23 +228,31 @@ export class EntityView {
     if (!this.visual.sprite && !this.dead) {
       const bob = this.moving ? -Math.abs(Math.sin(this.clock * 11)) * 3.5 : Math.sin(this.clock * 2.5) * 0.8;
       const bump = now < this.bumpUntil ? 5 : 0;
-      this.body.y = bob;
-      this.body.x = (this.body.flipX ? -1 : 1) * bump + (this.warn ? Math.sin(this.clock * 60) * 1.5 : 0);
+      this.bodyY = bob;
+      this.bodyX = (this.body.flipX ? -1 : 1) * bump + (this.warn ? Math.sin(this.clock * 60) * 1.5 : 0);
+      this.place();
     }
   }
 
   private place(): void {
     const p = worldToScreen(this.wx, this.wy);
-    this.container.setPosition(p.x, p.y);
-    this.container.setDepth(p.y);
+    this.sx = p.x;
+    this.sy = p.y;
+    for (const part of this.parts) {
+      const extraX = part.obj === this.body ? this.bodyX : 0;
+      const extraY = part.obj === this.body ? this.bodyY : 0;
+      part.obj.setPosition(p.x + part.ox + extraX, p.y + part.oy + extraY);
+      part.obj.setDepth(p.y + part.dz);
+    }
   }
 
   /** Position écran des pieds. */
   get screen(): { x: number; y: number } {
-    return { x: this.container.x, y: this.container.y };
+    return { x: this.sx, y: this.sy };
   }
 
   destroy(): void {
-    this.container.destroy(true);
+    for (const part of this.parts) part.obj.destroy();
+    this.parts = [];
   }
 }

@@ -41,6 +41,7 @@ import type { Hud } from '../ui/Hud.ts';
 import { Minimap } from '../ui/Minimap.ts';
 import { Details } from '../ui/Details.ts';
 import { SpellPreview } from './SpellPreview.ts';
+import { settings } from '../settings.ts';
 import { Controls } from './Controls.ts';
 import { Effects } from './Effects.ts';
 import { EntityView } from './EntityView.ts';
@@ -72,6 +73,14 @@ export class GameScene extends Phaser.Scene {
   private previewSlot: number | null = null;
   /** Dernière direction de visée (normalisée), pour orienter l'aperçu. */
   private aimDir = { x: 1, y: 0 };
+  /** Orientation du personnage : sens de déplacement, ou direction du dernier sort pendant un court instant. */
+  private facing = 1;
+  private castFacingUntil = 0;
+  /** Smart cast désactivé : sort en cours de ciblage (zone affichée, en attente du clic) et point visé. */
+  private targeting: number | null = null;
+  private aimPos = { x: 0, y: 0 };
+  /** Après un clic de confirmation, ce bouton ne relance rien tant qu'il n'est pas relâché. */
+  private suppressHeld = [false, false, false, false];
   private lastFrameTime = 0;
 
   private map!: GameMap;
@@ -129,6 +138,8 @@ export class GameScene extends Phaser.Scene {
     this.controls = new Controls(this.game.canvas);
     this.effects = new Effects(this, this.store);
     this.preview = new SpellPreview(this);
+    // Accès console en développement (débogage).
+    if (import.meta.env.DEV) (window as unknown as { __scene: GameScene }).__scene = this;
     this.details = new Details(
       this.store,
       (slot) => (this.previewSlot = slot),
@@ -190,7 +201,11 @@ export class GameScene extends Phaser.Scene {
     const myState = state.players.get(this.room.sessionId);
     // Tab (ou Échap pour fermer) : panneau de détails.
     if (this.controls.consumePress('Tab')) this.details.toggle();
-    if (this.controls.consumePress('Escape')) this.details.toggle(false);
+    if (this.controls.consumePress('Escape')) {
+      // Échap annule d'abord un ciblage en cours, puis ferme le panneau.
+      if (this.targeting !== null) this.targeting = null;
+      else this.details.toggle(false);
+    }
     // Pendant une pause, les temps de recharge affichés sont figés eux aussi.
     if (state.paused && this.lastFrameTime > 0) for (let i = 0; i < 4; i++) this.cdEnd[i] += time - this.lastFrameTime;
     this.lastFrameTime = time;
@@ -213,7 +228,9 @@ export class GameScene extends Phaser.Scene {
     this.details.update(state, this.room.sessionId, time);
     // Aperçu de la zone d'effet du sort survolé, depuis la position du joueur dans la direction visée.
     const hovered = this.previewSlot !== null && myState ? getClass(myState.classId).spells[this.previewSlot] : undefined;
+    const targeted = this.targeting !== null && myState ? getClass(myState.classId).spells[this.targeting] : undefined;
     if (hovered) this.preview.draw(getSpell(hovered), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y);
+    else if (targeted) this.preview.draw(getSpell(targeted), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y, Math.hypot(this.aimPos.x - this.me.x, this.aimPos.y - this.me.y));
     else this.preview.hide();
     this.hud.updateCooldowns(time, this.cdEnd, this.cdTotal);
     this.hud.update(state, this.room.sessionId, myState && !myState.alive ? this.spectating : null, prompt);
@@ -246,11 +263,16 @@ export class GameScene extends Phaser.Scene {
     }
     const move = canAct ? this.controls.moveDir() : { x: 0, y: 0 };
     const aim = this.aimPoint();
-    // La direction n'est mise à jour que si la souris est sur le jeu (pas sur le HUD).
+    this.aimPos = aim;
+    // La visée n'est mise à jour que si la souris est sur le jeu (pas sur le HUD).
     const overCanvas = (this.input.activePointer.event?.target as HTMLElement | undefined)?.tagName === 'CANVAS';
     const aimLen = Math.hypot(aim.x - this.me.x, aim.y - this.me.y);
     if (overCanvas && aimLen > 0.2) this.aimDir = { x: (aim.x - this.me.x) / aimLen, y: (aim.y - this.me.y) / aimLen };
-    const dir = dirFromVector(this.aimDir.x, this.aimDir.y);
+
+    // Orientation : le personnage regarde où il marche ; seul un sort le tourne (brièvement) vers la visée.
+    const moving = move.x !== 0 || move.y !== 0;
+    if (time >= this.castFacingUntil && moving) this.facing = dirFromVector(move.x, move.y);
+    const dir = this.facing;
 
     // Envoi des entrées : seulement quand elles changent, plus un rappel périodique.
     const changed = move.x !== this.lastInput.dx || move.y !== this.lastInput.dy || dir !== this.lastInput.dir;
@@ -270,21 +292,55 @@ export class GameScene extends Phaser.Scene {
       this.me.x = s.x;
       this.me.y = s.y;
     } else if (err > 0.001) {
-      const moving = move.x !== 0 || move.y !== 0;
       const rate = time < this.followServerUntil ? 25 : moving ? 3 : 10;
       const k = 1 - Math.exp(-rate * dt);
       this.me.x += ex * k;
       this.me.y += ey * k;
     }
 
-    // Sorts : une touche maintenue relance dès que le sort est prêt.
-    if (!canAct) return;
-    for (let slot = 0; slot < 4; slot++) {
-      if (!this.controls.isHeld(slot)) continue;
-      if (time < this.cdEnd[slot] || time - this.lastCastSent[slot] < 120) continue;
-      this.lastCastSent[slot] = time;
-      this.room.send('cast', { slot, tx: aim.x, ty: aim.y });
+    if (!canAct) {
+      this.targeting = null;
+      return;
     }
+
+    // Smart cast désactivé : la touche d'un sort ouvre le ciblage, le clic gauche confirme, le clic droit annule.
+    if (!settings.smartCast) {
+      for (const slot of [2, 3]) {
+        if (!this.controls.consumeKeySlot(slot)) continue;
+        this.targeting = this.targeting === slot ? null : slot;
+      }
+      if (this.targeting !== null) {
+        if (this.controls.consumeMouse(0)) {
+          if (time >= this.cdEnd[this.targeting]) this.castSlot(time, this.targeting, aim);
+          this.targeting = null;
+          this.suppressHeld[0] = true;
+        } else if (this.controls.consumeMouse(2)) {
+          this.targeting = null;
+          this.suppressHeld[1] = true;
+        }
+      }
+    }
+    this.controls.consumeMouse(0);
+    this.controls.consumeMouse(2);
+    for (let slot = 0; slot < 2; slot++) if (!this.controls.isHeld(slot)) this.suppressHeld[slot] = false;
+
+    // Sorts : une touche maintenue relance dès que le sort est prêt.
+    for (let slot = 0; slot < 4; slot++) {
+      if (!this.controls.isHeld(slot) || this.suppressHeld[slot]) continue;
+      if (!settings.smartCast && this.controls.isKeyboardSlot(slot)) continue;
+      if (this.targeting !== null && slot < 2) continue;
+      if (time < this.cdEnd[slot] || time - this.lastCastSent[slot] < 120) continue;
+      this.castSlot(time, slot, aim);
+    }
+    if (settings.smartCast) for (const slot of [2, 3]) this.controls.consumeKeySlot(slot);
+  }
+
+  /** Envoie un sort au serveur et tourne le personnage vers la cible le temps de l'animation. */
+  private castSlot(time: number, slot: number, target: { x: number; y: number }): void {
+    this.lastCastSent[slot] = time;
+    this.room.send('cast', { slot, tx: target.x, ty: target.y });
+    this.facing = dirFromVector(target.x - this.me.x, target.y - this.me.y);
+    this.castFacingUntil = time + 400;
   }
 
   private syncPlayers(state: GameStateView, dt: number): void {
@@ -311,7 +367,7 @@ export class GameScene extends Phaser.Scene {
         view.setPosition(this.me.x, this.me.y);
         view.moving = p.alive && (this.lastInput.dx !== 0 || this.lastInput.dy !== 0);
         // Le joueur local regarde toujours sa souris, sans attendre le serveur.
-        view.dir = p.alive && this.lastInput.dir >= 0 ? this.lastInput.dir : p.dir;
+        view.dir = p.alive ? this.facing : p.dir;
       } else {
         view.setTarget(p.x, p.y);
         view.moving = p.moving;

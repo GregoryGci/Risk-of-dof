@@ -11,6 +11,9 @@ export class Controls {
   private held = [false, false, false, false];
   /** Touches enfoncées depuis la dernière lecture (actions ponctuelles comme « interagir »). */
   private pressed = new Set<string>();
+  /** Sorts dont la touche clavier vient d'être enfoncée / boutons de souris venant d'être cliqués. */
+  private keySlotPresses = new Set<number>();
+  private mousePresses = new Set<number>();
   private cleanup: (() => void)[] = [];
 
   constructor(canvas: HTMLCanvasElement) {
@@ -24,7 +27,10 @@ export class Controls {
       if (!e.repeat) this.pressed.add(e.code);
       this.keys.add(e.code);
       const slot = KEY_SLOTS[e.code];
-      if (slot !== undefined) this.held[slot] = true;
+      if (slot !== undefined) {
+        this.held[slot] = true;
+        if (!e.repeat) this.keySlotPresses.add(slot);
+      }
       // Espace et flèches ne doivent pas faire défiler la page.
       if (e.code === 'Space' || e.code === 'Tab' || e.code.startsWith('Arrow')) e.preventDefault();
     });
@@ -34,6 +40,7 @@ export class Controls {
       if (slot !== undefined) this.held[slot] = false;
     });
     on(canvas, 'mousedown', (e) => {
+      this.mousePresses.add(e.button);
       const slot = MOUSE_SLOTS[e.button];
       if (slot !== undefined) this.held[slot] = true;
     });
@@ -50,6 +57,8 @@ export class Controls {
   releaseAll(): void {
     this.keys.clear();
     this.held.fill(false);
+    this.keySlotPresses.clear();
+    this.mousePresses.clear();
   }
 
   private down(...codes: string[]): boolean {
@@ -77,6 +86,21 @@ export class Controls {
   /** Vrai une seule fois par appui sur la touche. */
   consumePress(code: string): boolean {
     return this.pressed.delete(code);
+  }
+
+  /** Vrai une fois par appui sur la touche CLAVIER d'un sort (Espace, R, 1-4). */
+  consumeKeySlot(slot: number): boolean {
+    return this.keySlotPresses.delete(slot);
+  }
+
+  /** Vrai une fois par clic du bouton de souris (0 = gauche, 2 = droit) sur le jeu. */
+  consumeMouse(button: number): boolean {
+    return this.mousePresses.delete(button);
+  }
+
+  /** Le sort est-il tenu par une touche du clavier (et pas par la souris) ? */
+  isKeyboardSlot(slot: number): boolean {
+    return slot >= 2;
   }
 
   isHeld(slot: number): boolean {

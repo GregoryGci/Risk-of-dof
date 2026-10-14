@@ -130,7 +130,10 @@ async function startGame(room: Room): Promise<void> {
     parent: 'game',
     backgroundColor: '#1a2611',
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
-    render: { antialias: true, roundPixels: false },
+    // maxTextures: 1 contourne un bug de rendu WebGL de Phaser 3.90 : au-delà de 16 textures par image,
+    // créer une texture en cours de partie (chiffre de dégâts, effet...) faisait disparaître les sprites
+    // des personnages. Le sol est pré-dessiné dans une seule texture pour limiter le coût (MapView).
+    render: { antialias: true, roundPixels: false, maxTextures: 1 },
     // La scène reçoit la salle, les assets et le HUD par son constructeur.
     scene: new GameScene({ room, store, hud }),
   });

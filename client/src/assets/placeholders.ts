@@ -521,6 +521,10 @@ function makeEffects(scene: Phaser.Scene): void {
       g.fillCircle(32, 32, i * 2);
     }
   });
+  make(scene, 'ph_ring', 128, 128, (g) => {
+    g.lineStyle(6, 0xffffff, 1);
+    g.strokeCircle(64, 64, 60);
+  });
   make(scene, 'ph_dot', 8, 8, (g) => {
     g.fillStyle(0xffffff, 1);
     g.fillCircle(4, 4, 4);

@@ -3,8 +3,8 @@
 import { GROUND_BLE, GROUND_CHEMIN, GROUND_FLEURS, PHASE_PLAYING, ZAAP_IDLE, type GameMap, type GameStateView } from '@rod/shared';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 
-const W = 180;
-const H = 92;
+const W = 260;
+const H = 133;
 
 export class Minimap {
   private canvas = document.getElementById('minimap') as HTMLCanvasElement;
@@ -34,7 +34,7 @@ export class Minimap {
         const blocked = map.obstacles[y * map.size + x] !== 0;
         c.fillStyle = blocked ? '#3d6a2a' : (colors[map.ground[y * map.size + x]] ?? '#7fb241');
         const [px, py] = this.project(x + 0.5, y + 0.5);
-        c.fillRect(px - 1.7, py - 1, 3.4, 2);
+        c.fillRect(px - 2.5, py - 1.4, 5, 2.8);
       }
     }
   }

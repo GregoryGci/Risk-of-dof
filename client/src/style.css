@@ -557,8 +557,8 @@ input[type='text']:focus {
   pointer-events: none !important;
 }
 #minimap {
-  width: 180px;
-  height: 92px;
+  width: 260px;
+  height: 133px;
 }
 
 #objective {
@@ -661,16 +661,14 @@ input[type='text']:focus {
 }
 
 /* --- Panneau Tab --------------------------------------------------------- */
-/* Ancré à droite : le personnage reste visible pour l'aperçu des zones de sorts. */
 #details {
   pointer-events: auto;
-  background: linear-gradient(90deg, rgba(5, 8, 3, 0) 30%, rgba(5, 8, 3, 0.6));
-  justify-content: flex-end;
-  padding-right: 14px;
+  background: rgba(5, 8, 3, 0.55);
 }
 .details-panel {
-  width: min(560px, 50vw);
-  max-height: 88vh;
+  width: 50vw;
+  min-width: 520px;
+  max-height: 80vh;
   overflow-y: auto;
   user-select: text;
 }
@@ -709,7 +707,7 @@ input[type='text']:focus {
 }
 .details-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 0 18px;
 }
 .details-spells {
@@ -773,4 +771,20 @@ input[type='text']:focus {
   top: 40%;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.5;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--texte);
+  cursor: pointer;
+}
+.option input {
+  margin-top: 3px;
+  accent-color: var(--orange);
 }

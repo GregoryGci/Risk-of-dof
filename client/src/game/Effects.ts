@@ -10,6 +10,9 @@ const DEPTH_GROUND_FX = -1000;
 const DEPTH_TEXT = 1_000_000;
 /** Hauteur de vol des projectiles au-dessus du sol (px). */
 const FLY_HEIGHT = 18;
+/** Textures d'éventail : taille (px) et rayon de référence (cases). */
+const SLASH_TEX = 256;
+const SLASH_REF = 2.5;
 
 interface ProjectileView {
   id: number;
@@ -24,7 +27,7 @@ interface ProjectileView {
   sprite: Phaser.GameObjects.Image;
   glow: Phaser.GameObjects.Image;
   /** Marqueur au sol du point d'impact (tirs en cloche). */
-  marker?: Phaser.GameObjects.Ellipse;
+  marker?: { destroy(): void };
   trailTimer: number;
 }
 
@@ -70,7 +73,7 @@ export class Effects {
     const pv: ProjectileView = { id: e.id, spell, shape, x: e.x, y: e.y, dx, dy, total, travelled: 0, sprite, glow, trailTimer: 0 };
     if (shape.toTarget && spell.area) {
       const c = worldToScreen(e.tx, e.ty);
-      pv.marker = this.groundEllipse(c.x, c.y, spell.area.radius, spell.color, 0.18).setStrokeStyle(2, spell.color, 0.9);
+      pv.marker = this.groundCircle(c.x, c.y, spell.area.radius, spell.color, 0.18, 0.9);
     }
     this.projectiles.set(e.id, pv);
     this.placeProjectile(pv);
@@ -132,27 +135,49 @@ export class Effects {
     }
   }
 
+  /**
+   * Texture d'éventail déjà en perspective isométrique, pour un angle de cône et l'une des
+   * 16 directions ; générée une seule fois. Rayon de référence : SLASH_REF cases.
+   *
+   * Pourquoi des textures pré-calculées : en WebGL, dessiner un Graphics à la volée ou un conteneur
+   * tourné et étiré faisait disparaître les sprites des personnages.
+   */
+  private slashTexture(arcDeg: number, dirIndex: number): string {
+    const key = `ph_slash_${arcDeg}_${dirIndex}`;
+    if (this.scene.textures.exists(key)) return key;
+    const size = SLASH_TEX;
+    const angle = (dirIndex / 16) * Math.PI * 2;
+    const half = ((arcDeg / 2) * Math.PI) / 180;
+    const pts: { x: number; y: number }[] = [{ x: size / 2, y: size / 2 }];
+    for (let i = 0; i <= 20; i++) {
+      const a = angle - half + (i / 20) * half * 2;
+      const p = worldToScreen(Math.cos(a) * SLASH_REF, Math.sin(a) * SLASH_REF);
+      pts.push({ x: size / 2 + p.x, y: size / 2 + p.y });
+    }
+    const g = this.scene.make.graphics({ x: 0, y: 0 }, false);
+    g.fillStyle(0xffffff, 0.55);
+    g.fillPoints(pts, true);
+    g.lineStyle(8, 0xffffff, 1);
+    g.strokePoints(pts.slice(1), false);
+    g.generateTexture(key, size, size);
+    g.destroy();
+    return key;
+  }
+
   /** Coup de mêlée : éventail lumineux au sol, dans la direction du coup. */
   private slash(e: CastEvent, spell: SpellDef, arcDeg: number): void {
     const angle = Math.atan2(e.ty - e.y, e.tx - e.x);
     const half = ((arcDeg / 2) * Math.PI) / 180;
+    const dirIndex = ((Math.round(angle / ((Math.PI * 2) / 16)) % 16) + 16) % 16;
     const origin = worldToScreen(e.x, e.y);
-    const points: { x: number; y: number }[] = [{ x: 0, y: 0 }];
-    for (let i = 0; i <= 10; i++) {
-      const a = angle - half + (i / 10) * half * 2;
-      const p = worldToScreen(e.x + Math.cos(a) * spell.range, e.y + Math.sin(a) * spell.range);
-      points.push({ x: p.x - origin.x, y: p.y - origin.y });
-    }
-    // Éventail coloré + bord blanc épais, au-dessus des personnages pour rester bien visible.
-    const g = this.scene.add.graphics({ x: origin.x, y: origin.y - 6 }).setDepth(origin.y + 30).setBlendMode(Phaser.BlendModes.ADD);
-    g.fillStyle(spell.color, 0.55);
-    g.fillPoints(points, true);
-    g.lineStyle(6, 0xffffff, 0.95);
-    g.strokePoints(points.slice(1), false);
-    g.lineStyle(3, spell.color, 1);
-    g.strokePoints(points.slice(1), false);
-    g.setScale(0.55);
-    this.scene.tweens.add({ targets: g, scale: 1.08, alpha: 0, duration: 320, ease: 'Cubic.easeOut', onComplete: () => g.destroy() });
+    const scale = spell.range / SLASH_REF;
+    const fan = this.scene.add
+      .image(origin.x, origin.y - 6, this.slashTexture(arcDeg, dirIndex))
+      .setTint(spell.color)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(origin.y + 30)
+      .setScale(scale * 0.55);
+    this.scene.tweens.add({ targets: fan, scale: scale * 1.08, alpha: 0, duration: 320, ease: 'Cubic.easeOut', onComplete: () => fan.destroy() });
     // Étincelles au bout de l'arc.
     for (let i = 0; i < 8; i++) {
       const a = angle + (Math.random() - 0.5) * half * 2;
@@ -160,6 +185,23 @@ export class Effects {
       const dot = this.scene.add.image(origin.x, origin.y - 14, 'ph_dot').setTint(i % 2 ? spell.color : 0xffffff).setDepth(origin.y + 31).setScale(1.4);
       this.scene.tweens.add({ targets: dot, x: end.x, y: end.y - 14, alpha: 0, scale: 0.3, duration: 260, ease: 'Quad.easeOut', onComplete: () => dot.destroy() });
     }
+  }
+
+  /** Cercle au sol (disque plein + anneau), sans conteneur. */
+  private groundCircle(x: number, y: number, radius: number, color: number, fillAlpha: number, ringAlpha: number): { destroy(): void } {
+    const disc = this.groundEllipse(x, y, radius, color, fillAlpha);
+    const ring = this.scene.add
+      .image(x, y, 'ph_ring')
+      .setTint(color)
+      .setAlpha(ringAlpha)
+      .setDepth(DEPTH_GROUND_FX)
+      .setScale((radius * TILE_W * Math.SQRT2) / 120, (radius * TILE_H * Math.SQRT2) / 120);
+    return {
+      destroy: () => {
+        disc.destroy();
+        ring.destroy();
+      },
+    };
   }
 
   // -------------------------------------------------------------------------
@@ -212,9 +254,11 @@ export class Effects {
     const disc = this.groundEllipse(p.x, p.y, radius, color, 0.55);
     disc.setScale(0.2);
     this.scene.tweens.add({ targets: disc, scale: 1, alpha: 0, duration: 380, ease: 'Cubic.easeOut', onComplete: () => disc.destroy() });
-    const ring = this.groundEllipse(p.x, p.y, radius, 0xffffff, 0).setStrokeStyle(3, 0xffffff, 1);
-    ring.setScale(0.2);
-    this.scene.tweens.add({ targets: ring, scale: 1.05, alpha: 0, duration: 420, ease: 'Cubic.easeOut', onComplete: () => ring.destroy() });
+    const ring = this.scene.add.image(p.x, p.y, 'ph_ring').setDepth(DEPTH_GROUND_FX);
+    const rx = (radius * TILE_W * Math.SQRT2) / 120;
+    const ry = (radius * TILE_H * Math.SQRT2) / 120;
+    ring.setScale(rx * 0.2, ry * 0.2);
+    this.scene.tweens.add({ targets: ring, scaleX: rx * 1.05, scaleY: ry * 1.05, alpha: 0, duration: 420, ease: 'Cubic.easeOut', onComplete: () => ring.destroy() });
     const flash = this.scene.add.image(p.x, p.y - 10, 'ph_glow').setTint(color).setBlendMode(Phaser.BlendModes.ADD).setScale(radius * 1.6).setDepth(p.y + 40);
     this.scene.tweens.add({ targets: flash, alpha: 0, scale: radius * 2.6, duration: 320, onComplete: () => flash.destroy() });
     // Éclats.

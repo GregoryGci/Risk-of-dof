@@ -5,6 +5,7 @@ import type { AssetStore } from '../assets/store.ts';
 import { spellIconSvg } from './icons.ts';
 import { spellDetailsHtml } from './spellInfo.ts';
 import { escapeHtml } from './Hud.ts';
+import { saveSettings, settings } from '../settings.ts';
 
 const SLOT_KEYS = ['Clic gauche', 'Clic droit', 'Espace', 'R'];
 
@@ -32,6 +33,13 @@ export class Details {
     });
     this.body.addEventListener('mouseleave', () => this.onSpellHover(null));
     document.getElementById('details-close')!.addEventListener('click', () => this.toggle(false));
+    this.body.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      if (input.name === 'smartCast') {
+        settings.smartCast = input.checked;
+        saveSettings();
+      }
+    });
   }
 
   toggle(open = !this.isOpen): void {
@@ -71,6 +79,9 @@ export class Details {
     </section>`;
     html += `</div>`;
 
+    html += `<h3>Options</h3><label class="option"><input type="checkbox" name="smartCast" ${settings.smartCast ? 'checked' : ''}>
+      <span><b>Smart cast</b> — Espace et R lancent le sort aussitôt vers la souris. Désactivé : la touche affiche la zone, clic gauche pour lancer, clic droit / Échap pour annuler.</span></label>`;
+
     html += `<h3>Sorts <small>(survolez pour voir la zone en jeu)</small></h3><div class="details-spells">`;
     cls.spells.forEach((id, slot) => {
       const spell = getSpell(id);
@@ -95,7 +106,7 @@ export class Details {
     }
     html += `</div>`;
 
-    if (html !== this.lastHtml) {
+    if (html !== this.lastHtml && !this.body.contains(document.activeElement)) {
       this.lastHtml = html;
       this.body.innerHTML = html;
     }
