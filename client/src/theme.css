@@ -1,0 +1,154 @@
+/* Le même langage visuel du menu au combat : pin, parchemin, or patiné. */
+:root { --parchemin: #f3ead0; --parchemin-fonce: #e0d4b2; --parchemin-creux: #cfc09a; --encre: #34402b; --encre-douce: #7a7257; --bois: #526442; --bois-fonce: #283c2b; --or: #c5a264; --or-clair: #f0d9a7; --vert: #678a4b; --bleu: #549998; --rouge: #b85b45; --ombre: 0 8px 28px #0a1b1640; }
+button, select, input { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #c5a264; outline-offset: 3px; }
+.panel { background: linear-gradient(140deg, #f5edcefa, #dcd1aefa); border: 1px solid #ac9767; border-radius: 6px; box-shadow: 0 14px 50px #06170e50, inset 0 0 0 3px #fff5d040; padding: 20px; }
+.panel.small { padding: 9px 12px; }
+.overlay { background: radial-gradient(ellipse at center, #0b201847, #061810cc); backdrop-filter: blur(5px); }
+.btn { border: 1px solid #a89060; border-radius: 4px; background: linear-gradient(180deg, #fff7de, #e5d9b6); box-shadow: inset 0 1px 0 #fffae8, 0 2px 4px #332c1825; color: #5f5134; padding: 9px 15px; font-size: 12px; font-weight: 500; }
+.btn-primary, .btn.active { background: linear-gradient(180deg, #687d47, #43592f); border-color: #3a4f2b; box-shadow: inset 0 1px 0 #d5e7b330, 0 3px 5px #32280d25; color: #fff2d4; text-shadow: none; }
+.btn:hover:not(:disabled) { filter: brightness(1.07); }
+.btn:active:not(:disabled) { box-shadow: inset 0 2px 4px #0002; }
+input[type='text'] { border: 1px solid #ad996c; background: #fff8e8a0; border-radius: 4px; box-shadow: inset 0 1px 3px #6a55351c; font-size: 13px; }
+.details-panel { width: min(960px, 94vw); min-width: 0; max-height: 90dvh; padding: 24px; }
+.details-head { padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid #a0895740; }
+.details-head h2 { font-size: 28px; font-weight: normal; color: #354630; }
+.details-head .btn { padding: 7px 13px; font-size: 11px; }
+.details-panel h3 { font-size: 17px; font-weight: normal; margin: 17px 0 11px; }
+.details-panel section { background: #b8a46b15; border: 1px solid #a0895730; border-radius: 4px; padding: 14px; margin: 12px 0; font-size: 12px; }
+.details-panel section h3 { margin-top: 0; }
+.details-status { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: normal; color: #58794f; }
+.details-grid { gap: 0 12px; }
+.spell-card, .talent { border: 1px solid #b19b6950; border-radius: 4px; background: #fff7de45; padding: 12px; }
+.spell-card:hover { background: #fff5d9; border-color: #b9a069; }
+.spell-card-icon { border: 1px solid #a89060; border-radius: 4px; box-shadow: 0 2px 5px #44351c20; }
+.spell-card-name { color: #394b31; font-weight: 500; }
+.talents-panel { width: min(1240px, 95vw); }
+.talents-bank { padding: 12px 15px; background: #bcad7d20; border: 1px solid #a0895730; border-radius: 4px; font-size: 12px; }
+.talents-bank small { font-size: 10px; }
+.talents-classes { margin: 16px 0; gap: 5px; }
+.talents-classes .btn { padding: 7px 12px; font-size: 10px; }
+.talents-slot { border-left: 1px solid #a0895735; padding-left: 12px; }
+.talents-slot:first-child { border-left: 0; padding-left: 0; }
+.talents-slot h3 { margin-top: 0; color: #6e714b; font-size: 13px; }
+.talent { line-height: 1.65; }
+.talent.equipped { border: 1px solid #839664; background: #a8bb8330; box-shadow: inset 3px 0 0 #748954; }
+.talent-state { color: #627842; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+.talent.locked { background: #d4caa640; }
+.talent-action .btn { font-size: 10px; }
+.sheet-head, .equipment-sheet .sheet-head { background: linear-gradient(180deg, #304733, #203627); color: #f3e3ba; border-radius: 5px 5px 0 0; padding: 15px 20px; font: 23px Georgia, serif; }
+.sheet-head .sheet-close, .equipment-sheet .sheet-close { background: #405942; border: 1px solid #a7946250; color: #f3e3ba; border-radius: 50%; width: 27px; height: 27px; font: 11px 'Trebuchet MS', sans-serif; }
+.sheet-head-actions { display: flex; align-items: center; gap: 14px; }
+.sheet-head-actions .btn { font-size: 10px; padding: 6px 10px; background: #a69e7430; color: #e8d8b0; border-color: #baaa6b40; }
+.gear-footer { background: #253d2d; color: #efe2be; border-top-color: #a0895750; }
+.gear-footer div > span { color: #c6c8a5; }
+.gear-character { background: linear-gradient(135deg, #f1e9d0, #d9d2b0); }
+.gear-slot { background: #c6c9a738; }
+.gear-avatar .avatar-halo { background: radial-gradient(ellipse, #ecf1c760, #c6d8a52b, transparent 70%); }
+.gear-inspector { background: #b9bb941c; }
+#hud-team, #hud-timer, #hud-stats, #hud-meter { background: linear-gradient(145deg, #203829ed, #13291fef); color: #ece2bf; border: 1px solid #d4bb7550; box-shadow: 0 4px 16px #0003, inset 0 0 0 2px #afaa7320; backdrop-filter: blur(6px); }
+#hud .room-code { color: #b6bfa6; }
+#hud .room-code b, #hud #timer { color: #f2dfad; font-weight: normal; }
+#hud .team-row .name { font-size: 11px; font-weight: 500; }
+#hud .team-row .mini-bar { background: #081911; border: 0; height: 5px; }
+#hud .team-row .mini-bar > div { background: linear-gradient(90deg, #67874b, #a3b97b); }
+#hud #objective { color: #b7c2a9; font-size: 10px; }
+#hud #objective b { color: #8bc6b3; }
+#hud #timer { font-size: 27px; }
+#hud-meter .meter-tabs button { color: #bfc7ae; background: #78946118; border-color: #b4a96f30; font-size: 10px; font-weight: 500; padding: 5px; }
+#hud-meter .meter-tabs button.active { color: #f3e1b2; background: #77946155; border-color: #b4a96f65; }
+#hud-meter .meter-row { background: #63794a20; font-size: 10px; height: 23px; line-height: 23px; }
+#hud-meter .meter-row span { font-weight: 500; }
+#hud-meter .meter-row .fill { opacity: .3; }
+#banner { border-color: #ad996c; padding: 22px 28px; }
+#banner .big-code { color: #4e6840; text-shadow: none; font-size: 34px; font-weight: normal; }
+#banner .class-btn { font-size: 10px; border-color: #b29e7240; }
+#banner .mode-btn { font-size: 11px; }
+#banner .class-desc { color: #786b4b; font-style: normal; padding: 5px 0; }
+#banner > .btn-primary { padding: 12px 24px; }
+#gameover .menu-panel { width: min(580px,92vw); padding: 28px; }
+#gameover h1 { color: #405734; text-shadow: none; font-size: 37px; font-weight: normal; }
+#gameover .subtitle { font-size: 11px; line-height: 1.7; }
+#gameover-reward { border-top: 1px solid #a0895740; padding-top: 12px; color: #4b6539; }
+.shop-panel { width: min(640px,94vw); }
+.shop-offer { background: #fff6dc50; padding: 14px; border-radius: 4px; }
+.option { padding: 12px 0; border-bottom: 1px solid #a0895725; font-size: 11px; }
+.option input { accent-color: #677d45; }
+.collection-link { margin-top: 14px; width: 100%; display: flex; gap: 12px; align-items: center; padding: 12px 0 0; border: 0; border-top: 1px solid #a0895735; background: transparent; color: #6c7047; text-align: left; cursor: pointer; font: 11px 'Trebuchet MS', sans-serif; }
+.collection-link #collection-summary { margin-left: auto; color: #87734f; font-size: 9px; }
+#encyclopedia { z-index: 70; }
+#encyclopedia .encyclopedia-sheet { width: min(1120px,95vw); max-height: 92dvh; overflow: auto; border: 2px solid #b19a64; border-radius: 8px; background: #e9e1c3; }
+.catalog-progress { display: flex; align-items: center; gap: 22px; padding: 20px 24px; background: #c6c99e30; border-bottom: 1px solid #a0895740; }
+.catalog-progress > div:first-child { display: flex; flex-direction: column; gap: 5px; }
+.catalog-progress b { font: 26px Georgia, serif; color: #435a35; }
+.catalog-progress b small { font-size: 16px; color: #89906c; }
+.catalog-progress div > span { font-size: 8px; letter-spacing: 1.5px; color: #7c7852; }
+.catalog-progress-track { height: 5px; background: #a8b08035; flex: 1; border-radius: 5px; overflow: hidden; }
+.catalog-progress-track i { display: block; height: 100%; background: linear-gradient(90deg,#647d46,#a9b777); }
+.catalog-progress > span { font: 16px Georgia, serif; color: #6f7951; }
+.catalog-layout { display: grid; grid-template-columns: minmax(0,1fr) 270px; }
+.catalog-list { padding: 20px; }
+.catalog-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 24px; }
+.catalog-filters .btn { padding: 7px 11px; font-size: 10px; }
+.catalog-filters input { flex: 1; min-width: 90px; width: 110px; padding: 7px 10px; font-size: 10px; margin-left: 8px; }
+#catalog-items { max-height: 54dvh; overflow-y: auto; padding: 3px 8px 3px 3px; }
+.catalog-tier { margin-bottom: 26px; }
+.catalog-tier .section-caption { border-bottom: 1px solid #a0895730; padding-bottom: 12px; margin-bottom: 13px; }
+.catalog-tier-title { font: 17px Georgia, serif !important; color: #566342 !important; }
+.catalog-tier-title small { font: 9px 'Trebuchet MS', sans-serif; margin-left: 10px; color: #8a815e; }
+.catalog-grid { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 9px; }
+.catalog-card { border: 1px solid #a0895740; border-radius: 4px; padding: 12px 5px; background: #f9f0d650; color: #6a644b; cursor: pointer; display: flex; flex-direction: column; align-items: center; min-height: 116px; }
+.catalog-card img { width: 48px; height: 45px; object-fit: contain; }
+.catalog-card span { font-size: 9px; line-height: 1.4; margin-top: 10px; flex: 1; }
+.catalog-card small { font-size: 7px; text-transform: uppercase; letter-spacing: .8px; color: #89846a; margin-top: 8px; }
+.catalog-card.found { border-color: #80925d75; background: #e7ecc850; }
+.catalog-card.found small { color: #687e46; }
+.undiscovered img { filter: brightness(0); opacity: .23; }
+.catalog-card:hover, .catalog-card.selected { background: #fffae7; border-color: #a18d58; }
+.catalog-card.selected { box-shadow: inset 0 0 0 1px #a18d5840; }
+.catalog-detail { border-left: 1px solid #a0895740; padding: 24px; background: #c8caaa20; }
+.catalog-detail h3 { font: 25px Georgia, serif; color: #435a35; margin: 12px 0; }
+.catalog-detail p { color: #81785a; font-size: 11px; line-height: 1.8; }
+.catalog-book-symbol { font-size: 80px; color: #7d8e5250; text-align: center; margin: 25px 0; }
+.catalog-art { height: 115px; display: flex; align-items: center; justify-content: center; margin: 0 0 24px; background: radial-gradient(ellipse,#eef2cb85,transparent 70%); }
+.catalog-art img { width: 85px; height: 85px; object-fit: contain; }
+.catalog-effects { padding: 15px 0; border-top: 1px solid #a0895730; border-bottom: 1px solid #a0895730; margin: 20px 0; }
+.catalog-effects h4 { font-size: 10px; color: #6f774c; font-weight: normal; margin: 0 0 12px; }
+.catalog-effects div { padding: 4px 0; font-size: 11px; color: #4c603b; }
+.catalog-detail .catalog-roll-note { font-size: 9px; }
+.catalog-rates { border-collapse: collapse; width: 100%; font-size: 10px; margin: 18px 0; }
+.catalog-rates caption { color: #8b7e58; font-size: 8px; margin-bottom: 8px; text-align: left; }
+.catalog-rates td { border-bottom: 1px solid #a0895725; padding: 6px 0; }
+.catalog-rates td:last-child { text-align: right; color: #597340; }
+.gear-quantity { position: absolute; top: 5px; left: 5px; padding: 2px 4px; background: #294632; color: #f4e8c4; font-size: 9px; border-radius: 3px; }
+.gear-card.selected::after { top: auto; bottom: 3px; }
+.gear-forge-tier { position: absolute; right: 5px; bottom: 4px; font-size: 8px; color: #8d702f; }
+.gear-fusion { border-top: 1px solid #a0895735; margin-top: 15px; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 10px; color: #6d7147; }
+.gear-fusion small { display: block; font-size: 8px; margin-top: 5px; color: #8b805c; }
+.gear-fusion .btn { padding: 7px 12px; font-size: 10px; }
+#run-gains { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 13px; margin-top: 9px; font-size: 10px; color: #dce3bd; }
+#run-gains .run-gains-label { font-size: 8px; color: #b9bf99; letter-spacing: 1px; }
+#run-gains small { font-size: 8px; color: #b9bf99; }
+.run-stats-recap { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.run-stats-recap > div { padding: 12px; font-size: 11px; background: #c9ceaa30; border: 1px solid #a0895730; border-radius: 4px; display: flex; align-items: center; gap: 8px; }
+.run-stats-recap > div > span { color: #7d925a; }
+.run-gains-help { font-size: 10px; color: #8b805c; margin: -2px 0 15px; }
+.stat-bonus-icon { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 23px; background: #9bb27830; border: 1px solid #9ca67180; border-radius: 50%; color: #678145; }
+#toast { display: flex; align-items: center; justify-content: center; gap: 14px; background: #233e2be8; border: 1px solid #c8ac6970; border-radius: 6px; padding: 13px 19px; color: #f0e3bb; font-size: 13px; }
+#toast small { display: block; color: #c4cea8; font-size: 10px; margin-top: 5px; }
+.loot-toast-icon { width: 42px; height: 42px; border: 2px solid #ab9b76; border-radius: 4px; background: #f1e8ca; display: flex; align-items: center; justify-content: center; }
+.loot-toast-icon.rare { border-color: #438dcc; } .loot-toast-icon.epique { border-color: #9855ba; } .loot-toast-icon.legendaire { border-color: #de9d2a; }
+.loot-toast-icon img { width: 35px; height: 35px; object-fit: contain; }
+@media (max-width:700px) { .run-stats-recap { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+#hud-bottom { background: linear-gradient(145deg,#203829ef,#122b1fef); border: 1px solid #d4bb7560; box-shadow: 0 8px 28px #05190b80, inset 0 0 0 3px #c8af6520; border-radius: 8px; padding: 11px 14px; }
+#hud-bar { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.sheet-head { position: sticky; top: 0; z-index: 2; }
+.gear-bonuses { max-height: 165px; overflow-y: auto; }
+.gear-grid { max-height: 240px; min-height: 210px; }
+.gear-footer { position: sticky; bottom: 0; z-index: 2; }
+#spellbar .spell-icon { border: 1px solid #aa9762; border-radius: 5px; box-shadow: 0 2px 6px #03150b50; }
+#spellbar .spell-key { color: #eaddb6; background: #1b3325; font-size: 9px; border: 1px solid #baa16c50; }
+#minimap { border-color: #a89969; border-radius: 5px; background: #1b3022; }
+@media (max-width:850px) { .home-background { background-image: linear-gradient(90deg,#061d17a0,#061d1750), linear-gradient(0deg,#061d1770,transparent 50%), url('/assets/menu/astrub-forest.png'); } }
+@media (max-width: 1000px) { .catalog-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } .talents-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 700px) { .catalog-layout { grid-template-columns: 1fr; } .catalog-detail { border-left: 0; border-top: 1px solid #a0895740; } .catalog-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } .catalog-list { padding: 14px; } .details-grid, .details-spells, .details-items { grid-template-columns: 1fr; } .details-panel { padding: 16px; } .talents-grid { grid-template-columns: 1fr; } .talents-slot { border-left: 0; padding: 0; } .catalog-filters input { flex-basis: 100%; margin: 5px 0 0; } }

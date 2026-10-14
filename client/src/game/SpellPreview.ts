@@ -34,7 +34,8 @@ export class SpellPreview {
    * Dessine le sort lancé depuis (x, y) dans la direction (dx, dy) normalisée.
    * `targetDist` : distance du point visé (ciblage) ; sans elle, la zone est dessinée à portée maximale.
    */
-  draw(spell: SpellDef, x: number, y: number, dx: number, dy: number, targetDist?: number): void {
+  draw(spell: SpellDef, x: number, y: number, dx: number, dy: number, targetDist?: number, rangeBonus = 0): void {
+    if (!spell.melee && spell.range>0 && rangeBonus) spell={...spell,range:spell.range+rangeBonus};
     // Canvas à la taille de l'écran, net sur les écrans haute densité.
     const ratio = window.devicePixelRatio || 1;
     const w = Math.round(window.innerWidth * ratio);

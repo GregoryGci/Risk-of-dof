@@ -1,7 +1,7 @@
 // Mini-carte (canvas 2D) : même orientation isométrique que le jeu.
 // Le terrain est dessiné une fois par carte, les points mobiles à chaque frame.
 // Coffres et Zaap n'apparaissent qu'une fois découverts par un joueur de l'équipe.
-import { GROUND_BLE, GROUND_CHEMIN, GROUND_FLEURS, PHASE_PLAYING, ZAAP_IDLE, getMonster, type ChestView, type GameMap, type GameStateView, type PlayerView } from '@rod/shared';
+import { PHASE_PLAYING, ZAAP_IDLE, getMonster, getZone, type ChestView, type GameMap, type GameStateView, type PlayerView } from '@rod/shared';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 
 const W = 360;
@@ -17,6 +17,7 @@ export class Minimap {
   private seed = -1;
   private foundChests = new Set<string>();
   private zaapFound = false;
+  private lastDraw=-Infinity;
 
   constructor() {
     this.canvas.width = this.terrain.width = W;
@@ -35,14 +36,15 @@ export class Minimap {
     this.seed = map.seed;
     this.foundChests.clear();
     this.zaapFound = false;
+    this.lastDraw=-Infinity;
     const c = this.terrain.getContext('2d')!;
     c.clearRect(0, 0, W, H);
-    const colors: Record<number, string> = { [GROUND_FLEURS]: '#8fbf55', [GROUND_CHEMIN]: '#cdaa6e', [GROUND_BLE]: '#dcbb4c' };
+    const colors = getZone(map.zoneId).minimap;
     const k = W / (2 * map.size);
     for (let y = 0; y < map.size; y++) {
       for (let x = 0; x < map.size; x++) {
         const blocked = map.obstacles[y * map.size + x] !== 0;
-        c.fillStyle = blocked ? '#3d6a2a' : (colors[map.ground[y * map.size + x]] ?? '#7fb241');
+        c.fillStyle = blocked ? '#3c4137' : colors[map.ground[y * map.size + x]];
         const [px, py] = this.project(x + 0.5, y + 0.5);
         c.fillRect(px - k, py - k * 0.55, k * 2, k * 1.1);
       }
@@ -64,6 +66,11 @@ export class Minimap {
 
   draw(state: GameStateView, myId: string): void {
     if (state.seed !== this.seed) return;
+    // 30 Hz suffit pour les marqueurs ; le jeu et les déplacements restent à la
+    // fréquence de l'écran. Évite un redessin du canvas à chaque frame à 240 Hz.
+    const now=performance.now();
+    if(now-this.lastDraw<1000/30) return;
+    this.lastDraw=now;
     this.discover(state);
     const c = this.ctx;
     c.clearRect(0, 0, W, H);
@@ -102,6 +109,10 @@ export class Minimap {
     state.chests.forEach((ch: ChestView, id: string) => {
       if (ch.opened || !this.foundChests.has(id)) return;
       const [px, py] = this.project(ch.x, ch.y);
+      if(ch.kind==='challenge') {
+        dot(ch.x,ch.y,3.5,'#d5915b','#fff1cc');
+        return;
+      }
       c.fillStyle = '#5a3a00';
       c.fillRect(px - 5, py - 4, 10, 8);
       c.fillStyle = '#ffd23a';
@@ -110,7 +121,8 @@ export class Minimap {
       c.fillRect(px - 4, py - 0.5, 8, 1.5);
     });
 
-    state.monsters.forEach((m) => dot(m.x, m.y, getMonster(m.type).boss ? 4.5 : 1.6, '#e02a1a'));
+    state.monsters.forEach((m) => dot(m.x, m.y, getMonster(m.type).boss ? 4.5 : m.ally ? 2.2 : 1.6, m.ally ? '#72e4db' : '#e02a1a'));
+    state.potions.forEach((p) => dot(p.x, p.y, 2.5, '#ff6374', '#ffffff'));
 
     // Coéquipiers en direct, le joueur local par-dessus avec un contour blanc.
     const me = state.players.get(myId);

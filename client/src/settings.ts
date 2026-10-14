@@ -6,10 +6,12 @@ export interface Settings {
    * Désactivé : la touche affiche la zone du sort, un clic gauche confirme (clic droit, Échap ou la même touche annule).
    */
   smartCast: boolean;
+  /** Attaque de base automatique, dirigée vers l'ennemi le plus proche à portée. */
+  autoAttack: boolean;
 }
 
 const KEY = 'rod.reglages';
-const DEFAULTS: Settings = { smartCast: true };
+const DEFAULTS: Settings = { smartCast: true, autoAttack: false };
 
 function load(): Settings {
   try {

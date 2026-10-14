@@ -51,6 +51,17 @@ const ENTITIES = {
   tofu: { kind: 'monsters', sprite: 1558 },
   arakne: { kind: 'monsters', sprite: 1564 },
   tournesol: { kind: 'monsters', sprite: 1569 },
+  boufton: { kind: 'monsters', sprite: 1570 },
+  rose_demoniaque: { kind: 'monsters', sprite: 1561 },
+  pissenlit: { kind: 'monsters', sprite: 1560 },
+  scarafeuille_vert: { kind: 'monsters', sprite: 1137 },
+  scarafeuille_rouge: { kind: 'monsters', sprite: 1136 },
+  scarafeuille_bleu: { kind: 'monsters', sprite: 1135 },
+  craqueboule: { kind: 'monsters', sprite: 1248 },
+  craqueleur: { kind: 'monsters', sprite: 1008 },
+  bwork: { kind: 'monsters', sprite: 1003 },
+  bwork_archer: { kind: 'monsters', sprite: 1004 },
+  bwork_mage: { kind: 'monsters', sprite: 1012 },
   bouftou_royal: { kind: 'monsters', sprite: 1574 },
   // Gardiens des zones suivantes.
   tournesol_affame: { kind: 'monsters', sprite: 1459 },
@@ -69,8 +80,8 @@ const ENTITIES = {
   poupee_bloqueuse: { kind: 'monsters', sprite: 1184 },
   poupee_gonflable: { kind: 'monsters', sprite: 1182 },
   // Invocations de l'Osamodas et de l'Enutrof.
-  osa_tofu: { kind: 'monsters', sprite: 1558 },
-  osa_bouftou: { kind: 'monsters', sprite: 1566 },
+  osa_tofu: { kind: 'monsters', sprite: 1165 },
+  osa_bouftou: { kind: 'monsters', sprite: 1165 },
   coffre_anime: { kind: 'monsters', sprite: 1083 },
 };
 

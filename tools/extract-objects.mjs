@@ -24,6 +24,10 @@ const OBJECTS = {
   rocher: ['o1:193'],
   souche: ['o1:201'],
   foin: ['o1:205'],
+  arbre_sec: ['o1:53', 'o1:214'],
+  piton: ['o1:193', 'o1:194'],
+  totem: ['o1:161'],
+  balise_defi: ['o1:161'],
   coffre: ['o1:418'],
   coffre_ouvert: ['o1:423'],
   zaap: ['o4:7000'],
@@ -94,7 +98,7 @@ for (const [key, refs] of Object.entries(OBJECTS)) {
     const origin = t ? [Number((Number(t[1]) / w).toFixed(4)), Number((Number(t[2]) / h).toFixed(4))] : [0.5, 0.9];
     const file = `objects/${ref.replace(':', '_')}.png`;
     fs.copyFileSync(path.join(png, '1.png'), path.join(OUT, file));
-    manifest.objects[key].push({ image: file, origin });
+    manifest.objects[key].push({ image: file, origin, scale: key === 'balise_defi' ? 0.55 : key === 'totem' ? 0.65 : key === 'piton' ? 0.7 : 1 });
     console.log(`${key} <- ${ref} origine ${origin}`);
   }
 }

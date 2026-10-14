@@ -59,6 +59,50 @@ export const MONSTERS: Record<string, MonsterDef> = {
     weight: 1.5,
     kamas: [8, 12],
   },
+  boufton: {
+    id:'boufton',name:'Boufton Blanc',color:0xe3ded0,hp:20,speed:4.2,radius:.3,
+    melee:{damage:4,range:.8,cooldown:1},behavior:{type:'melee'},cost:1,minDifficulty:1,weight:2,kamas:[2,4],
+  },
+  pissenlit: {
+    id:'pissenlit',name:'Pissenlit Diabolique',color:0xe4c955,hp:20,speed:3.6,radius:.3,
+    melee:{damage:4,range:.8,cooldown:1.1},behavior:{type:'erratic'},cost:1,minDifficulty:1,weight:3,kamas:[2,4],
+  },
+  rose_demoniaque: {
+    id:'rose_demoniaque',name:'Rose Démoniaque',color:0xde5573,hp:32,speed:3.1,radius:.35,
+    melee:{damage:7,range:.9,cooldown:1.3},behavior:{type:'melee'},cost:2,minDifficulty:1,weight:2,kamas:[4,7],
+  },
+  scarafeuille_vert: {
+    id:'scarafeuille_vert',name:'Scarafeuille Vert',color:0x7cac43,hp:27,speed:4,radius:.35,
+    melee:{damage:4,range:.8,cooldown:1.1},behavior:{type:'erratic'},cost:1.2,minDifficulty:1,weight:3,kamas:[3,5],
+  },
+  scarafeuille_rouge: {
+    id:'scarafeuille_rouge',name:'Scarafeuille Rouge',color:0xd86c43,hp:45,speed:2.8,radius:.42,
+    melee:{damage:8,range:1,cooldown:1.3},behavior:{type:'charger',chargeRange:5,windup:.75,chargeSpeed:8,chargeDuration:.65,chargeCooldown:5,chargeDamage:12},cost:3,minDifficulty:1,weight:2,kamas:[6,10],
+  },
+  scarafeuille_bleu: {
+    id:'scarafeuille_bleu',name:'Scarafeuille Bleu',color:0x5aa9d2,hp:34,speed:2.3,radius:.4,
+    melee:{damage:5,range:.9,cooldown:1.4},behavior:{type:'ranged',spell:'jet_scara',preferredRange:6},cost:4,minDifficulty:1.5,weight:1.5,kamas:[8,12],
+  },
+  craqueboule: {
+    id:'craqueboule',name:'Craqueboule',color:0x9ba3ad,hp:30,speed:3.5,radius:.38,
+    melee:{damage:5,range:.9,cooldown:1.2},behavior:{type:'melee'},cost:1.5,minDifficulty:1,weight:3,kamas:[3,5],
+  },
+  craqueleur: {
+    id:'craqueleur',name:'Craqueleur',color:0x879099,hp:65,speed:2.1,radius:.6,
+    melee:{damage:12,range:1.3,cooldown:1.6},behavior:{type:'charger',chargeRange:6,windup:1,chargeSpeed:7,chargeDuration:.75,chargeCooldown:6,chargeDamage:18},cost:4,minDifficulty:1,weight:2,kamas:[8,12],
+  },
+  bwork: {
+    id:'bwork',name:'Bwork Guerrier',color:0x81915a,hp:29,speed:3.4,radius:.4,
+    melee:{damage:5,range:1,cooldown:1.2},behavior:{type:'melee'},cost:1.5,minDifficulty:1,weight:3,kamas:[3,5],
+  },
+  bwork_archer: {
+    id:'bwork_archer',name:'Bwork Archer',color:0xa79856,hp:27,speed:2.6,radius:.38,
+    melee:{damage:4,range:.9,cooldown:1.4},behavior:{type:'ranged',spell:'fleche_bwork',preferredRange:7},cost:3,minDifficulty:1,weight:2,kamas:[6,9],
+  },
+  bwork_mage: {
+    id:'bwork_mage',name:'Bwork Mage',color:0x796da6,hp:37,speed:2.2,radius:.38,
+    melee:{damage:5,range:.9,cooldown:1.5},behavior:{type:'ranged',spell:'etincelle_bwork',preferredRange:6},cost:4,minDifficulty:1.5,weight:1,kamas:[8,12],
+  },
   // --- Boss ----------------------------------------------------------------
   bouftou_royal: {
     id: 'bouftou_royal',
@@ -104,7 +148,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
     melee: { damage: 26, range: 1.5, cooldown: 1.2 },
     behavior: { type: 'charger', chargeRange: 10, windup: 0.6, chargeSpeed: 13, chargeDuration: 0.9, chargeCooldown: 3.5, chargeDamage: 38 },
     boss: true,
-    summon: { monster: 'arakne', count: 3, interval: 10 },
+    summon: { monster: 'scarafeuille_vert', count: 3, interval: 10 },
     scale: 2,
     cost: 999,
     minDifficulty: 999,
@@ -137,7 +181,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
     melee: { damage: 35, range: 1.7, cooldown: 1.3 },
     behavior: { type: 'ranged', spell: 'boule_bworkette', preferredRange: 5 },
     boss: true,
-    summon: { monster: 'bouftou', count: 3, interval: 9 },
+    summon: { monster: 'bwork', count: 3, interval: 9 },
     scale: 2,
     cost: 999,
     minDifficulty: 999,
@@ -195,13 +239,13 @@ export const MONSTERS: Record<string, MonsterDef> = {
   // Invocations de l'Osamodas et de l'Enutrof.
   osa_tofu: {
     id: 'osa_tofu',
-    name: 'Tofu',
+    name: 'Dragonnet Rouge',
     color: 0xf0d050,
     hp: 45,
     speed: 6,
     radius: 0.3,
     melee: { damage: 8, range: 0.8, cooldown: 0.6 },
-    behavior: { type: 'melee' },
+    behavior: { type: 'ranged', spell: 'souffle_dragonnet', preferredRange: 4 },
     ally: true,
     scale: 0.8,
     cost: 0,
@@ -211,7 +255,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
   },
   osa_bouftou: {
     id: 'osa_bouftou',
-    name: 'Bouftou',
+    name: 'Dragonnet Gardien',
     color: 0xe0d0b0,
     hp: 220,
     speed: 3.6,

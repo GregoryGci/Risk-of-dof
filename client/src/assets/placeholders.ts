@@ -229,14 +229,15 @@ function makeObjects(scene: Phaser.Scene): void {
     g.fillStyle(0xf0c040, 1);
     for (const [x, y] of [[48, 10], [18, 40], [78, 40], [20, 78], [76, 78]]) g.fillCircle(x, y, 3);
   });
-  make(scene, 'ph_obj_cawotte', 40, 60, (g) => {
+  make(scene, 'ph_obj_balise_defi', 40, 60, (g) => {
     g.fillStyle(0x000000, 0.25);
     g.fillEllipse(20, 54, 30, 9);
-    g.fillStyle(0xe8701a, 1);
-    g.fillTriangle(10, 22, 30, 22, 20, 56);
-    g.fillStyle(0x3d9a2a, 1);
-    g.fillTriangle(14, 22, 20, 4, 22, 22);
-    g.fillTriangle(18, 22, 28, 6, 26, 22);
+    g.fillStyle(0x746955, 1);
+    g.fillRect(9,25,22,29);
+    g.fillStyle(0xd5c7a3, 1);
+    g.fillTriangle(5,25,35,25,20,7);
+    g.lineStyle(3,0xe3a963,1);
+    g.strokeCircle(20,36,6);
   });
   make(scene, 'ph_obj_souche', 40, 32, (g) => {
     g.fillStyle(0x000000, 0.25);
@@ -505,6 +506,22 @@ export function ensureGenericMonster(scene: Phaser.Scene, type: string, color: n
 // ---------------------------------------------------------------------------
 
 function makeEffects(scene: Phaser.Scene): void {
+  make(scene, 'ph_potion', 28, 38, (g) => {
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(14, 35, 24, 5);
+    g.lineStyle(2, 0xffebd0, 1);
+    g.fillStyle(0xffefe0, 0.75);
+    g.fillRoundedRect(9, 6, 10, 13, 3);
+    g.fillRoundedRect(3, 15, 22, 19, 7);
+    g.strokeRoundedRect(3, 15, 22, 19, 7);
+    g.fillStyle(0xe94055, 1);
+    g.fillRoundedRect(5, 20, 18, 12, 5);
+    g.fillStyle(0xa67d4a, 1);
+    g.fillRoundedRect(8, 2, 12, 6, 2);
+    g.fillStyle(0xffffff, 0.95);
+    g.fillRect(12, 22, 4, 8);
+    g.fillRect(10, 24, 8, 4);
+  });
   make(scene, 'ph_shadow', 44, 20, (g) => {
     g.fillStyle(0x000000, 0.28);
     g.fillEllipse(22, 10, 42, 18);

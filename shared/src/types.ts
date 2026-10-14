@@ -53,6 +53,8 @@ export interface SpellDef {
   area?: { radius: number };
   /** Si présent, le sort SOIGNE les alliés touchés de [min, max] PV au lieu de blesser les ennemis. */
   heal?: [number, number];
+  /** Bouclier sur le lanceur : fraction des PV max absorbée, durée en secondes. */
+  shield?: { maxHpFraction: number; duration: number };
   /** Dégâts multipliés par (1 + bonus × part de PV manquants du lanceur). */
   missingHpBonus?: number;
   /** La zone ne frappe qu'après ce délai (s), annoncée au sol en attendant. */
@@ -171,18 +173,18 @@ export type StatKey =
   | 'range' // portée des sorts (cases)
   | 'revive'; // résurrection automatique une fois par partie
 
-export type ItemRarity = 'commun' | 'rare' | 'epique';
+export type BonusRarity = 'commun' | 'rare' | 'epique';
 
-export interface ItemDef {
+export interface RunBonusDef {
   /** "base.rareté" */
   id: string;
-  /** Objet de base (même icône pour les trois raretés). */
+  /** Type de bonus (vitalité, puissance...). */
   base: string;
-  /** Nom de l'objet Dofus : sert aussi à retrouver son icône officielle. */
+  /** Libellé de la statistique. */
   name: string;
   description: string;
   color: number;
-  rarity: ItemRarity;
+  rarity: BonusRarity;
   stats: Partial<Record<StatKey, number>>;
 }
 
@@ -192,6 +194,8 @@ export interface ItemDef {
 
 /** Client -> serveur. Le client n'envoie QUE ses intentions. */
 export interface InputMessage {
+  /** Active l'attaque de base automatique sur l'ennemi le plus proche à portée. */
+  autoAttack?: boolean;
   /** Direction de déplacement en coordonnées monde (0,0 = immobile). */
   dx: number;
   dy: number;
@@ -264,9 +268,11 @@ export interface DamageEvent {
   /** Vrai si la cible est un joueur. */
   player: boolean;
   crit?: boolean;
+  /** Part des dégâts absorbée par le bouclier (non retirée des PV). */
+  absorbed?: number;
 }
-/** Un joueur a ouvert un coffre et obtenu un objet. */
-export interface ItemEvent {
+/** Un joueur a gagné un bonus de run (coffre, élite ou marchand). */
+export interface StatGainEvent {
   player: string;
   item: string;
   x: number;
@@ -295,6 +301,12 @@ export interface SyncMap<T> {
   forEach(cb: (value: T, key: string) => void): void;
 }
 export interface PlayerView {
+  /** Tenue permanente validée, identique pendant toute la run. */
+  equipment: string;
+  /** Récompense de fin de run calculée par le serveur (JSON). */
+  rewards: string;
+  /** Drops permanents déjà obtenus dans cette run, crédités dès réception. */
+  runLoot: string;
   name: string;
   classId: string;
   slot: number;
@@ -304,6 +316,8 @@ export interface PlayerView {
   hp: number;
   maxHp: number;
   speed: number;
+  /** Dégâts que le bouclier peut encore absorber. */
+  shield: number;
   alive: boolean;
   moving: boolean;
   kamas: number;
@@ -318,8 +332,8 @@ export interface PlayerView {
   invisible: boolean;
   /** Offres du marchand déjà achetées par ce joueur : "0,2". */
   bought: string;
-  /** Inventaire : "id:nombre,id:nombre" (voir parseInventory). */
-  items: string;
+  /** Inventaire : "id:nombre,id:nombre" (voir parseRunBonuses). */
+  bonuses: string;
 }
 export interface MonsterView {
   type: string;
@@ -331,7 +345,7 @@ export interface MonsterView {
   level: number;
   state: number;
   ally: boolean;
-  /** Monstre d'élite (apparu en déterrant une Cawotte). */
+  /** Monstre d'élite invoqué par une balise de défi. */
   elite: boolean;
 }
 export interface GroundView {
@@ -343,13 +357,20 @@ export interface GroundView {
   armed: boolean;
 }
 export interface ChestView {
-  /** 'chest' = coffre payant, 'cawotte' = fait apparaître un monstre d'élite (gratuit). */
+  /** 'chest' = coffre payant, 'challenge' = balise de défi gratuite contre un élite. */
   kind: string;
   x: number;
   y: number;
   opened: boolean;
 }
+export interface PotionView {
+  x: number;
+  y: number;
+}
 export interface GameStateView {
+  singlePlayer: boolean;
+  /** Identifiant de run, conservé à travers les changements de carte. */
+  runId: string;
   phase: number;
   seed: number;
   time: number;
@@ -360,6 +381,7 @@ export interface GameStateView {
   monsters: SyncMap<MonsterView>;
   chests: SyncMap<ChestView>;
   grounds: SyncMap<GroundView>;
+  potions: SyncMap<PotionView>;
   /** Numéro de la zone en cours (1, 2, 3...). */
   stage: number;
   zaapX: number;

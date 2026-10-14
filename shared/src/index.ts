@@ -7,6 +7,7 @@ export * from './difficulty.ts';
 export * from './data/spells.ts';
 export * from './data/classes.ts';
 export * from './data/monsters.ts';
+export * from './data/zones.ts';
 export * from './data/items.ts';
 export * from './data/talents.ts';
-export * from './data/stats.ts';
+export * from './data/equipment.ts';

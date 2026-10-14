@@ -20,6 +20,7 @@ export const TALENTS: Record<string, TalentDef[]> = {
     { slot: 0, spell: 'intimidation', cost: 250 },
     { slot: 1, spell: 'epee_celeste', cost: 400 },
     { slot: 2, spell: 'bond', cost: 200 },
+    { slot: 2, spell: 'vitalite', cost: 0 },
     { slot: 3, spell: 'epee_du_jugement', cost: 900 },
   ],
   eniripsa: [

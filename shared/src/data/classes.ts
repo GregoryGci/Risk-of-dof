@@ -29,7 +29,7 @@ export const CLASSES: Record<string, ClassDef> = {
     name: 'Eniripsa',
     description: 'Soigneur : garde ses alliés en vie et tient les ennemis à distance.',
     color: 0xff8ac8,
-    maxHp: 110,
+    maxHp: 130,
     speed: 4.7,
     regen: 1.5,
     spells: ['mot_blessant', 'mot_curatif', 'mot_de_frayeur', 'mot_de_reconstitution'],

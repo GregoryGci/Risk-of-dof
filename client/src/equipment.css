@@ -1,0 +1,77 @@
+/* Organisation Retro : personnage à gauche, inventaire et fiche d'objet à droite. */
+#equipment { z-index: 60; }
+#equipment .equipment-sheet { width: min(1060px, 94vw); max-height: 92dvh; overflow: auto; border-radius: 8px; border: 2px solid #b79a60; background: #e8dfbf; }
+.equipment-sheet .sheet-head { background: linear-gradient(180deg, #6a5332, #44331d); padding: 15px 19px; border-radius: 5px 5px 0 0; }
+.sheet-head small { display: block; font: 10px 'Trebuchet MS', sans-serif; color: #d4c49f; margin-top: 5px; }
+.equipment-sheet .sheet-close { background: #8a6b3c; border: 1px solid #bca26c; }
+.gear-layout { display: grid; grid-template-columns: 370px minmax(0,1fr); }
+.gear-character { border-right: 1px solid #a38c5c66; padding: 18px; background: linear-gradient(135deg, #f2e8cc, #ddd1ac); }
+.section-caption { display: flex; align-items: center; justify-content: space-between; font: 17px Georgia, serif; color: #554125; margin-bottom: 15px; }
+.section-caption > span { font: 10px 'Trebuchet MS', sans-serif; color: #87734f; }
+.gear-paperdoll { display: grid; grid-template-columns: 70px 1fr 70px; gap: 6px; }
+.gear-slot-column { display: flex; flex-direction: column; gap: 8px; }
+.gear-slot { width: 70px; height: 62px; background: #e0d6b4; border: 2px solid #b9a577; box-shadow: inset 0 1px 5px #8d77432a; border-radius: 5px; padding: 5px 3px 2px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer; position: relative; color: #816d48; }
+.gear-slot img { max-width: 100%; width: 42px; height: 36px; object-fit: contain; }
+.gear-slot small { font-size: 8px; }
+.slot-empty { font: 23px Georgia, serif; opacity: .55; line-height: 32px; }
+.gear-slot:hover { background: #f2e8cc; }
+.gear-slot.active { outline: 2px solid #645431; outline-offset: 2px; }
+.gear-avatar { position: relative; display: flex; justify-content: center; align-items: center; isolation: isolate; overflow: hidden; }
+.gear-avatar > img { height: 165px; width: 120px; object-fit: contain; filter: drop-shadow(2px 10px 6px #3b321945); margin-top: 15px; }
+.avatar-halo { position: absolute; width: 145px; height: 200px; border-radius: 50%; background: radial-gradient(ellipse, #fff6d6, #f7eac170, transparent 70%); z-index: -1; }
+.avatar-pedestal { position: absolute; width: 120px; height: 28px; border: 1px solid #9c95604a; border-radius: 50%; background: #a5a07126; top: calc(50% + 77px); z-index: -1; box-shadow: 0 5px 0 #b3a27533; }
+.gear-dofus { display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; margin: 20px 0; }
+.gear-dofus .gear-slot { width: 100%; height: 56px; }
+.gear-dofus .gear-slot img { width: 33px; height: 31px; }
+.gear-bonuses { border-top: 1px solid #b29a6550; padding-top: 15px; }
+.gear-bonuses .section-caption { font-size: 15px; margin-bottom: 9px; }
+.gear-stat-pair { display: flex; justify-content: space-between; gap: 10px; font-size: 11px; padding: 5px 7px; color: #665331; }
+.gear-stat-pair:nth-child(even) { background: #c3b17f25; }
+.gear-bonuses p { color: #87734f; font-size: 11px; line-height: 1.6; }
+.gear-inventory { padding: 18px; min-width: 0; }
+.gear-filters { display: flex; gap: 8px; margin-bottom: 13px; }
+.gear-filters input, .gear-filters select, .gear-actions select { border: 1px solid #af9763; border-radius: 4px; background: #f8efd9; font: 11px 'Trebuchet MS', sans-serif; color: #655030; padding: 9px; }
+.gear-filters input { flex: 1; min-width: 0; width: 40%; margin: 0; }
+.gear-filters select { max-width: 45%; }
+.gear-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 9px; max-height: 290px; min-height: 240px; overflow-y: auto; align-content: start; padding: 4px 5px 8px 3px; }
+.gear-card { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; border: 2px solid #b7aa85; border-radius: 5px; padding: 10px 4px 8px; color: #574729; background: linear-gradient(160deg,#f6efda,#e0d5b5); cursor: pointer; min-height: 100px; transition: background .15s, transform .15s; }
+.gear-card img { width: 52px; height: 47px; object-fit: contain; }
+.gear-card-name { font-size: 9px; line-height: 1.3; margin-top: 7px; text-align: center; }
+.gear-card-level { font-size: 8px; color: #817351; position: absolute; right: 5px; top: 4px; }
+.gear-card:hover { background: #fff7e0; transform: translateY(-2px); }
+.gear-card.selected { box-shadow: inset 0 0 0 2px #fffdf0; }
+.gear-card.selected::after { content: '✓'; font-size: 11px; font-weight: bold; position: absolute; left: 4px; top: 2px; color: #5b6e3e; }
+.gear-worn { font-size: 7px; text-transform: uppercase; letter-spacing: .5px; color: #657044; margin-top: 5px; }
+.gear-card.normal, .gear-slot.normal, .gear-detail-icon.normal, .gear-rarity-legend i.normal { border-color: #ab9b76; }
+.gear-card.rare, .gear-slot.rare, .gear-detail-icon.rare, .gear-rarity-legend i.rare { border-color: #438dcc; }
+.gear-card.epique, .gear-slot.epique, .gear-detail-icon.epique, .gear-rarity-legend i.epique { border-color: #9855ba; }
+.gear-card.legendaire, .gear-slot.legendaire, .gear-detail-icon.legendaire, .gear-rarity-legend i.legendaire { border-color: #de9d2a; }
+.gear-empty { grid-column: 1 / -1; color: #8b784f; text-align: center; padding: 58px 30px; }
+.gear-empty > span { font: 20px Georgia, serif; }
+.gear-empty p { font-size: 12px; line-height: 1.7; }
+.gear-inspector { margin-top: 12px; padding: 17px; border: 1px solid #af976355; border-radius: 5px; background: #d3c49625; min-height: 166px; }
+.gear-detail-head { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.gear-detail-icon { width: 56px; height: 56px; border: 2px solid; border-radius: 4px; background: #f6efd9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.gear-detail-icon img { width: 47px; height: 43px; object-fit: contain; }
+.gear-detail-head h3 { font-size: 18px; font-weight: normal; }
+.gear-detail-head p { font-size: 10px; color: #87734f; margin: 6px 0 0; }
+.gear-detail-stats > div { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-size: 11px; }
+.gear-detail-stats small { font-size: 9px; text-align: right; }
+.gain { color: #4c783b; } .loss { color: #a84930; }
+.gear-actions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-top: 15px; }
+.gear-actions .btn { padding: 7px 18px; font-size: 11px; }
+.gear-inspector-empty { text-align: center; color: #87734f; font-size: 12px; padding-top: 32px; line-height: 1.7; }
+.gear-footer { display: flex; justify-content: space-between; align-items: center; gap: 15px; border-top: 1px solid #a38c5c55; padding: 15px 18px; background: #cabb9528; }
+.gear-footer b { font: 14px Georgia, serif; display: block; }
+.gear-footer div > span { font-size: 10px; display: block; color: #87734f; margin-top: 5px; }
+.gear-rarity-legend { display: flex; gap: 12px; }
+.gear-footer .gear-rarity-legend > span { display: flex; align-items: center; gap: 5px; font-size: 9px; }
+.gear-rarity-legend i { border: 2px solid; width: 10px; height: 10px; border-radius: 2px; }
+.migration-note { display: flex; align-items: center; gap: 20px; justify-content: space-between; padding: 12px 18px; background: #9bb47130; font-size: 11px; line-height: 1.6; border-bottom: 1px solid #a38c5c55; }
+.migration-note .btn { padding: 5px 10px; font-size: 10px; flex-shrink: 0; }
+.reward-gear { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin: 12px 0 18px; max-height: 240px; overflow: auto; padding: 3px; }
+.reward-gear .gear-card { min-height: 94px; }
+.lobby-progression { display: flex; justify-content: center; gap: 8px; margin: 12px 0; }
+#gameover .menu-panel { max-height: 92dvh; overflow-y: auto; }
+@media (max-width: 950px) { .gear-layout { grid-template-columns: 310px minmax(0,1fr); } .gear-character { padding: 14px; } .gear-paperdoll { grid-template-columns: 62px 1fr 62px; } .gear-slot { width: 62px; } .gear-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } .gear-avatar img { width: 110px; height: 150px; } .gear-rarity-legend { gap: 6px; } }
+@media (max-width: 720px) { .gear-layout { grid-template-columns: 1fr; } .gear-character { border-right: 0; border-bottom: 1px solid #a38c5c66; } .gear-paperdoll { max-width: 330px; margin: auto; } .gear-dofus { max-width: 330px; margin: 20px auto; } .gear-bonuses { max-height: 170px; overflow: auto; } .gear-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } .gear-footer { flex-direction: column; align-items: flex-start; } .gear-filters { flex-wrap: wrap; } .sheet-head small { display: none; } }

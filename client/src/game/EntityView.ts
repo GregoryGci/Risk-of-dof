@@ -45,6 +45,8 @@ export class EntityView {
   private label?: Phaser.GameObjects.Text;
   private barBg: Phaser.GameObjects.Rectangle;
   private barFill: Phaser.GameObjects.Rectangle;
+  private shieldBar: Phaser.GameObjects.Rectangle;
+  private shieldAura: Phaser.GameObjects.Ellipse;
   private mark?: Phaser.GameObjects.Text;
 
   /** Position affichée, en cases. */
@@ -88,10 +90,13 @@ export class EntityView {
     this.barFill = scene.add.rectangle(-opts.barWidth / 2, this.headY, opts.barWidth, 4, opts.barColor).setOrigin(0, 0.5);
     this.barBg.setVisible(opts.barAlways);
     this.barFill.setVisible(opts.barAlways);
+    this.shieldBar = scene.add.rectangle(0, 0, opts.barWidth, 3, 0x69cfff).setOrigin(0, 0.5).setVisible(false);
+    this.shieldAura = scene.add.ellipse(0, 0, Math.max(40, this.body.displayWidth * 0.7), Math.max(58, this.body.displayHeight), 0x69cfff, 0.12).setStrokeStyle(2, 0x69cfff, 0.7).setVisible(false);
 
     // Ombre sous le corps, barres et nom juste au-dessus.
     this.parts.push({ obj: this.shadow, ox: 0, oy: 0, dz: -0.2 }, { obj: this.body, ox: 0, oy: 0, dz: 0 });
     this.parts.push({ obj: this.barBg, ox: 0, oy: this.headY, dz: 0.2 }, { obj: this.barFill, ox: -opts.barWidth / 2, oy: this.headY, dz: 0.3 });
+    this.parts.push({ obj: this.shieldBar, ox: -opts.barWidth / 2, oy: this.headY + 7, dz: 0.3 }, { obj: this.shieldAura, ox: 0, oy: -this.body.displayHeight * 0.45, dz: -0.1 });
     if (opts.label) {
       this.label = scene.add
         .text(0, this.headY - 6, opts.label, {
@@ -139,6 +144,14 @@ export class EntityView {
     const visible = !this.dead && (this.opts.barAlways || ratio < 1);
     this.barBg.setVisible(visible);
     this.barFill.setVisible(visible);
+  }
+
+  /** Bouclier : aura et réserve affichée en bleu sous les PV. */
+  setShield(shield: number, maxHp: number): void {
+    const visible = shield > 0;
+    this.shieldBar.setVisible(visible);
+    this.shieldBar.width = this.opts.barWidth * Phaser.Math.Clamp(shield / (maxHp || 1), 0, 1);
+    this.shieldAura.setVisible(visible);
   }
 
   /** Joueur mort : couché et estompé. */

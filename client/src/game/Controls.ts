@@ -23,7 +23,7 @@ export class Controls {
     };
 
     on(window, 'keydown', (e) => {
-      if (e.target instanceof HTMLInputElement) return;
+      if (e.target instanceof HTMLElement && e.target.closest('input,textarea,select,[contenteditable="true"]')) return;
       if (!e.repeat) this.pressed.add(e.code);
       this.keys.add(e.code);
       const slot = KEY_SLOTS[e.code];

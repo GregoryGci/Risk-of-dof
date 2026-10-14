@@ -3,6 +3,9 @@
    Panneaux parchemin, liseré brun encre, accents dorés. Texte sombre sur clair
    pour la lisibilité ; seuls les éléments posés sur le jeu sont clairs sur sombre.
    ============================================================================= */
+@import './home.css';
+@import './equipment.css';
+
 :root {
   /* Parchemin */
   --parchemin: #f2e8c9;
@@ -517,6 +520,17 @@ input[type='text']:focus {
 }
 #hp-heart.hit {
   animation: coeur-touche 0.25s;
+}
+#shield-text {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: #69cfff;
+  font-size: 11px;
+  font-weight: bold;
+  text-shadow: 0 1px 3px #000;
 }
 @keyframes coeur-touche {
   0% {

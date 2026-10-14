@@ -25,6 +25,7 @@ const DETAILS: Record<string, string> = {
 
 /** Glyphes génériques pour les sorts sans dessin dédié, choisis d'après la forme du sort. */
 const GLYPHS = {
+  bouclier: `<path d="M28 6 L46 13 V27 Q46 41 28 50 Q10 41 10 27 V13 Z" fill="#f6efd8"/><path d="M28 13 L39 18 V27 Q39 35 28 42 Q17 35 17 27 V18 Z" fill="#4aafff"/>`,
   epee: `<polygon points="14,44 18,48 44,20 46,10 36,12" fill="#f6efd8"/><rect x="9" y="36" width="16" height="4" transform="rotate(45 17 38)" fill="#f0c040"/><rect x="8" y="44" width="5" height="8" transform="rotate(45 10 48)" fill="#8a5a2a"/>`,
   soin: `<rect x="22" y="10" width="12" height="36" rx="3" fill="#ffffff"/><rect x="10" y="22" width="36" height="12" rx="3" fill="#ffffff"/>`,
   zone: `<circle cx="28" cy="30" r="17" fill="none" stroke="#fff" stroke-width="3" opacity="0.9"/><circle cx="28" cy="30" r="9" fill="#fff" opacity="0.85"/><polygon points="28,2 31,14 25,14" fill="#fff"/>`,
@@ -33,6 +34,7 @@ const GLYPHS = {
 };
 
 function glyphFor(spell: SpellDef): string {
+  if (spell.shield) return GLYPHS.bouclier;
   if (spell.icon.startsWith('fleche')) return ARROW + (DETAILS[spell.icon] ?? '');
   if (spell.heal) return GLYPHS.soin;
   if (spell.melee) return GLYPHS.epee;

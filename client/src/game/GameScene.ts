@@ -14,8 +14,9 @@ import {
   ZAAP_READY,
   dirFromVector,
   generateMap,
+  zoneForStage,
   getClass,
-  getItem,
+  getRunBonus,
   RARITY_NAMES,
   getMonster,
   getSpell,
@@ -34,9 +35,10 @@ import {
   type GameMap,
   type GameStateView,
   type HealEvent,
-  type ItemEvent,
+  type StatGainEvent,
   type MonsterView,
   type PlayerView,
+  type PotionView,
   type ProjEndEvent,
 } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
@@ -104,6 +106,8 @@ export class GameScene extends Phaser.Scene {
   private mySpellsKey = '';
   private dashCdEnd = 0;
   private chests = new Map<string, { image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite; opened: boolean }>();
+  private potions = new Map<string, Phaser.GameObjects.Image>();
+  private uiAbort = new AbortController();
   private zaap?: { image: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Image };
 
   /** Position prédite du joueur local (cases). */
@@ -112,7 +116,7 @@ export class GameScene extends Phaser.Scene {
   /** Pendant un bond imposé par le serveur, on suit sa position au lieu de prédire. */
   private followServerUntil = 0;
 
-  private lastInput = { dx: 0, dy: 0, dir: -1 };
+  private lastInput = { dx: 0, dy: 0, dir: -1, autoAttack: false };
   private lastInputAt = 0;
   private cdEnd = [0, 0, 0, 0];
   private cdTotal = [1, 1, 1, 1];
@@ -164,7 +168,7 @@ export class GameScene extends Phaser.Scene {
     );
     this.hud.setSpellHover((slot) => (this.previewSlot = slot));
     this.shop = new ShopPanel(this.store, (index) => this.room.send('buy', { index }));
-    document.getElementById('details-menu')!.addEventListener('click', () => this.room.leave());
+    document.getElementById('details-menu')!.addEventListener('click', () => this.room.leave(),{signal:this.uiAbort.signal});
 
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyZoom, this);
     this.applyZoom();
@@ -175,12 +179,12 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('explode', (e: ExplodeEvent) => this.onExplode(e));
     this.room.onMessage('dmg', (e: DamageEvent) => this.onDamage(e));
     this.room.onMessage('death', (e: DeathEvent) => this.onDeath(e));
-    this.room.onMessage('boss', (e: { name: string }) => {
-      this.hud.toast(`<b style="color:#ff6a5a">${e.name}</b> garde le Zaap !`);
+    this.room.onMessage('boss', (e: { name: string; challenge?:boolean }) => {
+      this.hud.toast(`<b style="color:#ff6a5a">${e.name}</b> ${e.challenge ? '— défi activé !' : 'garde le Zaap !'}`);
       this.store.playSound(this, 'boss');
     });
     this.room.onMessage('stage', (e: { stage: number }) => {
-      this.hud.toast(`<b>Zone ${e.stage}</b>`);
+      this.hud.toast(`<b>Zone ${e.stage} — ${zoneForStage(e.stage).name}</b>`);
       this.store.playSound(this, 'stage');
     });
     this.room.onMessage('heal', (e: HealEvent) => {
@@ -199,7 +203,7 @@ export class GameScene extends Phaser.Scene {
       this.dashCdEnd = this.time.now + e.cooldown;
       this.followServerUntil = this.time.now + 300;
     });
-    this.room.onMessage('item', (e: ItemEvent) => this.onItem(e));
+    this.room.onMessage('item', (e: StatGainEvent) => this.onItem(e));
     // Lancer de Pièces (Enutrof) : kamas tombés d'une cible.
     this.room.onMessage('kamas', (e: { amount: number; x: number; y: number }) => {
       if (!document.hidden) this.effects.floatText(e.x, e.y + 0.6, `+${e.amount} K`, '#ffd84a', 12, 22);
@@ -209,8 +213,9 @@ export class GameScene extends Phaser.Scene {
     // Mort : un clic change de joueur observé.
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.cycleSpectate());
 
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.controls.destroy());
-    this.events.once(Phaser.Scenes.Events.DESTROY, () => this.controls.destroy());
+    const clean=()=>{ this.controls.destroy(); this.details.destroy(); this.shop.destroy(); this.uiAbort.abort(); };
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, clean);
+    this.events.once(Phaser.Scenes.Events.DESTROY, clean);
   }
 
   private applyZoom(): void {
@@ -228,21 +233,26 @@ export class GameScene extends Phaser.Scene {
     const dt = Math.min(deltaMs / 1000, 0.1);
 
     // La carte est régénérée à partir de la graine (et à chaque nouvelle partie).
-    if (!this.mapView || this.map.seed !== state.seed) this.rebuildMap(state.seed);
+    if (!this.mapView || this.map.seed !== state.seed || this.map.zoneId !== zoneForStage(state.stage).id) this.rebuildMap(state.seed);
 
     const myState = state.players.get(this.room.sessionId);
+    const progressionOpen = ['equipment','talents','encyclopedia'].some(id => !document.getElementById(id)!.classList.contains('hidden'));
     // Tab (ou Échap pour fermer) : panneau de détails.
-    if (this.controls.consumePress('Tab')) this.details.toggle();
+    if (this.controls.consumePress('Tab') && !progressionOpen) this.details.toggle();
     if (this.controls.consumePress('Escape')) {
       // Échap annule d'abord un ciblage en cours, puis ferme le panneau.
-      if (this.targeting !== null) this.targeting = null;
+      if (progressionOpen) {
+        const top = ['encyclopedia','equipment','talents'].find(id => !document.getElementById(id)!.classList.contains('hidden'));
+        if (top) document.getElementById(top)!.classList.add('hidden');
+      } else if (this.targeting !== null) this.targeting = null;
       else if (this.shop.isOpen) this.shop.toggle(false);
       else this.details.toggle();
     }
+    if (progressionOpen) this.controls.releaseAll();
     // Pendant une pause, les temps de recharge affichés sont figés eux aussi.
     if (state.paused && this.lastFrameTime > 0) for (let i = 0; i < 4; i++) this.cdEnd[i] += time - this.lastFrameTime;
     this.lastFrameTime = time;
-    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !this.details.isOpen && !this.shop.isOpen && !state.paused;
+    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !progressionOpen && !this.details.isOpen && !this.shop.isOpen && !state.paused && !document.hidden && document.hasFocus();
 
     if (myState && (myState.classId !== this.myClass || myState.spells !== this.mySpellsKey)) {
       // Première frame, changement de classe ou de sorts équipés : la barre de sorts suit.
@@ -256,18 +266,21 @@ export class GameScene extends Phaser.Scene {
     this.syncPlayers(state, dt);
     this.syncMonsters(state, dt);
     this.syncGrounds(state, time);
+    this.syncPotions(state, time);
     const prompt = this.syncZaap(state, canAct) || this.syncMerchant(state, canAct, dt) || this.syncChests(state, myState, canAct);
     this.shop.update(state, this.room.sessionId);
     this.effects.update(dt);
     this.updateCamera(state, myState, dt);
+    const watched=myState?.alive ? this.me : state.players.get(this.spectating??'');
+    if(watched) this.mapView?.revealPlayer(watched.x,watched.y,dt);
 
     this.minimap.draw(state, this.room.sessionId);
     this.details.update(state, this.room.sessionId, time);
     // Aperçu de la zone d'effet du sort survolé, depuis la position du joueur dans la direction visée.
     const hovered = this.previewSlot !== null && myState ? this.mySpells[this.previewSlot] : undefined;
     const targeted = this.targeting !== null && myState ? this.mySpells[this.targeting] : undefined;
-    if (hovered) this.preview.draw(getSpell(hovered), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y);
-    else if (targeted) this.preview.draw(getSpell(targeted), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y, Math.hypot(this.aimPos.x - this.me.x, this.aimPos.y - this.me.y));
+    if (hovered) this.preview.draw(getSpell(hovered), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y,undefined,this.hud.playerStats.range);
+    else if (targeted) this.preview.draw(getSpell(targeted), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y, Math.hypot(this.aimPos.x - this.me.x, this.aimPos.y - this.me.y),this.hud.playerStats.range);
     else this.preview.hide();
     this.hud.updateCooldowns(time, this.cdEnd, this.cdTotal);
     this.hud.updateDash(time, this.dashCdEnd);
@@ -276,7 +289,7 @@ export class GameScene extends Phaser.Scene {
 
   private rebuildMap(seed: number): void {
     this.mapView?.destroy();
-    this.map = generateMap(seed);
+    this.map = generateMap(seed,undefined,this.state.stage);
     this.mapView = new MapView(this, this.store, this.map);
     this.minimap.setMap(this.map);
     this.effects.clear();
@@ -284,6 +297,7 @@ export class GameScene extends Phaser.Scene {
     this.meReady = false;
     this.cam.ready = false;
     this.cdEnd = [0, 0, 0, 0];
+    this.dashCdEnd=0;
   }
 
   /** Point visé par la souris, en coordonnées monde. */
@@ -313,9 +327,10 @@ export class GameScene extends Phaser.Scene {
     const dir = this.facing;
 
     // Envoi des entrées : seulement quand elles changent, plus un rappel périodique.
-    const changed = move.x !== this.lastInput.dx || move.y !== this.lastInput.dy || dir !== this.lastInput.dir;
+    const autoAttack = canAct && settings.autoAttack && this.targeting === null && !this.controls.isHeld(0) && !this.suppressHeld[0];
+    const changed = move.x !== this.lastInput.dx || move.y !== this.lastInput.dy || dir !== this.lastInput.dir || autoAttack !== this.lastInput.autoAttack;
     if ((changed && time - this.lastInputAt > 30) || time - this.lastInputAt > 500) {
-      this.lastInput = { dx: move.x, dy: move.y, dir };
+      this.lastInput = { dx: move.x, dy: move.y, dir, autoAttack };
       this.lastInputAt = time;
       this.room.send('input', this.lastInput);
     }
@@ -418,6 +433,7 @@ export class GameScene extends Phaser.Scene {
         view.dir = p.dir;
       }
       view.setHp(p.hp, p.maxHp);
+      view.setShield(p.shield, p.maxHp);
       view.setDead(!p.alive);
       view.setInvisible(p.invisible);
       view.update(dt);
@@ -477,6 +493,25 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /** Potions synchronisées : icône officielle de soin Retro flottant au-dessus du sol. */
+  private syncPotions(state: GameStateView, time: number): void {
+    state.potions.forEach((potion: PotionView, id: string) => {
+      let image = this.potions.get(id);
+      if (!image) {
+        const v = this.store.potionVisual(this);
+        image = this.add.image(0, 0, v.key).setOrigin(v.origin[0], v.origin[1]).setScale(v.scale);
+        this.potions.set(id, image);
+      }
+      const p = worldToScreen(potion.x, potion.y);
+      image.setPosition(p.x, p.y - 3 - Math.sin(time / 220) * 2).setDepth(p.y + 0.1);
+    });
+    for (const [id, image] of this.potions) {
+      if (state.potions.get(id)) continue;
+      image.destroy();
+      this.potions.delete(id);
+    }
+  }
+
   /** Affiche le Zaap de la zone ; retourne le texte d'aide si le joueur est à portée. */
   private syncZaap(state: GameStateView, canAct: boolean): string {
     const visible = state.phase === PHASE_PLAYING;
@@ -514,12 +549,12 @@ export class GameScene extends Phaser.Scene {
    */
   private syncChests(state: GameStateView, myState: PlayerView | undefined, canAct: boolean): string {
     let nearestChest = Infinity;
-    let nearestCawotte = Infinity;
+    let nearestChallenge = Infinity;
     const chestSprite = this.store.chestSprite(this);
     state.chests.forEach((c: ChestView, id: string) => {
       let view = this.chests.get(id);
-      const cawotte = c.kind === 'cawotte';
-      if (!cawotte && chestSprite && (!view || view.opened !== c.opened)) {
+      const challenge = c.kind === 'challenge';
+      if (!challenge && chestSprite && (!view || view.opened !== c.opened)) {
         // Coffre animé : on garde le même sprite, l'ouverture joue l'animation de « mort » (il crache ses pièces).
         if (!view) {
           const p = worldToScreen(c.x, c.y);
@@ -532,16 +567,17 @@ export class GameScene extends Phaser.Scene {
         view.opened = c.opened;
       } else if (!view || view.opened !== c.opened) {
         view?.image.destroy();
-        const v = this.store.objectVisual(cawotte ? 'cawotte' : c.opened ? 'coffre_ouvert' : 'coffre', 0);
+        const v = this.store.objectVisual(challenge ? 'balise_defi' : c.opened ? 'coffre_ouvert' : 'coffre', 0);
         const p = worldToScreen(c.x, c.y);
         const image = this.add.image(p.x, p.y, v.key).setOrigin(v.origin[0], v.origin[1]).setScale(v.scale).setDepth(p.y);
-        if (c.opened) image.setAlpha(cawotte ? 0.3 : 0.75);
+        if(challenge) image.setTint(0xffd9ab);
+        if (c.opened) image.setAlpha(challenge ? 0.3 : 0.75);
         view = { image, opened: c.opened };
         this.chests.set(id, view);
       }
       if (c.opened) return;
       const d = Math.hypot(c.x - this.me.x, c.y - this.me.y);
-      if (cawotte) nearestCawotte = Math.min(nearestCawotte, d);
+      if (challenge) nearestChallenge = Math.min(nearestChallenge, d);
       else nearestChest = Math.min(nearestChest, d);
     });
     for (const [id, view] of this.chests) {
@@ -552,9 +588,9 @@ export class GameScene extends Phaser.Scene {
 
     const pressed = this.controls.consumePress('KeyE');
     if (!canAct || !myState || state.phase !== PHASE_PLAYING) return '';
-    if (nearestCawotte <= INTERACT_RANGE && nearestCawotte <= nearestChest) {
+    if (nearestChallenge <= INTERACT_RANGE && nearestChallenge <= nearestChest) {
       if (pressed) this.room.send('interact');
-      return `<b>E</b> — Déterrer la Cawotte (un monstre d'élite surgit, chaque joueur qui le frappe gagne un objet)`;
+      return `<b>E</b> — Activer la balise de défi : vaincre un élite de la région pour gagner un bonus de stats`;
     }
     if (nearestChest > INTERACT_RANGE) return '';
     const affordable = myState.kamas >= state.chestCost;
@@ -654,7 +690,7 @@ export class GameScene extends Phaser.Scene {
     // Les projectiles l'ont déjà en vol (clip « move ») ; les zones à retardement la jouent à l'impact.
     // Pièges : l'animation joue quand ils se déclenchent (événement « explode »), pas à la pose.
     if (!document.hidden && !spell.projectile && !spell.delay && spell.ground?.kind !== 'trap') {
-      const onCaster = this.store.spellFx(this, spell.id)?.type === 10 || !!spell.buff;
+      const onCaster = this.store.spellFx(this, spell.id)?.type === 10 || !!spell.buff || !!spell.shield;
       this.effects.playSpellFx(spell.id, onCaster ? e.x : e.tx, onCaster ? e.y : e.ty, e.tx - e.x, e.ty - e.y);
     }
     // Bond : traînée le long du trajet (vu par tout le monde).
@@ -673,6 +709,8 @@ export class GameScene extends Phaser.Scene {
     if (e.caster !== this.room.sessionId || e.slot === undefined) return;
     // Le serveur confirme notre sort : le temps de recharge démarre.
     const now = this.time.now;
+    if (Math.hypot(e.tx - e.x, e.ty - e.y) > 0.001) this.facing = dirFromVector(e.tx - e.x, e.ty - e.y);
+    this.castFacingUntil = now + 400;
     this.cdTotal[e.slot] = e.cooldown ?? spell.cooldown;
     this.cdEnd[e.slot] = now + this.cdTotal[e.slot];
     if (dash && dash.type === 'dash') this.followServerUntil = now + dash.duration * 1000 + 180;
@@ -699,6 +737,8 @@ export class GameScene extends Phaser.Scene {
   private onDamage(e: DamageEvent): void {
     if (document.hidden) return;
     if (e.player) {
+      if (e.absorbed) this.effects.floatText(e.x, e.y, `-${e.absorbed} bouclier`, '#69cfff', 13, 50);
+      if (e.amount <= 0) return;
       this.players.get(e.target)?.flash();
       this.effects.floatText(e.x, e.y, `-${e.amount}`, '#ff5040', 15);
       if (e.target === this.room.sessionId) {
@@ -719,16 +759,16 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private onItem(e: ItemEvent): void {
-    const item = getItem(e.item);
+  private onItem(e: StatGainEvent): void {
+    const item = getRunBonus(e.item);
     if (!item || document.hidden) return;
     const mine = e.player === this.room.sessionId;
     const color = `#${item.color.toString(16).padStart(6, '0')}`;
-    const label = `${item.name} (${RARITY_NAMES[item.rarity]})`;
+    const label = item.description;
     this.effects.floatText(e.x, e.y, label, color, mine ? 16 : 12, 60);
     this.effects.spark(worldToScreen(e.x, e.y).x, worldToScreen(e.x, e.y).y - 20, item.color);
     if (mine) {
-      this.hud.toast(`<b style="color:${color}">${label}</b> — ${item.description}`);
+      this.hud.toast(`<b>Bonus de run</b><small>${label} · ${RARITY_NAMES[item.rarity]}</small>`);
       this.store.playSound(this, 'item');
     }
   }

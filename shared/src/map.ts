@@ -4,6 +4,7 @@
 import { MAP_SIZE } from './constants.ts';
 import { clamp, type Vec2 } from './iso.ts';
 import { makeRng } from './rng.ts';
+import { zoneForStage } from './data/zones.ts';
 
 /** Types de sol (index utilisé pour choisir la tile). */
 export const GROUND_HERBE = 0;
@@ -24,11 +25,15 @@ export const OBSTACLES: ObstacleDef[] = [
   { id: 'foin', radius: 0.42 },
   { id: 'buisson', radius: 0.36 },
   { id: 'souche', radius: 0.3 },
+  { id: 'arbre_sec', radius: 0.42 },
+  { id: 'piton', radius: 0.48 },
+  { id: 'totem', radius: 0.4 },
 ];
 
 export interface GameMap {
   size: number;
   seed: number;
+  zoneId: string;
   /** Type de sol par case (index = y * size + x). */
   ground: Uint8Array;
   /** 0 = libre, sinon index d'obstacle + 1. */
@@ -39,8 +44,9 @@ function obstacleIndex(id: string): number {
   return OBSTACLES.findIndex((o) => o.id === id) + 1;
 }
 
-/** Génère une zone type « Champs d'Astrub » : prairie, champs de blé, chemins, bosquets. */
-export function generateMap(seed: number, size = MAP_SIZE): GameMap {
+/** Reconstruit le terrain de la région liée au gardien, à partir de sa graine. */
+export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
+  const zone = zoneForStage(stage);
   const rng = makeRng(seed);
   const ground = new Uint8Array(size * size);
   const obstacles = new Uint8Array(size * size);
@@ -49,7 +55,7 @@ export function generateMap(seed: number, size = MAP_SIZE): GameMap {
   const center = size / 2;
 
   // Parterres de fleurs : quelques taches irrégulières.
-  for (let i = 0; i < 26; i++) {
+  for (let i = 0; i < zone.patches; i++) {
     const cx = Math.floor(rng() * size);
     const cy = Math.floor(rng() * size);
     const r = 1 + rng() * 2.5;
@@ -62,7 +68,7 @@ export function generateMap(seed: number, size = MAP_SIZE): GameMap {
 
   // Champs de blé rectangulaires, avec parfois des bottes de foin.
   const foin = obstacleIndex('foin');
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < zone.fields; i++) {
     const w = 5 + Math.floor(rng() * 6);
     const h = 4 + Math.floor(rng() * 5);
     const x0 = 3 + Math.floor(rng() * (size - w - 6));
@@ -98,8 +104,8 @@ export function generateMap(seed: number, size = MAP_SIZE): GameMap {
   // Bosquets d'arbres et décors épars, hors chemins et hors champs.
   const libre = (x: number, y: number) =>
     inside(x, y) && ground[idx(x, y)] !== GROUND_CHEMIN && ground[idx(x, y)] !== GROUND_BLE && obstacles[idx(x, y)] === 0;
-  const arbre = obstacleIndex('arbre');
-  for (let i = 0; i < 22; i++) {
+  const arbre = obstacleIndex(zone.trees);
+  for (let i = 0; i < zone.treeClusters; i++) {
     const cx = Math.floor(rng() * size);
     const cy = Math.floor(rng() * size);
     const n = 2 + Math.floor(rng() * 5);
@@ -109,7 +115,7 @@ export function generateMap(seed: number, size = MAP_SIZE): GameMap {
       if (libre(x, y)) obstacles[idx(x, y)] = arbre;
     }
   }
-  const epars = ['rocher', 'buisson', 'souche', 'buisson', 'rocher'].map(obstacleIndex);
+  const epars = zone.scatter.map(obstacleIndex);
   for (let i = 0; i < 70; i++) {
     const x = Math.floor(rng() * size);
     const y = Math.floor(rng() * size);
@@ -131,7 +137,13 @@ export function generateMap(seed: number, size = MAP_SIZE): GameMap {
     }
   }
 
-  return { size, seed, ground, obstacles };
+  // Les décors sont placés après les routes : leurs abords restent praticables,
+  // même pour les grands gardiens (pas de goulot aléatoire à une seule case).
+  for (let y=1;y<size-1;y++) for(let x=1;x<size-1;x++) {
+    if(ground[idx(x,y)]!==GROUND_CHEMIN) continue;
+    for(let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++) obstacles[idx(x+ox,y+oy)]=0;
+  }
+  return { size, seed, zoneId:zone.id, ground, obstacles };
 }
 
 /** Obstacle présent sur une case (ou null). */
@@ -151,10 +163,14 @@ export function resolveCollisions(map: GameMap, pos: Vec2, radius: number): void
   const max = map.size - 1 - radius;
   pos.x = clamp(pos.x, min, max);
   pos.y = clamp(pos.y, min, max);
+  // Réitérer évite qu'une résolution fasse entrer le cercle dans son voisin.
+  const reach=Math.ceil(radius+.48);
+  for(let pass=0;pass<4;pass++) {
+  let overlap=false;
   const tx = Math.floor(pos.x);
   const ty = Math.floor(pos.y);
-  for (let j = ty - 1; j <= ty + 1; j++) {
-    for (let i = tx - 1; i <= tx + 1; i++) {
+  for (let j = ty - reach; j <= ty + reach; j++) {
+    for (let i = tx - reach; i <= tx + reach; i++) {
       const o = obstacleAt(map, i, j);
       if (!o) continue;
       const dx = pos.x - (i + 0.5);
@@ -162,13 +178,17 @@ export function resolveCollisions(map: GameMap, pos: Vec2, radius: number): void
       const d = Math.hypot(dx, dy);
       const minDist = o.radius + radius;
       if (d >= minDist) continue;
+      overlap=true;
       if (d < 0.0001) {
-        pos.x += minDist;
+        pos.x += minDist+1e-6;
       } else {
-        pos.x += (dx / d) * (minDist - d);
-        pos.y += (dy / d) * (minDist - d);
+        pos.x += (dx / d) * (minDist - d+1e-6);
+        pos.y += (dy / d) * (minDist - d+1e-6);
       }
     }
+  }
+  pos.x=clamp(pos.x,min,max);pos.y=clamp(pos.y,min,max);
+  if(!overlap) break;
   }
 }
 
@@ -177,8 +197,9 @@ export function isBlocked(map: GameMap, x: number, y: number, radius: number): b
   if (x < 1 + radius || y < 1 + radius || x > map.size - 1 - radius || y > map.size - 1 - radius) return true;
   const tx = Math.floor(x);
   const ty = Math.floor(y);
-  for (let j = ty - 1; j <= ty + 1; j++) {
-    for (let i = tx - 1; i <= tx + 1; i++) {
+  const reach=Math.ceil(radius+.48);
+  for (let j = ty - reach; j <= ty + reach; j++) {
+    for (let i = tx - reach; i <= tx + reach; i++) {
       const o = obstacleAt(map, i, j);
       if (o && Math.hypot(x - (i + 0.5), y - (j + 0.5)) < o.radius + radius) return true;
     }
@@ -193,8 +214,15 @@ export function isBlocked(map: GameMap, x: number, y: number, radius: number): b
 export function stepMovement(map: GameMap, pos: Vec2, dx: number, dy: number, speed: number, dt: number, radius: number): void {
   const len = Math.hypot(dx, dy);
   if (len > 0.001) {
-    pos.x += (dx / len) * speed * dt;
-    pos.y += (dy / len) * speed * dt;
+    const distance=speed*dt;
+    // Un pas de 0,2 case maximum empêche le dash de traverser les petits décors.
+    const steps=Math.max(1,Math.ceil(Math.abs(distance)/.2));
+    for(let i=0;i<steps;i++) {
+      pos.x += (dx / len) * distance/steps;
+      pos.y += (dy / len) * distance/steps;
+      resolveCollisions(map,pos,radius);
+    }
+    return;
   }
   resolveCollisions(map, pos, radius);
 }

@@ -45,7 +45,7 @@ export class Director {
   private spawnWave(): void {
     const sim = this.sim;
     const diff = sim.state.difficulty;
-    const eligible = Object.values(MONSTERS).filter((m) => !m.boss && !m.ally && m.weight > 0 && m.minDifficulty <= diff && m.cost <= this.credits);
+    const eligible = sim.zoneMonsters().filter((m) => m.minDifficulty <= diff && m.cost <= this.credits);
     if (eligible.length === 0) return;
     const def = pickWeighted(eligible);
     // Une vague = un groupe du même monstre.

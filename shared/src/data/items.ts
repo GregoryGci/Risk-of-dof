@@ -1,9 +1,6 @@
-// Objets cumulables façon Risk of Rain : chaque exemplaire ajoute ses bonus.
-// Chaque objet existe en trois raretés (Commun, Rare, Épique) : mêmes bonus, plus forts.
-// Les noms sont ceux d'objets Dofus existants : l'icône officielle est retrouvée par ce nom
-// (tools/extract-item-icons.mjs). Pour ajouter un objet : une ligne dans ITEM_BASES suffit
-// tant qu'il n'utilise que des stats existantes.
-import type { ItemDef, ItemRarity, StatKey } from '../types.ts';
+// Bonus de run : les coffres et le marchand donnent directement des statistiques.
+// Les compteurs internes permettent de recalculer leur total, sans inventaire d'objets.
+import type { RunBonusDef, BonusRarity, StatKey } from '../types.ts';
 
 export interface ItemBase {
   name: string;
@@ -15,31 +12,26 @@ export interface ItemBase {
 }
 
 /** Multiplicateur des bonus selon la rareté. */
-export const RARITY_MULT: Record<ItemRarity, number> = { commun: 1, rare: 2, epique: 3.5 };
-export const RARITY_NAMES: Record<ItemRarity, string> = { commun: 'Commun', rare: 'Rare', epique: 'Épique' };
-export const RARITIES: ItemRarity[] = ['commun', 'rare', 'epique'];
+export const RARITY_MULT: Record<BonusRarity, number> = { commun: 1, rare: 2, epique: 3.5 };
+export const RARITY_NAMES: Record<BonusRarity, string> = { commun: 'Standard', rare: 'Renforcé', epique: 'Exceptionnel' };
+export const RARITIES: BonusRarity[] = ['commun', 'rare', 'epique'];
 
-export const ITEM_BASES: Record<string, ItemBase> = {
-  amulette_aventurier: { name: "Amulette de l'Aventurier", description: 'PV max', color: 0xe9e2cf, stats: { maxHp: 20 } },
-  kwaklame: { name: 'Kwaklame de Flammes', description: 'Dégâts', color: 0xff7a3a, stats: { damage: 0.08 } },
-  anneau_agilite: { name: "Anneau d'Agilité", description: 'Réduction du temps de recharge des sorts', color: 0x7fd6ff, stats: { haste: 0.08 } },
-  arc_boisaille: { name: 'Arc de Boisaille', description: "Vitesse de l'attaque de base (sauf corps à corps)", color: 0xb08a50, stats: { attackSpeed: 0.12 } },
-  sandales_tofuesques: { name: 'Sandales Tofuesques', description: 'Vitesse de déplacement', color: 0xf5d63d, stats: { speed: 0.05 } },
-  ceinture_aventurier: { name: "Ceinture de l'aventurier", description: 'Régénération (PV par seconde)', color: 0x8a62a8, stats: { regen: 0.8 } },
-  chapeau_aventurier: { name: "Chapeau de l'Aventurier", description: 'Chance de coup critique', color: 0x4fae3a, stats: { crit: 0.04 } },
-  cape_tofu_fou: { name: 'Cape du Tofu Fou', description: 'Dégâts critiques', color: 0xe0d0a0, stats: { critDamage: 0.2 } },
-  bottes_petit_bouftou: { name: 'Bottes du Petit Bouftou', description: 'Armure (réduit les dégâts subis)', color: 0x8a5a2a, stats: { armor: 0.8 } },
-  larme_bouftou: { name: 'La Larme du Bouftou', description: 'PV rendus par monstre vaincu', color: 0x9fd8ff, stats: { killHeal: 2 } },
-  sac_aventurier: { name: "Sac de l'Aventurier", description: 'Kamas gagnés', color: 0xf0b90b, stats: { kamas: 0.12 } },
-  anneau_vampyre: { name: 'Anneau du Vampyre', description: 'Vol de vie sur tous les dégâts', color: 0xa02040, stats: { lifesteal: 0.025 } },
-  vieux_trefle: { name: 'Vieux Trèfle à 4 feuilles', description: 'Chance de trouver des objets rares et épiques', color: 0x60c060, stats: { luck: 0.04 } },
-  dofus_emeraude: { name: 'Dofus Emeraude', description: 'PV max et régénération', color: 0x2fd67a, stats: { maxHp: 30, regen: 0.4 } },
-  dofus_pourpre: { name: 'Dofus Pourpre', description: 'Dégâts', color: 0xd62f4a, stats: { damage: 0.12 } },
-  dofus_turquoise: { name: 'Dofus Turquoise', description: 'Chance de coup critique', color: 0x2fc8d6, stats: { crit: 0.06 } },
-  dofus_vulbis: { name: 'Dofus Vulbis', description: 'Réduction du temps de recharge des sorts', color: 0xe0a02f, stats: { haste: 0.1 } },
-  gelano: { name: 'Gelano', description: 'Recharge des sorts et vitesse de déplacement', color: 0x80e0ff, stats: { haste: 0.06, speed: 0.03 } },
-  baton_maitre_bouftous: { name: 'Bâton du Maître des Bouftous', description: 'Critiques et dégâts critiques', color: 0xf0d060, stats: { crit: 0.03, critDamage: 0.15 } },
-  dofus_des_glaces: { name: 'Dofus des Glaces', description: "Projectile (ou frappe) en plus sur l'attaque de base", color: 0xb0f0ff, stats: { multishot: 0.35 } },
+export const RUN_BONUS_BASES: Record<string, ItemBase> = {
+  vitalite: { name: 'Vitalité', description: 'PV max', color: 0xa55b45, stats: { maxHp: 20 } },
+  puissance: { name: 'Puissance', description: 'Dégâts', color: 0xc08d4c, stats: { damage: 0.08 } },
+  celerite: { name: 'Célérité', description: 'Recharge des sorts', color: 0x5c9996, stats: { haste: 0.08 } },
+  attaque: { name: 'Vivacité', description: 'Attaque de base à distance', color: 0x9b8358, stats: { attackSpeed: 0.12 } },
+  agilite: { name: 'Agilité', description: 'Déplacement', color: 0x7b9451, stats: { speed: 0.04 } },
+  recuperation: { name: 'Récupération', description: 'Régénération', color: 0x7c9b6c, stats: { regen: 0.6 } },
+  critique: { name: 'Précision', description: 'Critiques', color: 0xaca15f, stats: { crit: 0.035 } },
+  impact: { name: 'Impact', description: 'Dégâts critiques', color: 0xb4855d, stats: { critDamage: 0.18 } },
+  protection: { name: 'Robustesse', description: 'Armure', color: 0x879074, stats: { armor: 0.7 } },
+  recuperation_victoire: { name: 'Second souffle', description: 'PV par victoire', color: 0x7d9d8a, stats: { killHeal: 1.5 } },
+  fortune: { name: 'Fortune', description: 'Kamas', color: 0xd1ad64, stats: { kamas: 0.1 } },
+  vampirisme: { name: 'Vampirisme', description: 'Vol de vie', color: 0xaa615e, stats: { lifesteal: 0.015 } },
+  chance: { name: 'Chance', description: 'Meilleures qualités de bonus de run', color: 0x7b9854, stats: { luck: 0.035 } },
+  echos: { name: 'Échos', description: 'Attaque supplémentaire', color: 0x77a59c, stats: { multishot: 0.25 } },
+  portee: { name: 'Allonge', description: 'Portée', color: 0xafa572, stats: { range: 0.4 } },
 };
 
 /** Libellé lisible d'une stat pour une valeur donnée (« +12 % de dégâts »...). */
@@ -53,7 +45,7 @@ export function statText(key: StatKey, value: number): string {
     case 'armor':
       return `-${Math.round((1 - Math.pow(0.92, value)) * 100)} % de dégâts subis`;
     case 'killHeal':
-      return `+${Math.round(value)} PV par monstre vaincu`;
+      return `+${Math.round(value*10)/10} PV par monstre vaincu`;
     case 'multishot':
       return `+1 projectile à ${Math.round(Math.min(1, value) * 100)} % des dégâts${value > 1 ? ' (+1 de plus)' : ''}`;
     case 'range':
@@ -61,7 +53,7 @@ export function statText(key: StatKey, value: number): string {
     case 'damage':
       return `+${pct(value)} de dégâts`;
     case 'haste':
-      return `-${pct(value)} de temps de recharge`;
+      return `+${pct(value)} de vitesse de recharge`;
     case 'attackSpeed':
       return `+${pct(value)} de vitesse d'attaque à distance`;
     case 'speed':
@@ -81,9 +73,9 @@ export function statText(key: StatKey, value: number): string {
   }
 }
 
-function buildItems(): Record<string, ItemDef> {
-  const out: Record<string, ItemDef> = {};
-  for (const [base, def] of Object.entries(ITEM_BASES)) {
+function buildItems(): Record<string, RunBonusDef> {
+  const out: Record<string, RunBonusDef> = {};
+  for (const [base, def] of Object.entries(RUN_BONUS_BASES)) {
     for (const rarity of RARITIES) {
       const stats: Partial<Record<StatKey, number>> = {};
       for (const [k, v] of Object.entries(def.stats)) stats[k as StatKey] = (v ?? 0) * RARITY_MULT[rarity];
@@ -98,14 +90,14 @@ function buildItems(): Record<string, ItemDef> {
 }
 
 /** Tous les objets du jeu, une entrée par (objet, rareté) : id = "base.rareté". */
-export const ITEMS: Record<string, ItemDef> = buildItems();
+export const RUN_BONUSES: Record<string, RunBonusDef> = buildItems();
 
-export function getItem(id: string): ItemDef | undefined {
-  return ITEMS[id];
+export function getRunBonus(id: string): RunBonusDef | undefined {
+  return RUN_BONUSES[id];
 }
 
 /** Tire la rareté d'un objet de coffre ; la chance (`luck`) augmente les rares et les épiques. */
-export function rollRarity(luck: number, random = Math.random): ItemRarity {
+export function rollRarity(luck: number, random = Math.random): BonusRarity {
   const r = random();
   if (r < 0.03 + luck * 0.4) return 'epique';
   if (r < 0.18 + luck * 1.2) return 'rare';
@@ -113,22 +105,22 @@ export function rollRarity(luck: number, random = Math.random): ItemRarity {
 }
 
 /** Un objet au hasard (base uniforme, rareté selon la chance). */
-export function rollItem(luck: number, random = Math.random): ItemDef {
-  const bases = Object.keys(ITEM_BASES);
+export function rollRunBonus(luck: number, random = Math.random): RunBonusDef {
+  const bases = Object.keys(RUN_BONUS_BASES);
   const base = bases[Math.floor(random() * bases.length)];
-  return ITEMS[`${base}.${rollRarity(luck, random)}`];
+  return RUN_BONUSES[`${base}.${rollRarity(luck, random)}`];
 }
 
 /** Inventaire synchronisé sous forme de texte : "id:nombre,id:nombre". */
-export function parseInventory(text: string): Map<string, number> {
+export function parseRunBonuses(text: string): Map<string, number> {
   const inv = new Map<string, number>();
   for (const part of text.split(',')) {
     const [id, n] = part.split(':');
-    if (id && ITEMS[id]) inv.set(id, Number(n) || 1);
+    if (id && RUN_BONUSES[id]) inv.set(id, Number(n) || 1);
   }
   return inv;
 }
-export function formatInventory(inv: Map<string, number>): string {
+export function formatRunBonuses(inv: Map<string, number>): string {
   return [...inv].map(([id, n]) => `${id}:${n}`).join(',');
 }
 
@@ -137,10 +129,10 @@ export function emptyStats(): Record<StatKey, number> {
 }
 
 /** Somme des bonus de tous les objets possédés. */
-export function sumStats(inv: Map<string, number>): Record<StatKey, number> {
+export function sumRunStats(inv: Map<string, number>): Record<StatKey, number> {
   const total = emptyStats();
   for (const [id, n] of inv) {
-    const stats = ITEMS[id]?.stats ?? {};
+    const stats = RUN_BONUSES[id]?.stats ?? {};
     for (const key of Object.keys(stats) as StatKey[]) total[key] += (stats[key] ?? 0) * n;
   }
   return total;
@@ -152,6 +144,6 @@ export function chestCost(difficulty: number): number {
 }
 
 /** Prix d'un objet chez le marchand. */
-export function merchantPrice(item: ItemDef, difficulty: number): number {
+export function merchantPrice(item: RunBonusDef, difficulty: number): number {
   return Math.round(chestCost(difficulty) * { commun: 1.5, rare: 3, epique: 6 }[item.rarity]);
 }

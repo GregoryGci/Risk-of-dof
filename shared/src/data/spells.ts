@@ -138,18 +138,14 @@ export const SPELLS: Record<string, SpellDef> = define({
   },
   tempete_de_puissance: {
     name: 'Tempête de Puissance',
-    description: "Bondit vers la direction visée et frappe une zone à l'atterrissage.",
+    description: 'Frappe une zone au point visé et repousse les ennemis.',
     color: 0x9fd8ff,
     element: 'air',
     cooldown: 6000,
     range: 5,
     damage: [24, 32],
     zone: { radius: 2.4 },
-    zoneAtDashEnd: true,
-    effects: [
-      { type: 'dash', direction: 'forward', distance: 5, duration: 0.22 },
-      { type: 'knockback', distance: 1.2 },
-    ],
+    effects: [{ type: 'knockback', distance: 1.2 }],
   },
   colere_de_iop: {
     name: 'Colère de Iop',
@@ -195,6 +191,16 @@ export const SPELLS: Record<string, SpellDef> = define({
     damage: [0, 0],
     effects: [{ type: 'dash', direction: 'forward', distance: 5, duration: 0.22 }],
   },
+  vitalite: {
+    name: 'Vitalité',
+    description: 'Protège le Iop avec un bouclier de 50 % de ses PV max pendant 5 secondes.',
+    color: 0x69cfff,
+    element: 'neutre',
+    cooldown: 12000,
+    range: 0,
+    damage: [0, 0],
+    shield: { maxHpFraction: 0.5, duration: 5 },
+  },
   epee_du_jugement: {
     name: 'Épée du Jugement',
     description: 'Ultime : une immense épée frappe une large zone après un instant.',
@@ -217,7 +223,7 @@ export const SPELLS: Record<string, SpellDef> = define({
     element: 'feu',
     cooldown: 400,
     range: 10,
-    damage: [8, 12],
+    damage: [10, 14],
     projectile: { speed: 20, radius: 0.3 },
   },
   mot_curatif: {
@@ -726,8 +732,8 @@ export const SPELLS: Record<string, SpellDef> = define({
     melee: { arc: 70 },
   },
   invocation_de_tofu: {
-    name: 'Invocation de Tofu',
-    description: 'Invoque un Tofu rapide et fragile (3 au maximum, 25 s).',
+    name: 'Invocation de Dragonnet',
+    description: 'Invoque un Dragonnet rouge qui crache du feu à distance (3 au maximum, 25 s).',
     color: 0xf0d050,
     element: 'air',
     cooldown: 4000,
@@ -736,8 +742,8 @@ export const SPELLS: Record<string, SpellDef> = define({
     summon: { monster: 'osa_tofu', max: 3, duration: 25 },
   },
   invocation_de_bouftou: {
-    name: 'Invocation de Bouftou',
-    description: 'Invoque un Bouftou robuste qui attire les monstres sur lui (30 s).',
+    name: 'Dragonnet Gardien',
+    description: 'Invoque un Dragonnet robuste qui attire les monstres sur lui (30 s).',
     color: 0xe0d0b0,
     element: 'terre',
     cooldown: 12000,
@@ -902,6 +908,18 @@ export const SPELLS: Record<string, SpellDef> = define({
   // =========================================================================
   // Monstres
   // =========================================================================
+  souffle_dragonnet: {
+    name:'Souffle du Dragonnet',description:'Flamme de l’invocation alliée.',icon:'graine',color:0xff7340,element:'feu',cooldown:1100,range:6,damage:[13,16],projectile:{speed:12,radius:.2},
+  },
+  jet_scara: {
+    name:'Jet du Scarafeuille',description:'Projectile du Scarafeuille Bleu.',icon:'graine',color:0x6cc6ed,element:'eau',cooldown:2600,range:9,damage:[8,11],projectile:{speed:8,radius:.26},
+  },
+  fleche_bwork: {
+    name:'Flèche Bwork',description:'Tir du Bwork Archer.',icon:'graine',color:0xc0ba88,element:'air',cooldown:2400,range:10,damage:[7,10],projectile:{speed:10,radius:.2},
+  },
+  etincelle_bwork: {
+    name:'Étincelle Bwork',description:'Petit projectile explosif du Bwork Mage.',icon:'graine',color:0xec9360,element:'feu',cooldown:3000,range:9,damage:[8,11],projectile:{speed:7.5,radius:.25},area:{radius:.8},
+  },
   graine_geante: {
     name: 'Graine Géante',
     description: 'Grosse graine qui éclate en zone (Tournesol Affamé).',

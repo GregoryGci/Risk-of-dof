@@ -2293,80 +2293,8 @@
       "image": "sprites/osa_tofu.png",
       "atlas": "sprites/osa_tofu.json",
       "origin": [
-        0.5,
-        0.8108
-      ],
-      "scale": 0.7907,
-      "anims": {
-        "idle": {
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 11,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 11,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 15,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 31,
-            "frameRate": 15,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "shrunk": 0.75
-    },
-    "osa_bouftou": {
-      "image": "sprites/osa_bouftou.png",
-      "atlas": "sprites/osa_bouftou.json",
-      "origin": [
-        0.4706,
-        0.6667
+        0.4806,
+        0.8859
       ],
       "scale": 1.1271,
       "anims": {
@@ -2388,28 +2316,28 @@
           "1": {
             "prefix": "run_1_",
             "start": 0,
-            "end": 17,
-            "frameRate": 40
+            "end": 19,
+            "frameRate": 20
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
-            "end": 17,
-            "frameRate": 40
+            "end": 22,
+            "frameRate": 20
           }
         },
         "attack": {
           "1": {
             "prefix": "attack_1_",
             "start": 0,
-            "end": 29,
-            "frameRate": 10,
+            "end": 28,
+            "frameRate": 20,
             "repeat": 0
           },
           "5": {
             "prefix": "attack_5_",
             "start": 0,
-            "end": 21,
+            "end": 22,
             "frameRate": 13,
             "repeat": 0
           }
@@ -2418,14 +2346,86 @@
           "1": {
             "prefix": "death_1_",
             "start": 0,
-            "end": 17,
+            "end": 26,
             "frameRate": 13,
             "repeat": 0
           },
           "5": {
             "prefix": "death_5_",
             "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "osa_bouftou": {
+      "image": "sprites/osa_bouftou.png",
+      "atlas": "sprites/osa_bouftou.json",
+      "origin": [
+        0.4806,
+        0.8859
+      ],
+      "scale": 1.1271,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
             "end": 19,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 23,
             "frameRate": 13,
             "repeat": 0
           }
@@ -2504,6 +2504,834 @@
         }
       },
       "shrunk": 0.75
+    },
+    "boufton": {
+      "image": "sprites/boufton.png",
+      "atlas": "sprites/boufton.json",
+      "origin": [
+        0.5419,
+        0.7368
+      ],
+      "scale": 0.6199,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "rose_demoniaque": {
+      "image": "sprites/rose_demoniaque.png",
+      "atlas": "sprites/rose_demoniaque.json",
+      "origin": [
+        0.4803,
+        0.8824
+      ],
+      "scale": 0.5635,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "pissenlit": {
+      "image": "sprites/pissenlit.png",
+      "atlas": "sprites/pissenlit.json",
+      "origin": [
+        0.5802,
+        0.852
+      ],
+      "scale": 0.5635,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 7,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 30,
+            "frameRate": 8,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "scarafeuille_vert": {
+      "image": "sprites/scarafeuille_vert.png",
+      "atlas": "sprites/scarafeuille_vert.json",
+      "origin": [
+        0.5364,
+        0.7782
+      ],
+      "scale": 1.1271,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 40,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "scarafeuille_rouge": {
+      "image": "sprites/scarafeuille_rouge.png",
+      "atlas": "sprites/scarafeuille_rouge.json",
+      "origin": [
+        0.5364,
+        0.775
+      ],
+      "scale": 1.1271,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 40,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "scarafeuille_bleu": {
+      "image": "sprites/scarafeuille_bleu.png",
+      "atlas": "sprites/scarafeuille_bleu.json",
+      "origin": [
+        0.5364,
+        0.7782
+      ],
+      "scale": 1.1271,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 40,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "craqueboule": {
+      "image": "sprites/craqueboule.png",
+      "atlas": "sprites/craqueboule.json",
+      "origin": [
+        0.4693,
+        0.7863
+      ],
+      "scale": 0.7889,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "craqueleur": {
+      "image": "sprites/craqueleur.png",
+      "atlas": "sprites/craqueleur.json",
+      "origin": [
+        0.4467,
+        0.7675
+      ],
+      "scale": 0.9016,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 30,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 7,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 8,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "bwork": {
+      "image": "sprites/bwork.png",
+      "atlas": "sprites/bwork.json",
+      "origin": [
+        0.4488,
+        0.8498
+      ],
+      "scale": 0.7099,
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 40
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 40
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "bwork_archer": {
+      "image": "sprites/bwork_archer.png",
+      "atlas": "sprites/bwork_archer.json",
+      "origin": [
+        0.6,
+        0.8671
+      ],
+      "scale": 0.71,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 12,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 9,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 12,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "bwork_mage": {
+      "image": "sprites/bwork_mage.png",
+      "atlas": "sprites/bwork_mage.json",
+      "origin": [
+        0.3797,
+        0.9108
+      ],
+      "scale": 0.7333,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
     }
   },
   "tiles": {
@@ -2532,6 +3360,17 @@
       "tiles/g486.png",
       "tiles/g485.png",
       "tiles/g484.png"
+    ],
+    "sable": [
+      "tiles/sable_80.png",
+      "tiles/sable_81.png",
+      "tiles/sable_82.png"
+    ],
+    "terre": [
+      "tiles/terre_54.png"
+    ],
+    "pierre": [
+      "tiles/pierre_133.png"
     ]
   },
   "objects": {
@@ -2541,42 +3380,48 @@
         "origin": [
           0.5636,
           0.8719
-        ]
+        ],
+        "scale": 1
       },
       {
         "image": "objects/o1_43.png",
         "origin": [
           0.5305,
           0.8518
-        ]
+        ],
+        "scale": 1
       },
       {
         "image": "objects/o1_44.png",
         "origin": [
           0.4784,
           0.8087
-        ]
+        ],
+        "scale": 1
       },
       {
         "image": "objects/o1_210.png",
         "origin": [
           0.495,
           0.8798
-        ]
+        ],
+        "scale": 1
       },
       {
         "image": "objects/o1_215.png",
         "origin": [
           0.3931,
           0.9507
-        ]
+        ],
+        "scale": 1
       },
       {
         "image": "objects/o1_219.png",
         "origin": [
           0.5023,
           1.0004
-        ]
+        ],
+        "scale": 1
       }
     ],
     "buisson": [
@@ -2585,14 +3430,16 @@
         "origin": [
           0.4884,
           0.7918
-        ]
+        ],
+        "scale": 1
       },
       {
         "image": "objects/o1_216.png",
         "origin": [
           0.5068,
           0.6983
-        ]
+        ],
+        "scale": 1
       }
     ],
     "rocher": [
@@ -2601,7 +3448,8 @@
         "origin": [
           0.4217,
           0.8075
-        ]
+        ],
+        "scale": 1
       }
     ],
     "souche": [
@@ -2610,7 +3458,8 @@
         "origin": [
           0.5286,
           0.6046
-        ]
+        ],
+        "scale": 1
       }
     ],
     "foin": [
@@ -2619,7 +3468,8 @@
         "origin": [
           0.4818,
           0.8778
-        ]
+        ],
+        "scale": 1
       }
     ],
     "coffre": [
@@ -2628,7 +3478,8 @@
         "origin": [
           0.6648,
           0.8623
-        ]
+        ],
+        "scale": 1
       }
     ],
     "coffre_ouvert": [
@@ -2637,7 +3488,8 @@
         "origin": [
           0.5328,
           0.6739
-        ]
+        ],
+        "scale": 1
       }
     ],
     "zaap": [
@@ -2646,7 +3498,8 @@
         "origin": [
           0.5724,
           0.7857
-        ]
+        ],
+        "scale": 1
       }
     ],
     "cawotte": [
@@ -2656,7 +3509,73 @@
           0.5,
           0.85
         ],
-        "scale": 1.6
+        "scale": 0.96
+      }
+    ],
+    "potion_vie": [
+      {
+        "image": "objects/potion_vie.png",
+        "origin": [
+          0.5,
+          1
+        ],
+        "scale": 0.75
+      }
+    ],
+    "arbre_sec": [
+      {
+        "image": "objects/o1_53.png",
+        "origin": [
+          0.5149,
+          0.9394
+        ],
+        "scale": 1
+      },
+      {
+        "image": "objects/o1_214.png",
+        "origin": [
+          0.4734,
+          0.8299
+        ],
+        "scale": 1
+      }
+    ],
+    "piton": [
+      {
+        "image": "objects/o1_193.png",
+        "origin": [
+          0.4217,
+          0.8075
+        ],
+        "scale": 0.7
+      },
+      {
+        "image": "objects/o1_194.png",
+        "origin": [
+          1.1102,
+          0.9164
+        ],
+        "scale": 0.7
+      }
+    ],
+    "totem": [
+      {
+        "image": "objects/o1_161.png",
+        "origin": [
+          0.4955,
+          0.8888
+        ],
+        "scale": 0.65
+      }
+    ],
+    "balise_defi": [
+      {
+        "image": "objects/o1_161.png",
+        "origin": [
+          0.4955,
+          0.8888
+        ],
+        "scale": 0.55
       }
     ]
   },
@@ -2761,7 +3680,74 @@
     "cape_vampyre": "items/cape_vampyre.png",
     "trefle_5_feuilles": "items/trefle_5_feuilles.png",
     "dofus_des_glaces": "items/dofus_des_glaces.png",
-    "arc_boisaille": "items/arc_boisaille.png"
+    "arc_boisaille": "items/arc_boisaille.png",
+    "cape_aventurier": "items/cape_aventurier.png",
+    "anneau_aventurier": "items/anneau_aventurier.png",
+    "bottes_aventurier": "items/bottes_aventurier.png",
+    "bouclier_bouftou": "items/bouclier_bouftou.png",
+    "familier_bwak": "items/familier_bwak.png",
+    "coiffe_bouftou": "items/coiffe_bouftou.png",
+    "cape_bouftou": "items/cape_bouftou.png",
+    "amulette_bouftou": "items/amulette_bouftou.png",
+    "anneau_royal_bouftou": "items/anneau_royal_bouftou.png",
+    "anneau_prespic": "items/anneau_prespic.png",
+    "ceinture_bouftou": "items/ceinture_bouftou.png",
+    "bottes_bouftou": "items/bottes_bouftou.png",
+    "marteau_bouftou": "items/marteau_bouftou.png",
+    "dofus_cawotte": "items/dofus_cawotte.png",
+    "amublop_royale": "items/amublop_royale.png",
+    "blopanneau_royal": "items/blopanneau_royal.png",
+    "blopture_royale": "items/blopture_royale.png",
+    "bloptes_royales": "items/bloptes_royales.png",
+    "bouclier_craqueleur": "items/bouclier_craqueleur.png",
+    "familier_chacha": "items/familier_chacha.png",
+    "abracaska_ancestral": "items/abracaska_ancestral.png",
+    "abracapa_ancestrale": "items/abracapa_ancestrale.png",
+    "torque_ancestral": "items/torque_ancestral.png",
+    "anneau_ancestral": "items/anneau_ancestral.png",
+    "anneau_dragon_cochon": "items/anneau_dragon_cochon.png",
+    "abrature_ancestrale": "items/abrature_ancestrale.png",
+    "fendeuse_ancestrale": "items/fendeuse_ancestrale.png",
+    "coiffe_chene_mou": "items/coiffe_chene_mou.png",
+    "cape_chene_mou": "items/cape_chene_mou.png",
+    "talisman_chene_mou": "items/talisman_chene_mou.png",
+    "anneau_chene_mou": "items/anneau_chene_mou.png",
+    "anneau_meulou": "items/anneau_meulou.png",
+    "string_chene_mou": "items/string_chene_mou.png",
+    "tongues_chene_mou": "items/tongues_chene_mou.png",
+    "baguette_chene_mou": "items/baguette_chene_mou.png",
+    "bouclier_chene_mou": "items/bouclier_chene_mou.png",
+    "familier_dragoune": "items/familier_dragoune.png",
+    "dofus_glaces": "items/dofus_glaces.png",
+    "coiffe_terrdala": "items/coiffe_terrdala.png",
+    "abrabottes_ancestrales": "items/abrabottes_ancestrales.png",
+    "baguette_boisaille": "items/baguette_boisaille.png",
+    "familier_bilby": "items/familier_bilby.png",
+    "chapeau_prespic": "items/chapeau_prespic.png",
+    "cape_prespic": "items/cape_prespic.png",
+    "ceinture_prespic": "items/ceinture_prespic.png",
+    "amulette_royale_bouftou": "items/amulette_royale_bouftou.png",
+    "familier_bouloute": "items/familier_bouloute.png",
+    "dofus_kaliptus": "items/dofus_kaliptus.png",
+    "solomonk": "items/solomonk.png",
+    "cape_dragon_cochon": "items/cape_dragon_cochon.png",
+    "collier_dragon_cochon": "items/collier_dragon_cochon.png",
+    "mules_dragon_cochon": "items/mules_dragon_cochon.png",
+    "dagues_ancestrales": "items/dagues_ancestrales.png",
+    "familier_nomoon": "items/familier_nomoon.png",
+    "dofus_ocre": "items/dofus_ocre.png",
+    "coiffe_meulou": "items/coiffe_meulou.png",
+    "cape_meulou": "items/cape_meulou.png",
+    "ceinture_meulou": "items/ceinture_meulou.png",
+    "bottes_meulou": "items/bottes_meulou.png",
+    "dofus_ebene": "items/dofus_ebene.png",
+    "dofus_ivoire": "items/dofus_ivoire.png",
+    "epee_boisaille": "items/epee_boisaille.png",
+    "coiffe_scarafeuille": "items/coiffe_scarafeuille.png",
+    "cape_scarafeuille": "items/cape_scarafeuille.png",
+    "anneau_scarafeuille": "items/anneau_scarafeuille.png",
+    "ceinture_scarafeuille": "items/ceinture_scarafeuille.png",
+    "kwakcoiffe": "items/kwakcoiffe.png"
   },
   "spellfx": {
     "101": {

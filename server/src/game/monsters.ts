@@ -1,6 +1,6 @@
 // IA des monstres : chaque monstre cible le joueur visible le plus proche (ou une invocation alliée,
 // en priorité celles qui provoquent). Les invocations alliées ont leur propre IA (updateAlly).
-import { MAX_MONSTERS, MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getMonster, getSpell, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, resolveCollisions } from '@rod/shared';
+import { MAX_MONSTERS, MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getMonster, getSpell, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, resolveCollisions, stepMovement } from '@rod/shared';
 import type { MonsterRt, PlayerRt, Simulation } from './Simulation.ts';
 
 /** Cible d'un monstre : un joueur ou une invocation alliée. */
@@ -65,8 +65,8 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
   // Recul subi : interrompt ce que faisait le monstre. Un boss ne se laisse pas repousser.
   if (m.push && m.def.boss) m.push = null;
   if (m.push) {
-    const pos = { x: s.x + m.push.vx * dt, y: s.y + m.push.vy * dt };
-    resolveCollisions(sim.map, pos, m.def.radius);
+    const pos = { x: s.x, y: s.y };
+    stepMovement(sim.map,pos,m.push.vx,m.push.vy,Math.hypot(m.push.vx,m.push.vy),dt,m.def.radius);
     s.x = pos.x;
     s.y = pos.y;
     m.push.time -= dt;
@@ -105,8 +105,8 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
   if (b.type === 'charger' && s.state === MSTATE_CHARGE) {
     // Charge en ligne droite : touche chaque joueur une fois au passage.
     const before = { x: s.x, y: s.y };
-    const pos = { x: s.x + m.chargeDx * b.chargeSpeed * dt, y: s.y + m.chargeDy * b.chargeSpeed * dt };
-    resolveCollisions(sim.map, pos, m.def.radius);
+    const pos = { x: s.x, y: s.y };
+    stepMovement(sim.map,pos,m.chargeDx,m.chargeDy,b.chargeSpeed,dt,m.def.radius);
     s.x = pos.x;
     s.y = pos.y;
     for (const p of sim.players.values()) {
@@ -220,8 +220,8 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
     return;
   }
   if (m.push) {
-    const pos = { x: s.x + m.push.vx * dt, y: s.y + m.push.vy * dt };
-    resolveCollisions(sim.map, pos, m.def.radius);
+    const pos = { x: s.x, y: s.y };
+    stepMovement(sim.map,pos,m.push.vx,m.push.vy,Math.hypot(m.push.vx,m.push.vy),dt,m.def.radius);
     s.x = pos.x;
     s.y = pos.y;
     m.push.time -= dt;
@@ -269,6 +269,17 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
     moveTo(owner.state.x, owner.state.y, 2.5);
     return;
   }
+  if (b.type === 'ranged') {
+    const spell = getSpell(b.spell);
+    s.dir = dirFromVector(enemy.state.x-s.x,enemy.state.y-s.y);
+    if (best > b.preferredRange) moveTo(enemy.state.x,enemy.state.y,b.preferredRange);
+    if (best <= spell.range && sim.now >= m.specialReadyAt) {
+      m.specialReadyAt=sim.now+spell.cooldown/1000;
+      // Le maître reçoit les dégâts/kills ; seule l'invocation joue l'animation.
+      sim.cast(spell,s.x,s.y,enemy.state.x,enemy.state.y,owner.id,true,m.damageMult,0,undefined,undefined,undefined,0,m.id);
+    }
+    return;
+  }
   moveTo(enemy.state.x, enemy.state.y, m.def.melee.range * 0.8);
   if (best <= m.def.melee.range + enemy.def.radius && sim.now >= m.meleeReadyAt && m.def.melee.damage > 0) {
     m.meleeReadyAt = sim.now + m.def.melee.cooldown;
@@ -289,8 +300,9 @@ function separate(sim: Simulation): void {
       const dx = b.state.x - a.state.x;
       const dy = b.state.y - a.state.y;
       const min = a.def.radius + b.def.radius;
-      const d = Math.hypot(dx, dy);
-      if (d >= min) continue;
+      const distanceSquared=dx*dx+dy*dy;
+      if (distanceSquared >= min*min) continue;
+      const d = Math.sqrt(distanceSquared);
       if (d < 0.001) {
         // Exactement superposés : on décale arbitrairement.
         a.state.x -= 0.05;
@@ -303,5 +315,11 @@ function separate(sim: Simulation): void {
       b.state.x += (dx / d) * push;
       b.state.y += (dy / d) * push;
     }
+  }
+  for(const m of list) {
+    if(m.def.behavior.type==='dummy') continue;
+    const pos={x:m.state.x,y:m.state.y};
+    resolveCollisions(sim.map,pos,m.def.radius);
+    m.state.x=pos.x;m.state.y=pos.y;
   }
 }

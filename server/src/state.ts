@@ -6,6 +6,9 @@ import { PHASE_LOBBY } from '@rod/shared';
 
 export const PlayerState = schema(
   {
+    equipment: t.string().default('{}'),
+    rewards: t.string().default(''),
+    runLoot: t.string().default('[]'),
     name: t.string().default(''),
     classId: t.string().default('cra'),
     /** Numéro du joueur dans la partie (0-3), sert pour la couleur. */
@@ -16,6 +19,7 @@ export const PlayerState = schema(
     hp: t.float32().default(0),
     maxHp: t.float32().default(0),
     speed: t.float32().default(0),
+    shield: t.float32().default(0),
     alive: t.boolean().default(true),
     moving: t.boolean().default(false),
     kamas: t.uint32().default(0),
@@ -30,7 +34,7 @@ export const PlayerState = schema(
     invisible: t.boolean().default(false),
     bought: t.string().default(''),
     /** Inventaire encodé en texte (voir formatInventory). */
-    items: t.string().default(''),
+    bonuses: t.string().default(''),
   },
   'PlayerState',
 );
@@ -65,6 +69,13 @@ export const ChestState = schema(
 );
 export type ChestState = InstanceType<typeof ChestState>;
 
+/** Potion de vie ramassée au contact. */
+export const PotionState = schema(
+  { x: t.float32().default(0), y: t.float32().default(0) },
+  'PotionState',
+);
+export type PotionState = InstanceType<typeof PotionState>;
+
 /** Piège ou glyphe posé au sol. */
 export const GroundState = schema(
   {
@@ -81,6 +92,8 @@ export type GroundState = InstanceType<typeof GroundState>;
 
 export const GameState = schema(
   {
+    singlePlayer: t.boolean().default(false),
+    runId: t.string().default(''),
     phase: t.uint8().default(PHASE_LOBBY),
     /** Graine de la carte : le client régénère la même carte que le serveur. */
     seed: t.uint32().default(1),
@@ -93,6 +106,7 @@ export const GameState = schema(
     monsters: t.map(MonsterState),
     chests: t.map(ChestState),
     grounds: t.map(GroundState),
+    potions: t.map(PotionState),
     chestCost: t.uint16().default(35),
     stage: t.uint8().default(1),
     paused: t.boolean().default(false),

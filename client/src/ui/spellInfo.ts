@@ -1,5 +1,5 @@
 // Description lisible d'un sort, générée à partir de ses données (shared/src/data/spells.ts).
-// Les valeurs tiennent compte des objets du joueur (dégâts, vitesse de recharge, critiques).
+// Les valeurs tiennent compte de la tenue et des bonus de run.
 import { statText, type SpellDef, type StatKey } from '@rod/shared';
 
 const BASE_CRIT = 0.05;
@@ -15,6 +15,7 @@ function pct(v: number): string {
 
 /** Forme du sort en quelques mots. */
 export function spellShape(spell: SpellDef): string {
+  if (spell.shield) return `Bouclier sur soi pendant ${spell.shield.duration} s`;
   if (spell.projectile) {
     if (spell.projectile.toTarget) return 'Tir en cloche au point visé';
     if (spell.projectile.pierce) return 'Projectile perçant (touche toute la ligne)';
@@ -34,10 +35,11 @@ export function spellShape(spell: SpellDef): string {
 }
 
 /** Lignes de détail d'un sort, en HTML. */
-export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number>): string {
+export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number>, slot?: number): string {
   const damage = 1 + (stats?.damage ?? 0);
-  const haste = 1 + (stats?.haste ?? 0);
-  const crit = BASE_CRIT + (stats?.crit ?? 0);
+  const ranged = !spell.melee && !spell.zone?.self;
+  const haste = (1 + (stats?.haste ?? 0)) * (ranged && slot===0 ? 1 + (stats?.attackSpeed ?? 0) : 1);
+  const crit = Math.min(1,BASE_CRIT + (stats?.crit ?? 0));
   const critMult = 1.5 + (stats?.critDamage ?? 0);
   const lines: string[] = [];
 
@@ -47,7 +49,8 @@ export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number
     lines.push(`<span class="dmg">Dégâts ${a} à ${b}</span> — critique ${pct(crit)} (×${critMult.toFixed(2).replace('.', ',')})`);
   }
   lines.push(spellShape(spell));
-  if (spell.range > 0) lines.push(`Portée : ${cases(spell.range)}`);
+  if (spell.shield) lines.push(`Absorbe ${pct(spell.shield.maxHpFraction)} de vos PV max en dégâts`);
+  if (spell.range > 0) lines.push(`Portée : ${cases(Math.round((spell.range + (spell.melee ? 0 : stats?.range ?? 0))*10)/10)}`);
   if (spell.area) lines.push(`Explosion de rayon ${spell.area.radius} à l'impact`);
   for (const e of spell.effects ?? []) {
     if (e.type === 'knockback') lines.push(`Repousse de ${cases(e.distance)}`);

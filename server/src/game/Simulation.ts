@@ -1,14 +1,14 @@
 // Simulation autoritaire d'une partie : joueurs, sorts, projectiles, dégâts.
 // L'IA des monstres est dans monsters.ts, le spawn dans director.ts.
 import {
-  CAWOTTE_COUNT,
+  CHALLENGE_COUNT,
   CHEST_COUNT,
   MONSTERS,
   SHOP_SIZE,
   merchantPrice,
-  rollItem,
+  rollRunBonus,
   INTERACT_RANGE,
-  ITEMS,
+  RUN_BONUSES,
   MAP_SIZE,
   bossForStage,
   getMode,
@@ -26,19 +26,24 @@ import {
   clamp,
   difficultyAt,
   dirFromVector,
-  formatInventory,
+  formatRunBonuses,
   generateMap,
+  zoneForStage,
   getClass,
   getMonster,
   getSpell,
   isBlocked,
   monsterDamageMultiplier,
   monsterHpMultiplier,
-  metaStats,
+  equippedStats,
+  sanitizeEquipped,
+  equipmentReward,
+  monsterEquipmentDrops,
+  type GearDrop,
   resolveCollisions,
   sanitizeLoadout,
   stepMovement,
-  sumStats,
+  sumRunStats,
   type CastEvent,
   type CastMessage,
   type ClassDef,
@@ -48,9 +53,10 @@ import {
   type SpellDef,
   type StatKey,
 } from '@rod/shared';
-import { ChestState, GameState, GroundState, MonsterState, PlayerState } from '../state.ts';
+import { ChestState, GameState, GroundState, MonsterState, PlayerState, PotionState } from '../state.ts';
 import { Director } from './director.ts';
 import { updateMonsters } from './monsters.ts';
+import { randomUUID } from 'node:crypto';
 
 /** Déplacement forcé (bond, recul) : vitesse appliquée pendant `time` secondes. */
 export interface Push {
@@ -70,6 +76,9 @@ export interface PlayerRt {
   readyAt: number[];
   push: Push | null;
   lastHitAt: number;
+  shieldUntil: number;
+  autoAttack: boolean;
+  lastInputAt: number;
   /** Objets possédés (id -> nombre) et somme de leurs bonus. */
   inventory: Map<string, number>;
   stats: Record<StatKey, number>;
@@ -77,15 +86,16 @@ export interface PlayerRt {
   spells: string[];
   /** Bonus temporaires (sorts de soutien). */
   buffs: { stats: Partial<Record<StatKey, number>>; until: number; invisible: boolean; invulnerable: boolean }[];
-  /** Résurrection de l'arbre de stats déjà utilisée / en attente pendant cette partie. */
+  /** Résurrection déjà utilisée / en attente pendant cette partie. */
   reviveUsed: boolean;
   revivePending: boolean;
   /** Offres du marchand déjà achetées dans cette zone. */
   bought: Set<number>;
   /** Prochain dash (Maj) disponible. */
   dashReadyAt: number;
-  /** Bonus permanents de l'arbre de stats. */
+  /** Bonus permanents de la tenue équipée, figés au lancement. */
   meta: Record<StatKey, number>;
+  loot: GearDrop[];
   /** Positions et PV récents (Vol du Temps du Xélor). */
   history: { t: number; x: number; y: number; hp: number }[];
 }
@@ -162,6 +172,9 @@ const ARMOR_FACTOR = 0.92;
 const CRIT_MULT = 1.5;
 /** Délai sans dégât avant que la régénération reprenne (s). */
 const REGEN_DELAY = 4;
+const POTION_DROP_CHANCE = 0.08;
+const POTION_LIFETIME = 30;
+const POTION_PICKUP_RANGE = 0.8;
 /** Dash (Maj) : distance, durée et temps de recharge. */
 const DASH_DISTANCE = 3;
 const DASH_DURATION = 0.15;
@@ -177,6 +190,8 @@ export class Simulation {
   private nextProjectileId = 1;
   private nextMonsterId = 1;
   private nextChestId = 1;
+  private nextPotionId = 1;
+  private potionExpires = new Map<string, number>();
   /** Actions différées (réapparition des coffres...). */
   private timers: { at: number; run: () => void }[] = [];
   /** Id du gardien du Zaap en vie ('' sinon). */
@@ -215,19 +230,20 @@ export class Simulation {
   // Cycle de vie
   // -------------------------------------------------------------------------
 
-  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, meta?: unknown): void {
+  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, equipment?: unknown): void {
     // Un nouveau joueur arrive : plus de pause possible.
     this.state.paused = false;
     const def = getClass(classId ?? '');
     const state = new PlayerState();
     state.name = name;
     state.classId = def.id;
+    state.equipment = JSON.stringify(sanitizeEquipped(equipment));
     // Premier numéro de joueur libre (sert à la couleur).
     const used = new Set([...this.players.values()].map((p) => p.state.slot));
     let slot = 0;
     while (used.has(slot)) slot++;
     state.slot = slot;
-    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, inventory: new Map(), stats: sumStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, meta: metaStats(meta), reviveUsed: false, revivePending: false, bought: new Set(), history: [] };
+    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, bought: new Set(), history: [] };
     this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
@@ -249,12 +265,14 @@ export class Simulation {
     p.state.spells = p.spells.join(',');
   }
 
-  /** Arbre de stats mis à jour depuis le salon. */
-  setMeta(id: string, meta: unknown): void {
+  /** Tenue modifiable dans le salon ou après une défaite, jamais pendant la run. */
+  setEquipment(id: string, equipment: unknown): void {
     const p = this.players.get(id);
-    if (!p || this.state.phase !== PHASE_LOBBY) return;
-    p.meta = metaStats(meta);
-    this.resetPlayer(p);
+    if (!p || this.state.phase === PHASE_PLAYING) return;
+    const valid = sanitizeEquipped(equipment);
+    p.state.equipment = JSON.stringify(valid);
+    p.meta = equippedStats(valid);
+    if (this.state.phase === PHASE_LOBBY) this.resetPlayer(p);
   }
 
   /** Changement des sorts équipés : possible uniquement dans le salon. */
@@ -297,10 +315,11 @@ export class Simulation {
     this.removeDummies();
     for (const id of [...this.grounds.keys()]) this.removeGround(id);
     this.state.phase = PHASE_PLAYING;
+    this.state.runId = randomUUID();
     this.state.time = 0;
     this.state.difficulty = 1;
     this.state.stage = 1;
-    for (const p of this.players.values()) this.resetMeters(p);
+    for (const p of this.players.values()) { this.resetPlayer(p); this.resetMeters(p); p.state.rewards = ''; p.state.runLoot='[]'; p.loot=[]; }
     this.setupStage();
   }
 
@@ -317,12 +336,14 @@ export class Simulation {
 
   /** Prépare une zone : coffres neufs, Zaap éteint placé loin du point d'apparition. */
   private setupStage(): void {
+    this.state.potions.clear();
+    this.potionExpires.clear();
     this.director.reset();
     this.timers = [];
     this.bossId = '';
     for (const id of [...this.state.chests.keys()]) this.state.chests.delete(id);
     for (let i = 0; i < CHEST_COUNT; i++) this.spawnChest();
-    for (let i = 0; i < CAWOTTE_COUNT; i++) this.spawnChest('cawotte');
+    for (let i = 0; i < CHALLENGE_COUNT; i++) this.spawnChest('challenge');
 
     // Marchand à partir de la deuxième zone, près du point d'arrivée.
     for (const p of this.players.values()) p.bought.clear();
@@ -330,7 +351,7 @@ export class Simulation {
     if (this.state.stage >= 2) {
       this.state.merchantX = MAP_SIZE / 2 + 3;
       this.state.merchantY = MAP_SIZE / 2 - 3;
-      const offers = Array.from({ length: SHOP_SIZE }, () => rollItem(0.15));
+      const offers = Array.from({ length: SHOP_SIZE }, () => rollRunBonus(0.15));
       this.state.shop = offers.map((it) => `${it.id}:${merchantPrice(it, this.state.difficulty)}`).join(',');
     } else {
       this.state.merchantX = 0;
@@ -345,6 +366,9 @@ export class Simulation {
       const x = 5 + Math.random() * (this.map.size - 10);
       const y = 5 + Math.random() * (this.map.size - 10);
       if (Math.hypot(x - c, y - c) < 16 || isBlocked(this.map, x, y, 1.3)) continue;
+      // Les portées d'interaction ne doivent pas se chevaucher : E au défi
+      // ne doit jamais déclencher le Zaap prioritaire à sa place.
+      if([...this.state.chests.values()].some(ch=>Math.hypot(ch.x-x,ch.y-y)<ZAAP_RANGE+INTERACT_RANGE+.2)) continue;
       this.state.zaapX = x;
       this.state.zaapY = y;
       break;
@@ -357,9 +381,12 @@ export class Simulation {
     for (const id of [...this.grounds.keys()]) this.removeGround(id);
     this.projectiles = [];
     this.state.seed = Math.floor(Math.random() * 0xffffffff);
-    this.map = generateMap(this.state.seed);
     this.state.stage++;
+    this.map = generateMap(this.state.seed, undefined, this.state.stage);
     for (const p of this.players.values()) {
+      p.push=null;
+      p.readyAt=[this.now,this.now,this.now,this.now];
+      p.dashReadyAt=this.now;
       this.placeAtSpawn(p);
       if (!p.state.alive) {
         p.state.alive = true;
@@ -367,7 +394,7 @@ export class Simulation {
       }
     }
     this.setupStage();
-    this.broadcast('stage', { stage: this.state.stage });
+    this.broadcast('stage', { stage: this.state.stage, name: zoneForStage(this.state.stage).name });
   }
 
   private activateZaap(): void {
@@ -411,7 +438,18 @@ export class Simulation {
       this.resetMeters(p);
     }
     this.state.phase = PHASE_LOBBY;
-    this.start();
+    this.state.paused = false;
+    this.state.time = 0;
+    this.state.stage = 1;
+    this.state.difficulty = 1;
+    this.state.potions.clear();
+    this.potionExpires.clear();
+    this.state.chests.clear();
+    this.state.shop = '';
+    this.state.zaapState = ZAAP_IDLE;
+    this.timers = [];
+    for (const p of this.players.values()) { p.state.rewards = ''; p.state.runLoot='[]'; p.loot=[]; }
+    this.spawnDummies();
   }
 
   private resetPlayer(p: PlayerRt): void {
@@ -425,6 +463,9 @@ export class Simulation {
     p.push = null;
     p.readyAt = [0, 0, 0, 0];
     p.lastHitAt = -999;
+    p.state.shield = 0;
+    p.shieldUntil = 0;
+    p.autoAttack = false;
     p.buffs = [];
     p.state.invisible = false;
     p.reviveUsed = false;
@@ -454,13 +495,15 @@ export class Simulation {
     const dy = Number(msg.dy);
     p.dx = Number.isFinite(dx) ? clamp(dx, -1, 1) : 0;
     p.dy = Number.isFinite(dy) ? clamp(dy, -1, 1) : 0;
+    p.autoAttack = msg.autoAttack === true;
+    p.lastInputAt = this.now;
     const dir = Number(msg.dir);
     if (Number.isInteger(dir) && dir >= 0 && dir < 8) p.state.dir = dir;
   }
 
   playerCast(id: string, msg: CastMessage): void {
     const p = this.players.get(id);
-    if (!p || !msg || !p.state.alive || this.state.phase === PHASE_LOST) return;
+    if (!p || !msg || !p.state.alive || this.state.phase === PHASE_LOST || this.state.paused) return;
     const slot = Number(msg.slot);
     const tx = Number(msg.tx);
     const ty = Number(msg.ty);
@@ -481,7 +524,7 @@ export class Simulation {
     const critChance = BASE_CRIT_CHANCE + p.stats.crit;
     const critMult = CRIT_MULT + p.stats.critDamage;
     const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, critChance, slot, cooldown, critMult, p.stats.range);
-    // Dofus des Glaces : l'attaque de base tire des projectiles en éventail, ou frappe de nouveau un instant après.
+    // Bonus Échos : projectiles en éventail, ou frappes supplémentaires un instant après.
     if (slot === 0 && p.stats.multishot > 0) {
       const extra = Math.ceil(p.stats.multishot);
       const share = Math.min(1, p.stats.multishot / extra);
@@ -526,7 +569,7 @@ export class Simulation {
    * Lance un sort depuis (x, y) vers (tx, ty) et prévient les clients.
    * Retourne la direction normalisée du tir.
    */
-  cast(spell: SpellDef, x: number, y: number, tx: number, ty: number, owner: string, fromPlayer: boolean, damageMult: number, critChance = 0, slot?: number, cooldown?: number, critMult = CRIT_MULT, rangeBonus = 0): { x: number; y: number } {
+  cast(spell: SpellDef, x: number, y: number, tx: number, ty: number, owner: string, fromPlayer: boolean, damageMult: number, critChance = 0, slot?: number, cooldown?: number, critMult = CRIT_MULT, rangeBonus = 0, visualCaster = owner): { x: number; y: number } {
     const range = spell.range + rangeBonus;
     let dx = tx - x;
     let dy = ty - y;
@@ -540,13 +583,22 @@ export class Simulation {
     }
     const id = this.nextProjectileId++;
     const pr: Projectile = { id, spell, owner, fromPlayer, x, y, dx, dy, remaining: 0, damageMult, critChance, critMult, hit: new Set() };
-    const event: CastEvent = { id, caster: owner, spell: spell.id, x, y, tx: x + dx, ty: y + dy };
+    const event: CastEvent = { id, caster: visualCaster, spell: spell.id, x, y, tx: x + dx, ty: y + dy };
     if (slot !== undefined) {
       event.slot = slot;
       event.cooldown = cooldown ?? spell.cooldown;
     }
 
     const caster = fromPlayer ? this.players.get(owner) : undefined;
+    if (spell.shield && caster) {
+      caster.state.shield = Math.round(caster.state.maxHp * spell.shield.maxHpFraction);
+      caster.shieldUntil = this.now + spell.shield.duration;
+      event.tx = x;
+      event.ty = y;
+      this.broadcast('cast', event);
+      this.broadcast('buff', { target: owner, label: `Bouclier +${caster.state.shield}`, duration: spell.shield.duration });
+      return { x: dx, y: dy };
+    }
     // Point visé, limité par la portée.
     const reachTarget = Math.min(d, range);
     const aimX = x + dx * reachTarget;
@@ -704,6 +756,8 @@ export class Simulation {
 
     this.runTimers();
     this.updatePlayers(dt);
+    this.updateAutoAttacks();
+    this.updatePotions();
     this.updateGrounds();
     if (this.state.phase === PHASE_PLAYING) {
       this.state.time += dt;
@@ -724,6 +778,7 @@ export class Simulation {
   private updatePlayers(dt: number): void {
     for (const p of this.players.values()) {
       const s = p.state;
+      if (s.shield > 0 && this.now >= p.shieldUntil) s.shield = 0;
       // Bonus temporaires expirés.
       if (p.buffs.some((b) => b.until <= this.now)) {
         p.buffs = p.buffs.filter((b) => b.until > this.now);
@@ -732,9 +787,7 @@ export class Simulation {
       if (!s.alive) continue;
       const pos = { x: s.x, y: s.y };
       if (p.push) {
-        pos.x += p.push.vx * dt;
-        pos.y += p.push.vy * dt;
-        resolveCollisions(this.map, pos, PLAYER_RADIUS);
+        stepMovement(this.map,pos,p.push.vx,p.push.vy,Math.hypot(p.push.vx,p.push.vy),dt,PLAYER_RADIUS);
         p.push.time -= dt;
         if (p.push.time <= 0) p.push = null;
         s.moving = false;
@@ -747,6 +800,53 @@ export class Simulation {
       if (p.history.length === 0 || this.now - p.history[p.history.length - 1].t >= 0.1) p.history.push({ t: this.now, x: s.x, y: s.y, hp: s.hp });
       while (p.history.length > 1 && this.now - p.history[1].t > 4) p.history.shift();
       if (s.hp < s.maxHp && this.now - p.lastHitAt > REGEN_DELAY) s.hp = Math.min(s.maxHp, s.hp + (p.def.regen + p.stats.regen) * dt);
+    }
+  }
+
+  /** La simulation choisit la cible et respecte la recharge habituelle du sort de base. */
+  private updateAutoAttacks(): void {
+    for (const p of this.players.values()) {
+      if (!p.autoAttack || !p.state.alive || this.now < p.readyAt[0] || this.now - p.lastInputAt > 2) continue;
+      const spell = getSpell(p.spells[0]);
+      if (spell.heal || spell.shield || !(spell.projectile || spell.melee || spell.zone)) continue;
+      const range = spell.zone?.self ? spell.zone.radius : spell.melee ? spell.range : spell.range + p.stats.range;
+      let nearest: MonsterRt | undefined;
+      let nearestDist = Infinity;
+      for (const m of this.monsters.values()) {
+        if (m.state.ally || m.state.hp <= 0) continue;
+        const dist = Math.hypot(m.state.x - p.state.x, m.state.y - p.state.y);
+        if (dist > range + m.def.radius || dist >= nearestDist) continue;
+        nearest = m;
+        nearestDist = dist;
+      }
+      if (nearest) this.playerCast(p.id, { slot: 0, tx: nearest.state.x, ty: nearest.state.y });
+    }
+  }
+
+  /** Une potion profite au joueur blessé le plus proche au contact, une seule fois. */
+  private updatePotions(): void {
+    if (this.state.phase !== PHASE_PLAYING) return;
+    for (const [id, expiresAt] of this.potionExpires) {
+      if (this.now >= expiresAt) {
+        this.state.potions.delete(id);
+        this.potionExpires.delete(id);
+        continue;
+      }
+      const potion = this.state.potions.get(id);
+      if (!potion) continue;
+      let nearest: PlayerRt | undefined;
+      let nearestDist = POTION_PICKUP_RANGE;
+      for (const p of this.players.values()) {
+        if (!p.state.alive || p.state.hp >= p.state.maxHp) continue;
+        const dist = Math.hypot(p.state.x - potion.x, p.state.y - potion.y);
+        if (dist > nearestDist) continue;
+        nearest = p;
+        nearestDist = dist;
+      }
+      if (!nearest) continue;
+      this.state.potions.delete(id);
+      this.potionExpires.delete(id);
+      this.healPlayer(nearest, nearest.state.maxHp * 0.5, null);
     }
   }
 
@@ -896,8 +996,8 @@ export class Simulation {
   // Bonus, pièges et glyphes, invocations
   // -------------------------------------------------------------------------
 
-  healPlayer(p: PlayerRt, amount: number, source: PlayerRt | undefined = p): void {
-    const gain = Math.round(Math.min(p.state.maxHp - p.state.hp, amount));
+  healPlayer(p: PlayerRt, amount: number, source: PlayerRt | null | undefined = p): void {
+    const gain = Math.min(p.state.maxHp - p.state.hp, Math.round(amount));
     if (gain <= 0) return;
     p.state.hp += gain;
     if (source) source.state.healDone += gain;
@@ -989,6 +1089,7 @@ export class Simulation {
     ally.allyOwner = owner.id;
     ally.expiresAt = this.now + summon.duration;
     ally.meleeReadyAt = this.now;
+    ally.specialReadyAt = this.now;
   }
 
   // -------------------------------------------------------------------------
@@ -1028,17 +1129,37 @@ export class Simulation {
       if (killer.state.alive && killer.stats.killHeal > 0) killer.state.hp = Math.min(killer.state.maxHp, killer.state.hp + killer.stats.killHeal);
     }
     this.state.kills++;
+    if (this.state.phase===PHASE_PLAYING) {
+      for (const p of this.players.values()) {
+        const drops = monsterEquipmentDrops(this.state.stage,!!m.def.boss);
+        if (!drops.length) continue;
+        drops.forEach((gear,index)=>{
+          const drop={claimId:`${this.state.runId}:${m.id}:${p.id}:${index}`,gear};
+          p.loot.push(drop);
+          this.broadcast('gearDrop',{player:p.id,drop});
+        });
+        p.state.runLoot=JSON.stringify(p.loot);
+      }
+    }
     if (m.state.elite) {
       // Récompense d'élite : un objet pour chaque joueur qui l'a frappé.
       for (const pid of m.hitBy) {
         const p = this.players.get(pid);
         if (!p) continue;
-        const item = rollItem(p.stats.luck + 0.05);
+        const item = rollRunBonus(p.stats.luck + 0.05);
         this.giveItem(p, item.id);
         this.broadcast('item', { player: pid, item: item.id, x: m.state.x, y: m.state.y });
       }
     }
     this.broadcast('death', { id: m.id, player: false, x: m.state.x, y: m.state.y, kamas });
+    if (this.state.phase === PHASE_PLAYING && Math.random() < POTION_DROP_CHANCE) {
+      const id = `p${this.nextPotionId++}`;
+      const potion = new PotionState();
+      potion.x = m.state.x;
+      potion.y = m.state.y;
+      this.state.potions.set(id, potion);
+      this.potionExpires.set(id, this.now + POTION_LIFETIME);
+    }
     this.removeMonster(m.id);
   }
 
@@ -1047,17 +1168,23 @@ export class Simulation {
     // Trêve : aucun dégât.
     if (p.buffs.some((b) => b.invulnerable && b.until > this.now)) return;
     amount = Math.max(1, Math.round(amount * Math.pow(ARMOR_FACTOR, p.stats.armor)));
+    if (this.now >= p.shieldUntil) p.state.shield = 0;
+    const absorbed = Math.min(p.state.shield, amount);
+    p.state.shield -= absorbed;
+    amount -= absorbed;
     p.state.dmgTaken += Math.min(amount, Math.max(0, Math.round(p.state.hp)));
     p.state.hp = Math.max(0, p.state.hp - amount);
     p.lastHitAt = this.now;
-    this.broadcast('dmg', { target: p.id, amount, x: p.state.x, y: p.state.y, player: true });
+    this.broadcast('dmg', { target: p.id, amount, absorbed, x: p.state.x, y: p.state.y, player: true });
     if (p.state.hp > 0) return;
     p.state.alive = false;
     p.state.moving = false;
+    p.state.shield = 0;
+    p.shieldUntil = 0;
     p.push = null;
     this.broadcast('death', { id: p.id, player: true, x: p.state.x, y: p.state.y });
     if (p.stats.revive > 0 && !p.reviveUsed) {
-      // Résurrection de l'arbre de stats : une fois par partie, après un court instant.
+      // Résurrection : une fois par partie, après un court instant.
       p.reviveUsed = true;
       p.revivePending = true;
       this.after(2.5, () => {
@@ -1076,6 +1203,13 @@ export class Simulation {
     if (this.state.phase !== PHASE_PLAYING || this.players.size === 0) return;
     for (const p of this.players.values()) if (p.state.alive || p.revivePending) return;
     this.state.phase = PHASE_LOST;
+    for (const p of this.players.values()) {
+      let seed = 2166136261;
+      for (const c of `${this.state.runId}:${p.id}`) seed = Math.imul(seed ^ c.charCodeAt(0), 16777619);
+      const reward=equipmentReward(this.state.runId, seed >>> 0, this.state.stage, this.state.mode, p.state.kamasEarned,p.loot);
+      p.state.rewards = JSON.stringify(reward);
+      this.broadcast('runReward',{player:p.id,reward});
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -1084,7 +1218,7 @@ export class Simulation {
 
   /** Recalcule les stats d'un joueur à partir de son inventaire. */
   private applyStats(p: PlayerRt): void {
-    p.stats = sumStats(p.inventory);
+    p.stats = sumRunStats(p.inventory);
     for (const [k, v] of Object.entries(p.meta)) p.stats[k as StatKey] += v;
     p.stats.armor += p.def.armor ?? 0;
     for (const b of p.buffs) for (const [k, v] of Object.entries(b.stats)) p.stats[k as StatKey] += v ?? 0;
@@ -1095,7 +1229,7 @@ export class Simulation {
     // Les PV max gagnés sont aussi rendus tout de suite.
     if (p.state.alive && p.state.maxHp > oldMax && oldMax > 0) p.state.hp += p.state.maxHp - oldMax;
     p.state.hp = Math.min(p.state.hp, p.state.maxHp);
-    p.state.items = formatInventory(p.inventory);
+    p.state.bonuses = formatRunBonuses(p.inventory);
   }
 
   giveItem(p: PlayerRt, itemId: string): void {
@@ -1108,6 +1242,7 @@ export class Simulation {
       const x = 3 + Math.random() * (this.map.size - 6);
       const y = 3 + Math.random() * (this.map.size - 6);
       if (isBlocked(this.map, x, y, 0.6)) continue;
+      if(this.state.zaapX>0 && Math.hypot(x-this.state.zaapX,y-this.state.zaapY)<ZAAP_RANGE+INTERACT_RANGE+.2) continue;
       // Pas deux coffres collés, ni un coffre sur le point d'apparition.
       if (Math.hypot(x - MAP_SIZE / 2, y - MAP_SIZE / 2) < 5) continue;
       let tooClose = false;
@@ -1145,13 +1280,13 @@ export class Simulation {
       }
     });
     const chest = this.state.chests.get(bestId);
-    if (chest?.kind === 'cawotte') return this.digCawotte(bestId, chest.x, chest.y);
+    if (chest?.kind === 'challenge') return this.activateChallenge(bestId, chest.x, chest.y);
     if (!chest || p.state.kamas < this.state.chestCost) return;
 
     p.state.kamas -= this.state.chestCost;
     chest.opened = true;
     // La chance du joueur améliore la rareté (communs, rares, épiques).
-    const item = rollItem(p.stats.luck);
+    const item = rollRunBonus(p.stats.luck);
     this.giveItem(p, item.id);
     this.broadcast('item', { player: id, item: item.id, x: chest.x, y: chest.y });
 
@@ -1160,14 +1295,14 @@ export class Simulation {
     this.after(25, () => this.spawnChest());
   }
 
-  /** Cawotte déterrée (gratuit) : un monstre d'élite surgit à côté. */
-  private digCawotte(id: string, x: number, y: number): void {
+  /** Défi facultatif et gratuit : un élite de la région apparaît près de la balise. */
+  private activateChallenge(id: string, x: number, y: number): void {
     const chest = this.state.chests.get(id);
     if (!chest || chest.opened) return;
     chest.opened = true;
     this.after(3, () => this.state.chests.delete(id));
     const diff = this.state.difficulty;
-    const pool = Object.values(MONSTERS).filter((m) => !m.boss && !m.ally && m.weight > 0 && m.minDifficulty <= diff);
+    const pool = this.zoneMonsters().filter((m) => m.minDifficulty <= diff);
     const def = pool[Math.floor(Math.random() * pool.length)];
     let ex = x + 1.5;
     let ey = y;
@@ -1177,8 +1312,11 @@ export class Simulation {
     }
     const elite = this.spawnMonster(def, ex, ey, monsterHpMultiplier(diff) * 12, monsterDamageMultiplier(diff) * 1.6, Math.round(diff) + 5);
     elite.state.elite = true;
-    this.broadcast('boss', { name: `${def.name} d'élite` });
+    this.broadcast('boss', { name: `${def.name} d'élite`, challenge:true });
   }
+
+  /** Population propre à la région, partagée par les vagues et les défis. */
+  zoneMonsters(): MonsterDef[] { return zoneForStage(this.state.stage).monsters.map(getMonster); }
 
   /** Achat chez le marchand (une fois par offre et par joueur, à côté du marchand). */
   buy(id: string, index: unknown): void {
@@ -1189,7 +1327,7 @@ export class Simulation {
     const offer = this.state.shop.split(',')[i];
     if (!offer) return;
     const [itemId, price] = offer.split(':');
-    if (!ITEMS[itemId] || p.state.kamas < Number(price)) return;
+    if (!RUN_BONUSES[itemId] || p.state.kamas < Number(price)) return;
     p.state.kamas -= Number(price);
     p.bought.add(i);
     p.state.bought = [...p.bought].join(',');
@@ -1222,6 +1360,7 @@ export class Simulation {
     }
     const state = new MonsterState();
     state.type = def.id;
+    state.ally = !!def.ally;
     state.x = x;
     state.y = y;
     state.maxHp = Math.round(def.hp * hpMult);

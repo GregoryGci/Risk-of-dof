@@ -5,46 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Risk of Dof</title>
     <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/theme.css" />
   </head>
   <body>
     <!-- Canvas Phaser -->
     <div id="game"></div>
 
     <!-- Écran d'accueil -->
-    <div id="menu" class="overlay">
-      <div class="panel menu-panel">
-        <h1>Risk of Dof</h1>
-        <p class="subtitle">Fan game coop — Champs d'Astrub</p>
-
-        <label for="pseudo">Pseudo</label>
-        <input id="pseudo" type="text" maxlength="16" placeholder="Aventurier" autocomplete="off" />
-
-        <label>Classe</label>
-        <div id="class-picker"></div>
-        <div id="class-desc" class="class-desc"></div>
-
-        <div class="row">
-          <button id="btn-talents" class="btn">Arbre de talents</button>
-          <button id="btn-stats" class="btn">Arbre de stats</button>
-        </div>
-        <button id="btn-create" class="btn btn-primary">Créer une partie</button>
-
-        <div class="separator"><span>ou</span></div>
-
-        <label for="code">Code de la partie</label>
-        <div class="row">
-          <input id="code" type="text" maxlength="4" placeholder="ABCD" autocomplete="off" />
-          <button id="btn-join" class="btn">Rejoindre</button>
-        </div>
-
-        <p id="menu-error" class="error"></p>
-
-        <div class="help">
-          <b>Déplacement</b> ZQSD / WASD / flèches &nbsp;·&nbsp; <b>Visée</b> souris<br />
-          <b>Sorts</b> clic gauche · clic droit · Espace · R (ultime)<br />
-          <b>E</b> Ouvrir un coffre (coûte des kamas) &nbsp;·&nbsp; <b>Tab</b> Détails · <b>Échap</b> Menu &nbsp;·&nbsp; <b>Maj</b> Dash
-        </div>
-      </div>
+    <div id="menu" class="home-screen">
+      <div class="home-background" aria-hidden="true"></div>
+      <div class="home-grain" aria-hidden="true"></div>
+      <header class="home-topline"><span><i class="home-sigil"></i> LES CHAMPS D’ASTRUB</span><span>ACTION · SURVIE · COOPÉRATION</span></header>
+      <main class="home-layout">
+        <section class="home-navigation" aria-label="Menu principal">
+          <div class="home-brand"><p>CHAQUE DÉFAITE ÉCRIT LA SUITE</p><h1><span>RISK</span><span><em>OF</em> DOF</span></h1><div class="brand-rule"><i></i></div></div>
+          <nav class="home-nav">
+            <button class="home-nav-button" data-view="solo"><span class="nav-number">01</span><span>Single player<small>Une aventure à votre rythme</small></span><span class="nav-arrow">↗</span></button>
+            <button class="home-nav-button" data-view="multi"><span class="nav-number">02</span><span>Multiplayer<small>Jusqu’à quatre aventuriers</small></span><span class="nav-arrow">↗</span></button>
+            <button class="home-nav-button" data-view="character"><span class="nav-number">03</span><span>Character<small>Votre classe, vos sorts, votre tenue</small></span><span class="nav-arrow">↗</span></button>
+            <button class="home-nav-button" data-view="settings"><span class="nav-number">04</span><span>Settings<small>Préparez vos commandes</small></span><span class="nav-arrow">↗</span></button>
+          </nav>
+          <div class="home-profile" id="home-profile"></div>
+        </section>
+        <section class="home-welcome" id="home-welcome"><div class="welcome-caption"><span class="eyebrow">UN NOUVEAU DÉPART</span><h2>Le Zaap vous attend.</h2><p>Survivez. Explorez. Revenez plus fort.</p></div></section>
+        <section id="home-view" class="home-view panel hidden" aria-label="Préparation de l’aventure">
+          <div class="home-view-head"><div><span class="eyebrow" id="view-eyebrow"></span><h2 id="view-title"></h2></div><button id="view-close" class="sheet-close" aria-label="Retour à l’accueil">✕</button></div>
+          <div id="identity-row" class="identity-row"><label for="pseudo">Votre nom</label><input id="pseudo" type="text" maxlength="16" placeholder="Aventurier" autocomplete="off" /></div>
+          <div id="view-solo" class="home-view-content hidden">
+            <p class="view-intro">Une run en solo. Des trouvailles pour toutes les suivantes.</p><div id="solo-character" class="setup-character"></div><button class="text-button" data-view="character">Changer de classe ou d’équipement →</button>
+            <h3 class="setup-label">Choisissez votre difficulté</h3><div id="setup-modes" class="setup-modes"></div>
+            <button id="btn-solo" class="btn btn-primary start-adventure">Partir à l’aventure <span>→</span></button>
+            <p class="setup-hint">Tab met la partie en pause. Votre butin est conservé après la défaite.</p>
+          </div>
+          <div id="view-multi" class="home-view-content hidden"><p class="view-intro">Rassemblez votre équipe. Partagez un code et affrontez les vagues ensemble.</p>
+            <div class="multiplayer-option"><span class="eyebrow">CRÉER UN SALON</span><h3>Une place pour vos amis.</h3><p>Choisissez votre difficulté dans le salon, puis invitez jusqu’à trois joueurs.</p><button id="btn-create" class="btn btn-primary">Créer une partie <span>→</span></button></div>
+            <div class="separator"><span>ou rejoindre vos amis</span></div><label for="code">Code du salon</label><div class="row"><input id="code" type="text" maxlength="4" placeholder="ABCD" autocomplete="off" /><button id="btn-join" class="btn">Rejoindre</button></div>
+          </div>
+          <div id="view-character" class="home-view-content hidden"><div class="character-intro"><div><h3 id="character-name"></h3><p id="class-desc"></p></div><img id="character-portrait" alt=""></div><div id="class-picker" class="home-class-picker"></div>
+            <div class="character-actions"><button id="btn-equipment" class="character-action"><span>◈</span><div><b>Équipement</b><small id="equipment-summary"></small></div><span>→</span></button><button id="btn-talents" class="character-action"><span>✦</span><div><b>Arbre de talents</b><small id="talents-summary"></small></div><span>→</span></button></div>
+            <button id="btn-encyclopedia" class="collection-link">Ouvrir l’encyclopédie <span id="collection-summary"></span><span>→</span></button>
+          </div>
+          <div id="view-settings" class="home-view-content hidden"><p class="view-intro">Vos préférences vous suivent dans chaque aventure.</p><div id="home-settings"></div><h3 class="setup-label">À portée de main</h3><div class="home-controls"><div><kbd>ZQSD</kbd><span>Se déplacer · WASD / flèches</span></div><div><kbd>Souris</kbd><span>Viser · clics gauche et droit : sorts</span></div><div><kbd>Espace / R</kbd><span>Sorts équipés · R : ultime</span></div><div><kbd>Maj</kbd><span>Dash</span></div><div><kbd>E</kbd><span>Coffres · Zaap · marchand</span></div><div><kbd>Tab</kbd><span>Détails · pause en solo · options</span></div></div></div>
+          <p id="menu-error" class="error" role="status" aria-live="polite"></p>
+        </section>
+      </main>
+      <footer class="home-footer"><span>UN FAN GAME · DOFUS RETRO × RISK OF RAIN</span><span id="home-progress"></span></footer>
     </div>
 
     <!-- Arbre de talents (accueil et salon) -->
@@ -58,16 +63,18 @@
       </div>
     </div>
 
-    <!-- Arbre de stats (fiche de caractéristiques) -->
-    <div id="stats" class="overlay hidden">
-      <div class="sheet">
+    <!-- Tenue permanente (organisation de l’inventaire Retro) -->
+    <div id="equipment" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="equipment-title">
+      <div class="sheet equipment-sheet">
         <div class="sheet-head">
-          <span>Arbre de stats</span>
-          <button id="stats-close" class="sheet-close" title="Fermer">✕</button>
+          <span id="equipment-title">Équipement <small>Votre prochaine aventure se prépare ici</small></span>
+          <div class="sheet-head-actions"><button id="equipment-collection" class="btn">Encyclopédie</button><button id="equipment-close" class="sheet-close" aria-label="Fermer l’équipement">✕</button></div>
         </div>
-        <div id="stats-body"></div>
+        <div id="equipment-body"></div>
       </div>
     </div>
+
+    <div id="encyclopedia" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="encyclopedia-title"><div class="sheet encyclopedia-sheet"><div class="sheet-head"><span id="encyclopedia-title">Encyclopédie <small>Chaque trouvaille est une nouvelle page</small></span><button id="encyclopedia-close" class="sheet-close" aria-label="Fermer l’encyclopédie">✕</button></div><div id="encyclopedia-body"></div></div></div>
 
     <!-- HUD en jeu -->
     <div id="hud" class="hidden">
@@ -116,12 +123,13 @@
       <!-- Bas : PV + barre de sorts -->
       <div id="hud-bottom">
         <!-- Objets possédés, juste au-dessus de la barre -->
-        <div id="inventory"></div>
+        <div id="run-gains"></div>
         <div id="hud-bar" class="panel">
           <!-- Cœur de PV : la forme vient d'un masque, le contour du conteneur. -->
           <div id="hp-heart">
             <div id="hp-orb"><div id="hp-fill"></div></div>
             <div id="hp-text">120</div>
+            <div id="shield-text"></div>
           </div>
           <div id="spellbar"></div>
         </div>
@@ -169,7 +177,9 @@
           <p class="subtitle" id="gameover-stats"></p>
           <div id="gameover-players"></div>
           <p id="gameover-reward" class="subtitle"></p>
-          <button id="btn-restart" class="btn btn-primary">Relancer une partie</button>
+          <div id="gameover-gear" class="reward-gear"></div>
+          <button id="btn-go-equipment" class="btn">Gérer mon équipement</button>
+          <button id="btn-restart" class="btn btn-primary">Retour au salon</button>
           <button id="btn-quit" class="btn">Retour au menu</button>
         </div>
       </div>

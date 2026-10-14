@@ -31,7 +31,8 @@ export class GameRoom extends Room<{ state: GameState }> {
   state = new GameState();
   private sim!: Simulation;
 
-  onCreate(): void {
+  onCreate(options?: { singlePlayer?: boolean }): void {
+    if (options?.singlePlayer === true) { this.maxClients = 1; this.state.singlePlayer=true; }
     // Le code court sert directement d'identifiant de salle : le client rejoint avec joinById(code).
     this.roomId = generateCode();
     activeCodes.add(this.roomId);
@@ -48,7 +49,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage('loadout', (client: Client, message: { spells?: string[] }) => this.sim.setLoadout(client.sessionId, message?.spells));
     this.onMessage('dash', (client: Client, message: { dx?: number; dy?: number }) => this.sim.playerDash(client.sessionId, message));
     this.onMessage('pause', (client: Client, message: { paused?: boolean }) => this.sim.setPaused(client.sessionId, message?.paused));
-    this.onMessage('meta', (client: Client, message: { meta?: unknown }) => this.sim.setMeta(client.sessionId, message?.meta));
+    this.onMessage('equipment', (client: Client, message: { equipment?: unknown }) => this.sim.setEquipment(client.sessionId, message?.equipment));
     this.onMessage('buy', (client: Client, message: { index?: number }) => this.sim.buy(client.sessionId, message?.index));
     this.onMessage('mode', (client: Client, message: { mode?: number }) => this.sim.setMode(client.sessionId, message?.mode));
     this.onMessage('interact', (client: Client) => this.sim.interact(client.sessionId));
@@ -60,11 +61,11 @@ export class GameRoom extends Room<{ state: GameState }> {
     console.log(`[salle ${this.roomId}] créée`);
   }
 
-  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; meta?: unknown }): void {
+  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown }): void {
     const name = cleanName(options?.name);
-    this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.meta);
+    this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.equipment);
     if (!this.state.hostId) this.state.hostId = client.sessionId;
-    console.log(`[salle ${this.roomId}] ${name} a rejoint (${this.state.players.size}/${MAX_PLAYERS})`);
+    console.log(`[salle ${this.roomId}] ${name} a rejoint (${this.state.players.size}/${this.maxClients})`);
   }
 
   onLeave(client: Client): void {

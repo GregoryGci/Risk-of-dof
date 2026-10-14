@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readDofusItems } from './dofus-items.mjs';
 import { updateManifest } from './manifest.mjs';
+import { decodePng, encodePng } from './png.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'client/public/assets/dofus');
@@ -16,7 +17,7 @@ const FFDEC = process.env.FFDEC ?? 'C:/Program Files (x86)/FFDec/ffdec.jar';
 const WORK = path.join(os.tmpdir(), 'rod-extract/items');
 
 // Objets du jeu : id -> nom, lus dans shared/src/data/items.ts.
-const src = fs.readFileSync(path.join(ROOT, 'shared/src/data/items.ts'), 'utf8');
+const src = fs.readFileSync(path.join(ROOT, 'shared/src/data/equipment.ts'), 'utf8');
 const ours = {};
 for (const m of src.matchAll(/^ {2}(\w+): \{ name: (['"])(.+?)\2,/gm)) ours[m[1]] = m[3].replace(/\\'/g, "'");
 
@@ -25,7 +26,7 @@ const input = path.join(WORK, 'in');
 fs.mkdirSync(input, { recursive: true });
 const found = {};
 // Décors tirés d'icônes d'objets (clé -> nom Dofus), affichés en grand sur la carte.
-const DECOR = { cawotte: 'Cawotte' };
+const DECOR = { potion_vie: 'Potion de Mini Soin Supérieure' };
 for (const [key, name] of Object.entries(DECOR)) ours[`decor_${key}`] = name;
 for (const [id, name] of Object.entries(ours)) {
   const item = dofus.get(name);
@@ -43,7 +44,22 @@ for (const [id, name] of Object.entries(ours)) {
 }
 
 const output = path.join(WORK, 'out');
-execFileSync('java', ['-jar', FFDEC, '-zoom', '1.5', '-format', 'frame:png', '-export', 'frame', output, input], { stdio: 'pipe' });
+execFileSync('java', ['-jar', FFDEC, '-ignorebackground', '-zoom', '2.5', '-format', 'frame:png', '-export', 'frame', output, input], { stdio: 'pipe' });
+
+/** Retire la scène Flash vide : l'image s'adapte à la carte sans réduire l'objet. */
+function trimIcon(file) {
+  const p = decodePng(fs.readFileSync(file));
+  let left = p.width, top = p.height, right = -1, bottom = -1;
+  for (let y = 0; y < p.height; y++) for (let x = 0; x < p.width; x++) {
+    if (!p.data[(y * p.width + x) * 4 + 3]) continue;
+    left = Math.min(left,x); top = Math.min(top,y); right = Math.max(right,x); bottom = Math.max(bottom,y);
+  }
+  if (right < left) throw new Error(`Icône vide : ${file}`);
+  const width = right - left + 5, height = bottom - top + 5;
+  const data = Buffer.alloc(width * height * 4);
+  for (let y = top; y <= bottom; y++) p.data.copy(data, ((y - top + 2) * width + 2) * 4, (y * p.width + left) * 4, (y * p.width + right + 1) * 4);
+  return encodePng({ width, height, data });
+}
 
 fs.mkdirSync(path.join(OUT, 'items'), { recursive: true });
 const manifestFile = path.join(OUT, 'manifest.json');
@@ -56,12 +72,12 @@ for (const id of Object.keys(found)) {
   if (id.startsWith('decor_')) {
     const key = id.slice(6);
     fs.mkdirSync(path.join(OUT, 'objects'), { recursive: true });
-    fs.copyFileSync(png, path.join(OUT, 'objects', `${key}.png`));
-    objects[key] = [{ image: `objects/${key}.png`, origin: [0.5, 0.85], scale: 1.6 }];
+    fs.writeFileSync(path.join(OUT, 'objects', `${key}.png`), trimIcon(png));
+    objects[key] = [{ image: `objects/${key}.png`, origin: [0.5, key === 'potion_vie' ? 1 : 0.85], scale: key === 'potion_vie' ? 0.75 : 0.96 }];
     console.log(`décor ${key} <- ${found[id]}`);
     continue;
   }
-  fs.copyFileSync(png, path.join(OUT, 'items', `${id}.png`));
+  fs.writeFileSync(path.join(OUT, 'items', `${id}.png`), trimIcon(png));
   manifest.items[id] = `items/${id}.png`;
   console.log(`${id} <- ${found[id]}`);
 }

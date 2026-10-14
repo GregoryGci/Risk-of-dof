@@ -80,13 +80,13 @@ export class AssetStore {
     const m = this.manifest;
 
     // Sol : variantes fournies, sinon placeholders.
-    for (const type of GROUND_NAMES) {
+    for (const type of new Set([...GROUND_NAMES, ...Object.keys(m.tiles ?? {})])) {
       const provided = asArray(m.tiles?.[type] ?? []).map((_, i) => `tile_${type}_${i}`).filter((k) => scene.textures.exists(k));
-      this.tiles[type] = provided.length > 0 ? provided : Array.from({ length: TILE_VARIANTS }, (_, v) => tilePlaceholderKey(type, v));
+      this.tiles[type] = provided.length > 0 ? provided : Array.from({ length: TILE_VARIANTS }, (_, v) => tilePlaceholderKey('herbe', v));
     }
 
     // Décors.
-    for (const o of [...OBSTACLES, { id: 'coffre' }, { id: 'coffre_ouvert' }, { id: 'zaap' }, { id: 'cawotte' }]) {
+    for (const o of [...OBSTACLES, { id: 'coffre' }, { id: 'coffre_ouvert' }, { id: 'zaap' }, { id: 'balise_defi' }]) {
       const defs = asArray<ImageDef>(m.objects?.[o.id] ?? []);
       const provided: ImageVisual[] = [];
       defs.forEach((d, i) => {
@@ -144,6 +144,11 @@ export class AssetStore {
   objectVisual(id: string, variant: number): ImageVisual {
     const list = this.objects[id] ?? this.objects.arbre;
     return list[variant % list.length];
+  }
+
+  potionVisual(scene: Phaser.Scene): ImageVisual {
+    if (scene.textures.exists('obj_potion_vie_0')) return this.objectVisual('potion_vie', 0);
+    return { key: 'ph_potion', origin: [0.5, 1], scale: 1 };
   }
 
   character(scene: Phaser.Scene, classId: string, slot: number): EntityVisual {
