@@ -96,7 +96,7 @@ export class AssetStore {
     }
 
     // Décors.
-    for (const o of [...OBSTACLES, { id: 'coffre' }, { id: 'coffre_ouvert' }, { id: 'zaap' }, { id: 'balise_defi' }]) {
+    for (const o of [...OBSTACLES, { id: 'coffre' }, { id: 'coffre_ouvert' }, { id: 'zaap' }, { id: 'balise_defi' }, {id:'potion_vie'}]) {
       const defs = asArray<ImageDef>(m.objects?.[o.id] ?? []);
       const provided: ImageVisual[] = [];
       defs.forEach((d, i) => {

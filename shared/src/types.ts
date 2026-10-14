@@ -304,6 +304,7 @@ export interface SyncMap<T> {
   forEach(cb: (value: T, key: string) => void): void;
 }
 export interface PlayerView {
+  connected:boolean;
   bossKills:number;
   deathCause:string;
   /** Tenue permanente validée, identique pendant toute la run. */
@@ -389,6 +390,7 @@ export interface PotionView {
   y: number;
 }
 export interface GameStateView {
+  protocolVersion:number;
   waves:number;
   zoneWave:number;
   intermission:boolean;

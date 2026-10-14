@@ -16,7 +16,11 @@ npm run dev     # lance le serveur (port 2567) et le client (port 5173)
 
 Ouvrez ensuite <http://localhost:5173>.
 
-Un compte Supabase est désormais obligatoire. Après l'inscription et la confirmation de l'adresse e-mail, choisissez un pseudo et un avatar. La configuration est décrite dans [docs/SUPABASE.md](docs/SUPABASE.md). Les anciennes sauvegardes sont importées lors du premier compte utilisé sur l'appareil.
+Un compte Supabase est désormais obligatoire. Après l'inscription (et la confirmation de l'e-mail si elle est activée), choisissez un pseudo et un avatar. La configuration est décrite dans [docs/SUPABASE.md](docs/SUPABASE.md). Les anciennes sauvegardes sont importées lors du premier compte utilisé sur l'appareil.
+
+Recharger la page reprend la même partie dans cet onglet, en solo comme en multi, si le retour intervient sous deux minutes. Quand tous les joueurs sont déconnectés, la simulation se met en pause. « Retour au menu » quitte volontairement la partie.
+
+Les simulations et l'audit sont détaillés dans [docs/AUDIT_REFONTE_PROGRESSION.md](docs/AUDIT_REFONTE_PROGRESSION.md).
 
 L'accueil comporte **Single player → Multiplayer → Character → Classement → Historique → Settings**. Les chroniques affichent les runs en lignes avec les détails au clic ; la meilleure run est épinglée en tête de liste.
 

@@ -3,7 +3,7 @@
 Projet : https://supabase.com/dashboard/project/gwhorrgwaefsvayctqig
 
 1. Dans SQL Editor, exécuter [la migration](../supabase/migrations/202610140001_progression.sql). Elle crée les sauvegardes privées, les runs et le classement public.
-2. Dans Authentication → URL Configuration, ajouter l'origine locale utilisée (`http://localhost:5175`) aux URL de redirection autorisées. Ajouter aussi l'URL publiée lors du déploiement.
+2. Dans Authentication → URL Configuration, mettre **Site URL** à `https://gregorygci.github.io/Risk-of-dof/`, ajouter cette adresse et `http://localhost:5175/` aux **Redirect URLs**. Cela permet au lien de confirmation d'e-mail de ramener au jeu.
 3. Copier `server/.env.example` vers `server/.env`, puis renseigner `SUPABASE_SECRET_KEY` avec la clé secrète du projet (Settings → API Keys). Ce fichier est ignoré par Git. Le serveur l'utilise uniquement pour inscrire les scores observés en partie.
 4. Recharger le jeu, créer son compte, confirmer l'adresse e-mail puis se connecter.
 5. Lors de la première connexion, choisir son pseudo et son avatar. Le jeu exige un profil terminé, côté navigateur et serveur. Le profil est conservé dans la sauvegarde du compte ; aucune migration SQL supplémentaire n'est nécessaire.

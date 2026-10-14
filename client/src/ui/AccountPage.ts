@@ -27,7 +27,7 @@ export class AccountPage {
       document.getElementById('signout')!.onclick=()=>void cloud.signOut().then(()=>this.render(),()=>this.message('Déconnexion indisponible, réessayez.'));
       document.getElementById('cloud-refresh')!.onclick=()=>void cloud.refresh();return;
     }
-    this.body.innerHTML=`<span class="eyebrow">VOTRE AVENTURE COMMENCE ICI</span><h3 class="auth-heading">Rejoignez les aventuriers.</h3><p class="view-intro">Créez votre compte pour jouer avec vos amis et conserver votre progression. Après confirmation de l’e-mail, choisissez votre pseudo et votre avatar.</p><form id="auth-form" class="auth-form"><label>Adresse e-mail<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label>Mot de passe<input name="password" type="password" autocomplete="current-password" minlength="8" required maxlength="128"></label><div class="auth-actions"><button class="btn btn-primary" type="submit" name="action" value="signup">Créer mon compte</button><button class="btn" type="submit" name="action" value="login">J’ai déjà un compte</button></div><p class="auth-status" id="auth-message" role="status" aria-live="polite"></p></form><small>Vos anciennes trouvailles sur cet appareil seront importées dans votre premier compte.</small>`;
+    this.body.innerHTML=`<span class="eyebrow">VOTRE AVENTURE COMMENCE ICI</span><h3 class="auth-heading">Rejoignez les aventuriers.</h3><p class="view-intro">Créez votre compte pour jouer avec vos amis et conserver votre progression. Choisissez ensuite votre pseudo et votre avatar.</p><form id="auth-form" class="auth-form"><label>Adresse e-mail<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label>Mot de passe<input name="password" type="password" autocomplete="current-password" minlength="8" required maxlength="128"></label><div class="auth-actions"><button class="btn btn-primary" type="submit" name="action" value="signup">Créer mon compte</button><button class="btn" type="submit" name="action" value="login">J’ai déjà un compte</button></div><p class="auth-status" id="auth-message" role="status" aria-live="polite"></p></form><small>Vos anciennes trouvailles sur cet appareil seront importées dans votre premier compte.</small>`;
     const form=document.getElementById('auth-form') as HTMLFormElement;
     form.onsubmit=event=>{event.preventDefault();void this.submit(form,(event.submitter as HTMLButtonElement)?.value??'login');};
   }
@@ -47,7 +47,7 @@ export class AccountPage {
   private async submit(form:HTMLFormElement,action:string):Promise<void>{
     const fields=new FormData(form),email=String(fields.get('email')).trim(),password=String(fields.get('password'));const buttons=[...form.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);this.message('Connexion…');
     try{
-      const result=action==='signup'?await supabase.auth.signUp({email,password,options:{emailRedirectTo:location.origin}}):await supabase.auth.signInWithPassword({email,password});
+      const result=action==='signup'?await supabase.auth.signUp({email,password,options:{emailRedirectTo:new URL('.',location.href).href}}):await supabase.auth.signInWithPassword({email,password});
       if(result.error)throw result.error;
       if(!result.data.session){this.message('Confirmez votre adresse via l’e-mail reçu, puis utilisez « J’ai déjà un compte ».');return;}
       await cloud.activate(result.data.session);this.render();this.enforce();

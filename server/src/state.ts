@@ -2,10 +2,11 @@
 // Seul ce qui doit être affiché par les clients vit ici ; le reste (cooldowns,
 // IA, projectiles) reste dans la simulation côté serveur.
 import { schema, t } from '@colyseus/schema';
-import { PHASE_LOBBY } from '@rod/shared';
+import { PHASE_LOBBY,GAME_PROTOCOL_VERSION } from '@rod/shared';
 
 export const PlayerState = schema(
   {
+    connected:t.boolean().default(true),
     equipment: t.string().default('{}'),
     rewards: t.string().default(''),
     runLoot: t.string().default('[]'),
@@ -110,6 +111,7 @@ export type GroundState = InstanceType<typeof GroundState>;
 
 export const GameState = schema(
   {
+    protocolVersion:t.uint16().default(GAME_PROTOCOL_VERSION),
     singlePlayer: t.boolean().default(false),
     intermission: t.boolean().default(false),
     runId: t.string().default(''),

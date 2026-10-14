@@ -33,6 +33,7 @@ export class GameRoom extends Room<{ state: GameState }> {
   state = new GameState();
   private sim!: Simulation;
   private accounts=new Map<string,string>();
+  private pausedForReconnect=false;
   async onAuth(_client:Client,options:{accessToken?:unknown}) {return await authenticate(options?.accessToken)??true;}
 
   onCreate(options?: { singlePlayer?: boolean }): void {
@@ -84,9 +85,20 @@ export class GameRoom extends Room<{ state: GameState }> {
     console.log(`[salle ${this.roomId}] ${name} a rejoint (${this.state.players.size}/${this.maxClients})`);
   }
 
+  onDrop(client:Client):void {
+    const p=this.sim.players.get(client.sessionId);
+    if(p){p.state.connected=false;p.dx=p.dy=0;p.autoAttack=false;p.state.moving=false;p.pendingInputSeq=p.state.inputSeq;}
+    if([...this.sim.players.values()].every(p=>!p.state.connected)&&!this.state.paused){this.state.paused=true;this.pausedForReconnect=true;}
+    this.allowReconnection(client,120);
+  }
+  onReconnect(client:Client):void {
+    const p=this.sim.players.get(client.sessionId);if(p)p.state.connected=true;
+    if(this.pausedForReconnect){this.state.paused=false;this.pausedForReconnect=false;}
+  }
   onLeave(client: Client): void {
     this.accounts.delete(client.sessionId);
     this.sim.removePlayer(client.sessionId);
+    if(this.pausedForReconnect&&[...this.sim.players.values()].some(p=>p.state.connected)){this.state.paused=false;this.pausedForReconnect=false;}
     // Si l'hôte part, le plus ancien joueur restant prend le relais.
     if (this.state.hostId === client.sessionId) {
       this.state.hostId = this.state.players.keys().next().value ?? '';

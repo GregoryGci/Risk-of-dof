@@ -148,6 +148,7 @@ export class GameScene extends Phaser.Scene {
     this.room = this.ctx.room;
     this.store = this.ctx.store;
     this.hud = this.ctx.hud;
+    this.inputSeq=this.state.players.get(this.room.sessionId)?.inputSeq??0;
     const zone=zoneForStage(this.state.stage??1);
     this.store.preload(this,[...zone.monsters,zone.boss,'epouvantail','marchand','coffre','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable']);
 

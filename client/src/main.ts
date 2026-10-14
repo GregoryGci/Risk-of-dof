@@ -1,7 +1,7 @@
 // Point d'entrée du client : écran d'accueil (DOM), connexion Colyseus, puis lancement de Phaser.
 import Phaser from 'phaser';
 import { Client, type Room } from '@colyseus/sdk';
-import { CLASSES, DEFAULT_CLASS, EQUIPMENT_TIERS, GAME_MODES, PHASE_PLAYING, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT, type GearDrop, type RunReward } from '@rod/shared';
+import { CLASSES, GAME_PROTOCOL_VERSION, DEFAULT_CLASS, EQUIPMENT_TIERS, GAME_MODES, PHASE_PLAYING, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT, type GearDrop, type RunReward } from '@rod/shared';
 import { ASSET_ROOT, loadManifest } from './assets/manifest.ts';
 import { AssetStore } from './assets/store.ts';
 import { GameScene } from './game/GameScene.ts';
@@ -225,13 +225,16 @@ function explain(e: unknown): string {
 async function connect(join: () => Promise<Room>): Promise<void> {
   errorEl.textContent = '';
   setBusy(true);
+  let joined:Room|undefined;
   try {
     await cloud.ready;
     if(!cloud.session||!account.profile.complete){accountPage.open();return;}
     await cloud.flush();
     const room = await join();
+    joined=room;
     await startGame(room);
   } catch (e) {
+    if(joined){joined.reconnection.enabled=false;void joined.leave().catch(()=>{});}
     console.error(e);
     errorEl.textContent = explain(e);
   } finally {
@@ -274,7 +277,13 @@ async function startGame(room: Room): Promise<void> {
       room.onStateChange(receive);
     });
   }
+  if(room.state.protocolVersion!==GAME_PROTOCOL_VERSION)throw new Error('Le serveur de jeu utilise encore une ancienne version. Déployez le dernier commit sur Render puis réessayez.');
   currentRoom = room;
+  const sessionKey=`rod.partie.${cloud.session!.user.id}`;
+  const remember=()=>sessionStorage.setItem(sessionKey,JSON.stringify({token:room.reconnectionToken,roomId:room.roomId,at:Date.now()}));
+  remember();room.onReconnect(remember);
+  let rememberedToken=room.reconnectionToken;
+  room.onStateChange(()=>{if(room.reconnectionToken!==rememberedToken){rememberedToken=room.reconnectionToken;remember();}});
   const store = new AssetStore(await manifestPromise);
 
   /**
@@ -285,6 +294,7 @@ async function startGame(room: Room): Promise<void> {
   const backToMenu = (error = ''): void => {
     if (closed) return;
     closed = true;
+    sessionStorage.removeItem(sessionKey);
     if (currentRoom === room) currentRoom = null;
     // Plus aucun message du serveur ne doit atteindre la scène détruite.
     room.removeAllListeners();
@@ -354,3 +364,16 @@ async function startGame(room: Room): Promise<void> {
   // 1000/4000 = départ volontaire ; tout autre code = coupure.
   room.onLeave((code) => backToMenu(code === 1000 || code === 4000 ? '' : 'Connexion au serveur perdue.'));
 }
+
+// sessionStorage conserve la partie de cet onglet et ne fusionne pas deux onglets multijoueur.
+void cloud.ready.then(async()=>{
+  if(!cloud.session||!account.profile.complete||currentRoom)return;
+  const key=`rod.partie.${cloud.session.user.id}`;
+  let saved:{token?:string;at?:number}|undefined;
+  try{saved=JSON.parse(sessionStorage.getItem(key)??'null');}catch{sessionStorage.removeItem(key);return;}
+  if(!saved?.token)return;
+  setBusy(true);
+  try{await startGame(await client.reconnect(saved.token));}
+  catch{sessionStorage.removeItem(key);showView('solo');errorEl.textContent='La précédente partie n’est plus disponible. Vous pouvez en lancer une nouvelle.';}
+  finally{setBusy(false);}
+});

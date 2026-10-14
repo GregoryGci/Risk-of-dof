@@ -4,6 +4,14 @@ import {EQUIPMENT_BASES,EQUIPMENT_RARITIES,ZONES,createEquipment,dropPool,dropSo
 import {Simulation} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 import {migrateAccount} from '../client/src/progression.ts';
+import {sanitizeProfile} from '@rod/shared';
+import {authenticate} from '../server/src/cloud.ts';
+test('profil obligatoire : pseudo/avatar validés, serveur refuse une connexion sans compte',async()=>{
+  assert.equal(sanitizeProfile({name:'Test',avatar:'iop',complete:true}).complete,true);
+  assert.equal(sanitizeProfile({name:'Test',avatar:'inconnu',complete:true}).complete,false);
+  assert.equal(sanitizeProfile({name:'',avatar:'iop',complete:true}).complete,false);
+  await assert.rejects(()=>authenticate(undefined),/Connectez-vous/);
+});
 test('courbe d’objet : Cape Meulou nettement plus forte que Cape Bouffante',()=>{
   const low=EQUIPMENT_BASES.cape_bouftou,high=EQUIPMENT_BASES.cape_meulou;
   assert.ok(high.stats.maxHp!>low.stats.maxHp!*5);
