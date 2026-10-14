@@ -23,7 +23,9 @@ export function spellShape(spell: SpellDef): string {
   if (spell.ground?.kind === 'trap') return `Piège au sol (explosion de rayon ${spell.ground.blast ?? spell.ground.radius}${spell.ground.max ? `, ${spell.ground.max} max` : ''})`;
   if (spell.ground?.kind === 'glyph') return `Glyphe au sol de rayon ${spell.ground.radius} pendant ${spell.ground.duration} s (effet toutes les ${spell.ground.tick ?? 0.5} s)`;
   if (spell.summon) return `Invocation (${spell.summon.max} max, ${spell.summon.duration} s)`;
-  if (spell.buff) return `${spell.buff.zone ? `Bonus pour vous et les alliés à ${spell.buff.zone} cases` : 'Bonus'} pendant ${spell.buff.duration} s${spell.buff.invisible ? ', invisible' : ''}${spell.buff.invulnerable ? ', aucun dégât subi' : ''}${spell.buff.randomOne ? ' (un seul, au hasard)' : ''}`;
+  if (spell.revive) return 'Ressuscite un allié mort';
+  if (spell.rewind) return `Retour dans le temps (${spell.rewind} s)`;
+  if (spell.buff && !spell.zone) return `${spell.buff.zone ? `Bonus pour vous et les alliés à ${spell.buff.zone} cases` : 'Bonus'} pendant ${spell.buff.duration} s${spell.buff.invisible ? ', invisible' : ''}${spell.buff.invulnerable ? ', aucun dégât subi' : ''}${spell.buff.randomOne ? ' (un seul, au hasard)' : ''}`;
   if (spell.teleport) return 'Téléportation';
   if (spell.melee) return `Corps à corps, cône de ${spell.melee.arc}°`;
   if (spell.zone && spell.zoneAtDashEnd) return `Bond puis zone à l'arrivée (rayon ${spell.zone.radius})`;
@@ -53,6 +55,8 @@ export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number
     else if (e.type === 'dash') lines.push(`${e.direction === 'back' ? 'Bond en arrière' : 'Bond en avant'} de ${cases(e.distance)}`);
     else if (e.type === 'burn') lines.push(`Brûle : ${e.dps} dégâts/s pendant ${e.duration} s`);
     else if (e.type === 'slow') lines.push(`Ralentit de ${pct(1 - e.factor)} pendant ${e.duration} s`);
+    else if (e.type === 'stun') lines.push(`Fige les ennemis pendant ${e.duration} s`);
+    else if (e.type === 'gold') lines.push(`${pct(e.chance)} de chances de faire tomber ${e.amount[0]}-${e.amount[1]} kamas`);
     else if (e.type === 'lifesteal') lines.push(`Vol de vie : ${pct(e.fraction)} des dégâts`);
   }
   if (spell.gamble) lines.push(`Pari : ${pct(spell.gamble.chance)} de chances de dégâts ×${String(spell.gamble.win).replace('.', ',')}, sinon ×${String(spell.gamble.lose).replace('.', ',')}`);

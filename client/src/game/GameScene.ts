@@ -200,6 +200,10 @@ export class GameScene extends Phaser.Scene {
       this.followServerUntil = this.time.now + 300;
     });
     this.room.onMessage('item', (e: ItemEvent) => this.onItem(e));
+    // Lancer de Pièces (Enutrof) : kamas tombés d'une cible.
+    this.room.onMessage('kamas', (e: { amount: number; x: number; y: number }) => {
+      if (!document.hidden) this.effects.floatText(e.x, e.y + 0.6, `+${e.amount} K`, '#ffd84a', 12, 22);
+    });
     this.room.onMessage('atk', (e: AttackEvent) => this.monsters.get(e.id)?.attack());
 
     // Mort : un clic change de joueur observé.

@@ -55,6 +55,10 @@ export const TALENTS: Record<string, TalentDef[]> = {
     { slot: 2, spell: 'bouclier_feca', cost: 300 },
     { slot: 2, spell: 'teleportation', cost: 250 },
   ],
+  osamodas: [],
+  enutrof: [],
+  xelor: [],
+  pandawa: [],
 };
 
 /** Sorts autorisés dans un emplacement d'une classe : le sort de base + ses alternatives. */

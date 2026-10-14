@@ -13,7 +13,9 @@ function $(id: string): HTMLElement {
 }
 
 /** Fenêtre du DPS instantané de l'addon. */
-const DPS_WINDOW_MS = 5000;
+const DPS_WINDOW_MS = 10000;
+/** Rafraîchissement de l'affichage de l'addon. */
+const METER_REFRESH_MS = 1000;
 
 /** 1234 -> « 1,2 k » pour l'addon de dégâts. */
 function fmt(n: number): string {
@@ -58,6 +60,7 @@ export class Hud {
   private cache: Record<string, string> = {};
   private meter: 'dps' | 'heal' | 'taken' = 'dps';
   /** Historique des dégâts infligés par joueur, pour le DPS glissant. */
+  private meterShownAt = 0;
   private dpsSamples = new Map<string, { t: number; v: number }[]>();
   private roomCode = '';
   /** Bonus d'objets du joueur local (pour les infobulles). */
@@ -333,7 +336,7 @@ export class Hud {
       $('boss-bar').style.width = `${bossPct}%`;
     }
 
-    // Addon de dégâts : DPS instantané (dégâts des 5 dernières secondes, par seconde), soins et dégâts subis en total.
+    // Addon de dégâts : DPS instantané (dégâts des 10 dernières secondes, par seconde), soins et dégâts subis en total.
     const now = performance.now();
     const rows: { name: string; slot: number; value: number }[] = [];
     state.players.forEach((p: PlayerView, id: string) => {
@@ -347,14 +350,20 @@ export class Hud {
       rows.push({ name: p.name, slot: p.slot, value });
     });
     for (const id of this.dpsSamples.keys()) if (!state.players.get(id)) this.dpsSamples.delete(id);
-    rows.sort((a, b) => b.value - a.value);
-    const best = Math.max(1, rows[0]?.value ?? 1);
-    let meter = '';
-    for (const r of rows) {
-      const shown = this.meter === 'dps' ? `${fmt(r.value)} /s` : fmt(r.value);
-      meter += `<div class="meter-row"><div class="fill" style="width:${(r.value / best) * 100}%;background:${cssColor(PLAYER_COLORS[r.slot % PLAYER_COLORS.length])}"></div><span>${escapeHtml(r.name)}</span><span>${shown}</span></div>`;
+    // Affichage rafraîchi une fois par seconde (sauf changement d'onglet) : les chiffres restent lisibles.
+    const meterKey = this.meter + rows.length;
+    if (now - this.meterShownAt >= METER_REFRESH_MS || this.cache.meterKey !== meterKey) {
+      this.meterShownAt = now;
+      this.cache.meterKey = meterKey;
+      rows.sort((a, b) => b.value - a.value);
+      const best = Math.max(1, rows[0]?.value ?? 1);
+      let meter = '';
+      for (const r of rows) {
+        const shown = this.meter === 'dps' ? `${fmt(r.value)} /s` : fmt(r.value);
+        meter += `<div class="meter-row"><div class="fill" style="width:${(r.value / best) * 100}%;background:${cssColor(PLAYER_COLORS[r.slot % PLAYER_COLORS.length])}"></div><span>${escapeHtml(r.name)}</span><span>${shown}</span></div>`;
+      }
+      this.setHtml('meter-body', meter);
     }
-    this.setHtml('meter-body', meter);
 
     // Équipe
     let team = '';

@@ -43,6 +43,10 @@ const ENTITIES = {
   sadida: { kind: 'characters', sprite: 100 },
   ecaflip: { kind: 'characters', sprite: 60 },
   feca: { kind: 'characters', sprite: 10 },
+  osamodas: { kind: 'characters', sprite: 20 },
+  enutrof: { kind: 'characters', sprite: 30 },
+  xelor: { kind: 'characters', sprite: 50 },
+  pandawa: { kind: 'characters', sprite: 120 },
   bouftou: { kind: 'monsters', sprite: 1566 },
   tofu: { kind: 'monsters', sprite: 1558 },
   arakne: { kind: 'monsters', sprite: 1564 },
@@ -64,6 +68,10 @@ const ENTITIES = {
   poupee_folle: { kind: 'monsters', sprite: 1180 },
   poupee_bloqueuse: { kind: 'monsters', sprite: 1184 },
   poupee_gonflable: { kind: 'monsters', sprite: 1182 },
+  // Invocations de l'Osamodas et de l'Enutrof.
+  osa_tofu: { kind: 'monsters', sprite: 1558 },
+  osa_bouftou: { kind: 'monsters', sprite: 1566 },
+  coffre_anime: { kind: 'monsters', sprite: 1083 },
 };
 
 /** Animation du jeu -> noms d'animation Dofus à essayer, dans l'ordre. */

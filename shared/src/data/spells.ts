@@ -713,6 +713,193 @@ export const SPELLS: Record<string, SpellDef> = define({
   },
 
   // =========================================================================
+  // Osamodas
+  // =========================================================================
+  fouet: {
+    name: 'Fouet',
+    description: 'Coup de fouet qui porte un peu plus loin qu\'une arme de mêlée.',
+    color: 0x7ad0c8,
+    element: 'air',
+    cooldown: 600,
+    range: 3,
+    damage: [12, 16],
+    melee: { arc: 70 },
+  },
+  invocation_de_tofu: {
+    name: 'Invocation de Tofu',
+    description: 'Invoque un Tofu rapide et fragile (3 au maximum, 25 s).',
+    color: 0xf0d050,
+    element: 'air',
+    cooldown: 4000,
+    range: 5,
+    damage: [0, 0],
+    summon: { monster: 'osa_tofu', max: 3, duration: 25 },
+  },
+  invocation_de_bouftou: {
+    name: 'Invocation de Bouftou',
+    description: 'Invoque un Bouftou robuste qui attire les monstres sur lui (30 s).',
+    color: 0xe0d0b0,
+    element: 'terre',
+    cooldown: 12000,
+    range: 5,
+    damage: [0, 0],
+    summon: { monster: 'osa_bouftou', max: 1, duration: 30 },
+  },
+  laisse_spirituelle: {
+    name: 'Laisse Spirituelle',
+    description: 'Ultime : ramène à la vie l\'allié mort le plus proche du point visé, avec la moitié de ses PV.',
+    color: 0xb0f0ff,
+    element: 'eau',
+    cooldown: 40000,
+    range: 8,
+    damage: [0, 0],
+    revive: true,
+  },
+
+  // =========================================================================
+  // Enutrof
+  // =========================================================================
+  lancer_de_pieces: {
+    name: 'Lancer de Pièces',
+    description: 'Lance une pièce ; chaque cible touchée peut lâcher quelques kamas.',
+    color: 0xf0c840,
+    element: 'eau',
+    cooldown: 550,
+    range: 8,
+    damage: [11, 15],
+    projectile: { speed: 15, radius: 0.3 },
+    effects: [{ type: 'gold', chance: 0.12, amount: [1, 3] }],
+  },
+  malchance: {
+    name: 'Malchance',
+    description: 'Zone de malchance : dégâts et fort ralentissement pendant 4 s.',
+    color: 0x7a60a0,
+    element: 'eau',
+    cooldown: 6000,
+    range: 7,
+    damage: [10, 14],
+    zone: { radius: 2.5 },
+    effects: [{ type: 'slow', factor: 0.5, duration: 4 }],
+  },
+  coffre_anime: {
+    name: 'Coffre Animé',
+    description: 'Invoque un coffre vivant, très résistant, qui attire les monstres (25 s).',
+    color: 0xb08040,
+    element: 'terre',
+    cooldown: 15000,
+    range: 4,
+    damage: [0, 0],
+    summon: { monster: 'coffre_anime', max: 1, duration: 25 },
+  },
+  pelle_du_jugement: {
+    name: 'Pelle du Jugement',
+    description: 'Ultime : une pelle géante s\'abat sur une large zone après un instant.',
+    color: 0xd0a060,
+    element: 'terre',
+    cooldown: 13000,
+    range: 8,
+    damage: [110, 140],
+    zone: { radius: 3 },
+    delay: 0.8,
+    effects: [{ type: 'knockback', distance: 1.5 }],
+  },
+
+  // =========================================================================
+  // Xélor
+  // =========================================================================
+  aiguille: {
+    name: 'Aiguille',
+    description: 'Aiguille rapide qui ralentit légèrement.',
+    color: 0x9090ff,
+    element: 'feu',
+    cooldown: 450,
+    range: 8.5,
+    damage: [10, 14],
+    projectile: { speed: 18, radius: 0.25 },
+    effects: [{ type: 'slow', factor: 0.8, duration: 1 }],
+  },
+  gelure: {
+    name: 'Gelure',
+    description: 'Zone qui gèle presque les ennemis pendant 3 s.',
+    color: 0x80c0ff,
+    element: 'feu',
+    cooldown: 5000,
+    range: 7,
+    damage: [18, 24],
+    zone: { radius: 2.2 },
+    effects: [{ type: 'slow', factor: 0.35, duration: 3 }],
+  },
+  vol_du_temps: {
+    name: 'Vol du Temps',
+    description: 'Remonte le temps : vous ramène là où vous étiez il y a 3 s, avec vos PV d\'alors s\'ils étaient plus hauts.',
+    color: 0xc0a0ff,
+    element: 'air',
+    cooldown: 12000,
+    range: 0,
+    damage: [0, 0],
+    rewind: 3,
+  },
+  sablier_de_xelor: {
+    name: 'Sablier de Xélor',
+    description: 'Ultime : arrête le temps autour de vous ; les monstres proches sont figés 2,5 s.',
+    color: 0xe0d090,
+    element: 'feu',
+    cooldown: 25000,
+    range: 0,
+    damage: [20, 26],
+    zone: { radius: 5, self: true },
+    effects: [{ type: 'stun', duration: 2.5 }],
+  },
+
+  // =========================================================================
+  // Pandawa
+  // =========================================================================
+  poing_enflamme: {
+    name: 'Poing Enflammé',
+    description: 'Coup de poing qui enflamme légèrement.',
+    color: 0xff8a40,
+    element: 'feu',
+    cooldown: 550,
+    range: 2.1,
+    damage: [14, 18],
+    melee: { arc: 100 },
+    effects: [{ type: 'burn', dps: 4, duration: 2 }],
+  },
+  karcham: {
+    name: 'Karcham',
+    description: 'Empoigne les ennemis devant soi et les projette au loin.',
+    color: 0xa0c080,
+    element: 'terre',
+    cooldown: 5000,
+    range: 2.3,
+    damage: [22, 28],
+    melee: { arc: 60 },
+    effects: [{ type: 'knockback', distance: 4.5 }],
+  },
+  ivresse: {
+    name: 'Ivresse',
+    description: 'Le Pandawa boit un coup : plus de dégâts et d\'armure pendant 6 s.',
+    color: 0xd08040,
+    element: 'terre',
+    cooldown: 15000,
+    range: 0,
+    damage: [0, 0],
+    buff: { stats: { damage: 0.3, armor: 4 }, duration: 6, label: 'Ivresse' },
+  },
+  lait_de_bambou: {
+    name: 'Lait de Bambou',
+    description: 'Ultime : soigne les alliés autour de vous et leur donne de l\'armure pendant 5 s.',
+    color: 0xf0f0d0,
+    element: 'eau',
+    cooldown: 22000,
+    range: 0,
+    damage: [0, 0],
+    heal: [45, 60],
+    zone: { radius: 4.5, self: true },
+    buff: { stats: { armor: 5 }, duration: 5, zone: 4.5, label: 'Lait de Bambou' },
+  },
+
+  // =========================================================================
   // Monstres
   // =========================================================================
   graine_geante: {

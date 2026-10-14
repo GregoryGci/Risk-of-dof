@@ -321,6 +321,13 @@
     "spriteInfos": "10,1,1",
     "swf": true
   },
+  "odorat": {
+    "dofusId": 115,
+    "name": "Odorat",
+    "sprite": 2112,
+    "spriteInfos": "10,1,1",
+    "swf": true
+  },
   "bond_du_felin": {
     "dofusId": 105,
     "name": "Bond du Félin",
@@ -370,6 +377,13 @@
     "spriteInfos": "0,1,1",
     "swf": false
   },
+  "treve": {
+    "dofusId": 5,
+    "name": "Trêve",
+    "sprite": 101,
+    "spriteInfos": "10,1,1",
+    "swf": true
+  },
   "teleportation": {
     "dofusId": 11,
     "name": "Téléportation",
@@ -396,6 +410,104 @@
     "name": "Bouclier Féca",
     "sprite": 802,
     "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "fouet": {
+    "dofusId": 30,
+    "name": "Fouet",
+    "sprite": 211,
+    "spriteInfos": "51,0,1",
+    "swf": true
+  },
+  "invocation_de_tofu": {
+    "dofusId": 34,
+    "name": "Invocation de Tofu",
+    "sprite": 1100,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "invocation_de_bouftou": {
+    "dofusId": 35,
+    "name": "Invocation de Bouftou",
+    "sprite": 1100,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "lancer_de_pieces": {
+    "dofusId": 51,
+    "name": "Lancer de Pièces",
+    "sprite": 306,
+    "spriteInfos": "21,1,1",
+    "swf": true
+  },
+  "coffre_anime": {
+    "dofusId": 60,
+    "name": "Coffre Animé ",
+    "sprite": 0,
+    "spriteInfos": "11,1,1",
+    "swf": false
+  },
+  "pelle_du_jugement": {
+    "dofusId": 56,
+    "name": "Pelle du Jugement",
+    "sprite": 308,
+    "spriteInfos": "51,1,1",
+    "swf": true
+  },
+  "aiguille": {
+    "dofusId": 83,
+    "name": "Aiguille",
+    "sprite": 510,
+    "spriteInfos": "20,1,1",
+    "swf": true
+  },
+  "gelure": {
+    "dofusId": 84,
+    "name": "Gelure",
+    "sprite": 501,
+    "spriteInfos": "41,0,1",
+    "swf": true
+  },
+  "vol_du_temps": {
+    "dofusId": 98,
+    "name": "Vol du Temps",
+    "sprite": 507,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "sablier_de_xelor": {
+    "dofusId": 100,
+    "name": "Sablier de Xélor",
+    "sprite": 509,
+    "spriteInfos": "51,1,1",
+    "swf": true
+  },
+  "poing_enflamme": {
+    "dofusId": 687,
+    "name": "Poing Enflammé ",
+    "sprite": 1208,
+    "spriteInfos": "11,1,1",
+    "swf": true
+  },
+  "karcham": {
+    "dofusId": 693,
+    "name": "Karcham",
+    "sprite": 0,
+    "spriteInfos": "0,-1,1",
+    "swf": false
+  },
+  "ivresse": {
+    "dofusId": 423,
+    "name": "Ivresse",
+    "sprite": 0,
+    "spriteInfos": "0,2,1",
+    "swf": false
+  },
+  "lait_de_bambou": {
+    "dofusId": 699,
+    "name": "Lait de Bambou",
+    "sprite": 1213,
+    "spriteInfos": "10,1,1",
     "swf": true
   }
 }

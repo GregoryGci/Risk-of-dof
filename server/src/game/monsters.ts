@@ -50,6 +50,10 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
   }
 
   if (s.ally) return updateAlly(sim, m, dt);
+  // Étourdi : ne bouge ni n'attaque (mais peut être repoussé).
+  if (sim.now < m.stunUntil && !m.push) {
+    return;
+  }
   if (m.def.behavior.type === 'dummy') {
     // Épouvantail : ne bouge pas (même repoussé) et se remet à neuf 2 s après le dernier coup.
     m.push = null;

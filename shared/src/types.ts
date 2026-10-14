@@ -15,7 +15,11 @@ export type SpellEffect =
   /** Ralentit les cibles (facteur 0..1 appliqué à la vitesse) pendant une durée (s). */
   | { type: 'slow'; factor: number; duration: number }
   /** Vol de vie : le lanceur récupère cette fraction des dégâts infligés. */
-  | { type: 'lifesteal'; fraction: number };
+  | { type: 'lifesteal'; fraction: number }
+  /** Étourdit les cibles : elles ne bougent ni n'attaquent pendant une durée (s). */
+  | { type: 'stun'; duration: number }
+  /** Chance de faire tomber des kamas pour le lanceur à chaque cible touchée. */
+  | { type: 'gold'; chance: number; amount: [number, number] };
 
 /** Sort défini uniquement en données : la logique serveur est générique. */
 export interface SpellDef {
@@ -80,6 +84,10 @@ export interface SpellDef {
   };
   /** Téléporte le lanceur au point visé (limité par la portée). */
   teleport?: boolean;
+  /** Ressuscite le joueur mort le plus proche du point visé (le sort n'est pas lancé s'il n'y en a pas). */
+  revive?: boolean;
+  /** Ramène le lanceur là où il était il y a ce nombre de secondes, avec ses PV d'alors s'ils étaient plus hauts. */
+  rewind?: number;
   /** Pari : chance de multiplier les dégâts par `win`, sinon par `lose`. */
   gamble?: { chance: number; win: number; lose: number };
   effects?: SpellEffect[];

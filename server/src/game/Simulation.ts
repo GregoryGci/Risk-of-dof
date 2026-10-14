@@ -86,6 +86,8 @@ export interface PlayerRt {
   dashReadyAt: number;
   /** Bonus permanents de l'arbre de stats. */
   meta: Record<StatKey, number>;
+  /** Positions et PV récents (Vol du Temps du Xélor). */
+  history: { t: number; x: number; y: number; hp: number }[];
 }
 
 /** Données serveur d'un monstre qui ne sont pas synchronisées. */
@@ -102,6 +104,8 @@ export interface MonsterRt {
   burnOwner: string;
   slowFactor: number;
   slowUntil: number;
+  /** Étourdi (Sablier de Xélor) : ni déplacement ni attaque. */
+  stunUntil: number;
   // Comportement (charge, tir)
   specialReadyAt: number;
   phaseUntil: number;
@@ -223,7 +227,7 @@ export class Simulation {
     let slot = 0;
     while (used.has(slot)) slot++;
     state.slot = slot;
-    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, inventory: new Map(), stats: sumStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, meta: metaStats(meta), reviveUsed: false, revivePending: false, bought: new Set() };
+    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], push: null, lastHitAt: -999, inventory: new Map(), stats: sumStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, meta: metaStats(meta), reviveUsed: false, revivePending: false, bought: new Set(), history: [] };
     this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
@@ -466,6 +470,7 @@ export class Simulation {
     if (this.now < p.readyAt[slot]) return;
 
     const spell = getSpell(p.spells[slot]);
+    if (spell.revive && !this.deadAllyNear(p, tx, ty, spell.range + p.stats.range)) return;
     // Les objets de « hâte » raccourcissent la recharge, ceux de dégâts et de critique améliorent le tir.
     // Vitesse d'attaque : seulement l'attaque de base, et pas au corps à corps.
     const ranged = !spell.melee && !spell.zone?.self;
@@ -559,6 +564,34 @@ export class Simulation {
       this.broadcast('cast', event);
       return { x: dx, y: dy };
     }
+    if (spell.revive && caster) {
+      const target = this.deadAllyNear(caster, tx, ty, range);
+      event.tx = target?.state.x ?? aimX;
+      event.ty = target?.state.y ?? aimY;
+      this.broadcast('cast', event);
+      if (target) {
+        target.state.alive = true;
+        target.state.hp = target.state.maxHp * 0.5;
+        target.revivePending = false;
+        this.broadcast('buff', { target: target.id, label: 'Ressuscité !', duration: 2 });
+      }
+      return { x: dx, y: dy };
+    }
+    if (spell.rewind && caster) {
+      // Vol du Temps : la position la plus ancienne de moins de `rewind` secondes.
+      const snap = caster.history.find((h) => this.now - h.t <= spell.rewind!) ?? caster.history[0];
+      if (snap) {
+        caster.state.x = snap.x;
+        caster.state.y = snap.y;
+        caster.state.hp = Math.min(caster.state.maxHp, Math.max(caster.state.hp, snap.hp));
+        caster.push = null;
+        caster.history = [];
+      }
+      event.tx = caster.state.x;
+      event.ty = caster.state.y;
+      this.broadcast('cast', event);
+      return { x: dx, y: dy };
+    }
     if (spell.summon && caster) {
       event.tx = aimX;
       event.ty = aimY;
@@ -575,7 +608,7 @@ export class Simulation {
       this.placeGround(pr, gx, gy);
       return { x: dx, y: dy };
     }
-    if (spell.buff && caster) {
+    if (spell.buff && caster && !spell.zone) {
       this.broadcast('cast', event);
       this.applyBuff(caster, spell.buff);
       return { x: dx, y: dy };
@@ -630,11 +663,27 @@ export class Simulation {
       } else {
         this.explode(pr, event.tx, event.ty, radius);
       }
+      if (spell.buff && caster) this.applyBuff(caster, spell.buff);
     } else {
       // Sort utilitaire (bond...) : seul l'effet sur le lanceur compte.
       this.broadcast('cast', event);
     }
     return { x: dx, y: dy };
+  }
+
+  /** Allié mort (pas le lanceur) le plus proche du point visé, à portée du lanceur. */
+  private deadAllyNear(caster: PlayerRt, tx: number, ty: number, range: number): PlayerRt | undefined {
+    let best: PlayerRt | undefined;
+    let bestD = Infinity;
+    for (const p of this.players.values()) {
+      if (p === caster || p.state.alive || Math.hypot(p.state.x - caster.state.x, p.state.y - caster.state.y) > range + 1) continue;
+      const d = Math.hypot(p.state.x - tx, p.state.y - ty);
+      if (d < bestD) {
+        bestD = d;
+        best = p;
+      }
+    }
+    return best;
   }
 
   /** Cibles hostiles à un lanceur : les monstres (hors invocations) pour un joueur, les joueurs vivants pour un monstre. */
@@ -695,6 +744,8 @@ export class Simulation {
       }
       s.x = pos.x;
       s.y = pos.y;
+      if (p.history.length === 0 || this.now - p.history[p.history.length - 1].t >= 0.1) p.history.push({ t: this.now, x: s.x, y: s.y, hp: s.hp });
+      while (p.history.length > 1 && this.now - p.history[1].t > 4) p.history.shift();
       if (s.hp < s.maxHp && this.now - p.lastHitAt > REGEN_DELAY) s.hp = Math.min(s.maxHp, s.hp + (p.def.regen + p.stats.regen) * dt);
     }
   }
@@ -821,6 +872,16 @@ export class Simulation {
       } else if (e.type === 'slow') {
         m.slowFactor = e.factor;
         m.slowUntil = this.now + e.duration;
+      } else if (e.type === 'stun') {
+        m.stunUntil = Math.max(m.stunUntil, this.now + e.duration);
+      } else if (e.type === 'gold') {
+        const caster = this.players.get(pr.owner);
+        if (caster && Math.random() < e.chance) {
+          const gain = Math.round(e.amount[0] + Math.random() * (e.amount[1] - e.amount[0]));
+          caster.state.kamas += gain;
+          caster.state.kamasEarned += gain;
+          this.broadcast('kamas', { player: caster.id, amount: gain, x: m.state.x, y: m.state.y });
+        }
       } else if (e.type === 'lifesteal') {
         const caster = this.players.get(pr.owner);
         if (caster?.state.alive) this.healPlayer(caster, Math.min(amount, Math.max(0, m.state.hp)) * e.fraction);
@@ -1179,6 +1240,7 @@ export class Simulation {
       burnOwner: '',
       slowFactor: 1,
       slowUntil: 0,
+      stunUntil: 0,
       specialReadyAt: this.now + 1 + Math.random() * 2,
       phaseUntil: 0,
       chargeDx: 0,
