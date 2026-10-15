@@ -7,7 +7,7 @@ import { spellDetailsHtml } from './spellInfo.ts';
 import { escapeHtml } from './Hud.ts';
 import {account} from '../account.ts';
 import { saveSettings, settings } from '../settings.ts';
-import {getBlessing,parseBlessings,blessingDescription,blessingSpell} from '@rod/shared';
+import {getBlessing,parseBlessings,blessingDescription,blessingSpell,EQUIPMENT_BASES,EQUIPMENT_RARITIES,EQUIPMENT_RARITY_NAMES,type GearDrop} from '@rod/shared';
 
 const SLOT_KEYS = ['Clic gauche', 'Clic droit', 'Espace', 'R'];
 
@@ -87,6 +87,7 @@ export class Details {
       <div>Dégâts subis <b>-${Math.round((1 - Math.pow(0.92, stats.armor)) * 100)} %</b> — PV par victime <b>${stats.killHeal}</b> — kamas <b>+${Math.round(stats.kamas * 100)} %</b></div>
     </section>`;
     html += `</div>`;
+    html += runLootHtml(me.runLoot);
     html+='<h3>Bénédictions des élites</h3><div class="run-blessings">'+Object.entries(parseBlessings(me.blessings)).map(([id,rank])=>{const b=getBlessing(id)!;return`<section class="blessing-detail" style="--pact:#${b.color.toString(16)}"><img src="assets/dofus/spells/${b.icon}.png" alt=""><h3>${b.name} <small>Rang ${rank}</small></h3><p>${escapeHtml(blessingDescription(id,rank))}</p></section>`;}).join('')+'</div>';
 
     html += `<h3>Options</h3><label class="option"><input type="checkbox" name="smartCast" ${settings.smartCast ? 'checked' : ''}>
@@ -123,4 +124,23 @@ export class Details {
       this.body.innerHTML = html;
     }
   }
+}
+
+/** Récapitulatif des équipements trouvés pendant la run : regroupés par objet et rareté, les plus rares d'abord. */
+function runLootHtml(raw: string): string {
+  let drops: GearDrop[] = [];
+  try { drops = JSON.parse(raw || '[]') as GearDrop[]; } catch { drops = []; }
+  const groups = new Map<string, { base: string; rarity: GearDrop['gear']['rarity']; count: number }>();
+  for (const drop of drops) {
+    if (!drop?.gear || !EQUIPMENT_BASES[drop.gear.base]) continue;
+    const key = `${drop.gear.base}|${drop.gear.rarity}`;
+    const group = groups.get(key) ?? { base: drop.gear.base, rarity: drop.gear.rarity, count: 0 };
+    group.count++;
+    groups.set(key, group);
+  }
+  const rows = [...groups.values()].sort((a, b) => EQUIPMENT_RARITIES.indexOf(b.rarity) - EQUIPMENT_RARITIES.indexOf(a.rarity) || b.count - a.count);
+  const total = rows.reduce((n, r) => n + r.count, 0);
+  return `<h3>Butin de la run <small>${total ? `${total} équipement${total > 1 ? 's' : ''}` : ''}</small></h3>` + (rows.length
+    ? `<div class="run-loot">${rows.map(r => `<span class="run-loot-item ${r.rarity}" title="${escapeHtml(EQUIPMENT_BASES[r.base].name)} · ${EQUIPMENT_RARITY_NAMES[r.rarity]}"><img src="assets/dofus/items/${r.base}.png" alt=""><span>${escapeHtml(EQUIPMENT_BASES[r.base].name)}<small>${EQUIPMENT_RARITY_NAMES[r.rarity]}</small></span>${r.count > 1 ? `<b>×${r.count}</b>` : ''}</span>`).join('')}</div>`
+    : '<p class="run-loot-empty">Aucun équipement trouvé pour l’instant.</p>');
 }

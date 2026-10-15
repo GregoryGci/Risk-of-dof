@@ -34,7 +34,7 @@ const DISPLAY_BOOST = 1.4;
 const MAX_FRAMES = 32;
 
 /** Entités à extraire : clé du jeu -> numéro de sprite (voir clips/sprites/sprites.xml). */
-const ENTITIES = {
+export const ENTITIES = {
   cra: { kind: 'characters', sprite: 90 },
   iop: { kind: 'characters', sprite: 80 },
   eniripsa: { kind: 'characters', sprite: 70 },
@@ -129,6 +129,47 @@ function parseSwfXml(xml) {
   return { sprites, exportsByName, frameRate };
 }
 
+/** Vrai si le code ActionScript (octets d'un DoAction) contient un stop(). */
+function hasStop(hex) {
+  const b = Buffer.from(hex, 'hex');
+  for (let i = 0; i < b.length; ) {
+    const code = b[i++];
+    if (code === 0x07) return true;
+    if (code >= 0x80) i += 2 + b.readUInt16LE(i);
+  }
+  return false;
+}
+
+/**
+ * Fige les clips qui s'arrêtent d'eux-mêmes : JPEXS ignore les stop() et joue toutes leurs images.
+ * Exemple : la tête de l'Iop a deux images (cheveux longs, puis cheveux courts sous une coiffe) et un
+ * stop() sur la première ; sans ce correctif, ses cheveux alternent à chaque image et clignotent.
+ * On ne garde que la première image des clips qui s'y arrêtent. Les stop() plus loin (fin d'une animation
+ * jouée une fois, enchaînements lancés par le script) ne sont pas touchés : la durée des animations ne change pas.
+ * Retourne le XML et le nombre de clips figés.
+ */
+export function freezeStoppedClips(xml) {
+  let count = 0;
+  const out = xml.replace(/(<item type="DefineSpriteTag"[^>]*?frameCount=")(\d+)("[^>]*>\s*<subTags>)([\s\S]*?)(<\/subTags>)/g, (all, head, frames, open, body, close) => {
+    const tags = body.split(/(?=<item type=")/);
+    let frame = 0;
+    for (let i = 0; i < tags.length; i++) {
+      const hex = /^<item type="DoActionTag" actionBytes="([0-9a-f]*)"/.exec(tags[i])?.[1];
+      if (hex && hasStop(hex)) {
+        if (frame > 0) return all;
+        const end = tags.findIndex((t, j) => j > i && t.startsWith('<item type="ShowFrameTag"'));
+        if (end < 0 || frame + 1 >= Number(frames)) return all;
+        count++;
+        return `${head}${frame + 1}${open}${tags.slice(0, end + 1).join('')}
+${close}`;
+      }
+      if (tags[i].startsWith('<item type="ShowFrameTag"')) frame++;
+    }
+    return all;
+  });
+  return { xml: out, count };
+}
+
 /** Descend dans les clips « enveloppes » (1 frame, 1 enfant) jusqu'au clip qui porte l'animation. */
 function resolveClip(sprites, id) {
   let scale = 1;
@@ -149,8 +190,8 @@ function resolveClip(sprites, id) {
 // Extraction d'une entité
 // ---------------------------------------------------------------------------
 
-function extract(key, { kind, sprite, idleLastFrame,maxFrames=MAX_FRAMES }) {
-  const swf = path.join(RETRO, 'clips/sprites', `${sprite}.swf`);
+// `swf` remplace le fichier d'origine (ex. personnage avec apparat greffé, voir extract-skins.mjs).
+export function extract(key, { kind, sprite, idleLastFrame,maxFrames=MAX_FRAMES, swf = path.join(RETRO, 'clips/sprites', `${sprite}.swf`) }) {
   const work = path.join(CACHE, `${key}_${sprite}`);
   fs.mkdirSync(work, { recursive: true });
   console.log(`\n[${key}] sprite ${sprite}`);
@@ -158,6 +199,15 @@ function extract(key, { kind, sprite, idleLastFrame,maxFrames=MAX_FRAMES }) {
   const xmlFile = path.join(work, 'structure.xml');
   if (!fs.existsSync(xmlFile)) ffdec(['-swf2xml', swf, xmlFile]);
   const { sprites, exportsByName, frameRate } = parseSwfXml(fs.readFileSync(xmlFile, 'utf8'));
+  // Clips arrêtés par stop() : on rend une copie du SWF où ils sont figés (voir freezeStoppedClips).
+  const frozen = freezeStoppedClips(fs.readFileSync(xmlFile, 'utf8'));
+  if (frozen.count > 0) {
+    const fixedXml = path.join(work, 'frozen.xml');
+    const fixedSwf = path.join(work, 'frozen.swf');
+    if (!fs.existsSync(fixedSwf)) { fs.writeFileSync(fixedXml, frozen.xml); ffdec(['-xml2swf', fixedXml, fixedSwf]); }
+    console.log(`  ${frozen.count} clips figés sur leur stop()`);
+    swf = fixedSwf;
+  }
 
   // Animations voulues -> clip à exporter.
   const wanted = [];
@@ -286,6 +336,7 @@ function extract(key, { kind, sprite, idleLastFrame,maxFrames=MAX_FRAMES }) {
 
 // ---------------------------------------------------------------------------
 
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
 const only = process.argv.slice(2);
 const manifestFile = path.join(OUT, 'manifest.json');
 const manifest = fs.existsSync(manifestFile) ? JSON.parse(fs.readFileSync(manifestFile, 'utf8')) : {};
@@ -309,3 +360,4 @@ for (const [key, entity] of Object.entries(ENTITIES)) {
   }
 }
 console.log(`\nManifeste mis à jour : ${manifestFile}`);
+}

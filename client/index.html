@@ -18,7 +18,7 @@
     <div id="menu" class="home-screen">
       <div class="home-background" aria-hidden="true"></div>
       <div class="home-grain" aria-hidden="true"></div>
-      <header class="home-topline"><span><i class="home-sigil"></i> LE SANCTUAIRE DES DOUZE</span><span>ACTION · SURVIE · COOPÉRATION</span></header>
+      <header class="home-topline"><div class="home-profile" id="home-profile"></div><span>ACTION · SURVIE · COOPÉRATION</span></header>
       <main class="home-layout">
         <section class="home-navigation" aria-label="Menu principal">
           <div class="home-brand"><p>CHAQUE DÉFAITE ÉCRIT LA SUITE</p><h1><span>RISK</span><span><em>OF</em> DOF</span></h1><div class="brand-rule"><i></i></div></div>
@@ -28,9 +28,9 @@
             <button class="home-nav-button" data-view="character"><span>Character<small>Votre classe, vos sorts, votre tenue</small></span></button>
             <button id="btn-ladder" class="home-nav-button"><span>Classement<small>Les meilleurs aventuriers solo et multi</small></span></button>
             <button id="btn-history" class="home-nav-button"><span>Historique<small>Vos runs, vos records, vos trouvailles</small></span></button>
+            <button id="btn-skins" class="home-nav-button" hidden><span>Apparats<small>Banc d’essai local des skins</small></span></button>
             <button class="home-nav-button" data-view="settings"><span>Settings<small>Préparez vos commandes</small></span></button>
           </nav>
-          <div class="home-profile" id="home-profile"></div>
           <div class="home-extra"><button id="btn-account">Se connecter ↗</button></div>
         </section>
         <section class="home-welcome" id="home-welcome">
@@ -90,6 +90,7 @@
     <!-- HUD en jeu -->
     <div id="history" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="history-title"><div class="sheet archive-sheet"><div class="sheet-head"><span id="history-title">Chroniques <small>Vos aventures et votre meilleure run</small></span><button id="history-close" class="sheet-close" aria-label="Fermer l’historique">✕</button></div><div id="history-body" class="archive-body"></div></div></div>
     <div id="account-panel" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="account-title"><div class="sheet auth-sheet"><div class="sheet-head"><span id="account-title">Votre compte <small>Retrouvez votre progression partout</small></span><button id="account-close" class="sheet-close" aria-label="Fermer le compte">✕</button></div><div id="account-body" class="archive-body"></div></div></div>
+    <div id="game-settings" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="game-settings-title"><div class="sheet archive-sheet game-settings-sheet"><div class="sheet-head"><span id="game-settings-title">Réglages <small>Son, musique, viseur, DPS, affichage</small></span><button id="game-settings-close" class="sheet-close" aria-label="Fermer les réglages">✕</button></div><div id="game-settings-body" class="archive-body game-settings-body"></div></div></div>
     <div id="ladder" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ladder-title"><div class="sheet archive-sheet"><div class="sheet-head"><span id="ladder-title">Classement <small>Les aventures les plus lointaines</small></span><button id="ladder-close" class="sheet-close" aria-label="Fermer le classement">✕</button></div><div id="ladder-body" class="archive-body"></div></div></div>
 
     <div id="hud" class="hidden">
@@ -131,6 +132,7 @@
           <button data-meter="dmg" class="active">Dégâts</button>
           <button data-meter="heal">Soins</button>
           <button data-meter="taken">Subis</button>
+          <button id="meter-dps" data-meter="dmg" class="meter-dps" title="Cliquer : DPS moyen de la run, ou des 10 dernières secondes">DPS total</button>
         </div>
         <div id="meter-body"></div>
       </div>
@@ -167,6 +169,7 @@
             <h2>Détails de la partie</h2>
             <div class="row">
               <button id="details-menu" class="btn">Retour au menu</button>
+              <button id="details-settings" class="btn">Réglages</button>
               <button id="details-close" class="btn btn-primary">Reprendre</button>
             </div>
           </div>

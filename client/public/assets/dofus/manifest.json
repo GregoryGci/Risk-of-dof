@@ -116,6 +116,7 @@
         0.913
       ],
       "scale": 1.1271,
+      "sourceSprite": 80,
       "anims": {
         "idle": {
           "0": {

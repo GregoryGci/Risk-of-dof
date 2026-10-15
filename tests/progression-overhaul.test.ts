@@ -42,7 +42,7 @@ test('gardien surprise : seulement tous les trois donjons, puissance et butin ×
     Math.random=()=>0;const state=new GameState(),events:unknown[]=[];
     const sim=new Simulation(state,(type,event)=>{if(type==='boss')events.push(event);});sim.addPlayer('p','Test');sim.start();
     state.stage=3;state.difficulty=5;
-    (sim as unknown as {activateZaap():void}).activateZaap();
+    (sim as unknown as {activateZaap():void}).activateZaap();for(let i=0;i<61;i++)sim.update(1/30);
     const boss=[...sim.monsters.values()].find(m=>m.def.boss)!;
     assert.equal(boss.state.rogue,true);assert.equal(boss.lootMultiplier,3);
     assert.notEqual(boss.def.id,ZONES[2].boss);assert.ok(boss.state.maxHp>=bossHpBudget(3)*monsterHpMultiplier(5)*1.75);

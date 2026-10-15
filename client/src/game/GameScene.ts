@@ -51,6 +51,7 @@ import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import type { Hud } from '../ui/Hud.ts';
 import { Minimap } from '../ui/Minimap.ts';
 import { Details } from '../ui/Details.ts';
+import { gameSettings } from '../ui/GameSettings.ts';
 import { SpellPreview } from './SpellPreview.ts';
 import { ShopPanel } from '../ui/Shop.ts';
 import { settings } from '../settings.ts';
@@ -200,6 +201,10 @@ export class GameScene extends Phaser.Scene {
         this.room.send('pause', { paused: open });
       },
     );
+    // Réglages en partie : même pause que le panneau de détails (effective en solo seulement).
+    const menu = gameSettings();
+    menu.onToggle = (open) => { this.controls.releaseAll(); this.room.send('pause', { paused: open }); };
+    document.getElementById('details-settings')!.onclick = () => { this.details.toggle(false); menu.toggle(true); };
     this.hud.setSpellHover((slot) => (this.previewSlot = slot));
     this.shop = new ShopPanel(this.store, (index) => this.room.send('buy', { index }),()=>this.room.send('shopReroll'),()=>{this.controls.releaseAll();this.room.send('shopReady');},route=>this.room.send('routeChoice',{route}));
 
@@ -286,7 +291,7 @@ export class GameScene extends Phaser.Scene {
     // Mort : un clic change de joueur observé.
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.cycleSpectate());
 
-    const clean=()=>{this.effects.clear();this.controls.destroy();this.details.destroy();this.shop.destroy();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
+    const clean=()=>{const menu=gameSettings();menu.onToggle=()=>{};menu.toggle(false);this.effects.clear();this.controls.destroy();this.details.destroy();this.shop.destroy();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, clean);
     this.events.once(Phaser.Scenes.Events.DESTROY, clean);
   }
@@ -333,13 +338,15 @@ export class GameScene extends Phaser.Scene {
         if (top) document.getElementById(top)!.classList.add('hidden');
       } else if (this.targeting !== null) this.targeting = null;
       else if (this.shop.isOpen) this.shop.toggle(false);
-      else this.details.toggle();
+      else if (this.details.isOpen) this.details.toggle(false);
+      // Rien à fermer : Échap ouvre les réglages (la partie se met en pause en solo).
+      else gameSettings().toggle(true);
     }
     if (progressionOpen) this.controls.releaseAll();
     // Pendant une pause, les temps de recharge affichés sont figés eux aussi.
     if (state.paused && this.lastFrameTime > 0) for (let i = 0; i < 4; i++) this.cdEnd[i] += time - this.lastFrameTime;
     this.lastFrameTime = time;
-    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !progressionOpen && !this.details.isOpen && !this.shop.isOpen && !state.paused && !document.hidden && document.hasFocus();
+    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !progressionOpen && !this.details.isOpen && !gameSettings().isOpen && !this.shop.isOpen && !state.paused && !document.hidden && document.hasFocus();
 
     if (myState && (myState.classId !== this.myClass || myState.spells !== this.mySpellsKey || myState.spellLevels !== this.myLevelsKey)) {
       // Première frame, changement de classe ou de sorts équipés : la barre de sorts suit.

@@ -69,7 +69,9 @@ test('Crâ : flèche chargée traverse deux cibles et consomme la charge',()=>{
 });
 test('Iop : trois sorts préparent 3 % de bouclier par cible du quatrième, sans proc supplémentaire',()=>{
   const {sim,p,target}=setup('iop');const second=sim.spawnMonster(getMonster('epouvantail'),target.state.x,target.state.y+1,1,1,1);
-  for(let i=0;i<3;i++)cast(sim,p,0);assert.equal(sim.mechanics.get(p).charge,3);assert.equal(p.state.shield,0);
+  // L'attaque de base ne charge pas Bravoure : seuls les sorts comptent.
+  for(let i=0;i<4;i++)cast(sim,p,0);assert.equal(sim.mechanics.get(p).charge,0);assert.equal(p.state.shield,0);
+  for(let i=0;i<3;i++)cast(sim,p,1);assert.equal(sim.mechanics.get(p).charge,3);p.state.shield=0;
   cast(sim,p,1);assert.equal(sim.mechanics.get(p).charge,0);assert.ok(second.state.hp<second.state.maxHp);assert.ok(Math.abs(p.state.shield-p.state.maxHp*.06)<.001);
   const shield=p.state.shield;action(sim,p);assert.equal(p.state.shield,shield);
   advance(sim,5.1);assert.equal(p.state.shield,0);

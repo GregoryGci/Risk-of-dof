@@ -1,6 +1,6 @@
 // Progression entre les parties, mémorisée dans le navigateur :
 // bourse de kamas (gagnée en fin de partie), sorts débloqués et sorts équipés par classe.
-import { EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, TALENTS, fusionResult, equippedStats, getClass, isFlexSlot, sanitizeEquipment, sanitizeLoadout, slotKind, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
+import { EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, TALENTS, fusionResult, equippedStats, getClass, isFlexSlot, sanitizeEquipment, sanitizeLoadout, slotKind, type EquipmentRarity, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
 import { equippedFromAccount, migrateAccount, type AccountData } from './progression.ts';
 import {forgeCost,recycleValue,type ForgeGrant} from '@rod/shared';
 import {sanitizeRunSummary,compareRuns,unlockedModeFromProgression} from '@rod/shared';
@@ -95,6 +95,42 @@ export const account = {
     data.fragments+=recycleValue(source);source.quantity--;
     if(!source.quantity)data.inventory=data.inventory.filter(e=>e.uid!==uid);
     save();return true;
+  },
+  /** Copies recyclables d'une rareté (les exemplaires portés sont gardés) et fragments rendus. */
+  recyclableOfRarity(rarity:EquipmentRarity):{count:number;fragments:number} {
+    let count=0,fragments=0;
+    for(const e of data.inventory){
+      if(e.rarity!==rarity)continue;
+      const spare=e.quantity-EQUIPMENT_SLOTS.filter(slot=>data.equipped[slot]===e.uid).length;
+      if(spare>0){count+=spare;fragments+=spare*recycleValue(e);}
+    }
+    return{count,fragments};
+  },
+  /** Recycle d'un coup toutes les copies non portées d'une rareté. Retourne le nombre d'objets recyclés. */
+  recycleRarity(rarity:EquipmentRarity):number {
+    const {count,fragments}=this.recyclableOfRarity(rarity);
+    if(!count)return 0;
+    data.fragments+=fragments;
+    data.inventory=data.inventory.flatMap(e=>{
+      if(e.rarity!==rarity)return[e];
+      const worn=EQUIPMENT_SLOTS.filter(slot=>data.equipped[slot]===e.uid).length;
+      return worn?[{...e,quantity:Math.min(e.quantity,worn)}]:[];
+    });
+    save();return count;
+  },
+  /** Nombre de fusions possibles tout de suite (10 exemplaires identiques). */
+  get fusable():number {
+    return data.inventory.reduce((n,e)=>n+(fusionResult(e)?Math.floor(e.quantity/FUSION_COST):0),0);
+  },
+  /** Fusionne tout ce qui peut l'être, y compris les résultats qui atteignent à leur tour 10 exemplaires. */
+  fuseAll():number {
+    let fused=0;
+    for(let guard=0;guard<10000;guard++){
+      const next=data.inventory.find(e=>e.quantity>=FUSION_COST&&fusionResult(e));
+      if(!next||!this.fuseGear(next.uid))break;
+      fused++;
+    }
+    return fused;
   },
   get equipment() { return equippedFromAccount(data); },
   get bonuses() { return equippedStats(this.equipment); },

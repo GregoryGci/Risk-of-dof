@@ -1,4 +1,4 @@
-import { EQUIPMENT_BASES, EQUIPMENT_RARITIES, EQUIPMENT_RARITY_NAMES, EQUIPMENT_SLOTS, EQUIPMENT_TIERS, FUSION_COST, fusionResult, SLOT_NAMES, equipmentStats, getClass, slotKind, statText, type EquipmentKind, type EquipmentSlot, type StatKey } from '@rod/shared';
+import { EQUIPMENT_BASES, EQUIPMENT_RARITIES, EQUIPMENT_RARITY_NAMES, EQUIPMENT_SLOTS, EQUIPMENT_TIERS, FUSION_COST, fusionResult, SLOT_NAMES, equipmentStats, getClass, slotKind, statText, type EquipmentKind, type EquipmentRarity, type EquipmentSlot, type StatKey } from '@rod/shared';
 import { account } from '../account.ts';
 import {forgeCost,recycleValue,equipmentSet,setProgress,setThresholds,type EquipmentSet} from '@rod/shared';
 import { escapeHtml } from './Hud.ts';
@@ -14,6 +14,9 @@ export class EquipmentPage {
   private search = '';
   private target?: EquipmentSlot;
   private classId = 'cra';
+  /** Recyclage groupé : rareté choisie, et confirmation en attente. */
+  private bulkRarity: EquipmentRarity = 'normal';
+  private confirmRecycle = false;
 
   constructor(private onChange: () => void, private canEdit: () => boolean = () => true) {
     document.getElementById('equipment-close')!.addEventListener('click', () => this.close());
@@ -32,6 +35,13 @@ export class EquipmentPage {
       if (button.dataset.action === 'fuse' && this.canEdit()) { const uid=account.fuseGear(this.selected); if (uid) { this.selected=uid; this.onChange(); } }
       if(button.dataset.action==='forge' && this.canEdit()) {const uid=account.forgeGear(this.selected);if(uid){this.selected=uid;this.onChange();}}
       if(button.dataset.action==='recycle' && this.canEdit() && account.recycleGear(this.selected))this.onChange();
+      if (button.dataset.action === 'fuse-all' && this.canEdit() && account.fuseAll()) this.onChange();
+      if (button.dataset.action === 'recycle-rarity') this.confirmRecycle = true;
+      if (button.dataset.action === 'recycle-cancel') this.confirmRecycle = false;
+      if (button.dataset.action === 'recycle-confirm' && this.canEdit()) {
+        this.confirmRecycle = false;
+        if (account.recycleRarity(this.bulkRarity)) { if (!account.inventory.some(e => e.uid === this.selected)) this.selected = ''; this.onChange(); }
+      }
       if (button.dataset.action === 'migration') account.dismissMigration();
       this.render();
     });
@@ -39,6 +49,7 @@ export class EquipmentPage {
       const input = e.target as HTMLSelectElement;
       if (input.id === 'gear-filter') { this.filter = input.value; this.target = undefined; }
       if (input.id === 'gear-target') this.target = input.value as EquipmentSlot;
+      if (input.id === 'gear-bulk-rarity') { this.bulkRarity = input.value as EquipmentRarity; this.confirmRecycle = false; }
       this.render();
     });
     this.body.addEventListener('input', e => {
@@ -83,7 +94,7 @@ export class EquipmentPage {
         ${Object.entries(bonuses).filter(([k, v]) => v > 0 && k !== 'maxHp').map(([k,v]) => `<div class="gear-stat-pair"><span>${escapeHtml(statText(k as StatKey,v))}</span></div>`).join('') || '<p>Équipez vos trouvailles pour améliorer vos prochaines parties.</p>'}
       </div><div class="gear-panoplies"><div class="section-caption">Panoplies équipées</div>${setProgress(account.equipment).map(row=>`<div class="set-summary"><b>${escapeHtml(row.set.name)}</b><span>${row.count}/${row.set.members.length} pièces</span><small>${row.thresholds.filter(t=>t.pieces<=row.count).flatMap(t=>Object.entries(t.stats).map(([k,v])=>escapeHtml(statText(k as StatKey,v)))).join(' · ')||'Premier bonus à deux pièces distinctes'}</small></div>`).join('')||'<small>Aucune panoplie équipée.</small>'}</div></section>
       <section class="gear-inventory"><div class="section-caption">Inventaire <span>${account.inventory.length} objets · ${account.fragments.toLocaleString('fr')} ◈</span></div>
-        <div class="gear-filters"><input id="gear-search" type="text" placeholder="Rechercher un équipement…" aria-label="Rechercher un équipement" value="${escapeHtml(this.search)}"><select id="gear-filter" aria-label="Type d’équipement"><option value="">Tous les équipements</option>${KINDS.map((k,i) => `<option value="${k}" ${this.filter === k ? 'selected' : ''}>${KIND_NAMES[i]}</option>`).join('')}</select></div><div id="gear-grid" class="gear-grid"></div>
+        <div class="gear-filters"><input id="gear-search" type="text" placeholder="Rechercher un équipement…" aria-label="Rechercher un équipement" value="${escapeHtml(this.search)}"><select id="gear-filter" aria-label="Type d’équipement"><option value="">Tous les équipements</option>${KINDS.map((k,i) => `<option value="${k}" ${this.filter === k ? 'selected' : ''}>${KIND_NAMES[i]}</option>`).join('')}</select></div>${this.bulkActions()}<div id="gear-grid" class="gear-grid"></div>
         </section><aside class="gear-inspector" aria-label="Détails de l’équipement">`;
     if (selected) {
       const base = EQUIPMENT_BASES[selected.base];
@@ -109,6 +120,16 @@ export class EquipmentPage {
     html += `</aside></div><footer class="gear-footer"><div><b>Palier ${tier.level} débloqué</b><span>${account.bestTier < EQUIPMENT_TIERS.length-1 ? `Atteignez la zone ${EQUIPMENT_TIERS[account.bestTier + 1].stage} pour le palier ${EQUIPMENT_TIERS[account.bestTier + 1].level}.` : 'Tous les paliers sont débloqués.'}</span></div><div class="gear-rarity-legend">${EQUIPMENT_RARITIES.map(r => `<span><i class="${r}"></i>${EQUIPMENT_RARITY_NAMES[r]}</span>`).join('')}</div></footer>`;
     this.body.innerHTML = html;
     this.renderInventory();
+  }
+  /** Actions groupées : tout fusionner, recycler toute une rareté (avec confirmation). */
+  private bulkActions(): string {
+    const fusable = account.fusable, edit = this.canEdit();
+    const {count, fragments} = account.recyclableOfRarity(this.bulkRarity);
+    const name = (count > 1 ? { normal: 'normaux', rare: 'rares', epique: 'épiques', legendaire: 'légendaires' } : { normal: 'normal', rare: 'rare', epique: 'épique', legendaire: 'légendaire' })[this.bulkRarity];
+    const recycle = this.confirmRecycle && count
+      ? `<span class="gear-bulk-confirm">Recycler ${count} objet${count > 1 ? 's' : ''} ${name} (+${fragments.toLocaleString('fr')} ◈) ? Les exemplaires portés sont gardés.</span><button class="btn btn-primary" data-action="recycle-confirm">Confirmer</button><button class="btn" data-action="recycle-cancel">Annuler</button>`
+      : `<select id="gear-bulk-rarity" aria-label="Rareté à recycler">${EQUIPMENT_RARITIES.map(r => `<option value="${r}" ${r === this.bulkRarity ? 'selected' : ''}>${EQUIPMENT_RARITY_NAMES[r]}</option>`).join('')}</select><button class="btn" data-action="recycle-rarity" ${count && edit ? '' : 'disabled'}>Recycler tous (${count})</button>`;
+    return `<div class="gear-bulk"><button class="btn" data-action="fuse-all" ${fusable && edit ? '' : 'disabled'} title="Fusionne chaque groupe de ${FUSION_COST} exemplaires identiques, en cascade">Tout fusionner${fusable ? ` (${fusable})` : ''}</button>${recycle}</div>`;
   }
   private renderSet(set:EquipmentSet|undefined):string {
     if(!set)return '';const count=setProgress(account.equipment).find(row=>row.set.id===set.id)?.count??0;

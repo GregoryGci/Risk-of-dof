@@ -1,5 +1,5 @@
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, kamas, équipe, bandeaux.
-import { affinityProgress, getRoute, CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, zoneForStage, type GameStateView, type PlayerView } from '@rod/shared';
+import { affinityProgress, getRoute, CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, FINAL_STAGE, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, zoneForStage, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import { spellIconSvg } from './icons.ts';
@@ -8,6 +8,9 @@ import { account } from '../account.ts';
 import { equipmentCard } from './equipmentHtml.ts';
 import { EQUIPMENT_BASES, EQUIPMENT_RARITY_NAMES, type GearDrop } from '@rod/shared';
 import {leveledSpell,spellEvolutionText,assaultPlan,blessingSpell,parseBlessings} from '@rod/shared';
+import { saveSettings, settings } from '../settings.ts';
+import { DPS_WINDOW, dpsOf } from './dps.ts';
+
 
 const SLOT_KEYS = ['Clic G', 'Clic D', 'Espace', 'R'];
 
@@ -64,6 +67,8 @@ export class Hud {
   /** Dernier HTML écrit par zone : on ne touche au DOM que si ça change. */
   private cache: Record<string, string> = {};
   private meter: 'dmg' | 'heal' | 'taken' = 'dmg';
+  /** Dégâts cumulés de chaque joueur, échantillonnés chaque seconde de jeu (DPS récent). */
+  private dpsSamples = new Map<string, { t: number; v: number }[]>();
   private meterShownAt = 0;
   private roomCode = '';
   private solo=false;
@@ -111,6 +116,7 @@ export class Hud {
       (e) => {
         const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-meter]');
         if (!btn) return;
+        if (btn.id === 'meter-dps') { settings.dpsMode = settings.dpsMode === 'total' ? 'recent' : 'total'; saveSettings(); this.cache.meterKey = ''; return; }
         this.meter = btn.dataset.meter as 'dmg' | 'heal' | 'taken';
         document.querySelectorAll('#hud-meter [data-meter]').forEach((b) => b.classList.toggle('active', b === btn));
       },
@@ -402,9 +408,13 @@ export class Hud {
     let objective = '';
     if (state.phase === PHASE_PLAYING) {
       if(state.intermission)objective='<b>Halte marchande</b> — choisissez vos bonus puis confirmez « Prêt »';
-      else if (state.zaapState === ZAAP_IDLE) objective = `Zone ${state.stage} — trouvez et activez le <b>Zaap</b>`;
-      else if (state.zaapState === ZAAP_CHARGING) objective = `Zone ${state.stage} — <b>Zaap ${Math.floor(state.zaapCharge * 100)} %</b>${state.zaapCharge >= 1 ? ' — vainquez le gardien' : ''}`;
-      else objective = `Zone ${state.stage} — <b>Zaap prêt</b> : retournez-y`;
+      else {
+      // Progression de la campagne : « Zone X/Y », en plus du nom de la zone.
+      const zone=`Zone ${state.stage}/${FINAL_STAGE}`;
+      if (state.zaapState === ZAAP_IDLE) objective = `${zone} — trouvez et activez le <b>Zaap</b>`;
+      else if (state.zaapState === ZAAP_CHARGING) objective = `${zone} — <b>Zaap ${Math.floor(state.zaapCharge * 100)} %</b> — vainquez le gardien`;
+      else objective = `${zone} — <b>Zaap prêt</b> : retournez-y`;
+      }
       objective += ` <span class="zone-name">· ${zoneForStage(state.stage).name}${state.intermission?'':` · Assaut ${state.zoneWave}${state.zoneWave>0?' · '+assaultPlan(state.zoneWave,state.stage).name:''} · ${state.waves} au total`}</span>`;
       if(me&&!state.intermission&&state.zaapState===ZAAP_IDLE&&state.stageTime>=45) {
         const dx=state.zaapX-me.x,dy=state.zaapY-me.y;
@@ -442,13 +452,18 @@ export class Hud {
     // Addon de dégâts : totaux depuis le début de la run (dégâts infligés, soins, dégâts subis).
     // Le total plutôt qu'un DPS glissant : on compare les classes sur toute la run, début comme fin de partie.
     const now = performance.now();
-    const rows: { name: string; slot: number; value: number }[] = [];
-    state.players.forEach((p: PlayerView) => {
+    const rows: { name: string; slot: number; value: number; dps: number }[] = [];
+    state.players.forEach((p: PlayerView, id: string) => {
+      // Échantillon par seconde de jeu ; une nouvelle run (temps qui recule) repart de zéro.
+      let samples = this.dpsSamples.get(id);
+      if (!samples || (samples.length && state.time < samples.at(-1)!.t)) { samples = []; this.dpsSamples.set(id, samples); }
+      if (!samples.length || state.time - samples.at(-1)!.t >= 1) { samples.push({ t: state.time, v: p.dmgDealt }); while (samples.length > DPS_WINDOW + 3) samples.shift(); }
       const value = this.meter === 'dmg' ? p.dmgDealt : this.meter === 'heal' ? p.healDone : p.dmgTaken;
-      rows.push({ name: p.name, slot: p.slot, value });
+      rows.push({ name: p.name, slot: p.slot, value, dps: dpsOf(samples, settings.dpsMode, state.time, p.dmgDealt) });
     });
+    for (const id of [...this.dpsSamples.keys()]) if (!state.players.get(id)) this.dpsSamples.delete(id);
     // Affichage rafraîchi une fois par seconde (sauf changement d'onglet) : les chiffres restent lisibles.
-    const meterKey = this.meter + rows.length;
+    const meterKey = this.meter + rows.length + settings.dpsMode;
     if (now - this.meterShownAt >= METER_REFRESH_MS || this.cache.meterKey !== meterKey) {
       this.meterShownAt = now;
       this.cache.meterKey = meterKey;
@@ -456,10 +471,13 @@ export class Hud {
       const best = Math.max(1, rows[0]?.value ?? 1);
       let meter = '';
       for (const r of rows) {
-        const shown = fmt(r.value);
+        const shown = this.meter === 'dmg' ? `${fmt(r.value)} <small>${fmt(r.dps)}/s</small>` : fmt(r.value);
         meter += `<div class="meter-row"><div class="fill" style="width:${(r.value / best) * 100}%;background:${cssColor(PLAYER_COLORS[r.slot % PLAYER_COLORS.length])}"></div><span>${escapeHtml(r.name)}</span><span>${shown}</span></div>`;
       }
       this.setHtml('meter-body', meter);
+      const dpsButton = $('meter-dps');
+      dpsButton.textContent = settings.dpsMode === 'total' ? 'DPS total' : 'DPS 10 s';
+      dpsButton.classList.toggle('hidden', this.meter !== 'dmg');
     }
 
     // Équipe

@@ -213,6 +213,8 @@ const POTION_DROP_CHANCE = 0.02;
 const MAX_GROUND_POTIONS = 6;
 const POTION_LIFETIME = 30;
 const POTION_PICKUP_RANGE = 0.8;
+/** Délai entre l'annonce au sol et l'apparition d'un gardien ou d'une élite (s). */
+export const SPAWN_WARNING = 2;
 /** Dash (Maj) : distance, durée et temps de recharge. */
 const DASH_DISTANCE = 3;
 const DASH_DURATION = 0.15;
@@ -234,6 +236,8 @@ export class Simulation {
   private timers: { at: number; run: () => void }[] = [];
   /** Tous les gardiens de la rencontre doivent tomber avant la victoire. */
   private guardianIds=new Set<string>();
+  /** Gardiens annoncés au sol mais pas encore apparus : la zone ne peut pas se terminer sans eux. */
+  private pendingGuardians=0;
   private bossTelegraphUntil=0;
   tryBossTelegraph(duration:number):boolean{
     if(this.guardianIds.size<2)return true;
@@ -422,7 +426,7 @@ export class Simulation {
     this.potionExpires.clear();
     this.director.reset();
     this.timers = [];
-    this.guardianIds.clear();this.bossTelegraphUntil=0;
+    this.guardianIds.clear();this.pendingGuardians=0;this.bossTelegraphUntil=0;
     if(this.map.bossArena){this.state.zaapX=this.map.bossArena.x;this.state.zaapY=this.map.bossArena.y;}
     for (const id of [...this.state.chests.keys()]) this.state.chests.delete(id);
     for (let i = 0; i < CHEST_COUNT; i++) this.spawnChest();
@@ -491,7 +495,7 @@ export class Simulation {
       }
     }
     // L'étape marchande n'augmente ni le palier de loot ni la difficulté.
-    this.timers=[];this.guardianIds.clear();this.bossTelegraphUntil=0;this.state.chests.clear();this.state.potions.clear();this.potionExpires.clear();
+    this.timers=[];this.guardianIds.clear();this.pendingGuardians=0;this.bossTelegraphUntil=0;this.state.chests.clear();this.state.potions.clear();this.potionExpires.clear();
     this.state.intermission=true;this.state.zaapX=0;this.state.zaapY=0;this.state.zaapState=ZAAP_IDLE;
     this.state.merchantX=MAP_SIZE/2;this.state.merchantY=MAP_SIZE/2;
     this.state.shop='personal';
@@ -541,22 +545,47 @@ export class Simulation {
     const pool=[...new Set([1,2,3].map(offset=>bossForStage(Math.max(1,this.state.stage-offset))))].filter(id=>id!==first.id);
     if(pool.length<count-1)for(const zone of ZONES)if(zone.boss!==first.id&&!pool.includes(zone.boss)){pool.push(zone.boss);if(pool.length>=count-1)break;}
     const hpMult = monsterHpMultiplier(diff) * (1 + 0.5 * (this.players.size - 1));
+    const planned:{def:MonsterDef;x:number;y:number}[]=[];
     for(let i=0;i<count;i++){
       const companion=i?getMonster(pool[(i-1)%pool.length]):first;
       const def=i?{...companion,melee:{...companion.melee,damage:normal.melee.damage}}:first;
       let x=this.state.zaapX,y=this.state.zaapY;
       for(let attempt=0;attempt<40;attempt++){
         const a=count===1?Math.random()*Math.PI*2:i*Math.PI*2/count+attempt*.43,r=4+Math.floor(attempt/12)*1.5,px=this.state.zaapX+Math.cos(a)*r,py=this.state.zaapY+Math.sin(a)*r;
-        if(isBlocked(this.map,px,py,def.radius)||[...this.guardianIds].some(id=>{const other=this.monsters.get(id)!;return Math.hypot(other.state.x-px,other.state.y-py)<other.def.radius+def.radius+1;}))continue;
+        if(isBlocked(this.map,px,py,def.radius)||planned.some(other=>Math.hypot(other.x-px,other.y-py)<other.def.radius+def.radius+1))continue;
         x=px;y=py;break;
       }
-      const surprise=rogue&&i===0,share=count===3?.56:count===2?.72:1;
-      const boss=this.spawnMonster({...def,hp:bossHpBudget(this.state.stage)},x,y,hpMult*share*(surprise?1.75:1),monsterDamageMultiplier(diff)*(surprise?1.4:1),Math.round(diff));
-      boss.state.rogue=surprise;boss.lootMultiplier=surprise?3:1;boss.speedMult*=surprise?1.1:1;
-      boss.bossReadyAt=this.now+2.5+i*1.65;boss.bossPattern=i;
-      this.guardianIds.add(boss.id);names.push(def.name);
+      planned.push({def,x,y});names.push(def.name);
     }
     this.broadcast('boss', {name:count>1?`${count===3?'Triple':'Double'} gardien · ${names.join(' + ')}`:first.name,rogue,lootMultiplier:rogue?3:1,count});
+    // Les gardiens arrivent après l'annonce au sol : le temps de s'écarter.
+    this.pendingGuardians=count;
+    this.director.onBossArrival();
+    this.warnSpawn(planned.map(({def,x,y})=>({x,y,radius:def.radius+.6})),0xe96045,()=>{
+      this.pendingGuardians=0;
+      planned.forEach(({def,x,y},i)=>{
+        const surprise=rogue&&i===0,share=count===3?.56:count===2?.72:1;
+        const boss=this.spawnMonster({...def,hp:bossHpBudget(this.state.stage)},x,y,hpMult*share*(surprise?1.75:1),monsterDamageMultiplier(diff)*(surprise?1.4:1),Math.round(diff));
+        boss.state.rogue=surprise;boss.lootMultiplier=surprise?3:1;boss.speedMult*=surprise?1.1:1;
+        boss.bossReadyAt=this.now+2.5+i*1.65;boss.bossPattern=i;
+        this.guardianIds.add(boss.id);
+      });
+    });
+  }
+
+  /** Zaap en charge, tous les gardiens apparus et vaincus. */
+  private guardiansDefeated():boolean {
+    return this.state.zaapState===ZAAP_CHARGING&&!this.pendingGuardians&&(this.guardianIds.size>0||this.state.zaapCharge>=1)&&[...this.guardianIds].every(id=>!this.monsters.has(id));
+  }
+
+  /** Apparition annoncée : un cercle au sol pendant SPAWN_WARNING s, puis `spawn` (annulé si la zone ou la run change). */
+  private warnSpawn(points:{x:number;y:number;radius:number}[],color:number,spawn:()=>void):void {
+    const stage=this.state.stage,run=this.state.runId;
+    for(const point of points)this.broadcast('bossWarning',{...point,duration:SPAWN_WARNING,color,kind:'spawn'});
+    this.after(SPAWN_WARNING,()=>{
+      if(this.state.phase!==PHASE_PLAYING||this.state.intermission||this.state.stage!==stage||this.state.runId!==run)return;
+      spawn();
+    });
   }
 
   /** Retour au salon après une victoire ou une défaite. */
@@ -956,10 +985,11 @@ export class Simulation {
       if(minute>this.forgeMinute){this.forgeMinute=minute;this.awardFragments(`minute:${minute}`,minuteFragments(this.state.stage));}
       this.state.difficulty = difficultyAt(this.state.time, this.players.size,this.state.stage,this.state.stageTime);
       this.state.chestCost = chestCost(this.state.difficulty);
-      // Le Zaap se charge tout seul une fois activé, mais ne s'ouvre que si son gardien est vaincu.
+      // Le Zaap se charge tout seul une fois activé, et s'ouvre dès que ses gardiens sont vaincus
+      // (sans attendre la fin de la charge : on enchaîne les zones en speedrun).
       if (this.state.zaapState === ZAAP_CHARGING) {
         this.state.zaapCharge = Math.min(1, this.state.zaapCharge + dt / ZAAP_CHARGE_TIME);
-        if ((this.state.zaapCharge >= 1||this.state.stage===FINAL_STAGE&&this.guardianIds.size>0) && [...this.guardianIds].every(id=>!this.monsters.has(id))) this.completeStage();
+        if (this.guardiansDefeated()) this.completeStage();
       }
       if(this.state.zaapState !== ZAAP_READY) this.director.update(dt);
     }
@@ -1413,7 +1443,8 @@ export class Simulation {
     this.removeMonster(m.id);
     if(killer)this.blessings.onKill(killer,m);
     this.mechanics.onEnemyDeath(m);
-    if(this.state.phase===PHASE_PLAYING&&this.state.stage===FINAL_STAGE&&this.guardianIds.has(m.id)&&[...this.guardianIds].every(id=>!this.monsters.has(id)))this.completeStage();
+    // Dernier gardien vaincu : la zone se termine aussitôt (victoire de la run en zone finale).
+    if(this.state.phase===PHASE_PLAYING&&this.guardianIds.has(m.id)&&this.guardiansDefeated())this.completeStage();
   }
 
   damagePlayer(p: PlayerRt, amount: number, source='Dégâts de combat'): void {
@@ -1599,9 +1630,11 @@ export class Simulation {
       ex = x + Math.cos(k) * 2;
       ey = y + Math.sin(k) * 2;
     }
-    const elite = this.spawnMonster(def, ex, ey, monsterHpMultiplier(diff) * 12, monsterDamageMultiplier(diff) * 1.6, Math.round(diff) + 5);
-    elite.state.elite = true;
     this.broadcast('boss', { name: `${def.name} d'élite`, challenge:true });
+    this.warnSpawn([{x:ex,y:ey,radius:def.radius+.6}],0xb78cff,()=>{
+      const elite = this.spawnMonster(def, ex, ey, monsterHpMultiplier(diff) * 12, monsterDamageMultiplier(diff) * 1.6, Math.round(diff) + 5);
+      elite.state.elite = true;
+    });
   }
 
   /** Population propre à la région, partagée par les vagues et les défis. */

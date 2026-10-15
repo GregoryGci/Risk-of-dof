@@ -2,7 +2,7 @@
 import Phaser from 'phaser';
 import { Client, type Room } from '@colyseus/sdk';
 import { CLASSES, GAME_PROTOCOL_VERSION, DEFAULT_CLASS, EQUIPMENT_TIERS, GAME_MODES, PHASE_PLAYING, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT, type GearDrop, type RunReward } from '@rod/shared';
-import { ASSET_ROOT, loadManifest } from './assets/manifest.ts';
+import { loadManifest } from './assets/manifest.ts';
 import { AssetStore } from './assets/store.ts';
 import { GameScene } from './game/GameScene.ts';
 import { Hud, escapeHtml } from './ui/Hud.ts';
@@ -15,10 +15,11 @@ import {AtlasPage} from './ui/AtlasPage.ts';
 import {LadderPage} from './ui/LadderPage.ts';
 import {cloud} from './cloud.ts';
 import { setupDialogNavigation } from './ui/dialogNavigation.ts';
+import { mountSettings } from './ui/settingsForm.ts';
 import { account } from './account.ts';
-import { settings, saveSettings, subscribeSettings, VOLUMES, type VolumeKey } from './settings.ts';
+import { settings, subscribeSettings } from './settings.ts';
 import { ambiance, music, MENU_TRACK } from './music.ts';
-import { applyCrosshair, crosshairUrl, CROSSHAIR_COLORS, CROSSHAIR_SHAPES } from './crosshair.ts';
+import { applyCrosshair } from './crosshair.ts';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 setupDialogNavigation();
@@ -115,7 +116,8 @@ function renderProfile(): void {
   renderModes();
   const tier = EQUIPMENT_TIERS[account.bestTier];
   const count = Object.keys(account.equipment).length;
-  $('home-profile').innerHTML = `<img src="assets/dofus/portraits/${account.profile.avatar||classId}.png" alt=""><div><b>${escapeHtml(account.profile.name||pseudoInput.value.trim() || 'Aventurier')}</b><span>${CLASSES[classId].name} · ${count} équipements</span></div><span class="profile-bank">${account.bank.toLocaleString('fr')}<small>KAMAS</small><small class="profile-forge">${account.fragments.toLocaleString('fr')} ◈ forge</small></span>`;
+  // En haut à gauche : nom de l'invocateur et ses monnaies, rien d'autre.
+  $('home-profile').innerHTML = `<b class="profile-name">${escapeHtml(account.profile.name||pseudoInput.value.trim() || 'Aventurier')}</b><span class="profile-stat"><b>${account.bank.toLocaleString('fr')}</b> kamas</span><span class="profile-stat forge"><b>${account.fragments.toLocaleString('fr')}</b> ◈ forge</span>`;
   $('home-progress').textContent = `PALIER ${tier.level} · ${account.inventory.length} ÉQUIPEMENTS`;
   $('equipment-summary').textContent = `${count} emplacements équipés · ${account.inventory.length} objets`;
   $('collection-summary').textContent = `${account.discovered.length} / ${account.catalogSize} découverts`;
@@ -143,59 +145,9 @@ menu.addEventListener('click', e => {
 });
 $('view-close').addEventListener('click', () => { const prev = currentView; showView(''); document.querySelector<HTMLElement>(`.home-nav-button[data-view="${prev}"]`)?.focus(); });
 pseudoInput.addEventListener('input', () => { localStorage.setItem('rod.pseudo', pseudoInput.value); cloud.changed(); renderProfile(); });
-/** Réglages de volume : clé, titre, explication. */
-const VOLUME_ROWS: [VolumeKey, string, string][] = [
-  ['musicVolume', 'Musique', 'Musiques de Dofus 1.29 : une par région, une autre pendant le combat contre le gardien.'],
-  ['ambianceVolume', 'Ambiance', 'Bruits de la région (vent, oiseaux, forêt) et annonces : objet, gardien, nouvelle zone.'],
-  ['sfxVolume', 'Sorts et combat', 'Sons officiels des sorts, coups, critiques et explosions.'],
-];
-/** Son joué au relâchement d'un curseur de volume, pour entendre le réglage depuis le menu. */
-const VOLUME_PREVIEW: Partial<Record<VolumeKey, string>> = { ambianceVolume: 'item', sfxVolume: 'cast_pression' };
-function previewVolume(key: VolumeKey): void {
-  const sound = VOLUME_PREVIEW[key];
-  manifestPromise.then((m) => {
-    const file = sound && m.sounds?.[sound];
-    if (!file || settings[key] <= 0) return;
-    const audio = new Audio(ASSET_ROOT + file);
-    audio.volume = Math.min(1, 0.5 * settings[key]);
-    audio.play().catch(() => {});
-  });
-}
-function renderSettings(): void {
-  $('home-settings').innerHTML = `<label class="home-setting"><div><b>Direction artistique</b><span>Pacte des Douze : illustration infernale, rouge et ivoire. Ou le style parchemin.</span></div><select name="uiTheme" aria-label="Direction artistique"><option value="underworld" ${settings.uiTheme==='underworld'?'selected':''}>Pacte des Douze</option><option value="retro" ${settings.uiTheme==='retro'?'selected':''}>Parchemin</option></select></label><label class="home-setting"><div><b>Attaque automatique</b><span>L’attaque de base vise l’ennemi le plus proche à portée. Le clic gauche garde la visée manuelle.</span></div><input type="checkbox" name="autoAttack" ${settings.autoAttack ? 'checked' : ''}><i aria-hidden="true"></i></label>
-    <label class="home-setting"><div><b>Rendu du jeu</b><span>Le changement s’applique à la prochaine partie.</span></div><select name="renderMode" aria-label="Rendu du jeu"><option value="standard" ${settings.renderMode==='standard'?'selected':''}>Standard</option><option value="compatible" ${settings.renderMode==='compatible'?'selected':''}>Compatibilité</option></select></label><label class="home-setting"><div><b>Performances en jeu</b><span>FPS, aller-retour réseau et nombre de créatures pour identifier les ralentissements.</span></div><input type="checkbox" name="showPerformance" ${settings.showPerformance?'checked':''}><i aria-hidden="true"></i></label><label class="home-setting"><div><b>Smart cast</b><span>Espace et R lancent aussitôt le sort vers la souris. Désactivé, un clic confirme votre cible.</span></div><input type="checkbox" name="smartCast" ${settings.smartCast ? 'checked' : ''}><i aria-hidden="true"></i></label>
-    ${VOLUME_ROWS.map(([key, name, help]) => `<div class="home-setting setting-wide"><div><b>${name}</b><span>${help}</span></div><input class="setting-range" type="range" name="${key}" min="0" max="100" step="5" value="${Math.round(settings[key] * 100)}" aria-label="Volume : ${name}"><output id="${key}-value">${Math.round(settings[key] * 100)} %</output></div>`).join('')}
-    <div class="home-setting setting-wide crosshair-setting"><div><b>Viseur</b><span>Forme et couleur du curseur en jeu.</span>
-      <div class="crosshair-options" role="radiogroup" aria-label="Forme du viseur">${Object.entries(CROSSHAIR_SHAPES).map(([id, name]) => `<label class="crosshair-choice" title="${name}"><input type="radio" name="crosshairShape" value="${id}" ${settings.crosshairShape === id ? 'checked' : ''}><img src="${crosshairUrl(id, settings.crosshairColor)}" alt="${name}"></label>`).join('')}</div>
-      <div class="crosshair-colors" role="radiogroup" aria-label="Couleur du viseur">${Object.entries(CROSSHAIR_COLORS).map(([id, c]) => `<label class="crosshair-color" title="${c.name}"><input type="radio" name="crosshairColor" value="${id}" aria-label="${c.name}" ${settings.crosshairColor === id ? 'checked' : ''}><i style="background:${c.hex}"></i></label>`).join('')}</div>
-    </div><div class="crosshair-preview" aria-hidden="true"><img src="${crosshairUrl(settings.crosshairShape, settings.crosshairColor)}" alt=""></div></div>`;
-}
-$('home-settings').addEventListener('change', e => {
-  const input = e.target as HTMLInputElement;
-  if(input.name==='renderMode'&&(input.value==='standard'||input.value==='compatible')){settings.renderMode=input.value;saveSettings();}
-  if(input.name==='uiTheme'&&(input.value==='retro'||input.value==='underworld')){settings.uiTheme=input.value;saveSettings();}
-  if (input.name === 'autoAttack' || input.name === 'smartCast' || input.name === 'showPerformance') { settings[input.name] = input.checked; saveSettings(); }
-  if (input.name === 'crosshairShape' || input.name === 'crosshairColor') {
-    settings[input.name] = input.value;
-    saveSettings();
-    applyCrosshair();
-    renderSettings();
-    $('home-settings').querySelector<HTMLInputElement>(`input[name="${input.name}"][value="${input.value}"]`)?.focus();
-  }
-  if (isVolume(input.name)) { saveSettings(); previewVolume(input.name); }
-});
-const isVolume = (name: string): name is VolumeKey => (VOLUMES as readonly string[]).includes(name);
-// Le volume suit le curseur en direct ; il est mémorisé au relâchement (événement change).
-$('home-settings').addEventListener('input', e => {
-  const input = e.target as HTMLInputElement;
-  if (!isVolume(input.name)) return;
-  const volume = Number(input.value) / 100;
-  // Musique et ambiance tournent déjà : leur volume change en direct. Les bruitages lisent le réglage à chaque son.
-  if (input.name === 'musicVolume') music.setVolume(volume);
-  else if (input.name === 'ambianceVolume') ambiance.setVolume(volume);
-  else settings[input.name] = volume;
-  $(`${input.name}-value`).textContent = `${input.value} %`;
-});
+// Réglages : formulaire partagé avec le menu des réglages en partie (ui/settingsForm.ts).
+const homeSettings = mountSettings($('home-settings'));
+function renderSettings(): void { homeSettings.render(); }
 function renderModes(): void {
   setupMode=Math.min(setupMode,account.unlockedMode);
   $('setup-modes').innerHTML = GAME_MODES.map((m,i) => {const locked=m.id>account.unlockedMode;return`<button class="setup-mode${setupMode === m.id ? ' active' : ''}${locked?' locked':''}" data-setup-mode="${m.id}" aria-pressed="${setupMode === m.id}" ${locked?'disabled':''} title="${escapeHtml(locked?`Terminez le Kralamoure en ${GAME_MODES[m.id-1].name} pour débloquer ce mode.`:m.description)}"><span>${['Facile','Normal','Difficile','Cauchemar'][i]}${locked?' · Verrouillé':''}</span><b>${m.name}</b><small>${locked?`Vaincre le Krala en ${GAME_MODES[m.id-1].name}`:['Découvrez les champs','Avec une première tenue','Tenue de palier 80 conseillée','2 boss / 3 boss toutes les 3 zones'][i]}</small></button>`;}).join('');
@@ -205,6 +157,9 @@ $('setup-modes').addEventListener('click', e => {
   if (button&&Number(button.dataset.setupMode)<=account.unlockedMode) { setupMode = Number(button.dataset.setupMode); renderModes(); }
 });
 renderModes();
+// Apparats : banc d'essai local (skins.html), affiché seulement si les atlas ont été extraits sur ce poste.
+$('btn-skins').onclick=()=>{location.href='skins.html';};
+fetch('assets/dofus/skins/skins.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(data=>{if(data&&Object.keys(data).length)$('btn-skins').hidden=false;}).catch(()=>{});
 if (invited) showView('multi');
 
 function setBusy(busy: boolean): void {

@@ -126,3 +126,13 @@
   background: radial-gradient(circle at 30% 30%, #7fb241, #4f7a32 60%, #3d5f27); }
 .crosshair-preview img { width: 64px; height: 64px; }
 .sanctum-art{display:none}.welcome-link{background:none;border:0;color:#d7c090;font-size:11px;margin-top:15px;padding:0;cursor:pointer}
+
+/* Bouton masqué (ex. Apparats sans atlas locaux) : display:flex ne doit pas l'emporter sur hidden. */
+.home-nav-button[hidden] { display: none; }
+
+/* Profil en haut à gauche de l'accueil : nom de l'invocateur, kamas et forge, sur une ligne. */
+body .home-topline > .home-profile, body.underworld .home-topline > .home-profile { display: flex; align-items: baseline; gap: 18px; margin: 0; padding: 0; border: 0; letter-spacing: 1px; font-size: 11px; }
+body .home-topline > .home-profile .profile-name { font: 15px Georgia, serif; letter-spacing: 0; color: #f3e7c8; }
+body .home-topline > .home-profile .profile-stat { color: #b9ad8e; }
+body .home-topline > .home-profile .profile-stat b { font: 14px Georgia, serif; color: #e6bf74; margin-right: 3px; }
+body .home-topline > .home-profile .profile-stat.forge b { color: #8bc3aa; }

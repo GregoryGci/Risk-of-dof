@@ -31,7 +31,7 @@ test('routes reliées, départ libre et grande majorité du terrain accessible s
     assert.equal(isBlocked(map,size/2,size/2,PLAYER_RADIUS),false);
     const free=new Set<number>();
     for(let y=2;y<size-2;y++)for(let x=2;x<size-2;x++) if(!isBlocked(map,x+.5,y+.5,PLAYER_RADIUS))free.add(y*size+x);
-    const start=(size/2)*size+size/2,queue=[start],visited=new Set([start]);
+    const start=Math.floor(size/2)*size+Math.floor(size/2),queue=[start],visited=new Set([start]);
     for(let i=0;i<queue.length;i++) for(const next of [queue[i]-1,queue[i]+1,queue[i]-size,queue[i]+size]) {
       if(free.has(next)&&!visited.has(next)) {visited.add(next);queue.push(next);}
     }
@@ -63,7 +63,7 @@ test('passage de Zaap : carte, vagues, élite et cooldowns changent ensemble',()
     assert.equal(state.phase,PHASE_PLAYING);assert.ok(sim.monsters.size>0);
     assert.ok([...sim.monsters.values()].every(m=>zoneForStage(stage).monsters.includes(m.def.id)));
     const challenge=[...state.chests.values()].find(c=>c.kind==='challenge')!;
-    p.state.x=challenge.x;p.state.y=challenge.y;sim.interact(p.id);
+    p.state.x=challenge.x;p.state.y=challenge.y;sim.interact(p.id);for(let i=0;i<61;i++)sim.update(1/30);
     const elite=[...sim.monsters.values()].find(m=>m.state.elite)!;
     assert.ok(zoneForStage(stage).monsters.includes(elite.def.id));assert.equal(challenge.opened,true);
     if(stage===7)break;

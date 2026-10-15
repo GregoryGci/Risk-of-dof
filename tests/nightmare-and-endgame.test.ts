@@ -42,6 +42,8 @@ test('Fin de jeu : zones 13/18/25/31 débloquent les nouveaux pools, total 3 % e
 function encounter(stage:number,mode=3){
   const state=new GameState(),events:{type:string;data:any}[]=[],sim=new Simulation(state,(type,data)=>events.push({type,data}));state.mode=mode;sim.addPlayer('p','P','cra');sim.start();state.stage=stage;sim.map.obstacles.fill(0);const p=sim.players.get('p')!;p.state.x=state.zaapX;p.state.y=state.zaapY;
   const random=Math.random;try{Math.random=()=>.5;sim.interact(p.id);}finally{Math.random=random;}
+  // Les gardiens apparaissent après leur annonce au sol.
+  for(let i=0;i<61;i++)sim.update(1/30);
   return{sim,state,p,events,bosses:[...sim.monsters.values()].filter(m=>m.def.boss)};
 }
 
@@ -60,8 +62,8 @@ test('Cauchemar : double/triple gardiens réels, annonce, positions distinctes e
 test('Cauchemar : les grosses attaques alternent sans perdre de pattern quand un gardien attend',()=>{
   const{sim,bosses,events}=encounter(3);sim.now=10;for(const b of bosses){b.bossReadyAt=0;b.bossHoldUntil=0;}
   assert.equal(updateBoss(sim,bosses[0]),true);const pattern=bosses[1].bossPattern;assert.equal(updateBoss(sim,bosses[1]),false);assert.equal(bosses[1].bossPattern,pattern);
-  assert.equal(events.filter(e=>e.type==='bossWarning').length,1);sim.now+=2;
-  assert.equal(updateBoss(sim,bosses[1]),true);assert.equal(events.filter(e=>e.type==='bossWarning').length,2);
+  assert.equal(events.filter(e=>e.type==='bossWarning'&&e.data.kind!=='spawn').length,1);sim.now+=2;
+  assert.equal(updateBoss(sim,bosses[1]),true);assert.equal(events.filter(e=>e.type==='bossWarning'&&e.data.kind!=='spawn').length,2);
 });
 
 test('Cauchemar : mode choisi par hôte, récompense dédiée et historique sans rabattement vers Difficile',()=>{

@@ -18,12 +18,14 @@ export interface Settings {
   /** Viseur en jeu : forme et couleur (voir crosshair.ts). */
   crosshairShape: string;
   crosshairColor: string;
+  /** Compteur de DPS de l'addon : moyenne de la run, ou des 10 dernières secondes. */
+  dpsMode: 'total' | 'recent';
 }
 
 const KEY = 'rod.reglages';
 export type VolumeKey = 'musicVolume' | 'ambianceVolume' | 'sfxVolume';
 export const VOLUMES: readonly VolumeKey[] = ['musicVolume', 'ambianceVolume', 'sfxVolume'];
-const DEFAULTS: Settings = { uiTheme:'underworld', showPerformance:false, renderMode:'standard', smartCast: true, autoAttack: false, musicVolume: 0.4, ambianceVolume: 0.5, sfxVolume: 0.7, crosshairShape: 'classique', crosshairColor: 'or' };
+const DEFAULTS: Settings = { uiTheme:'underworld', showPerformance:false, renderMode:'standard', smartCast: true, autoAttack: false, musicVolume: 0.4, ambianceVolume: 0.5, sfxVolume: 0.7, crosshairShape: 'classique', crosshairColor: 'or', dpsMode: 'total' };
 
 function load(): Settings {
   try {
@@ -32,6 +34,7 @@ function load(): Settings {
     for (const key of VOLUMES) saved[key] = Number.isFinite(saved[key]) ? Math.min(1, Math.max(0, saved[key])) : DEFAULTS[key];
     if(!['underworld','retro'].includes(saved.uiTheme))saved.uiTheme=DEFAULTS.uiTheme;
     if(!['standard','compatible'].includes(saved.renderMode))saved.renderMode='standard';
+    if(!['total','recent'].includes(saved.dpsMode))saved.dpsMode=DEFAULTS.dpsMode;
     return saved;
   } catch {
     return { ...DEFAULTS };
@@ -47,6 +50,7 @@ export function replaceSettings(raw:unknown):void {
     const r=raw as Record<string,unknown>;
     if(r.uiTheme==='underworld'||r.uiTheme==='retro')settings.uiTheme=r.uiTheme;
     if(r.renderMode==='standard'||r.renderMode==='compatible')settings.renderMode=r.renderMode;
+    if(r.dpsMode==='total'||r.dpsMode==='recent')settings.dpsMode=r.dpsMode;
     for(const key of ['smartCast','autoAttack','showPerformance'] as const)if(typeof r[key]==='boolean')settings[key]=r[key];
     for(const key of VOLUMES)if(typeof r[key]==='number'&&Number.isFinite(r[key]))settings[key]=Math.min(1,Math.max(0,r[key]));
     for(const key of ['crosshairShape','crosshairColor'] as const)if(typeof r[key]==='string')settings[key]=r[key].slice(0,24);

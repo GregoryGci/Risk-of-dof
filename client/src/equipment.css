@@ -75,3 +75,9 @@
 #gameover .menu-panel { max-height: 92dvh; overflow-y: auto; }
 @media (max-width: 950px) { .gear-layout { grid-template-columns: 310px minmax(0,1fr); } .gear-character { padding: 14px; } .gear-paperdoll { grid-template-columns: 62px 1fr 62px; } .gear-slot { width: 62px; } .gear-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } .gear-avatar img { width: 110px; height: 150px; } .gear-rarity-legend { gap: 6px; } }
 @media (max-width: 720px) { .gear-layout { grid-template-columns: 1fr; } .gear-character { border-right: 0; border-bottom: 1px solid #a38c5c66; } .gear-paperdoll { max-width: 330px; margin: auto; } .gear-dofus { max-width: 330px; margin: 20px auto; } .gear-bonuses { max-height: 170px; overflow: auto; } .gear-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } .gear-footer { flex-direction: column; align-items: flex-start; } .gear-filters { flex-wrap: wrap; } .sheet-head small { display: none; } }
+
+/* Actions groupées de l'inventaire : tout fusionner, recycler une rareté. */
+.gear-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -5px 0 12px; }
+.gear-bulk .btn { padding: 5px 10px; font-size: 11px; }
+.gear-bulk select { font: 11px 'Trebuchet MS', sans-serif; padding: 4px; border-radius: 4px; }
+.gear-bulk-confirm { flex-basis: 100%; font-size: 11px; line-height: 1.5; }

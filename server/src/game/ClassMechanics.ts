@@ -42,7 +42,8 @@ export class ClassMechanics {
     return{spell,mult,handled:false};
   }
   prepareProjectile(p:PlayerRt,pr:Projectile):void {
-    if(pr.proc||p.def.id!=='iop')return;const m=this.get(p);pr.iopShield=m.charge===3;
+    // Bravoure : seuls les sorts comptent (emplacements 1 à 3), jamais l'attaque de base.
+    if(pr.proc||p.def.id!=='iop'||!pr.slot)return;const m=this.get(p);pr.iopShield=m.charge===3;
     if(pr.iopShield){m.charge=0;pr.shieldHits=new Set();}else m.charge++;
   }
   afterCast(p:PlayerRt,spell:SpellDef,slot:number,_tx:number,_ty:number):void {

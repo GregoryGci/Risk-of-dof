@@ -24,11 +24,17 @@ export class Director {
     this.wave=0;
   }
 
+  /** Arrivée des gardiens : une réserve de crédits et une vague presque immédiate les accompagnent. */
+  onBossArrival(): void {
+    this.credits += 8 + this.sim.state.stage * 0.6;
+    this.nextWaveIn = Math.min(this.nextWaveIn, 1);
+  }
+
   update(dt: number): void {
     const sim = this.sim;
     const diff = sim.state.difficulty;
     // Pendant la charge du Zaap, les monstres affluent.
-    const rush = sim.state.zaapState === ZAAP_CHARGING ? 1.4 : 1;
+    const rush = sim.state.zaapState === ZAAP_CHARGING ? 1.8 : 1;
     this.credits += spawnCreditsPerSecond(diff, sim.players.size,sim.state.stage) * rush * getMode(sim.state.mode).spawn * getRoute(sim.state.stageRoute).spawn * dt;
 
     this.nextWaveIn -= dt;

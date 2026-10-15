@@ -1376,3 +1376,21 @@ input[type='text']:focus {
 @media(prefers-reduced-motion:reduce){#dofus-announcement.show{animation:none}}
 
 #ranking-status{position:absolute;top:70px;left:50%;transform:translateX(-50%);color:#e7bf83;background:#211b16e6;border:1px solid #78583a;padding:7px 14px;border-radius:5px;font-size:12px;pointer-events:none!important;max-width:90vw;text-align:center}
+
+/* Panneau Tab : butin de la run. */
+.run-loot { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; margin-bottom: 10px; }
+.run-loot-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border: 1px solid #ffffff22; border-left: 3px solid #b9b9b9; border-radius: 4px; background: #00000030; font-size: 12px; }
+.run-loot-item.rare { border-left-color: #4f9cff; } .run-loot-item.epique { border-left-color: #b46cff; } .run-loot-item.legendaire { border-left-color: #ffb43c; }
+.run-loot-item img { width: 28px; height: 28px; object-fit: contain; }
+.run-loot-item > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.run-loot-item small { display: block; opacity: .7; font-size: 10px; }
+.run-loot-empty { opacity: .7; font-size: 12px; }
+
+/* Addon de dégâts : bascule DPS total / récent, et DPS en petit à côté du total. */
+.meter-tabs .meter-dps { flex: 1.3; font-weight: normal; font-style: italic; }
+.meter-tabs .meter-dps.hidden { display: none; }
+.meter-row small { font-size: 10px; opacity: .75; margin-left: 3px; }
+
+/* Réglages en partie : la feuille reprend le formulaire de l'accueil. */
+.game-settings-sheet { max-width: 720px; }
+.game-settings-body { max-height: min(70vh, 640px); overflow-y: auto; padding: 0 22px 18px; }

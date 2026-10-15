@@ -9,3 +9,6 @@ artifacts/
 
 # Projet Unity personnel (hors jeu web), jamais versionné
 My project/
+
+# Apparats extraits en local (tools/extract-skins.mjs), pas encore branchés au jeu
+client/public/assets/dofus/skins/
