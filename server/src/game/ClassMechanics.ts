@@ -1,3 +1,4 @@
+import {sourceDamageMultiplier} from '@rod/shared';
 import {CLASS_MECHANICS,cardLabel,evaluateHand,getSpell,stepMovement,type SpellDef,type MechanicView} from '@rod/shared';
 import type {Simulation,PlayerRt,MonsterRt,Projectile,GroundRt} from './Simulation.ts';
 interface Runtime {
@@ -22,7 +23,7 @@ export class ClassMechanics {
   private enemies(x:number,y:number,r:number):MonsterRt[]{return [...this.sim.monsters.values()].filter(m=>!m.state.ally&&!m.state.carried&&Math.hypot(m.state.x-x,m.state.y-y)<=r+m.def.radius);}
   private shield(p:PlayerRt,fraction:number,duration=3):void {p.state.shield=Math.max(p.state.shield,Math.round(p.state.maxHp*fraction));p.shieldUntil=Math.max(p.shieldUntil,this.sim.now+duration);}
   private pulse(p:PlayerRt,x:number,y:number,r:number,damage:number):void {
-    const spell:SpellDef={...getSpell('impulsion_classe'),damage:[damage,damage],zone:{radius:r},color:CLASS_MECHANICS[p.def.id].color};this.sim.cast(spell,x,y,x,y,p.id,true,1+p.stats.damage);this.fx(p,'burst',x,y,r);
+    const spell:SpellDef={...getSpell('impulsion_classe'),damage:[damage,damage],zone:{radius:r},color:CLASS_MECHANICS[p.def.id].color};this.sim.cast(spell,x,y,x,y,p.id,true,sourceDamageMultiplier(p.stats.damage,false));this.fx(p,'burst',x,y,r);
   }
   private fx(p:PlayerRt,kind:string,x=p.state.x,y=p.state.y,r=1,tx?:number,ty?:number):void {this.sim.broadcast('mechanicFx',{player:p.id,kind,x,y,r,tx,ty,color:CLASS_MECHANICS[p.def.id].color});}
   beforeCast(p:PlayerRt,spell:SpellDef,slot:number,tx:number,ty:number):{spell:SpellDef;mult:number;handled:boolean;cooldown?:number} {
@@ -65,7 +66,7 @@ export class ClassMechanics {
     return amount;
   }
   onEnemyDeath(enemy:MonsterRt):void {
-    for(const p of this.sim.players.values())if(p.def.id==='sram'&&p.state.alive&&Math.random()<.1){this.sim.cast(getSpell('piege_sournois'),enemy.state.x,enemy.state.y,enemy.state.x,enemy.state.y,p.id,true,1+p.stats.damage);this.publish(p);}
+    for(const p of this.sim.players.values())if(p.def.id==='sram'&&p.state.alive&&Math.random()<.1){this.sim.cast(getSpell('piege_sournois'),enemy.state.x,enemy.state.y,enemy.state.x,enemy.state.y,p.id,true,sourceDamageMultiplier(p.stats.damage,false));this.publish(p);}
   }
   beginDash(p:PlayerRt):void {this.get(p).dashGlyphs.clear();}
   dashStep(p:PlayerRt,x:number,y:number,tx:number,ty:number):void {
@@ -92,7 +93,7 @@ export class ClassMechanics {
       case 'sadida':{const plants=this.grounds(p).filter(g=>g.state.spell==='jardin_vivant').slice(-3);if(plants.length){for(const plant of plants){for(const ally of this.sim.players.values())if(ally.state.alive&&Math.hypot(ally.state.x-plant.state.x,ally.state.y-plant.state.y)<5)this.sim.healPlayer(ally,8,p,false);this.pulse(p,plant.state.x,plant.state.y,1,5);this.sim.removeGround(plant.id);}used=true;}break;}
       case 'osamodas': {
         const allies=[...this.sim.monsters.values()].filter(a=>a.allyOwner===p.id);if(!allies.length)break;const target=this.sim.monsters.get(m.target);
-        if(target&&!target.state.ally&&now<m.targetUntil){for(const ally of allies.slice(0,3))if(Math.hypot(target.state.x-ally.state.x,target.state.y-ally.state.y)<=10){this.sim.cast(getSpell('souffle_dragonnet'),ally.state.x,ally.state.y,target.state.x,target.state.y,p.id,true,(1+p.stats.damage)*.7,0,undefined,undefined,undefined,0,ally.id);ally.specialReadyAt=now+1.1;ally.attackHoldUntil=now+.4;}m.target='';}
+        if(target&&!target.state.ally&&now<m.targetUntil){for(const ally of allies.slice(0,3))if(Math.hypot(target.state.x-ally.state.x,target.state.y-ally.state.y)<=10){this.sim.cast(getSpell('souffle_dragonnet'),ally.state.x,ally.state.y,target.state.x,target.state.y,p.id,true,sourceDamageMultiplier(p.stats.damage,false)*.7,0,undefined,undefined,undefined,0,ally.id);ally.specialReadyAt=now+1.1;ally.attackHoldUntil=now+.4;}m.target='';}
         else{for(const ally of allies){const pos={x:p.state.x+(Math.random()-.5)*2,y:p.state.y+(Math.random()-.5)*2};stepMovement(this.sim.map,pos,0,0,0,0,ally.def.radius);ally.state.x=pos.x;ally.state.y=pos.y;}this.shield(p,.1);}used=true;break;
       }
       case 'xelor':if(m.charge>=3){m.charge=0;for(let slot=1;slot<4;slot++)p.readyAt[slot]=now+Math.max(0,p.readyAt[slot]-now)*.6;if(p.secondaryRefillAt>now)p.secondaryRefillAt=now+(p.secondaryRefillAt-now)*.6;p.dashReadyAt=now+Math.max(0,p.dashReadyAt-now)*.6;this.sim.broadcast('buff',{target:p.id,label:'Horloge : recharges restantes −40 %',duration:2});used=true;}break;
@@ -105,7 +106,7 @@ export class ClassMechanics {
     for(const p of this.sim.players.values()){const m=this.get(p);if(!p.state.alive){if(m.carried)this.release(m);continue;}
       if(p.def.id==='cra'){const stable=!p.dx&&!p.dy&&!p.push&&p.state.dir===m.stableDir;m.charge=Math.max(0,Math.min(100,m.charge+dt*(stable?70:-25)));m.stableDir=p.state.dir;}
       if(m.carried){const enemy=this.sim.monsters.get(m.carried);if(!enemy||now>=m.carryUntil)this.release(m);else{enemy.state.x=p.state.x;enemy.state.y=p.state.y-.35;}}
-      if(p.def.id==='sadida'&&now>=m.gardenAt){m.gardenAt=now+2.5;for(const doll of [...this.sim.monsters.values()].filter(a=>a.allyOwner===p.id).slice(0,3))this.sim.cast(getSpell('jardin_vivant'),doll.state.x,doll.state.y,doll.state.x,doll.state.y,p.id,true,1+p.stats.damage);}
+      if(p.def.id==='sadida'&&now>=m.gardenAt){m.gardenAt=now+2.5;for(const doll of [...this.sim.monsters.values()].filter(a=>a.allyOwner===p.id).slice(0,3))this.sim.cast(getSpell('jardin_vivant'),doll.state.x,doll.state.y,doll.state.x,doll.state.y,p.id,true,sourceDamageMultiplier(p.stats.damage,false));}
       if(now>=this.publishAt)this.publish(p);
     }if(now>=this.publishAt)this.publishAt=now+.1;
   }

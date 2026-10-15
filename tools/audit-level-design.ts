@@ -8,7 +8,7 @@ const maps:{stage:number;seed:number;reachable:number;arenaRadius:number}[]=[];
 for(let stage=1;stage<=33;stage++)for(let seed=1;seed<=4;seed++){
  const map=generateMap(seed,MAP_SIZE,stage),size=map.size,free=new Set<number>();
  for(let y=2;y<size-2;y++)for(let x=2;x<size-2;x++)if(!isBlocked(map,x+.5,y+.5,PLAYER_RADIUS))free.add(y*size+x);
- const start=size/2*size+size/2,queue=[start],visited=new Set([start]);for(let i=0;i<queue.length;i++)for(const cell of[queue[i]-1,queue[i]+1,queue[i]-size,queue[i]+size])if(free.has(cell)&&!visited.has(cell)){visited.add(cell);queue.push(cell);}
+ const start=Math.floor(size/2)*size+Math.floor(size/2),queue=[start],visited=new Set([start]);for(let i=0;i<queue.length;i++)for(const cell of[queue[i]-1,queue[i]+1,queue[i]-size,queue[i]+size])if(free.has(cell)&&!visited.has(cell)){visited.add(cell);queue.push(cell);}
  maps.push({stage,seed,reachable:visited.size/free.size,arenaRadius:map.bossArena!.radius});
 }
 const original=Math.random,loads=[];

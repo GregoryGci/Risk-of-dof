@@ -1,3 +1,4 @@
+import {skinById,type CurrencyGrant} from '@rod/shared';
 // Progression entre les parties, mémorisée dans le navigateur :
 // bourse de kamas (gagnée en fin de partie), sorts débloqués et sorts équipés par classe.
 import { EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, TALENTS, fusionResult, equippedStats, getClass, isFlexSlot, sanitizeEquipment, sanitizeLoadout, slotKind, type EquipmentRarity, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
@@ -36,6 +37,12 @@ function save(): void {
 save();
 
 export const account = {
+  get ogrines(){return data.ogrines;},
+  get skins(){return [...data.skins];},
+  get equippedSkins(){return {...data.equippedSkins};},
+  buySkin(id:string):boolean {const skin=skinById(id);if(!skin||data.skins.includes(id)||data.ogrines<skin.price)return false;data.ogrines-=skin.price;data.skins.push(id);data.equippedSkins[skin.classId]=id;save();return true;},
+  equipSkin(classId:string,id:string):boolean {if(!id){delete data.equippedSkins[classId];save();return true;}const skin=skinById(id);if(skin?.classId!==classId||!data.skins.includes(id))return false;data.equippedSkins[classId]=id;save();return true;},
+  claimOgrines(grants:CurrencyGrant[]):number {let gained=0;for(const grant of grants){if(!grant||typeof grant.claimId!=='string'||grant.claimId.length>200||grant.amount!==1||data.claimedOgrines.includes(grant.claimId)||data.credited.includes(grant.claimId.split(':')[0]))continue;data.claimedOgrines.push(grant.claimId);data.ogrines++;gained++;}if(gained)save();return gained;},
   get unlockedMode(){return data.unlockedMode;},
   get spellLevels(){return structuredClone(data.spellLevels);},
   spellLevel(classId:string,spell:string):number{return data.spellLevels[classId]?.[spell]??1;},
@@ -113,6 +120,28 @@ export const account = {
     data.fragments+=fragments;
     data.inventory=data.inventory.flatMap(e=>{
       if(e.rarity!==rarity)return[e];
+      const worn=EQUIPMENT_SLOTS.filter(slot=>data.equipped[slot]===e.uid).length;
+      return worn?[{...e,quantity:Math.min(e.quantity,worn)}]:[];
+    });
+    save();return count;
+  },
+  /** Copies recyclables parmi les objets choisis (les exemplaires portés sont gardés) et fragments rendus. */
+  recyclableOf(uids:Iterable<string>):{count:number;fragments:number} {
+    const wanted=new Set(uids);let count=0,fragments=0;
+    for(const e of data.inventory){
+      if(!wanted.has(e.uid))continue;
+      const spare=e.quantity-EQUIPMENT_SLOTS.filter(slot=>data.equipped[slot]===e.uid).length;
+      if(spare>0){count+=spare;fragments+=spare*recycleValue(e);}
+    }
+    return{count,fragments};
+  },
+  /** Recycle toutes les copies non portées des objets choisis. Retourne le nombre d'objets recyclés. */
+  recycleMany(uids:Iterable<string>):number {
+    const wanted=new Set(uids),{count,fragments}=this.recyclableOf(wanted);
+    if(!count)return 0;
+    data.fragments+=fragments;
+    data.inventory=data.inventory.flatMap(e=>{
+      if(!wanted.has(e.uid))return[e];
       const worn=EQUIPMENT_SLOTS.filter(slot=>data.equipped[slot]===e.uid).length;
       return worn?[{...e,quantity:Math.min(e.quantity,worn)}]:[];
     });
@@ -238,6 +267,7 @@ export const account = {
     if (!reward || typeof reward.runId !== 'string' || !reward.runId || data.credited.includes(reward.runId)) return false;
     data.bank += Number.isFinite(reward.kamas) ? Math.max(0, Math.floor(reward.kamas)) : 0;
     this.claimDrops(Array.isArray(reward.drops) ? reward.drops : []);
+    this.claimOgrines(Array.isArray(reward.ogrineGrants)?reward.ogrineGrants:[]);
     this.claimFragments(Array.isArray(reward.forgeGrants)?reward.forgeGrants:[]);
     data.bestTier = Math.max(data.bestTier, Math.min(EQUIPMENT_TIERS.length-1, Math.max(0, Math.floor(reward.tier) || 0)));
     data.credited.push(reward.runId);

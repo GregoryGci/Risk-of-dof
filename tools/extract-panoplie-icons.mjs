@@ -1,0 +1,12 @@
+﻿// Extrait seulement les icônes authentiques des panoplies, à partir du catalogue normalisé.
+import fs from 'node:fs';import path from 'node:path';import os from 'node:os';import {execFileSync} from 'node:child_process';
+import {decodePng,encodePng} from './png.mjs';import {updateManifest} from './manifest.mjs';
+const source=process.argv[2]??'shared/src/data/retro-catalogue.json',sets=JSON.parse(fs.readFileSync(source,'utf8'));
+const retro=process.env.DOFUS_RETRO??path.join(process.env.LOCALAPPDATA,'Ankama/Retro/resources/app/retroclient'),work=path.join(os.tmpdir(),'rod-panoplies-icons',String(Date.now())),input=path.join(work,'in'),output=path.join(work,'out'),target='client/public/assets/dofus/items';
+fs.mkdirSync(input,{recursive:true});fs.mkdirSync(target,{recursive:true});const pending=[];
+for(const item of sets.flatMap(s=>s.items)){if(!item.icon||fs.existsSync(path.join(target,item.id+'.png')))continue;const swf=path.join(retro,'clips/items',String(item.icon.type),item.icon.gfx+'.swf');if(!fs.existsSync(swf)){console.log('Icône originale absente : '+item.name);continue;}fs.copyFileSync(swf,path.join(input,item.id+'.swf'));pending.push(item.id);}
+console.log(`${pending.length} icônes originales à extraire.`);
+if(pending.length)execFileSync('java',['-jar',process.env.FFDEC??'C:/Program Files (x86)/FFDec/ffdec.jar','-ignorebackground','-zoom','2.5','-format','frame:png','-export','frame',output,input],{stdio:'pipe',maxBuffer:64*1024*1024});
+for(const id of pending){const dir=path.join(output,id+'.swf');if(!fs.existsSync(dir))continue;for(const file of fs.readdirSync(dir).filter(f=>f.endsWith('.png')).sort((a,b)=>parseInt(a)-parseInt(b))){const p=decodePng(fs.readFileSync(path.join(dir,file)));let l=p.width,t=p.height,r=-1,b=-1;for(let y=0;y<p.height;y++)for(let x=0;x<p.width;x++)if(p.data[(y*p.width+x)*4+3]){l=Math.min(l,x);t=Math.min(t,y);r=Math.max(r,x);b=Math.max(b,y);}if(r<l)continue;const width=r-l+5,height=b-t+5,data=Buffer.alloc(width*height*4);for(let y=t;y<=b;y++)p.data.copy(data,((y-t+2)*width+2)*4,(y*p.width+l)*4,(y*p.width+r+1)*4);fs.writeFileSync(path.join(target,id+'.png'),encodePng({width,height,data}));break;}}
+updateManifest(manifest=>{manifest.items??={};for(const item of sets.flatMap(s=>s.items))if(fs.existsSync(path.join(target,item.id+'.png')))manifest.items[item.id]='items/'+item.id+'.png';});
+console.log('Extraction des panoplies terminée.');

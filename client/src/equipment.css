@@ -81,3 +81,11 @@
 .gear-bulk .btn { padding: 5px 10px; font-size: 11px; }
 .gear-bulk select { font: 11px 'Trebuchet MS', sans-serif; padding: 4px; border-radius: 4px; }
 .gear-bulk-confirm { flex-basis: 100%; font-size: 11px; line-height: 1.5; }
+
+/* Sélection multiple pour recycler : case à cocher sur chaque objet. */
+.gear-bulk.picking { padding: 7px 9px; border: 1px solid #d1755a80; border-radius: 4px; background: #d1755a14; }
+.gear-bulk-hint { flex-basis: 100%; font-size: 11px; opacity: .8; }
+.gear-bulk-count { font-size: 11px; margin-right: 4px; }
+.gear-grid.picking .gear-card { position: relative; }
+.gear-grid.picking .gear-card::before { content: ''; position: absolute; bottom: 4px; right: 4px; width: 13px; height: 13px; border: 1px solid #e8d7ae; border-radius: 3px; background: #0006; z-index: 2; }
+.gear-grid.picking .gear-card.selected::before { content: '✓'; background: #c9553e; border-color: #ffd9a8; color: #fff; font: bold 11px/13px sans-serif; text-align: center; }

@@ -1,9 +1,23 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {ZONES,zoneForStage,bossForStage,generateMap,isBlocked,stepMovement,MAP_SIZE,PHASE_PLAYING,ZAAP_READY,ZAAP_RANGE,INTERACT_RANGE,PLAYER_RADIUS,getMonster,type GameMap} from '@rod/shared';
+import {ZONES,zoneForStage,bossForStage,generateMap,isBlocked,stepMovement,MAP_BASE_SIZE,MAP_SIZE,PHASE_PLAYING,ZAAP_READY,ZAAP_RANGE,INTERACT_RANGE,PLAYER_RADIUS,getMonster,type GameMap} from '@rod/shared';
 import {GameState} from '../server/src/state.ts';
 import {Simulation} from '../server/src/game/Simulation.ts';
+
+test('surface triplée : dimensions ×√3 et limites partagées client/serveur',()=>{
+  assert.ok(Math.abs(MAP_SIZE**2/MAP_BASE_SIZE**2-3)<.001);
+  const map=generateMap(123);
+  assert.equal(map.ground.length,MAP_SIZE**2);
+  assert.equal(map.obstacles.length,MAP_SIZE**2);
+  const pos={x:MAP_SIZE/2,y:MAP_SIZE/2};
+  for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+    stepMovement(map,pos,dx,dy,1000,1,PLAYER_RADIUS);
+    assert.equal(isBlocked(map,pos.x,pos.y,PLAYER_RADIUS),false);
+    assert.ok(pos.x>=1+PLAYER_RADIUS&&pos.x<=MAP_SIZE-1-PLAYER_RADIUS);
+    assert.ok(pos.y>=1+PLAYER_RADIUS&&pos.y<=MAP_SIZE-1-PLAYER_RADIUS);
+  }
+});
 
 test('33 donjons : gardiens, cartes et assets authentiques',()=>{
   const manifest=JSON.parse(fs.readFileSync('client/public/assets/dofus/manifest.json','utf8'));

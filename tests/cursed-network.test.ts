@@ -1,0 +1,17 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {Server,matchMaker} from '@colyseus/core';import {WebSocketTransport} from '@colyseus/ws-transport';import {Client,type Room} from '@colyseus/sdk';
+import {GameRoom} from '../server/src/rooms/GameRoom.ts';import type {Simulation} from '../server/src/game/Simulation.ts';import {PHASE_PLAYING,ZAAP_CHARGING,GAME_PROTOCOL_VERSION,getMonster,type GameStateView} from '@rod/shared';
+class CursedRoom extends GameRoom {async onAuth(){return {name:'Audit',unlockedMode:3,spellLevels:{},skinBook:{cra:'cra__solomonk'}} as any;}}
+const until=async(fn:()=>boolean)=>{const end=Date.now()+6000;while(!fn()){assert.ok(Date.now()<end,'État réseau attendu');await new Promise(r=>setTimeout(r,20));}};
+test('Multi : entrée maudite collective, butin Ogrine personnel et reconnexion sur la même carte',async()=>{
+ const transport=new WebSocketTransport(),server=new Server({transport,greet:false,gracefullyShutdown:false});server.define('curse',CursedRoom);const rooms:Room<GameStateView>[]=[];
+ try{
+  await server.listen(0,'127.0.0.1');const client=new Client(`ws://127.0.0.1:${(transport.server!.address() as {port:number}).port}`),a=await client.create<GameStateView>('curse',{classId:'cra'});rooms.push(a);a.onMessage('*',()=>{});const b=await client.joinById<GameStateView>(a.roomId,{classId:'cra'});rooms.push(b);b.onMessage('*',()=>{});await until(()=>a.state.players?.size===2);a.send('start');await until(()=>a.state.phase===PHASE_PLAYING);
+  const sim=(matchMaker.getLocalRoomById(a.roomId) as unknown as {sim:Simulation}).sim,host=sim.players.get(a.sessionId)!,guest=sim.players.get(b.sessionId)!;
+  for(const p of sim.players.values())p.buffs.push({stats:{},until:1e9,invisible:false,invulnerable:true});
+  const seed=sim.state.seed;sim.state.hasCursedZaap=true;host.state.x=sim.state.cursedZaapX;host.state.y=sim.state.cursedZaapY;a.send('interact');await until(()=>a.state.cursed&&b.state.cursed);assert.notEqual(a.state.seed,seed);assert.equal(a.state.seed,b.state.seed);assert.equal(a.state.zaapState,ZAAP_CHARGING);assert.equal(b.state.protocolVersion,GAME_PROTOCOL_VERSION);assert.equal(a.state.stage,1);assert.equal(b.state.players.get(b.sessionId)!.skin,'cra__solomonk');
+  const old=Math.random;try{Math.random=()=>0;const extra=sim.spawnMonster(getMonster('bouftou_royal'),host.state.x+5,host.state.y,1,1,1);sim.damageMonster(extra,1e9,host.id);}finally{Math.random=old;}
+  await until(()=>a.state.ogrines?.size===2&&b.state.ogrines?.size===2);const drop=[...sim.state.ogrines.values()].find(o=>o.owner===host.id)!;host.state.x=drop.x;host.state.y=drop.y;host.state.motionEpoch++;await until(()=>a.state.players.get(a.sessionId)!.ogrinesEarned===1);assert.equal(b.state.players.get(b.sessionId)!.ogrinesEarned,0);
+  const token=b.reconnectionToken,id=b.sessionId;b.reconnection.enabled=false;b.connection.close();await until(()=>!guest.state.connected);const resumed=await client.reconnect<GameStateView>(token);rooms.push(resumed);resumed.onMessage('*',()=>{});await until(()=>resumed.state.players?.get(id)?.connected===true);assert.equal(resumed.state.cursed,true);assert.equal(resumed.state.seed,a.state.seed);assert.equal(resumed.state.ogrines.size,1);assert.equal(resumed.state.players.get(a.sessionId)!.ogrinesEarned,1);assert.equal(resumed.state.players.get(id)!.ogrinesEarned,0);
+ }finally{for(const room of rooms)if(room.connection.isOpen)await room.leave();await server.gracefullyShutdown(false);}
+});

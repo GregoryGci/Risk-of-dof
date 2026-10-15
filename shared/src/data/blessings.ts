@@ -41,7 +41,7 @@ export function parseBlessings(raw:unknown):Record<string,number>{try{const row=
 export function blessingPower(rank:number):number{return 1+.2*(Math.max(1,Math.min(3,rank))-1);}
 export function blessingDescription(id:string,rank=1):string{
  const def=getBlessing(id);if(!def)return'';if(rank<=1)return def.description;const power=blessingPower(rank);
- if(id==='ricochet')return`Votre attaque de base gagne ${rank} rebonds supplémentaires, cumulables avec les bonus de run.`;
+ if(id==='ricochet')return`Votre attaque de base gagne ${rank} rebonds supplémentaires. Maximum : 3 rebonds par projectile, bonus de run compris.`;
  if(id==='zephyr')return`Recharge du dash réduite de ${Math.round((.15+.05*(rank-1))*100)} %.`;
  if(id==='precision')return`Fenêtre d’élan de ${(1+.15*(rank-1)).toFixed(2)} s ; bonus d’élan +${Math.round(.35*power*100)} % de dégâts.`;
  if(id==='sanctum')return`Les nouveaux glyphes et pièges gagnent ${(rank*.4).toFixed(1)} case de rayon, explosion comprise.`;

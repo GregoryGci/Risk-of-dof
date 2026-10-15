@@ -3,6 +3,7 @@
 import Phaser from 'phaser';
 import { PATCH_MS, worldToScreen } from '@rod/shared';
 import type { AssetStore, EntityVisual } from '../assets/store.ts';
+import type { GearManifest, GearTracks } from '../assets/manifest.ts';
 
 /** Durée d'interpolation entre deux positions serveur (un peu plus qu'un patch pour absorber la gigue). */
 const INTERP_S = (PATCH_MS * 1.3) / 1000;
@@ -25,6 +26,8 @@ interface Part {
   ox: number;
   oy: number;
   dz: number;
+  /** Suit le recul et le tremblement du corps (objets portés). */
+  onBody?: boolean;
 }
 
 /**
@@ -53,13 +56,70 @@ export class EntityView {
   private shieldRatio = 0;
   private mark?: Phaser.GameObjects.Text;
   private rogueAura?:Phaser.GameObjects.Ellipse;
+  /** Coiffe et cape portées, posées image par image sur les points d'accroche du corps. */
+  private gear?: { tracks: GearTracks; manifest: GearManifest; worn: { base: string; head: boolean; img: Phaser.GameObjects.Image; part: Part }[] };
+  private gearKey = '';
 
-  setRogue(rogue:boolean):void {
+  /** Objets d'apparence portés (coiffe, cape) ; sans effet sur un placeholder ou un monstre. */
+  setGear(head?: string, back?: string): void {
+    const key = `${head ?? ''}|${back ?? ''}`;
+    if (key === this.gearKey) return;
+    this.gearKey = key;
+    for (const w of this.gear?.worn ?? []) { w.img.destroy(); this.parts = this.parts.filter(p => p !== w.part); }
+    const found = this.visual.sprite ? this.store.gearFor(this.scene, this.visual.key) : null;
+    if (!found) { this.gear = undefined; return; }
+    const worn = [];
+    for (const [base, isHead] of [[head, true], [back, false]] as const) {
+      if (!base || !found.gear.items[base]) continue;
+      const img = this.scene.add.image(0, 0, 'gear').setVisible(false);
+      const part: Part = { obj: img, ox: 0, oy: 0, dz: isHead ? 0.02 : -0.01, onBody: true };
+      this.parts.push(part);
+      worn.push({ base, head: isHead, img, part });
+    }
+    this.gear = worn.length ? { tracks: found.tracks, manifest: found.gear, worn } : undefined;
+  }
+
+  /** Suit l'image courante du corps : position, rotation, échelle et profondeur de chaque objet porté. */
+  private updateGear(tint: 'flash' | 'tint' | 'none'): void {
+    if (!this.gear) return;
+    // Images d'atlas nommées <animation>_<direction>_<numéro> (tools/extract-dofus.mjs).
+    const [anim, dir, index] = String(this.body.frame.name).split('_');
+    const frame = this.gear.tracks[anim]?.[dir]?.[Number(index)];
+    const flip = this.body.flipX;
+    // Pixels écran par pixel de clip Dofus : échelle du sprite × pixels d'atlas par pixel de clip.
+    const perUnit = this.visual.scale * 2 * (this.visual.sprite?.shrunk ?? 1);
+    const imageScale = perUnit / this.gear.manifest.pixelsPerUnit;
+    for (const w of this.gear.worn) {
+      const anchor = (w.head ? frame?.h : frame?.c)?.[0];
+      const origin = anchor && this.gear.manifest.items[w.base].origins[anchor[0]];
+      if (!anchor || !origin || this.dead && !this.visual.sprite?.anims?.death) { w.img.setVisible(false); continue; }
+      let [, a, b, c, d, tx, ty] = anchor;
+      // Direction en miroir : symétrie horizontale de toute la transformation.
+      if (flip) { a = -a; c = -c; tx = -tx; }
+      const sx = Math.hypot(a, b) || 1;
+      w.img.setFrame(`${w.base}:${anchor[0]}`);
+      w.img.setOrigin(origin[0] / w.img.frame.width, origin[1] / w.img.frame.height);
+      w.img.setRotation(Math.atan2(b, a)).setScale(imageScale * sx, imageScale * (a * d - b * c) / sx);
+      // Phaser retourne le sprite autour du milieu de sa texture, pas de son origine : le corps se décale d'autant.
+      w.part.ox = tx * perUnit + (flip ? (1 - 2 * this.visual.origin[0]) * this.body.frame.realWidth * this.visual.scale : 0);
+      w.part.oy = ty * perUnit;
+      w.part.dz = w.head ? 0.02 : anchor[7] ? 0.01 : -0.01;
+      w.img.setVisible(true).setAlpha(this.body.alpha);
+      if (tint === 'flash') w.img.setTintFill(0xffffff);
+      else if (tint === 'tint') w.img.setTint(this.body.tintTopLeft);
+      else w.img.clearTint();
+    }
+  }
+
+  private cursed=false;
+  setRogue(rogue:boolean,cursed=false):void {
+    this.cursed=cursed;rogue=rogue||cursed;
     if(rogue&&!this.rogueAura){
       this.rogueAura=this.scene.add.ellipse(0,0,96,40,0xb453ed,.18).setStrokeStyle(3,0xe3b2ff,.9);
       this.parts.push({obj:this.rogueAura,ox:0,oy:0,dz:-.1});
     }
     this.rogueAura?.setVisible(rogue);
+    if(rogue)this.rogueAura?.setFillStyle(cursed?0xe5305b:0xb453ed,.18).setStrokeStyle(3,cursed?0xff739c:0xe3b2ff,.9);
   }
 
   /** Position affichée, en cases. */
@@ -284,7 +344,11 @@ export class EntityView {
     // Teinte : éclair de dégât > télégraphe > normal.
     if (now < this.flashUntil) this.body.setTintFill(0xffffff);
     else if (this.warn) this.body.setTint(Math.sin(this.clock * 30) > 0 ? 0xff5040 : 0xffffff);
+    else if(this.cursed)this.body.setTint(0xe98cba);
     else this.body.clearTint();
+    // Coiffe et cape suivent l'image et la teinte du corps.
+    this.updateGear(now < this.flashUntil ? 'flash' : this.warn || this.cursed ? 'tint' : 'none');
+    if (this.gear) this.place();
 
     // Animation procédurale des placeholders : sautillement et bond d'attaque.
     if (!this.visual.sprite && !this.dead) {
@@ -301,8 +365,9 @@ export class EntityView {
     this.sx = p.x;
     this.sy = p.y;
     for (const part of this.parts) {
-      const extraX = part.obj === this.body ? this.bodyX : 0;
-      const extraY = part.obj === this.body ? this.bodyY : 0;
+      const onBody = part.obj === this.body || part.onBody;
+      const extraX = onBody ? this.bodyX : 0;
+      const extraY = onBody ? this.bodyY : 0;
       part.obj.setPosition(p.x + part.ox + extraX, p.y + part.oy + extraY);
       const depth=p.y+part.dz;
       if(part.obj.depth!==depth)part.obj.setDepth(depth);

@@ -1,3 +1,4 @@
+import {runBonusText} from '@rod/shared';
 import {affinityForBonus, RARITY_NAMES,CLASS_MECHANICS,getRunBonus,statText,type GameStateView,type MechanicView,type StatKey} from '@rod/shared';
 import {escapeHtml} from './Hud.ts';
 import {getBlessing,parseBlessings,blessingDescription} from '@rod/shared';
@@ -36,12 +37,12 @@ export class MechanicHud {
       this.el.querySelector<HTMLElement>('.mechanic-track i')!.style.width=`${Math.min(100,m.value/m.max*100)}%`;
       this.el.querySelectorAll<HTMLButtonElement>('button').forEach(b=>b.disabled=disabled);
     }
-    const boonKey=`${p.boonChoices}|${p.blessings}|${p.alive}|${state.paused}`;
+    const boonKey=`${p.boonChoices}|${p.blessings}|${p.alive}|${state.paused}|${state.stage}|${state.zoneWave}`;
     if(boonKey!==this.boonKey) {
       this.boonKey=boonKey;let choices:string[]=[];try{choices=JSON.parse(p.boonChoices);}catch{/* Attend le patch. */}
       this.boons.classList.toggle('hidden',!choices.length||!p.alive);
       const ranks=parseBlessings(p.blessings),elite=choices.some(id=>!!getBlessing(id));
-      this.boons.innerHTML=choices.length?`<b>${elite?'Élite vaincue · choisissez une bénédiction':'Récompense du gardien'}</b><small>${elite?'Votre choix est personnel et reste actif jusqu’à la fin de la run.':'Choisissez un bonus de stats pour cette run.'}</small><details class="boon-selection" open><summary>Afficher / masquer les choix</summary><div>${choices.map((id,i)=>{const b=getBlessing(id);if(b){const rank=(ranks[id]??0)+1;return`<button class="btn blessing-choice" data-boon="${i}" style="--pact:#${b.color.toString(16)}" ${state.paused?'disabled':''}><span class="pact-family">${b.family} · ${rank>1?'RENFORCER · RANG '+rank:'NOUVEAU'}</span><img src="assets/dofus/spells/${b.icon}.png" alt=""><b>${escapeHtml(b.name)}</b><span>${escapeHtml(blessingDescription(id,rank))}</span></button>`;}const bonus=getRunBonus(id);if(!bonus)return '';return`<button class="btn" data-boon="${i}" ${state.paused?'disabled':''}><b>${escapeHtml(bonus.name)}</b><small>${RARITY_NAMES[bonus.rarity]}${affinityForBonus(bonus.base)?` · ${affinityForBonus(bonus.base)!.name}`:''}</small><span>${Object.entries(bonus.stats).map(([k,v])=>escapeHtml(statText(k as StatKey,v))).join(' · ')}</span></button>`;}).join('')}</div></details>`:'';
+      this.boons.innerHTML=choices.length?`<b>${elite?'Élite vaincue · choisissez une bénédiction':'Récompense du gardien'}</b><small>${elite?'Votre choix est personnel et reste actif jusqu’à la fin de la run.':'Choisissez un bonus de stats pour cette run.'}</small><details class="boon-selection" open><summary>Afficher / masquer les choix</summary><div>${choices.map((id,i)=>{const b=getBlessing(id);if(b){const rank=(ranks[id]??0)+1;return`<button class="btn blessing-choice" data-boon="${i}" style="--pact:#${b.color.toString(16)}" ${state.paused?'disabled':''}><span class="pact-family">${b.family} · ${rank>1?'RENFORCER · RANG '+rank:'NOUVEAU'}</span><img src="assets/dofus/spells/${b.icon}.png" alt=""><b>${escapeHtml(b.name)}</b><span>${escapeHtml(blessingDescription(id,rank))}</span></button>`;}const bonus=getRunBonus(id);if(!bonus)return '';return`<button class="btn" data-boon="${i}" ${state.paused?'disabled':''}><b>${escapeHtml(bonus.name)}</b><small>${RARITY_NAMES[bonus.rarity]}${affinityForBonus(bonus.base)?` · ${affinityForBonus(bonus.base)!.name}`:''}</small><span>${escapeHtml(runBonusText(bonus,{stage:state.stage,zoneWave:state.zoneWave,mode:state.mode}))}</span></button>`;}).join('')}</div></details>`:'';
     }
   }
   destroy():void{this.abort.abort();this.blessing.remove();this.momentum.remove();this.el.innerHTML='';this.boons.classList.add('hidden');}

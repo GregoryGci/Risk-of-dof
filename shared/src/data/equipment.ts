@@ -1,3 +1,4 @@
+import {RETRO_ITEMS} from './retro-equipment.ts';
 // Équipements permanents. Les objets de coffre restent cumulables pendant la run.
 // Adaptation Retro : caractéristiques élémentaires -> dégâts, sagesse -> récupération,
 // PM -> déplacement, PA -> recharge (aucune stat PA), résistances -> armure,
@@ -6,7 +7,7 @@ import type { StatKey } from '../types.ts';
 import { emptyStats, sumRunStats } from './items.ts';
 import { makeRng } from '../rng.ts';
 import { getMode } from '../difficulty.ts';
-import {scaleEquipmentStats} from './equipment-scaling.ts';
+import {standaloneEquipmentStats,scaleEquipmentStats} from './equipment-scaling.ts';
 import {equipmentSet,setBonusStats} from './equipment-sets.ts';
 
 export type EquipmentRarity = 'normal' | 'rare' | 'epique' | 'legendaire';
@@ -22,21 +23,24 @@ export const DOFUS_DROP_CHANCE = 0.03;
 export const DROP_RARITY_CHANCES: Record<EquipmentRarity, number> = { normal: 0.8, rare: 0.16, epique: 0.035, legendaire: 0.005 };
 export const FUSION_COST = 10;
 export const EQUIPMENT_TIERS = [
-  { level: 20, stage: 1, name: 'Premiers pas' },
-  { level: 40, stage: 2, name: 'Laine & crocs' },
-  { level: 80, stage: 4, name: 'Les éléments' },
-  { level: 120, stage: 6, name: 'Racines anciennes' },
-  { level: 160, stage: 9, name: 'Le Chêne Mou' },
-  { level: 170, stage: 13, name: 'L’héritage du Minotot' },
-  { level: 180, stage: 18, name: 'Les souverains d’Otomaï' },
-  { level: 190, stage: 25, name: 'Ougah & Bworker' },
-  { level: 200, stage: 31, name: 'Les reliques du Kralamoure' },
+  {level:20,stage:1,name:'Premiers pas'},
+  {level:40,stage:6,name:'Artisans & larves'},
+  {level:60,stage:9,name:'Gelées & scarafeuilles'},
+  {level:80,stage:13,name:'Les esprits de Pandala'},
+  {level:100,stage:16,name:'Hordes & montagnes'},
+  {level:120,stage:19,name:'Les gardiens anciens'},
+  {level:140,stage:22,name:'Les grandes tanières'},
+  {level:160,stage:25,name:'Meulou & Bworker'},
+  {level:180,stage:27,name:'Les royaumes sombres'},
+  {level:200,stage:31,name:'Les dernières reliques'},
 ];
 export interface EquipmentBase {
   name: string;
   kind: EquipmentKind;
   tier: number;
   level?:number;
+  zone?:number;
+  iconMissing?:boolean;
   set?:string;
   /** Jet parfait, dans les unités des stats du jeu. */
   stats: Partial<Record<StatKey, number>>;
@@ -176,11 +180,15 @@ export const EQUIPMENT_BASES: Record<string, EquipmentBase> = {
 };
 // Le catalogue stocke désormais les jets parfaits recalibrés. Le client et le
 // serveur utilisent exactement cette même conversion ; rien ne vient des sauvegardes.
-for(const [id,base] of Object.entries(EQUIPMENT_BASES)) {
-  base.level=EQUIPMENT_TIERS[base.tier].level;
-  base.set=equipmentSet(id)?.id;
-  base.stats=scaleEquipmentStats(base.stats,base.level,base.tier,base.kind==='dofus');
+const LEGACY_EQUIPMENT_LEVELS=[20,40,80,120,160,170,180,190,200];
+for(const [id,base]of Object.entries(EQUIPMENT_BASES)){
+  const legacyTier=base.tier,level=LEGACY_EQUIPMENT_LEVELS[legacyTier],rawStats=base.stats;
+  if(RETRO_ITEMS[id]){Object.assign(base,RETRO_ITEMS[id]);continue;}
+  base.level=level;base.tier=Math.max(0,EQUIPMENT_TIERS.findIndex(t=>t.level>=level));
+  base.set=equipmentSet(id)?.id;base.stats=base.kind==='dofus'?scaleEquipmentStats(base.stats,level,legacyTier,true):standaloneEquipmentStats(base.stats,level);
+  if(rawStats.attackSpeed)base.stats.attackSpeed=scaleEquipmentStats(rawStats,level,legacyTier).attackSpeed;
 }
+Object.assign(EQUIPMENT_BASES,RETRO_ITEMS);
 export interface Equipment {
   uid: string;
   base: string;
@@ -191,7 +199,7 @@ export interface Equipment {
 export interface EquipmentStack extends Equipment { quantity: number }
 export interface GearDrop { claimId: string; gear: Equipment }
 export type EquippedGear = Partial<Record<EquipmentSlot, Equipment>>;
-export interface RunReward { runId: string; kamas: number; stage: number; tier: number; gear: EquipmentStack[]; drops: GearDrop[]; forgeGrants?:import('./forge.ts').ForgeGrant[];summary?:import('./run-history.ts').RunSummary }
+export interface RunReward { ogrineGrants?:import('./skins.ts').CurrencyGrant[];runId: string; kamas: number; stage: number; tier: number; gear: EquipmentStack[]; drops: GearDrop[]; forgeGrants?:import('./forge.ts').ForgeGrant[];summary?:import('./run-history.ts').RunSummary }
 
 export function slotKind(slot: EquipmentSlot): EquipmentKind {
   return slot.startsWith('anneau') ? 'anneau' : slot.startsWith('dofus') ? 'dofus' : slot as EquipmentKind;
@@ -246,9 +254,9 @@ export function equippedStats(raw: unknown): Record<StatKey, number> {
 export function parseEquipped(text: string): EquippedGear {
   try { return sanitizeEquipped(JSON.parse(text)); } catch { return {}; }
 }
-export function playerItemStats(items: Map<string, number>, equipment: string): Record<StatKey, number> {
+export function playerItemStats(items: Map<string, number>, equipment: string,context:import('../combat-balance.ts').RunStatContext={}): Record<StatKey, number> {
   const total = equippedStats(parseEquipped(equipment));
-  const run = sumRunStats(items);
+  const run = sumRunStats(items,context);
   for (const k of Object.keys(total) as StatKey[]) total[k] += run[k];
   return total;
 }
@@ -275,25 +283,25 @@ export function dropRarity(random = Math.random,boost=1): EquipmentRarity {
   return 'legendaire';
 }
 export function dropSources(stage:number):{zone:number;tier:number;weight:number;rarityBoost:number}[] {
-  const rows=[.6,.25,.15].map((weight,offset)=>({zone:stage-offset,tier:equipmentTier(Math.max(1,stage-offset)),weight,rarityBoost:offset?3:1})).filter(row=>row.zone>=1);
-  const total=rows.reduce((n,row)=>n+row.weight,0);return rows.map(row=>({...row,weight:row.weight/total}));
+  return [{zone:stage,tier:equipmentTier(stage),weight:1,rarityBoost:1}];
 }
 export function dropPool(stage: number, dofus: boolean): string[] {
   const tiers=new Set(dropSources(stage).map(s=>s.tier));
-  return Object.keys(EQUIPMENT_BASES).filter(id => dofus?EQUIPMENT_BASES[id].kind==='dofus':EQUIPMENT_BASES[id].kind!=='dofus'&&tiers.has(EQUIPMENT_BASES[id].tier));
+  return Object.keys(EQUIPMENT_BASES).filter(id => dofus?EQUIPMENT_BASES[id].kind==='dofus':EQUIPMENT_BASES[id].kind!=='dofus'&&tiers.has(EQUIPMENT_BASES[id].tier)&&(!EQUIPMENT_BASES[id].zone||EQUIPMENT_BASES[id].zone===stage));
 }
 /** Probabilité exacte d'un objet/rareté par ennemi éligible, pour les tableaux et simulations. */
 export function equipmentDropChance(stage:number,base:string,rarity:EquipmentRarity,multiplier=1):number {
   const def=EQUIPMENT_BASES[base];if(!def)return 0;
+  if(def.kind!=='dofus'&&!dropPool(stage,false).includes(base))return 0;
   if(def.kind==='dofus')return Math.min(1,DOFUS_DROP_CHANCE*multiplier)*DROP_RARITY_CHANCES[rarity]/dropPool(stage,true).length;
-  return Math.min(1,GEAR_DROP_CHANCE*multiplier)*dropSources(stage).filter(s=>s.tier===def.tier).reduce((n,s)=>n+s.weight*dropRarityWeights(s.rarityBoost)[rarity]/Object.values(EQUIPMENT_BASES).filter(b=>b.kind!=='dofus'&&b.tier===s.tier).length,0);
+  return Math.min(1,GEAR_DROP_CHANCE*multiplier)*dropSources(stage).filter(s=>s.tier===def.tier).reduce((n,s)=>n+s.weight*dropRarityWeights(s.rarityBoost)[rarity]/dropPool(stage,false).length,0);
 }
 /** Deux tirages indépendants : équipement sur tout ennemi, Dofus sur boss uniquement. */
-export function monsterEquipmentDrops(stage: number, boss: boolean, random = Math.random, lootMultiplier = 1): Equipment[] {
+export function monsterEquipmentDrops(stage: number, boss: boolean, random = Math.random, lootMultiplier = 1,dofusMultiplier=1): Equipment[] {
   const items: Equipment[] = [];
   for (const dofus of [false,true]) {
     if (dofus && !boss) continue;
-    if (random() >= Math.min(1,(dofus ? DOFUS_DROP_CHANCE : GEAR_DROP_CHANCE)*lootMultiplier)) continue;
+    if (random() >= Math.min(1,(dofus ? DOFUS_DROP_CHANCE : GEAR_DROP_CHANCE)*lootMultiplier*(dofus?dofusMultiplier:1))) continue;
     let pool=dropPool(stage,dofus),rarityBoost=1;
     if(!dofus){let roll=random();const sources=dropSources(stage),source=sources.find(s=>(roll-=s.weight)<0)??sources.at(-1)!;pool=pool.filter(id=>EQUIPMENT_BASES[id].tier===source.tier);rarityBoost=source.rarityBoost;}
     if (!pool.length) continue;
@@ -305,7 +313,7 @@ export function monsterEquipmentDrops(stage: number, boss: boolean, random = Mat
 export function equipmentReward(runId: string, seed: number, stage: number, modeId: number, kamasEarned: number, loot: GearDrop[] = []): RunReward {
   const tier = equipmentTier(stage);
   const random = makeRng(seed);
-  const candidates = Object.keys(EQUIPMENT_BASES).filter(k => EQUIPMENT_BASES[k].tier === tier && EQUIPMENT_BASES[k].kind !== 'dofus');
+  const candidates = dropPool(stage,false);
   const bonus = createEquipment(candidates[Math.floor(random()*candidates.length)],dropRarity(random));
   const drops = [...loot,{claimId:`${runId}:${seed}:completion`,gear:bonus}];
   return { runId, stage, tier, kamas: Math.max(0, Math.round((kamasEarned + (stage - 1) * 100) * getMode(modeId).reward)), gear: stackEquipment(drops.map(d=>d.gear)), drops };

@@ -92,26 +92,36 @@ place de Tempête : un bouclier absorbe jusqu'à **50 % des PV max** pendant **5
   cumulable (PV, dégâts, vitesse de recharge, critiques...). Le marchand et les gardiens donnent
   aussi des bonus. **Tab** affiche leur total ; ils disparaissent à la run suivante.
 - **Zaap** : chaque zone contient un Zaap (losange bleu de la mini-carte). L'activer fait
-  apparaître le gardien de la région et lance une charge de 45 s. Une fois le Zaap
-  chargé et le gardien vaincu, il mène à la zone suivante : nouvelle carte, coffres neufs, et les
-  joueurs morts reviennent à la vie.
+  apparaître le gardien après son annonce au sol. Vaincre les gardiens ouvre immédiatement
+  le passage et réanime toute l’équipe. Le dernier Kralamoure termine la campagne par une victoire.
 - **Régions** : chaque Zaap change le terrain et la population : pâturages des Bouftous,
   champs du Tournesol, plaine des Scarafeuilles, montagnes des Craqueleurs, camp des Bworks.
-  La boucle recommence ensuite avec une nouvelle carte et une difficulté croissante.
+  La campagne traverse les 33 donjons dans l’ordre de l’Atlas. Les cartes font 97 × 97 cases : surface ×3.
 - **Balises de défi** : des petits autels surmontés d'un crâne remplacent les anciennes
   Cawottes. Appuyez sur **E** pour invoquer un élite de la région. À sa mort, **chaque joueur**
   choisit une bénédiction parmi **trois propositions issues de 30 pouvoirs**. Les choix sont
   personnels, conservés en file d'attente, actifs jusqu'à la fin de la run et visibles sur Tab.
   Un pouvoir déjà possédé peut être renforcé jusqu'au rang 3. Interaction gratuite et facultative.
 - **Osamodas** : ses invocations utilisent le Dragonnet rouge de Retro : un attaquant
-  à distance et un gardien qui provoque. Les identifiants historiques des sorts sont
-  conservés pour les sauvegardes.
+  à distance avec souffle et brasier. Frappe du Craqueleur remplace l’ancien Dragonnet robuste.
+  Les invocations héritent des bonus du maître et possèdent deux compétences.
 - **Mort** : un joueur mort devient spectateur (clic pour changer de joueur observé). La partie
   est perdue quand tout le monde est mort ; n'importe qui peut alors la relancer.
 - **Potions de vie** : les monstres ennemis ont **2 %** de chances d'en laisser une à leur mort, six au sol maximum.
   Marchez dessus pour récupérer **50 % de vos PV max**, sans dépasser le maximum.
   Elles restent au sol **30 s** ; un joueur avec tous ses PV les laisse pour ses alliés.
   Le flacon utilise le visuel officiel de la **Potion de Mini Soin Supérieure** de Retro.
+
+## Refonte du combat et des récompenses
+
+- La puissance renforce davantage les compétences après +50 % ; les autos gardent un scaling positif. Les bonus de vitesse d’attaque sont divisés par deux.
+- Vol de vie des autos : 0,3/0,5/0,8/1 % par bonus, plafond 10 % à distance ou 20 % en mêlée, effet natif compris. Vampirisme des compétences : 0,6/1/1,6/2 %, plafond 50 %. Les soins utilisent les dégâts effectifs.
+- Trois rebonds maximum. Aucun bonus de run déjà plafonné dans les coffres, les récompenses ou le marchand. Les projectiles supplémentaires restent sans limite.
+- Les PV flat de run suivent la difficulté des zones et des assauts. Les renforts augmentent avec la vitesse de kill et les dégâts du groupe, avec 220 ennemis ordinaires maximum hors gardiens et invocations.
+- Cauchemar : menace initiale renforcée, dégâts ×5, doubles/triples gardiens. Un Zaap rouge facultatif apparaît dans 10 % des zones : variante maudite de la même zone, gardiens PV ×2,5, dégâts ×1,8, Dofus ×3.
+- Chaque boss a 5 % de chance de laisser 1 Ogrine personnelle. Monnaie et apparats sont permanents, sauvegardés avec le compte. La boutique propose 36 apparats à 5 Ogrines. L’icône originale de la monnaie manque : son nom est affiché en texte.
+
+Audit et résultats reproductibles : [AUDIT_REFONTE_COMBAT.md](docs/AUDIT_REFONTE_COMBAT.md).
 
 ## Accueil et progression permanente
 
@@ -120,8 +130,10 @@ Le solo lance une salle réservée à un joueur ; le multijoueur permet de crée
 un salon par code. Character contient le choix de classe, l'équipement, les sorts et
 l'encyclopédie. Les réglages d'attaque automatique et de smart cast sont mémorisés.
 
-- **82 équipements**, avec les visuels officiels, répartis en paliers 20/40/80/120/160,
-  accessibles aux zones **1/2/4/6/9**. Ces niveaux sont propres au fan game.
+- **750 équipements, 142 panoplies vérifiées**, paliers **20/40/60/80/100/120/140/160/180/200**
+  accessibles aux zones **1/6/9/13/16/19/22/25/27/31**. Seuls le palier et le donjon actuels donnent leurs objets.
+  Les niveaux réels des pièces de panoplie sont conservés. Les anciens objets hors panoplie gardent leur palier adapté au fan game. Quatre icônes originales indisponibles sont listées dans
+  [ASSETS_PANOPLIES_MANQUANTS.md](docs/ASSETS_PANOPLIES_MANQUANTS.md), sans visuel inventé.
 - Tout monstre ennemi possède **3 %** de chance de donner un équipement permanent.
   Tout boss possède en plus **3 %** de chance de donner un Dofus : aucun Dofus dans les coffres.
   Les drops sont conservés dès réception, y compris si vous quittez ensuite la run.

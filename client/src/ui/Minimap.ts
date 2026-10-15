@@ -105,6 +105,8 @@ export class Minimap {
       c.stroke();
     }
 
+    if(state.hasCursedZaap&&this.zaapFound&&state.phase===PHASE_PLAYING)dot(state.cursedZaapX,state.cursedZaapY,5,'#f2366a','#ffd6e3');
+
     // Coffres découverts et encore fermés : petit coffre doré.
     state.chests.forEach((ch: ChestView, id: string) => {
       if (ch.opened || !this.foundChests.has(id)) return;

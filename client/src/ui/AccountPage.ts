@@ -8,7 +8,7 @@ export class AccountPage {
   private get required(){return !cloud.session||!account.profile.complete;}
   constructor(){
     document.getElementById('account-close')!.onclick=()=>{if(!this.required)this.el.classList.add('hidden');};
-    cloud.subscribe(()=>{document.getElementById('btn-account')!.textContent=cloud.session?'Mon compte ↗':'Se connecter ↗';document.getElementById('cloud-status')?.replaceChildren(document.createTextNode(cloud.status));this.enforce();});
+    cloud.subscribe(()=>{document.getElementById('btn-account')?.setAttribute('title',cloud.session?'Mon compte':'Se connecter');document.getElementById('cloud-status')?.replaceChildren(document.createTextNode(cloud.status));this.enforce();});
     void cloud.ready.then(()=>this.enforce());
   }
   private enforce():void {

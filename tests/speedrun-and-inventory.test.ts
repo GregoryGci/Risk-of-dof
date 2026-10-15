@@ -74,4 +74,14 @@ test('Inventaire : tout fusionner en cascade et recycler une rareté en gardant 
   assert.equal(account.fragments,before+fragments);
   assert.equal(account.inventory.find(e=>e.uid===boots.uid)?.quantity,1,'l’exemplaire porté reste');
   assert.equal(account.recycleRarity('normal'),0);
+  // Sélection multiple : seules les copies non portées des objets cochés partent.
+  const cape=createEquipment('chapeau_aventurier','rare');
+  account.claimDrops(Array.from({length:2},(_,i)=>({claimId:`pick:${i}`,gear:cape})));
+  const picked=[cape.uid,boots.uid],spare=account.recyclableOf(picked);
+  assert.equal(spare.count,2);
+  const bank=account.fragments;
+  assert.equal(account.recycleMany(picked),2);
+  assert.equal(account.fragments,bank+spare.fragments);
+  assert.equal(account.inventory.some(e=>e.uid===cape.uid),false);
+  assert.equal(account.inventory.find(e=>e.uid===boots.uid)?.quantity,1);
 });

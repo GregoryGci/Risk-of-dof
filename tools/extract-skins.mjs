@@ -13,6 +13,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ENTITIES, extract } from './extract-dofus.mjs';
 import { swfExports } from './swf-exports.mjs';
 import { MANIFEST_FILE } from './manifest.mjs';
@@ -49,14 +50,14 @@ export const SKINS = {
   keke: { name: 'Kéké', parts: [], colors: { default: ['#1c1c1c', '#1c1c1c', '#1c1c1c'] } },
 };
 
-const ffdec = (args) => execFileSync('java', ['-jar', FFDEC, ...args], { stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 });
+export const ffdec = (args) => execFileSync('java', ['-jar', FFDEC, ...args], { stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 });
 
 // ---------------------------------------------------------------------------
 // Lecture du XML JPEXS
 // ---------------------------------------------------------------------------
 
 /** Découpe les <item> de premier niveau entre deux positions. */
-function topItems(xml, from, to) {
+export function topItems(xml, from, to) {
   const re = /<item\b[^>]*?(\/?)>|<\/item>/g;
   re.lastIndex = from;
   const out = [];
@@ -70,15 +71,15 @@ function topItems(xml, from, to) {
   return out;
 }
 
-const ID_RE = /\b(characterId|characterID|shapeId|spriteId|bitmapId|buttonId)="(\d+)"/g;
+export const ID_RE = /\b(characterId|characterID|shapeId|spriteId|bitmapId|buttonId)="(\d+)"/g;
 /** 65535 = « pas de bitmap » dans un remplissage. */
-const NO_ID = 65535;
-const defId = (tag) => {
+export const NO_ID = 65535;
+export const defId = (tag) => {
   const m = /^<item type="Define\w*Tag"[^>]*?\b(?:characterID|characterId|shapeId|spriteId|buttonId)="(\d+)"/.exec(tag);
   return m ? Number(m[1]) : null;
 };
 
-function loadXml(file) {
+export function loadXml(file) {
   const xml = fs.readFileSync(file, 'utf8');
   const tagsStart = xml.indexOf('<tags>') + 6;
   const tagsEnd = xml.lastIndexOf('</tags>');
@@ -96,7 +97,7 @@ function loadXml(file) {
 }
 
 /** Objets affichés à l'image étiquetée `label` d'un clip (état de la liste d'affichage à cette image). */
-function frameAt(spriteTag, label) {
+export function frameAt(spriteTag, label) {
   const body = spriteTag.slice(spriteTag.indexOf('<subTags>') + 9, spriteTag.lastIndexOf('</subTags>'));
   const shown = new Map();
   let found = false;
@@ -138,11 +139,11 @@ function secondFrameOnly(spriteTag) {
   return [head, '<subTags>', ...scripts, ...places, '<item type="ShowFrameTag" forceWriteAsLong="false"/>', '</subTags>', '</item>'].join('\n');
 }
 
-const place = (id, depth, matrix = '', color = '') =>
+export const place = (id, depth, matrix = '', color = '') =>
   `<item type="PlaceObject2Tag" characterId="${id}" depth="${depth}" forceWriteAsLong="false" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="${color ? 'true' : 'false'}" placeFlagHasMatrix="${matrix ? 'true' : 'false'}" placeFlagHasName="false" placeFlagHasRatio="false" placeFlagMove="false">\n${matrix}${color}\n</item>`;
 
 /** Valeurs poussées par un DoAction (ActionPush, avec sa table de constantes) : suffisant pour lire les appels GAC. */
-function pushedValues(hex) {
+export function pushedValues(hex) {
   const b = Buffer.from(hex, 'hex');
   const values = [];
   let pool = [];
@@ -174,7 +175,7 @@ function pushedValues(hex) {
 }
 
 /** Points d'accroche d'un SWF de classe : id du clip -> { type, dir }. */
-function anchorsOf(cls) {
+export function anchorsOf(cls) {
   const anchors = new Map();
   for (const t of cls.items) {
     if (!t.startsWith('<item type="DefineSpriteTag"')) continue;
@@ -195,7 +196,7 @@ function anchorsOf(cls) {
 
 const accessoryFiles = new Map();
 /** XML du fichier aN.swf qui exporte `name`. */
-function accessoryXml(name) {
+export function accessoryXml(name) {
   for (const f of fs.readdirSync(ACCESSORIES).filter((n) => /^a\d+\.swf$/.test(n))) {
     if (!swfExports(path.join(ACCESSORIES, f)).some((e) => e.name === name)) continue;
     if (!accessoryFiles.has(f)) {
@@ -314,6 +315,7 @@ function recolor(tag, colors) {
 
 // ---------------------------------------------------------------------------
 
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
 // Options : --skin=<id>[,<id>] limite les apparats ; --preview n'exporte que les poses de repos
 // (face et profil) dans le dossier de travail, pour juger les couleurs sans refaire les atlas.
 const args = process.argv.slice(2);
@@ -368,3 +370,4 @@ for (const classId of classes) {
   }
 }
 if (preview) console.log(`Aperçus : ${previewDir} (node tools/contact-sheet.mjs <dossier> <sortie.png>)`);
+}

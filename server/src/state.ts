@@ -6,6 +6,9 @@ import { PHASE_LOBBY,GAME_PROTOCOL_VERSION } from '@rod/shared';
 
 export const PlayerState = schema(
   {
+    skin:t.string().default(''),
+    ogrinesEarned:t.uint16().default(0),
+    ogrineGrants:t.string().default('[]'),
     spellLevels:t.string().default('{}'),
     momentum:t.boolean().default(false),
     blessing:t.string().default(''),
@@ -79,6 +82,7 @@ export const MonsterState = schema(
     elite: t.boolean().default(false),
     carried: t.boolean().default(false),
     rogue: t.boolean().default(false),
+    cursed:t.boolean().default(false),
   },
   'MonsterState',
 );
@@ -117,8 +121,15 @@ export const GroundState = schema(
 );
 export type GroundState = InstanceType<typeof GroundState>;
 
+export const OgrineState=schema({owner:t.string().default(''),x:t.float32().default(0),y:t.float32().default(0)},'OgrineState');
+
 export const GameState = schema(
   {
+    cursed:t.boolean().default(false),
+    hasCursedZaap:t.boolean().default(false),
+    cursedZaapX:t.float32().default(0),
+    cursedZaapY:t.float32().default(0),
+    ogrines:t.map(OgrineState),
     protocolVersion:t.uint16().default(GAME_PROTOCOL_VERSION),
     singlePlayer: t.boolean().default(false),
     stageRoute:t.string().default('normal'),

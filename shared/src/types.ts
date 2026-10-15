@@ -23,6 +23,8 @@ export type SpellEffect =
 
 /** Sort défini uniquement en données : la logique serveur est générique. */
 export interface SpellDef {
+  /** Canal de dégâts conservé par les copies, rebonds et glyphes d'un lancement. */
+  autoAttack?:boolean;
   upgradeLevel?:number;
   dashStrike?:boolean;
   id: string;
@@ -169,7 +171,8 @@ export type StatKey =
   | 'armor' // chaque point réduit les dégâts subis de 8 %
   | 'killHeal' // PV rendus par monstre vaincu
   | 'kamas' // kamas gagnés (+%)
-  | 'lifesteal' // fraction des dégâts infligés rendue en PV
+  | 'lifesteal' // auto-attaques uniquement
+  | 'vampirism' // compétences uniquement
   | 'luck' // chance d'obtenir des objets rares ou épiques dans les coffres
   | 'multishot' // projectiles (ou frappes) en plus sur l'attaque de base
   | 'attackSpeed' // vitesse de l'attaque de base à distance (+%)
@@ -178,7 +181,7 @@ export type StatKey =
   | 'secondaryCharge' // charges supplémentaires du clic droit
   | 'revive'; // résurrection automatique une fois par partie
 
-export type BonusRarity = 'commun' | 'rare' | 'epique';
+export type BonusRarity = 'commun' | 'rare' | 'epique' | 'legendaire';
 
 export interface RunBonusDef {
   /** "base.rareté" */
@@ -309,6 +312,9 @@ export interface SyncMap<T> {
   forEach(cb: (value: T, key: string) => void): void;
 }
 export interface PlayerView {
+  skin:string;
+  ogrinesEarned:number;
+  ogrineGrants:string;
   spellLevels:string;
   momentum:boolean;
   blessing:string;
@@ -381,6 +387,7 @@ export interface MonsterView {
   elite: boolean;
   carried:boolean;
   rogue:boolean;
+  cursed:boolean;
 }
 export interface GroundView {
   owner:string;
@@ -403,6 +410,11 @@ export interface PotionView {
   y: number;
 }
 export interface GameStateView {
+  ogrines:SyncMap<{owner:string;x:number;y:number}>;
+  cursed:boolean;
+  hasCursedZaap:boolean;
+  cursedZaapX:number;
+  cursedZaapY:number;
   stageRoute:string;
   protocolVersion:number;
   waves:number;

@@ -24,10 +24,10 @@ test('panoplie : seuils cumulatifs et deux anneaux identiques comptent pour une 
   const ring=createEquipment('blopanneau_royal','rare');
   assert.equal(setProgress({anneau1:ring,anneau2:ring}).find(p=>p.set.id==='blop')!.count,1);
 });
-test('drops : zone courante et deux précédentes, raretés antérieures ×3, Dofus partout',()=>{
-  assert.deepEqual(dropSources(9).map(s=>s.zone),[9,8,7]);
-  assert.deepEqual(new Set(dropPool(9,false).map(id=>EQUIPMENT_BASES[id].tier)),new Set([3,4]));
-  assert.ok(dropPool(12,false).every(id=>EQUIPMENT_BASES[id].tier===4));
+test('drops : uniquement le palier et le donjon courants, Dofus partout',()=>{
+  assert.deepEqual(dropSources(9).map(s=>s.zone),[9]);
+  assert.deepEqual(new Set(dropPool(9,false).map(id=>EQUIPMENT_BASES[id].tier)),new Set([2]));
+  assert.ok(dropPool(12,false).every(id=>EQUIPMENT_BASES[id].tier===2));
   assert.equal(dropPool(1,true).length,10);
   const boosted=dropRarityWeights(3);assert.ok(Math.abs(boosted.normal-.4)<1e-9);assert.equal(boosted.rare,.48);assert.equal(boosted.legendaire,.015);
   for(const stage of [1,2,4,9,12]){

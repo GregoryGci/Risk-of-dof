@@ -11,6 +11,7 @@ class GameSettings {
 
   constructor() {
     document.getElementById('game-settings-close')!.addEventListener('click', () => this.toggle(false));
+    document.getElementById('game-settings-resume')!.addEventListener('click', () => this.toggle(false));
   }
 
   toggle(open = !this.isOpen): void {

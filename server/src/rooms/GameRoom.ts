@@ -42,7 +42,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     if(this.state.phase!==PHASE_LOBBY)return;
     const pending=this.refreshing.get(id);if(pending)return pending;
     const token=this.accessTokens.get(id);if(!token)return;
-    const request=(async()=>{try{const profile=await authenticate(token);if(profile.userId!==this.accounts.get(id)||this.state.phase!==PHASE_LOBBY)return;this.progression.set(id,profile.spellLevels);this.sim.setSpellLevels(id,profile.spellLevels);this.sim.setUnlockedMode(id,profile.unlockedMode);}catch{this.clients.find(c=>c.sessionId===id)?.send('progressionError',{message:'Niveaux de sorts : synchronisation indisponible. Le dernier deck synchronisé sera utilisé.'});}finally{this.refreshing.delete(id);}})();
+    const request=(async()=>{try{const profile=await authenticate(token);if(profile.userId!==this.accounts.get(id)||this.state.phase!==PHASE_LOBBY)return;this.progression.set(id,profile.spellLevels);this.sim.setSpellLevels(id,profile.spellLevels);this.sim.setUnlockedMode(id,profile.unlockedMode);this.sim.setSkins(id,profile.skinBook);}catch{this.clients.find(c=>c.sessionId===id)?.send('progressionError',{message:'Niveaux de sorts : synchronisation indisponible. Le dernier deck synchronisé sera utilisé.'});}finally{this.refreshing.delete(id);}})();
     this.refreshing.set(id,request);return request;
   }
   async onAuth(_client:Client,options:{accessToken?:unknown}) {return await authenticate(options?.accessToken)??true;}
@@ -91,7 +91,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     console.log(`[salle ${this.roomId}] créée`);
   }
 
-  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown; blessing?:unknown;accessToken?:unknown },auth?:{userId?:string;spellLevels?:SpellLevelBook;unlockedMode?:number}|boolean): void {
+  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown; blessing?:unknown;accessToken?:unknown },auth?:{userId?:string;spellLevels?:SpellLevelBook;unlockedMode?:number;skinBook?:Record<string,string>}|boolean): void {
     if(auth&&typeof auth==='object'&&auth.userId)this.accounts.set(client.sessionId,auth.userId);
     client.send('cloudStatus',{ranked:this.accounts.has(client.sessionId)&&cloudScoresEnabled});
     const name = cleanName(auth&&typeof auth==='object'&&'name' in auth?auth.name:options?.name);
@@ -99,6 +99,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     if(levels)this.progression.set(client.sessionId,levels);if(typeof options?.accessToken==='string')this.accessTokens.set(client.sessionId,options.accessToken);
     const unlockedMode=auth&&typeof auth==='object'?(auth.unlockedMode??0):3;
     this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.equipment, undefined,levels,unlockedMode);
+    this.sim.setSkins(client.sessionId,auth&&typeof auth==='object'?auth.skinBook:{});
     this.sim.players.get(client.sessionId)!.state.rankStatus=this.accounts.has(client.sessionId)&&cloudScoresEnabled?'ready':'disabled';
     if (!this.state.hostId){this.state.hostId = client.sessionId;this.state.mode=Math.min(this.state.mode,unlockedMode);}
     console.log(`[salle ${this.roomId}] ${name} a rejoint (${this.state.players.size}/${this.maxClients})`);

@@ -42,6 +42,27 @@ export interface SpriteDef {
    * Défaut Dofus : { "3": 1, "4": 0, "7": 5 } (l'Ouest est le miroir de l'Est, le Nord-Est celui du Nord-Ouest).
    */
   mirror?: Record<string, number>;
+  /** Réduction appliquée par tools/shrink-atlases.mjs (1 = atlas à la taille d'extraction). */
+  shrunk?: number;
+  /** Points d'accroche de la coiffe et de la cape, image par image (tools/extract-gear.mjs). */
+  gear?: string;
+}
+
+/**
+ * Points d'accroche d'une image : [direction Dofus, a, b, c, d, tx, ty(, devant)] en pixels du clip.
+ * `h` = tête (coiffe), `c` = dos (cape ; devant = 1 si elle passe devant le corps).
+ */
+export type GearAnchor = [string, number, number, number, number, number, number, number?];
+export type GearTracks = Record<string, Record<string, { h?: GearAnchor[]; c?: GearAnchor[] }[]>>;
+
+/** Coiffes et capes portées en jeu (tools/extract-gear.mjs). */
+export interface GearManifest {
+  image: string;
+  atlas: string;
+  /** Pixels de l'atlas par pixel de clip Dofus. */
+  pixelsPerUnit: number;
+  /** Objet -> emplacement et point d'attache de chaque direction (pixels de son image). */
+  items: Record<string, { kind: string; origins: Record<string, [number, number]> }>;
 }
 
 export interface ImageDef {
@@ -51,6 +72,7 @@ export interface ImageDef {
 }
 
 export interface Manifest {
+  skins?:Record<string,SpriteDef>;
   /** Personnages par id de classe (ex. "cra"). */
   characters?: Record<string, SpriteDef>;
   /** Monstres par id (ex. "bouftou"). */
@@ -77,6 +99,7 @@ export interface Manifest {
   spellfx?: Record<string, { image: string; atlas: string; origin?: [number, number]; scale?: number; anims: Record<string, AnimDef> }>;
   /** Sort du jeu -> animation officielle ; `type` = 1er nombre de spriteInfos Dofus (10 = sur le lanceur). */
   spellAnims?: Record<string, { anim: string; type: number;casterAnim?:number }>;
+  gear?: GearManifest;
 }
 
 export const DEFAULT_MIRROR: Record<string, number> = { '3': 1, '4': 0, '7': 5 };

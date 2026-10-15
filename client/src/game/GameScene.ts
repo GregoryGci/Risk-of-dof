@@ -1,3 +1,4 @@
+import {runBonusText} from '@rod/shared';
 // Scène principale : affiche l'état reçu du serveur, envoie les entrées du joueur.
 // Aucune règle de jeu ici : le client ne décide ni des dégâts ni des temps de recharge.
 import Phaser from 'phaser';
@@ -76,6 +77,18 @@ const VIEW_H = 600;
 /** Décalage vertical de la visée : on vise le corps des monstres, pas leurs pieds. */
 const AIM_OFFSET_Y = 10;
 
+/** Coiffe et cape équipées d'un joueur (JSON de son état), mémorisées par chaîne. */
+const wornCache = new Map<string, [string | undefined, string | undefined]>();
+function wornGear(raw: string): [string | undefined, string | undefined] {
+  let worn = wornCache.get(raw);
+  if (!worn) {
+    try { const e = JSON.parse(raw || '{}') as Record<string, { base?: string } | undefined>; worn = [e.coiffe?.base, e.cape?.base]; } catch { worn = [undefined, undefined]; }
+    if (wornCache.size > 64) wornCache.clear();
+    wornCache.set(raw, worn);
+  }
+  return worn;
+}
+
 export class GameScene extends Phaser.Scene {
   private room!: Room;
   private store!: AssetStore;
@@ -118,6 +131,8 @@ export class GameScene extends Phaser.Scene {
   private dashCdEnd = 0;
   private chests = new Map<string, { image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite; opened: boolean }>();
   private potions = new Map<string, Phaser.GameObjects.Image>();
+  private ogrineViews=new Map<string,Phaser.GameObjects.Text>();
+  private cursedZaap?:{image:Phaser.GameObjects.Image;glow:Phaser.GameObjects.Image};
   private zaap?: { image: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Image };
 
   /** Position prédite du joueur local (cases). */
@@ -164,7 +179,8 @@ export class GameScene extends Phaser.Scene {
     this.hud = this.ctx.hud;
     this.inputSeq=this.state.players.get(this.room.sessionId)?.inputSeq??0;
     const zone=zoneForStage(this.state.stage??1);
-    this.store.preload(this,[...zone.monsters,zone.boss,'epouvantail','marchand','coffre','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable']);
+    const characters:string[]=[];this.state.players.forEach(p=>characters.push(p.classId));
+    this.store.preload(this,[...zone.monsters,zone.boss,'epouvantail','marchand','coffre','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable'],characters);
 
     // Écran de chargement : les spritesheets Dofus pèsent quelques Mo.
     const { width, height } = this.scale;
@@ -235,7 +251,8 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('merchant',()=>this.hud.toast('<b>Halte marchande</b> — prenez le temps de choisir vos bonus'));
     this.room.onMessage('dmg', (e: DamageEvent) => this.onDamage(e));
     this.room.onMessage('death', (e: DeathEvent) => this.onDeath(e));
-    this.room.onMessage('boss', (e: { name: string; challenge?:boolean;rogue?:boolean }) => {
+    this.room.onMessage('boss', (e: { name: string; challenge?:boolean;rogue?:boolean;cursed?:boolean }) => {
+      if(e.cursed){this.hud.toast(`<b style="color:#ff84ad">GARDIEN MAUDIT · ${e.name}</b><small>PV ×2,5 · dégâts ×1,8 · chance de Dofus ×3</small>`);this.store.playSound(this,'boss');return;}
       if(e.rogue){this.hud.toast(`<b style="color:#dfadff">Gardien surprise : ${e.name}</b> — puissance accrue, chances de butin ×3 !`);this.store.playSound(this,'boss');return;}
       this.hud.toast(`<b style="color:#ff6a5a">${e.name}</b> ${e.challenge ? '— défi activé !' : 'garde le Zaap !'}`);
       this.store.playSound(this, 'boss');
@@ -319,12 +336,14 @@ export class GameScene extends Phaser.Scene {
     // La carte est régénérée à partir de la graine (et à chaque nouvelle partie).
     if (!this.mapView || this.map.seed !== state.seed || this.map.zoneId !== zoneForStage(state.stage).id) this.rebuildMap(state.seed);
 
+    this.syncOgrines(state);
     const myState = state.players.get(this.room.sessionId);
     if(time>=this.nextAssetCheck){
     this.nextAssetCheck=time+150;
     const monsterIds:string[]=[];state.monsters.forEach(m=>monsterIds.push(m.type));
     if(state.intermission){const next=zoneForStage(state.stage+1);monsterIds.push(...next.monsters,next.boss);}
     this.store.loadMonsters(this,monsterIds);
+    const skins:string[]=[],characters:string[]=[];state.players.forEach(p=>{skins.push(p.skin);characters.push(p.classId);});this.store.loadSkins(this,skins);this.store.loadCharacters(this,characters);
     }
     if(state.intermission!==this.lastIntermission){this.lastIntermission=state.intermission;this.shop.toggle(state.intermission);this.controls.releaseAll();this.targeting=null;}
     if(myState&&myState.cooldowns!==this.lastCooldownState){this.lastCooldownState=myState.cooldowns;try{const cds:number[]=JSON.parse(myState.cooldowns);for(let i=0;i<4;i++)this.cdEnd[i]=i===1&&myState.secondaryMax>1&&myState.secondaryCharges>0?0:time+(cds[i]??0)*1000;this.dashCdEnd=time+(cds[4]??0)*1000;}catch{/* Attend le patch. */}}
@@ -409,7 +428,7 @@ export class GameScene extends Phaser.Scene {
     this.state.monsters.forEach(m=>keep.push(m.type));this.store.releaseMonsters(this,keep);this.store.loadMonsters(this,keep);
     this.mapView?.destroy();
     this.map = generateMap(seed,undefined,this.state.stage);
-    this.mapView = new MapView(this, this.store, this.map);
+    this.mapView = new MapView(this, this.store, this.map,this.state.cursed);
     this.minimap.setMap(this.map);
     this.effects.clear();
     // Nouvelle partie : on repart de la position serveur et les sorts sont de nouveau prêts.
@@ -533,14 +552,14 @@ export class GameScene extends Phaser.Scene {
     const myId = this.room.sessionId;
     state.players.forEach((p: PlayerView, id: string) => {
       let view = this.players.get(id);
-      if (view && this.playerClass.get(id) !== p.classId) {
+      if (view && (this.playerClass.get(id) !== p.classId||view.assetKey!==this.store.character(this,p.classId,p.slot,p.skin).key)) {
         view.destroy();
         view = undefined;
       }
       if (!view) {
         this.playerClass.set(id, p.classId);
         const color = PLAYER_COLORS[p.slot % PLAYER_COLORS.length];
-        view = new EntityView(this, this.store, this.store.character(this, p.classId, p.slot), p.x, p.y, {
+        view = new EntityView(this, this.store, this.store.character(this, p.classId, p.slot,p.skin), p.x, p.y, {
           label: p.name,
           labelColor: id === myId ? '#ffe9a8' : '#ffffff',
           barWidth: 34,
@@ -563,6 +582,9 @@ export class GameScene extends Phaser.Scene {
       view.setShield(p.shield, p.maxHp);
       view.setDead(!p.alive);
       view.setInvisible(p.invisible);
+      // Apparence : la coiffe et la cape équipées sont portées en jeu, synchronisées par l'état du joueur.
+      const [head, back] = wornGear(p.equipment);
+      view.setGear(head, back);
       view.update(dt);
     });
     for (const [id, view] of this.players) {
@@ -580,6 +602,7 @@ export class GameScene extends Phaser.Scene {
       if (!view) {
         const visual = this.store.monster(this, m.type);
         if (m.elite) visual.scale *= 1.6;
+        if(m.cursed)visual.scale*=1.3;
         view = new EntityView(this, this.store, visual, m.x, m.y, {
           barWidth: getMonster(m.type).boss || m.elite ? 70 : 30,
           barColor: m.ally ? 0x4ad04a : m.elite ? 0xf0b030 : 0xd83a2a,
@@ -595,7 +618,7 @@ export class GameScene extends Phaser.Scene {
       view.dir = m.dir;
       if(m.carried)view.setPosition(m.x,m.y-.7);
       view.setHp(m.hp, m.maxHp);
-      view.setRogue(m.rogue);
+      view.setRogue(m.rogue,m.cursed);
       view.setWarning(m.state === MSTATE_WINDUP);
       view.update(dt);
       view.revealPlayer(hero.x,hero.y,!!alive&&!m.ally);
@@ -645,7 +668,18 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** Affiche le Zaap de la zone ; retourne le texte d'aide si le joueur est à portée. */
+  private syncOgrines(state:GameStateView):void {
+    state.ogrines.forEach((drop,id)=>{if(drop.owner!==this.room.sessionId)return;let text=this.ogrineViews.get(id);if(!text){text=this.add.text(0,0,'1 Ogrine',{fontFamily:'Georgia',fontSize:'13px',color:'#ffe2a8',stroke:'#27141d',strokeThickness:4}).setOrigin(.5,1);this.ogrineViews.set(id,text);}const p=worldToScreen(drop.x,drop.y);text.setPosition(p.x,p.y-15).setDepth(p.y+2);});
+    for(const[id,text]of this.ogrineViews)if(!state.ogrines.get(id)){text.destroy();this.ogrineViews.delete(id);}
+  }
+
   private syncZaap(state: GameStateView, canAct: boolean): string {
+    const red=state.phase===PHASE_PLAYING&&!state.intermission&&state.hasCursedZaap;
+    if(red&&!this.cursedZaap){const v=this.store.objectVisual('zaap',0);this.cursedZaap={image:this.add.image(0,0,v.key).setOrigin(v.origin[0],v.origin[1]).setScale(v.scale).setTint(0xff557b),glow:this.add.image(0,0,'ph_glow').setTint(0xff184c).setBlendMode(Phaser.BlendModes.ADD)};}
+    this.cursedZaap?.image.setVisible(red);this.cursedZaap?.glow.setVisible(red);
+    if(red&&this.cursedZaap){const p=worldToScreen(state.cursedZaapX,state.cursedZaapY);this.cursedZaap.image.setPosition(p.x,p.y).setDepth(p.y);this.cursedZaap.glow.setPosition(p.x,p.y-50).setDepth(p.y+1).setScale(3+Math.sin(this.time.now/200)*.3).setAlpha(.8);
+      if(canAct&&Math.hypot(state.cursedZaapX-this.me.x,state.cursedZaapY-this.me.y)<=ZAAP_RANGE){if(this.controls.consumePress('KeyE'))this.room.send('interact');return '<b>E</b> — Zaap maudit : gardiens renforcés, chance de Dofus ×3 · emmène toute l’équipe';}
+    }
     if(state.intermission){this.zaap?.image.setVisible(false);this.zaap?.glow.setVisible(false);return '';}
     const visible = state.phase === PHASE_PLAYING;
     if (!visible) {
@@ -898,7 +932,7 @@ export class GameScene extends Phaser.Scene {
     if (!item || document.hidden) return;
     const mine = e.player === this.room.sessionId;
     const color = `#${item.color.toString(16).padStart(6, '0')}`;
-    const label = item.description;
+    const label = runBonusText(item,{stage:this.state.stage,zoneWave:this.state.zoneWave,mode:this.state.mode});
     this.effects.floatText(e.x, e.y, label, color, mine ? 16 : 12, 60);
     this.effects.spark(worldToScreen(e.x, e.y).x, worldToScreen(e.x, e.y).y - 20, item.color);
     if (mine) {

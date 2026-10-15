@@ -4,7 +4,7 @@ import {RUN_BONUSES} from './items.ts';
 interface Affinity {id:string;name:string;icon:string;color:string;bases:string[];thresholds:{count:number;stats:Partial<Record<StatKey,number>>}[]}
 export const AFFINITIES:Affinity[]=[
   {id:'ember',name:'Braise',icon:'✦',color:'#e9a17c',bases:['puissance','attaque','critique','impact','echos','rebond'],thresholds:[{count:3,stats:{damage:.08}},{count:5,stats:{haste:.04,critDamage:.10}}]},
-  {id:'sap',name:'Sève',icon:'❖',color:'#9bc89b',bases:['vitalite','protection','recuperation','recuperation_victoire','vampirisme'],thresholds:[{count:3,stats:{maxHp:25}},{count:5,stats:{armor:.8,regen:.3}}]},
+  {id:'sap',name:'Sève',icon:'❖',color:'#9bc89b',bases:['vitalite','protection','recuperation','recuperation_victoire','vampirisme','vol_de_vie'],thresholds:[{count:3,stats:{maxHp:25}},{count:5,stats:{armor:.8,regen:.3}}]},
   {id:'wakfu',name:'Wakfu',icon:'◇',color:'#88c5cd',bases:['celerite','agilite','portee','reserve','chance'],thresholds:[{count:3,stats:{haste:.06}},{count:5,stats:{speed:.025,range:.5}}]},
 ];
 /** Les qualités et doublons d'un même bonus ne comptent qu'une fois. */

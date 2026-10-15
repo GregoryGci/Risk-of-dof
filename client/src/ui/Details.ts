@@ -1,3 +1,4 @@
+import {innateLifesteal,clampCombatStats,isRangedAttack} from '@rod/shared';
 // Panneau « détails de la partie » ouvert avec Tab : stats, objets et sorts détaillés.
 // Il libère la souris ; en solo, la partie est mise en pause.
 import { affinityProgress, getRunBonus, CLASSES, CLASS_MECHANICS, difficultyTier, getClass, leveledSpell, parseSpellLevels,spellEvolutionText, parseRunBonuses, playerItemStats, sumRunStats, statText, type StatKey, type GameStateView } from '@rod/shared';
@@ -63,7 +64,7 @@ export class Details {
     const me = state.players.get(myId);
     if (!me) return;
     const inventory = parseRunBonuses(me.bonuses);
-    const stats = playerItemStats(inventory, me.equipment);stats.bounce+=parseBlessings(me.blessings).ricochet??0;
+    const stats = playerItemStats(inventory, me.equipment,{stage:state.stage,zoneWave:state.zoneWave,mode:state.mode});stats.bounce+=parseBlessings(me.blessings).ricochet??0;stats.lifesteal+=innateLifesteal(leveledSpell(me.spells.split(',')[0]||getClass(me.classId).spells[0],1));clampCombatStats(stats,isRangedAttack(leveledSpell(me.spells.split(',')[0]||getClass(me.classId).spells[0],1)));
     const cls = getClass(me.classId);
     stats.armor += cls.armor ?? 0;
     const tier = difficultyTier(state.difficulty);
@@ -83,6 +84,7 @@ export class Details {
       <div>PV <b>${Math.ceil(me.hp)} / ${me.maxHp}</b> — régénération <b>${(cls.regen + stats.regen).toFixed(1)}/s</b></div>
       ${me.shield > 0 ? `<div>Bouclier <b>${Math.ceil(me.shield)} PV</b></div>` : ''}
       <div>Dégâts <b>+${Math.round(stats.damage * 100)} %</b> — critique <b>${Math.round((0.05 + stats.crit) * 100)} %</b> — dégâts critiques <b>×${(1.5 + stats.critDamage).toFixed(2).replace('.', ',')}</b></div>
+      <div>Vol de vie des autos <b>${Math.round(stats.lifesteal*1000)/10} %</b> · Vampirisme des sorts <b>${Math.round(stats.vampirism*1000)/10} / 50 %</b> · Rebonds <b>${stats.bounce} / 3</b></div>
       <div>Vitesse de recharge <b>+${Math.round(stats.haste * 100)} %</b> — déplacement <b>+${Math.round(stats.speed * 100)} %</b></div>
       <div>Dégâts subis <b>-${Math.round((1 - Math.pow(0.92, stats.armor)) * 100)} %</b> — PV par victime <b>${stats.killHeal}</b> — kamas <b>+${Math.round(stats.kamas * 100)} %</b></div>
     </section>`;
@@ -115,7 +117,7 @@ export class Details {
     html += `</div>`;
 
     html+=`<h3>Affinités de la run</h3><p class="run-gains-help">Collectionnez 3 puis 5 bonus différents d’une famille. Les doublons et leurs qualités comptent une seule fois ; les avantages sont inclus dans vos stats.</p><div class="affinity-grid">${affinityProgress(inventory).map(({affinity,count})=>`<section class="affinity-card" style="--affinity:${affinity.color}"><h3>${affinity.icon} ${affinity.name} <small>${count}/${affinity.bases.length}</small></h3>${affinity.thresholds.map(t=>`<p class="${count>=t.count?'active':''}">${count>=t.count?'✓':'◇'} ${t.count} différents · ${Object.entries(t.stats).map(([key,value])=>escapeHtml(statText(key as StatKey,value))).join(' · ')}</p>`).join('')}<small>${affinity.bases.map(base=>getRunBonus(base+'.commun')?.name??getRunBonus(base+'.epique')?.name??base).map(escapeHtml).join(' · ')}</small></section>`).join('')}</div>`;
-    const run=sumRunStats(inventory);
+    const run=sumRunStats(inventory,{stage:state.stage,zoneWave:state.zoneWave,mode:state.mode});
     const gains=Object.entries(run).filter(([,v])=>v>0);
     html += `<h3>Bonus gagnés pendant cette run</h3><p class="run-gains-help">Coffres, marchand et gardiens : ces stats s’additionnent à votre tenue jusqu’à la fin de la run. Les élites donnent les bénédictions affichées plus haut.</p><div class="run-stats-recap">${gains.length ? gains.map(([k,v])=>`<div><span>✦</span>${escapeHtml(statText(k as StatKey,v))}</div>`).join('') : '<p>Aucun bonus pour le moment. Ouvrez des coffres avec vos kamas.</p>'}</div>`;
 
@@ -141,6 +143,6 @@ function runLootHtml(raw: string): string {
   const rows = [...groups.values()].sort((a, b) => EQUIPMENT_RARITIES.indexOf(b.rarity) - EQUIPMENT_RARITIES.indexOf(a.rarity) || b.count - a.count);
   const total = rows.reduce((n, r) => n + r.count, 0);
   return `<h3>Butin de la run <small>${total ? `${total} équipement${total > 1 ? 's' : ''}` : ''}</small></h3>` + (rows.length
-    ? `<div class="run-loot">${rows.map(r => `<span class="run-loot-item ${r.rarity}" title="${escapeHtml(EQUIPMENT_BASES[r.base].name)} · ${EQUIPMENT_RARITY_NAMES[r.rarity]}"><img src="assets/dofus/items/${r.base}.png" alt=""><span>${escapeHtml(EQUIPMENT_BASES[r.base].name)}<small>${EQUIPMENT_RARITY_NAMES[r.rarity]}</small></span>${r.count > 1 ? `<b>×${r.count}</b>` : ''}</span>`).join('')}</div>`
+    ? `<div class="run-loot">${rows.map(r => `<span class="run-loot-item ${r.rarity}" title="${escapeHtml(EQUIPMENT_BASES[r.base].name)} · ${EQUIPMENT_RARITY_NAMES[r.rarity]}">${EQUIPMENT_BASES[r.base].iconMissing?'<span class="gear-no-icon">Visuel indisponible</span>':`<img src="assets/dofus/items/${r.base}.png" alt="">`}<span>${escapeHtml(EQUIPMENT_BASES[r.base].name)}<small>${EQUIPMENT_RARITY_NAMES[r.rarity]}</small></span>${r.count > 1 ? `<b>×${r.count}</b>` : ''}</span>`).join('')}</div>`
     : '<p class="run-loot-empty">Aucun équipement trouvé pour l’instant.</p>');
 }

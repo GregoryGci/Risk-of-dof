@@ -1,3 +1,4 @@
+import {sourceDamageMultiplier} from '@rod/shared';
 ﻿import {getBlessing,getSpell,PHASE_PLAYING,blessingPower,blessingSpell} from '@rod/shared';
 import type {Simulation,PlayerRt,Projectile,MonsterRt} from './Simulation.ts';
 interface Runtime{hits:number;skills:number;dashes:number;seen:WeakSet<Projectile>;cooldowns:Map<string,number>;resonance:boolean;marks:Map<string,number>;overflow:number;overflowUntil:number}
@@ -11,7 +12,7 @@ export class Blessings {
  private power(p:PlayerRt,id:string){return blessingPower(this.rank(p,id));}
  private active(p:PlayerRt){return p.state.alive&&this.sim.state.phase===PHASE_PLAYING&&!this.sim.state.intermission;}
  private ready(p:PlayerRt,id:string,seconds:number):boolean{const data=this.data(p);if(this.sim.now<(data.cooldowns.get(id)??0))return false;data.cooldowns.set(id,this.sim.now+seconds);return true;}
- private damage(p:PlayerRt,mult:number){const[a,b]=getSpell(p.spells[0]).damage;return(a+b)/2*(1+p.stats.damage)*mult;}
+ private damage(p:PlayerRt,mult:number){const[a,b]=getSpell(p.spells[0]).damage;return(a+b)/2*sourceDamageMultiplier(p.stats.damage,false)*mult;}
  private enemies(x:number,y:number,r:number){return[...this.sim.monsters.values()].filter(m=>!m.state.ally&&!m.state.carried&&m.state.hp>0&&Math.hypot(m.state.x-x,m.state.y-y)<=r+m.def.radius);}
  private burst(p:PlayerRt,id:string,x:number,y:number,r:number,mult:number){const def=getBlessing(id)!;this.sim.broadcast('blessingFx',{player:p.id,kind:'burst',x,y,r,color:def.color});for(const m of this.enemies(x,y,r))if(this.sim.monsters.has(m.id))this.sim.damageMonster(m,this.damage(p,mult*this.power(p,id)),p.id);}
  private later(p:PlayerRt,seconds:number,fn:()=>void){const stage=this.sim.state.stage,run=this.sim.state.runId;this.sim.after(seconds,()=>{if(this.active(p)&&this.sim.players.get(p.id)===p&&this.sim.state.stage===stage&&this.sim.state.runId===run)fn();});}
@@ -48,7 +49,7 @@ export class Blessings {
    if(this.rank(p,'storm')&&++data.hits>=4){data.hits=0;const hit=new Set([target.id]);let from={x:target.state.x,y:target.state.y};for(let i=0;i<3;i++){const next=this.enemies(from.x,from.y,4).filter(m=>!hit.has(m.id)).sort((a,b)=>Math.hypot(a.state.x-from.x,a.state.y-from.y)-Math.hypot(b.state.x-from.x,b.state.y-from.y))[0];if(!next)break;hit.add(next.id);this.sim.broadcast('blessingFx',{player:p.id,kind:'chain',x:from.x,y:from.y,tx:next.state.x,ty:next.state.y,r:.4,color:getBlessing('storm')!.color});from={x:next.state.x,y:next.state.y};this.sim.damageMonster(next,this.damage(p,.35*this.power(p,'storm')),p.id);}}
    p.state.blessingProgress=data.hits;
    if(this.sim.monsters.has(target.id)){
-    if(this.rank(p,'brand')&&this.ready(p,'brand',.8)){const burn=this.damage(p,.12*this.power(p,'brand'));if(target.burnUntil<=this.sim.now||burn>=target.burnDps){target.burnDps=burn;target.burnOwner=p.id;}target.burnUntil=Math.max(target.burnUntil,this.sim.now+3);target.burnNextTick=Math.min(target.burnNextTick||Infinity,this.sim.now+.5);}
+    if(this.rank(p,'brand')&&this.ready(p,'brand',.8)){const burn=this.damage(p,.12*this.power(p,'brand'));if(target.burnUntil<=this.sim.now||burn>=target.burnDps){target.burnDps=burn;target.burnOwner=p.id;target.burnAttack=true;}target.burnUntil=Math.max(target.burnUntil,this.sim.now+3);target.burnNextTick=Math.min(target.burnNextTick||Infinity,this.sim.now+.5);}
     if(this.rank(p,'roots')&&this.ready(p,'roots',1)){target.slowFactor=Math.min(target.slowUntil>this.sim.now?target.slowFactor:1,Math.max(.4,1-.3*this.power(p,'roots')));target.slowUntil=Math.max(target.slowUntil,this.sim.now+1.5);}
     if(this.rank(p,'doom')&&this.ready(p,'doom',3))this.later(p,1.1,()=>{if(this.sim.monsters.get(target.id)===target){this.sim.broadcast('blessingFx',{player:p.id,kind:'burst',x:target.state.x,y:target.state.y,r:.6,color:getBlessing('doom')!.color});this.sim.damageMonster(target,this.damage(p,.9*this.power(p,'doom')),p.id);}});
    }

@@ -17,6 +17,10 @@ export class EquipmentPage {
   /** Recyclage groupé : rareté choisie, et confirmation en attente. */
   private bulkRarity: EquipmentRarity = 'normal';
   private confirmRecycle = false;
+  /** Sélection multiple pour recycler : mode actif, objets cochés, confirmation en attente. */
+  private picking = false;
+  private picked = new Set<string>();
+  private confirmPicked = false;
 
   constructor(private onChange: () => void, private canEdit: () => boolean = () => true) {
     document.getElementById('equipment-close')!.addEventListener('click', () => this.close());
@@ -24,7 +28,11 @@ export class EquipmentPage {
     this.body.addEventListener('click', e => {
       const button = (e.target as HTMLElement).closest<HTMLElement>('button');
       if (!button) return;
-      if (button.dataset.gear) { this.selected = button.dataset.gear; this.target = undefined; }
+      if (button.dataset.gear && this.picking) {
+        const uid = button.dataset.gear;
+        if (!this.picked.delete(uid)) this.picked.add(uid);
+        this.confirmPicked = false;
+      } else if (button.dataset.gear) { this.selected = button.dataset.gear; this.target = undefined; }
       if (button.dataset.slot) {
         this.target = button.dataset.slot as EquipmentSlot;
         this.selected = account.equipment[this.target]?.uid ?? '';
@@ -41,6 +49,16 @@ export class EquipmentPage {
       if (button.dataset.action === 'recycle-confirm' && this.canEdit()) {
         this.confirmRecycle = false;
         if (account.recycleRarity(this.bulkRarity)) { if (!account.inventory.some(e => e.uid === this.selected)) this.selected = ''; this.onChange(); }
+      }
+      if (button.dataset.action === 'pick-start') { this.picking = true; this.picked.clear(); this.confirmPicked = false; this.confirmRecycle = false; }
+      if (button.dataset.action === 'pick-stop') { this.picking = false; this.picked.clear(); this.confirmPicked = false; }
+      if (button.dataset.action === 'pick-visible') for (const e of this.visibleItems()) if (account.recyclableOf([e.uid]).count) this.picked.add(e.uid);
+      if (button.dataset.action === 'pick-none') { this.picked.clear(); this.confirmPicked = false; }
+      if (button.dataset.action === 'pick-recycle') this.confirmPicked = true;
+      if (button.dataset.action === 'pick-cancel') this.confirmPicked = false;
+      if (button.dataset.action === 'pick-confirm' && this.canEdit()) {
+        if (account.recycleMany(this.picked)) { if (!account.inventory.some(e => e.uid === this.selected)) this.selected = ''; this.onChange(); }
+        this.picking = false; this.picked.clear(); this.confirmPicked = false;
       }
       if (button.dataset.action === 'migration') account.dismissMigration();
       this.render();
@@ -75,9 +93,15 @@ export class EquipmentPage {
   }
   private renderInventory(): void {
     const worn = new Set(Object.values(account.equipment).map(e => e.uid));
-    const items = account.inventory.filter(e => (!this.filter || EQUIPMENT_BASES[e.base].kind === this.filter) && EQUIPMENT_BASES[e.base].name.toLocaleLowerCase('fr').includes(this.search.toLocaleLowerCase('fr')))
+    const items = this.visibleItems();
+    const grid = document.getElementById('gear-grid')!;
+    grid.classList.toggle('picking', this.picking);
+    grid.innerHTML = items.length ? items.map(e => equipmentCard(e, this.picking ? this.picked.has(e.uid) : e.uid === this.selected, worn.has(e.uid))).join('') : `<div class="gear-empty"><span>Votre prochaine aventure commence ici.</span><p>${account.inventory.length ? 'Aucun équipement pour ce filtre.' : 'Les monstres laissent des équipements. Chaque fin de partie offre aussi une trouvaille. Ils restent à vous après une défaite.'}</p></div>`;
+  }
+  /** Objets affichés : filtre de type et recherche, triés par tier puis rareté. */
+  private visibleItems() {
+    return account.inventory.filter(e => (!this.filter || EQUIPMENT_BASES[e.base].kind === this.filter) && EQUIPMENT_BASES[e.base].name.toLocaleLowerCase('fr').includes(this.search.toLocaleLowerCase('fr')))
       .sort((a, b) => EQUIPMENT_BASES[b.base].tier - EQUIPMENT_BASES[a.base].tier || EQUIPMENT_RARITIES.indexOf(b.rarity) - EQUIPMENT_RARITIES.indexOf(a.rarity) || EQUIPMENT_BASES[a.base].name.localeCompare(EQUIPMENT_BASES[b.base].name));
-    document.getElementById('gear-grid')!.innerHTML = items.length ? items.map(e => equipmentCard(e, e.uid === this.selected, worn.has(e.uid))).join('') : `<div class="gear-empty"><span>Votre prochaine aventure commence ici.</span><p>${account.inventory.length ? 'Aucun équipement pour ce filtre.' : 'Les monstres laissent des équipements. Chaque fin de partie offre aussi une trouvaille. Ils restent à vous après une défaite.'}</p></div>`;
   }
   private render(): void {
     const cls = getClass(this.classId);
@@ -103,7 +127,7 @@ export class EquipmentPage {
       const current = account.equipment[this.target];
       const currentStats = current ? equipmentStats(current) : {};
       const stats = equipmentStats(selected);
-      html += `<div class="gear-detail-head"><div class="gear-detail-icon ${selected.rarity}">${equipmentIcon(selected)}</div><div><h3>${escapeHtml(base.name)}</h3><p>${EQUIPMENT_RARITY_NAMES[selected.rarity]} · Palier ${EQUIPMENT_TIERS[base.tier].level}${selected.rarity === 'legendaire' ? ` · Jet parfait · Tier ${selected.forgeTier}` : ''} · ×${selected.quantity}</p></div></div>
+      html += `<div class="gear-detail-head"><div class="gear-detail-icon ${selected.rarity}">${equipmentIcon(selected)}</div><div><h3>${escapeHtml(base.name)}</h3><p>${EQUIPMENT_RARITY_NAMES[selected.rarity]} · Niveau ${base.level??EQUIPMENT_TIERS[base.tier].level} · Palier ${EQUIPMENT_TIERS[base.tier].level}${selected.rarity === 'legendaire' ? ` · Jet parfait · Tier ${selected.forgeTier}` : ''} · ×${selected.quantity}</p></div></div>
         <div class="gear-detail-stats">${[...new Set([...Object.keys(stats), ...Object.keys(currentStats)])].map(k => {
           const key = k as StatKey;
           const value = stats[key] ?? 0;
@@ -129,7 +153,14 @@ export class EquipmentPage {
     const recycle = this.confirmRecycle && count
       ? `<span class="gear-bulk-confirm">Recycler ${count} objet${count > 1 ? 's' : ''} ${name} (+${fragments.toLocaleString('fr')} ◈) ? Les exemplaires portés sont gardés.</span><button class="btn btn-primary" data-action="recycle-confirm">Confirmer</button><button class="btn" data-action="recycle-cancel">Annuler</button>`
       : `<select id="gear-bulk-rarity" aria-label="Rareté à recycler">${EQUIPMENT_RARITIES.map(r => `<option value="${r}" ${r === this.bulkRarity ? 'selected' : ''}>${EQUIPMENT_RARITY_NAMES[r]}</option>`).join('')}</select><button class="btn" data-action="recycle-rarity" ${count && edit ? '' : 'disabled'}>Recycler tous (${count})</button>`;
-    return `<div class="gear-bulk"><button class="btn" data-action="fuse-all" ${fusable && edit ? '' : 'disabled'} title="Fusionne chaque groupe de ${FUSION_COST} exemplaires identiques, en cascade">Tout fusionner${fusable ? ` (${fusable})` : ''}</button>${recycle}</div>`;
+    if (this.picking) {
+      const picked = account.recyclableOf(this.picked);
+      const actions = this.confirmPicked && picked.count
+        ? `<span class="gear-bulk-confirm">Recycler ${picked.count} objet${picked.count > 1 ? 's' : ''} sélectionné${picked.count > 1 ? 's' : ''} (+${picked.fragments.toLocaleString('fr')} ◈) ? Les exemplaires portés sont gardés.</span><button class="btn btn-primary" data-action="pick-confirm">Confirmer</button><button class="btn" data-action="pick-cancel">Annuler</button>`
+        : `<span class="gear-bulk-count">${this.picked.size} sélectionné${this.picked.size > 1 ? 's' : ''} · +${picked.fragments.toLocaleString('fr')} ◈</span><button class="btn" data-action="pick-visible" title="Coche les objets affichés (filtre et recherche), sauf les exemplaires portés">Tout cocher</button><button class="btn" data-action="pick-none" ${this.picked.size ? '' : 'disabled'}>Tout décocher</button><button class="btn btn-primary" data-action="pick-recycle" ${picked.count && edit ? '' : 'disabled'}>Recycler la sélection (${picked.count})</button><button class="btn" data-action="pick-stop">Terminer</button>`;
+      return `<div class="gear-bulk picking"><span class="gear-bulk-hint">Cliquez sur les objets à recycler.</span>${actions}</div>`;
+    }
+    return `<div class="gear-bulk"><button class="btn" data-action="pick-start" title="Cocher plusieurs objets puis les recycler d’un coup">Sélectionner…</button><button class="btn" data-action="fuse-all" ${fusable && edit ? '' : 'disabled'} title="Fusionne chaque groupe de ${FUSION_COST} exemplaires identiques, en cascade">Tout fusionner${fusable ? ` (${fusable})` : ''}</button>${recycle}</div>`;
   }
   private renderSet(set:EquipmentSet|undefined):string {
     if(!set)return '';const count=setProgress(account.equipment).find(row=>row.set.id===set.id)?.count??0;

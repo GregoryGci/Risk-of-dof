@@ -3,7 +3,7 @@
 // ou « une tile d'herbe » et reçoit soit l'asset fourni, soit le placeholder.
 import Phaser from 'phaser';
 import { MONSTERS, GROUND_NAMES, OBSTACLES, getMonster } from '@rod/shared';
-import { ASSET_ROOT, DEFAULT_MIRROR, type AnimDef, type ImageDef, type Manifest, type SpriteDef } from './manifest.ts';
+import { ASSET_ROOT, DEFAULT_MIRROR, type AnimDef, type GearManifest, type GearTracks, type ImageDef, type Manifest, type SpriteDef } from './manifest.ts';
 import {
   ENTITY_PLACEHOLDER_ORIGIN,
   OBJECT_PLACEHOLDER_ORIGIN,
@@ -40,6 +40,10 @@ function asArray<T>(v: T | T[]): T[] {
 }
 
 export class AssetStore {
+  private pendingSkins=new Set<string>();
+  private failedSkins=new Set<string>();
+  private pendingCharacters=new Set<string>();
+  private failedCharacters=new Set<string>();
   private pendingMonsters=new Set<string>();
   private failedMonsters=new Set<string>();
   private monsterScales=new Map<string,number>();
@@ -53,7 +57,7 @@ export class AssetStore {
   // Chargement (appelé dans preload)
   // -------------------------------------------------------------------------
 
-  preload(scene: Phaser.Scene,monsterIds?:Iterable<string>): void {
+  preload(scene: Phaser.Scene,monsterIds?:Iterable<string>,characterIds?:Iterable<string>): void {
     const m = this.manifest;
     scene.load.setPath(ASSET_ROOT);
     // Version des fichiers = empreinte du manifeste : après une nouvelle extraction, le navigateur
@@ -72,7 +76,14 @@ export class AssetStore {
       else if (def.frameWidth && def.frameHeight) scene.load.spritesheet(key, v(def.image), { frameWidth: def.frameWidth, frameHeight: def.frameHeight });
       else scene.load.image(key, v(def.image));
     };
-    for (const [id, def] of Object.entries(m.characters ?? {})) loadSprite(`char_${id}`, def);
+    const characters=characterIds?new Set(characterIds):undefined;
+    for (const [id, def] of Object.entries(m.characters ?? {})) {
+      if(characters&&!characters.has(id))continue;
+      loadSprite(`char_${id}`, def);
+      if (def.gear) scene.load.json(`gear_${id}`, v(def.gear));
+    }
+    // Coiffes et capes de l'équipement, posées sur les points d'accroche du personnage.
+    if (m.gear?.atlas) scene.load.atlas('gear', v(m.gear.image), v(m.gear.atlas));
     const needed=monsterIds?new Set([...monsterIds].map(id=>m.monsters?.[id]?.aliasOf??id)):undefined;
     for (const [id, def] of Object.entries(m.monsters ?? {})) if(!def.aliasOf&&(!needed||needed.has(id)))loadSprite(`mon_${id}`, def);
     for (const [type, files] of Object.entries(m.tiles ?? {})) asArray(files).forEach((f, i) => scene.load.image(`tile_${type}_${i}`, v(f)));
@@ -162,7 +173,8 @@ export class AssetStore {
     return { key: 'ph_potion', origin: [0.5, 1], scale: 1 };
   }
 
-  character(scene: Phaser.Scene, classId: string, slot: number): EntityVisual {
+  character(scene: Phaser.Scene, classId: string, slot: number,skin=''): EntityVisual {
+    if(skin&&this.manifest.skins?.[skin]&&scene.textures.exists(`skin_${skin}`)){const def=this.manifest.skins[skin];return{key:`skin_${skin}`,origin:def.origin??[.5,.9],scale:def.scale??1,sprite:def};}
     const key = `char_${classId}`;
     const def = this.manifest.characters?.[classId];
     if (def && scene.textures.exists(key)) return { key, origin: def.origin ?? [0.5, 0.9], scale: def.scale ?? 1, sprite: def };
@@ -198,6 +210,17 @@ export class AssetStore {
     for(const id of names){const def=this.manifest.monsters![id];this.pendingMonsters.add(id);if(def.atlas)scene.load.atlas(`mon_${id}`,v(def.image),v(def.atlas));else if(def.frameWidth&&def.frameHeight)scene.load.spritesheet(`mon_${id}`,v(def.image),{frameWidth:def.frameWidth,frameHeight:def.frameHeight});else scene.load.image(`mon_${id}`,v(def.image));}
     scene.load.once(Phaser.Loader.Events.COMPLETE,()=>{for(const id of names){this.pendingMonsters.delete(id);if(scene.textures.exists(`mon_${id}`))this.createAnims(scene,`mon_${id}`,this.manifest.monsters![id]);else this.failedMonsters.add(id);}});
     if(!scene.load.isLoading())scene.load.start();
+  }
+  loadSkins(scene:Phaser.Scene,ids:Iterable<string>):void {
+    const needed=[...new Set(ids)].filter(id=>id&&this.manifest.skins?.[id]&&!scene.textures.exists(`skin_${id}`)&&!this.pendingSkins.has(id)&&!this.failedSkins.has(id));if(!needed.length)return;
+    for(const id of needed){const def=this.manifest.skins![id];this.pendingSkins.add(id);scene.load.atlas(`skin_${id}`,`${def.image}?v=${this.assetVersion}`,`${def.atlas}?v=${this.assetVersion}`);}
+    scene.load.once(Phaser.Loader.Events.COMPLETE,()=>{for(const id of needed){this.pendingSkins.delete(id);if(scene.textures.exists(`skin_${id}`))this.createAnims(scene,`skin_${id}`,this.manifest.skins![id]);else this.failedSkins.add(id);}});if(!scene.load.isLoading())scene.load.start();
+  }
+  /** En solo, ne télécharge pas les onze classes absentes de la partie. */
+  loadCharacters(scene:Phaser.Scene,ids:Iterable<string>):void {
+    const needed=[...new Set(ids)].filter(id=>this.manifest.characters?.[id]&&!scene.textures.exists(`char_${id}`)&&!this.pendingCharacters.has(id)&&!this.failedCharacters.has(id));if(!needed.length)return;
+    for(const id of needed){const def=this.manifest.characters![id];this.pendingCharacters.add(id);if(def.atlas)scene.load.atlas(`char_${id}`,`${def.image}?v=${this.assetVersion}`,`${def.atlas}?v=${this.assetVersion}`);else scene.load.image(`char_${id}`,`${def.image}?v=${this.assetVersion}`);if(def.gear)scene.load.json(`gear_${id}`,`${def.gear}?v=${this.assetVersion}`);}
+    scene.load.once(Phaser.Loader.Events.COMPLETE,()=>{for(const id of needed){this.pendingCharacters.delete(id);if(scene.textures.exists(`char_${id}`))this.createAnims(scene,`char_${id}`,this.manifest.characters![id]);else this.failedCharacters.add(id);}});if(!scene.load.isLoading())scene.load.start();
   }
   releaseMonsters(scene:Phaser.Scene,keep:Iterable<string>):void {
     const needed=new Set([...keep].map(id=>this.manifest.monsters?.[id]?.aliasOf??id));
@@ -274,6 +297,13 @@ export class AssetStore {
    * Trouve l'animation à jouer pour (nom, direction).
    * Gère les directions en miroir et retombe sur « idle » si l'animation manque.
    */
+  /** Points d'accroche d'un personnage (clé `char_<classe>`) et objets portables, si extraits. */
+  gearFor(scene: Phaser.Scene, key: string): { tracks: GearTracks; gear: GearManifest } | null {
+    const gear = this.manifest.gear;
+    const tracks = key.startsWith('char_') ? scene.cache.json.get(`gear_${key.slice(5)}`) as GearTracks | undefined : undefined;
+    return gear && tracks && scene.textures.exists('gear') ? { tracks, gear } : null;
+  }
+
   resolveAnim(scene: Phaser.Scene, visual: EntityVisual, name: string, dir: number): { key: string; flipX: boolean } | null {
     const def = visual.sprite;
     if (!def?.anims) return null;

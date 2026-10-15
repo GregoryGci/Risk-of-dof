@@ -7,32 +7,26 @@ const csv=(s:unknown)=>`"${String(s).replaceAll('"','""')}"`;
 const rows=['Objet;Type;Palier;Zone de mesure;Source;Rareté;Tier de forge;Taux par monstre;Statistiques fixes'];
 let doc=`# Équipements, taux de drop et jets parfaits
 
-Catalogue : **${Object.keys(EQUIPMENT_BASES).length} objets**, dont **10 Dofus**. Paliers ${EQUIPMENT_TIERS.map(t=>t.level).join('/')} ouverts aux zones ${EQUIPMENT_TIERS.map(t=>t.stage).join('/')}.
+Catalogue : **${Object.keys(EQUIPMENT_BASES).length} objets**, dont dix Dofus. Paliers ${EQUIPMENT_TIERS.map(t=>t.level).join('/')} ouverts aux zones ${EQUIPMENT_TIERS.map(t=>t.stage).join('/')}.
 
-- Chaque ennemi : **3 %** de chance d'équipement permanent. Puis on choisit la source : zone courante (**60 %**), précédente (**25 %**) ou celle d'avant (**15 %**), puis un équipement uniforme de son palier. Au début, on renormalise les sources disponibles.
-- Source courante : **80 % normal / 16 % rare / 3,5 % épique / 0,5 % légendaire**. Sources antérieures : chances rare/épique/légendaire ×3, soit **40 % / 48 % / 10,5 % / 1,5 %**. Les contributions s'additionnent si les zones correspondent au même palier.
-- Boss : tirage supplémentaire indépendant de **3 % de Dofus**, dans le pool complet des dix Dofus, quelle que soit la zone. Leurs raretés restent 80/16/3,5/0,5 %.
-- **Enutrof : chances de loot ×2**. **Gardien surprise : ×3**. Cumul : 18 % de chaque catégorie pour un Enutrof sur un boss surprise, 9 % pour les autres joueurs.
-- Les tableaux mesurent un objet précis par ennemi éligible, à la première zone de son palier. Pour un Dofus, le taux est par boss. Les chances par kill sont identiques entre les difficultés.
-- La fin de run garantit un équipement du palier atteint, hors de ces taux par kill.
-- Jets fixes : normal **55 %**, rare **75 %**, épique **90 %**, légendaire **100 %** du jet parfait. Piles par objet / rareté / tier.
-- Fusion : dix identiques donnent la rareté suivante, puis dix légendaires T1 donnent un T2, dix T2 un T3. Chaque tier ajoute 25 % du jet parfait de base. La forge à fragments permet également une amélioration d'une copie.
-- Six Dofus équipables, un seul de chaque nom. Deux anneaux identiques nécessitent deux copies ; ils ne comptent qu'une fois pour la panoplie.
-- Budget de puissance par niveau : (niveau / 20)^1,6. PV, dégâts, régénération et soins au kill progressent fortement ; vitesse/recharge suivent une courbe plus douce. Aucun PA, remplacé par la recharge.
+- Chaque ennemi : 3 % de chance d’un équipement permanent, répartis uniformément entre les objets éligibles du palier et du donjon actuels. Aucun ancien palier.
+- Raretés : 80 % normal, 16 % rare, 3,5 % épique, 0,5 % légendaire. Les taux ci-dessous concernent un seul objet précis, par ennemi.
+- Dofus : tirage indépendant de 3 % par boss, dans les dix Dofus, toutes zones. Enutrof double les chances individuelles d’équipement et de Dofus. Un gardien surprise multiplie ces deux catégories par 3. Un gardien maudit multiplie seulement la chance de Dofus par 3 ; ces multiplicateurs se cumulent.
+- Ogrine : 5 % par boss et par joueur, indépendamment des équipements et Dofus. Aucun multiplicateur de loot sur cette monnaie. Une Ogrine par succès, un apparat pour cinq Ogrines.
+- La fin de run garantit un équipement du pool actuel, hors taux par kill.
+- Jets fixes : normal 55 %, rare 75 %, épique 90 %, légendaire 100 %. Dix identiques fusionnent ; les tiers légendaires ajoutent 25 % du jet parfait de base par tier.
+- Les objets conservent leur niveau réel. Le palier et le donjon d’une panoplie sont indiqués dans [la répartition](PANOPLIES_REPARTITION.md). Les bonus 2/3/4… pièces se cumulent.
+- Les PA n’existent pas : ils sont adaptés en recharge des compétences. Les autres équivalences suivent les stats du jeu.
 
-Tous les jets et taux sont dans [objets-drops.csv](objets-drops.csv).
-
-## Exemple : zone 9
-
-60 % de la source d'équipement est de palier 160 (zone 9), 40 % de palier 120 (zones 8 et 7), avec raretés ×3. Les paliers 20, 40 et 80 ne tombent plus. Les dix Dofus restent accessibles sur le boss.
+Tous les jets et taux sont dans [objets-drops.csv](objets-drops.csv). Visuels absents : [liste exacte](ASSETS_PANOPLIES_MANQUANTS.md).
 `;
 for(let tier=0;tier<EQUIPMENT_TIERS.length;tier++){
   const t=EQUIPMENT_TIERS[tier],bases=Object.entries(EQUIPMENT_BASES).filter(([,b])=>b.tier===tier);
-  doc+=`\n## Palier ${t.level} — zone ${t.stage}\n\n| Objet | Type | Normal | Rare | Épique | Légendaire | Jet parfait T1 |\n|---|---|---:|---:|---:|---:|---|\n`;
+  doc+=`\n## Palier ${t.level} — zone ${t.stage}\n\n| Objet | Type | Zone | Normal | Rare | Épique | Légendaire | Jet parfait T1 |\n|---|---|---:|---:|---:|---:|---:|---|\n`;
   for(const [id,base] of bases){
-    const dofus=base.kind==='dofus';
-    doc+=`| ${base.name} | ${base.kind}${dofus?' (boss)':''} | ${EQUIPMENT_RARITIES.map(r=>pct(equipmentDropChance(t.stage,id,r))).join(' | ')} | ${effects(base.stats)} |\n`;
-    for(const rarity of EQUIPMENT_RARITIES)rows.push([base.name,base.kind,t.level,t.stage,dofus?'Boss uniquement':'Tous les ennemis',EQUIPMENT_RARITY_NAMES[rarity],1,pct(equipmentDropChance(t.stage,id,rarity)),effects(equipmentStats(createEquipment(id,rarity)))].map(csv).join(';'));
+    const dofus=base.kind==='dofus',zone=base.zone??t.stage;
+    doc+=`| ${base.name} | ${base.kind}${dofus?' (boss)':''} | ${zone} | ${EQUIPMENT_RARITIES.map(r=>pct(equipmentDropChance(zone,id,r))).join(' | ')} | ${effects(base.stats)} |\n`;
+    for(const rarity of EQUIPMENT_RARITIES)rows.push([base.name,base.kind,t.level,zone,dofus?'Boss uniquement':'Tous les ennemis',EQUIPMENT_RARITY_NAMES[rarity],1,pct(equipmentDropChance(t.stage,id,rarity)),effects(equipmentStats(createEquipment(id,rarity)))].map(csv).join(';'));
   }
 }
 fs.writeFileSync('docs/OBJETS_DROPS.md',doc);fs.writeFileSync('docs/objets-drops.csv','\uFEFF'+rows.join('\n'));

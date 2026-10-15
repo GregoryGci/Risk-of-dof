@@ -1,0 +1,770 @@
+{
+  "campaigns": [
+    {
+      "file": "final-rework-lv1",
+      "groups": [
+        {
+          "route": "normal",
+          "start": 1,
+          "mode": 0,
+          "gear": "Aucun",
+          "runs": 24,
+          "mean": 1.96,
+          "min": 1,
+          "max": 3,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 220
+        },
+        {
+          "route": "normal",
+          "start": 1,
+          "mode": 0,
+          "gear": "Palier 20 rare T1",
+          "runs": 24,
+          "mean": 2.33,
+          "min": 2,
+          "max": 3,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 221
+        },
+        {
+          "route": "normal",
+          "start": 1,
+          "mode": 0,
+          "gear": "Palier 40 rare T1",
+          "runs": 24,
+          "mean": 2.88,
+          "min": 2,
+          "max": 5,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 221
+        }
+      ],
+      "seeds": 2,
+      "spellLevel": 1,
+      "cap": 9,
+      "seconds": 800,
+      "seekElites": false
+    },
+    {
+      "file": "final-rework-lv3",
+      "groups": [
+        {
+          "route": "normal",
+          "start": 1,
+          "mode": 0,
+          "gear": "Aucun",
+          "runs": 24,
+          "mean": 2.21,
+          "min": 2,
+          "max": 4,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 223
+        },
+        {
+          "route": "normal",
+          "start": 1,
+          "mode": 0,
+          "gear": "Palier 20 rare T1",
+          "runs": 24,
+          "mean": 3,
+          "min": 2,
+          "max": 6,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 220
+        },
+        {
+          "route": "normal",
+          "start": 1,
+          "mode": 0,
+          "gear": "Palier 40 rare T1",
+          "runs": 24,
+          "mean": 3.54,
+          "min": 2,
+          "max": 6,
+          "victories": 0,
+          "censored": 1,
+          "maxEnemies": 220
+        }
+      ],
+      "seeds": 2,
+      "spellLevel": 3,
+      "cap": 9,
+      "seconds": 800,
+      "seekElites": false
+    },
+    {
+      "file": "zone6-equipment-control",
+      "groups": [
+        {
+          "route": "normal",
+          "start": 6,
+          "mode": 0,
+          "gear": "Aucun",
+          "runs": 12,
+          "mean": 6,
+          "min": 6,
+          "max": 6,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 93
+        },
+        {
+          "route": "normal",
+          "start": 6,
+          "mode": 0,
+          "gear": "Palier 20 rare T1",
+          "runs": 12,
+          "mean": 6,
+          "min": 6,
+          "max": 6,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 220
+        },
+        {
+          "route": "normal",
+          "start": 6,
+          "mode": 0,
+          "gear": "Palier 40 rare T1",
+          "runs": 12,
+          "mean": 6,
+          "min": 6,
+          "max": 6,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 221
+        }
+      ],
+      "seeds": 1,
+      "spellLevel": 3,
+      "cap": 9,
+      "seconds": 500,
+      "seekElites": false
+    },
+    {
+      "file": "zone13-equipment-control",
+      "groups": [
+        {
+          "route": "normal",
+          "start": 13,
+          "mode": 0,
+          "gear": "Aucun",
+          "runs": 12,
+          "mean": 13,
+          "min": 13,
+          "max": 13,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 123
+        },
+        {
+          "route": "normal",
+          "start": 13,
+          "mode": 0,
+          "gear": "Palier 60 rare T1",
+          "runs": 12,
+          "mean": 13,
+          "min": 13,
+          "max": 13,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 220
+        },
+        {
+          "route": "normal",
+          "start": 13,
+          "mode": 0,
+          "gear": "Palier 80 rare T1",
+          "runs": 12,
+          "mean": 13,
+          "min": 13,
+          "max": 13,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 223
+        }
+      ],
+      "seeds": 1,
+      "spellLevel": 3,
+      "cap": 16,
+      "seconds": 500,
+      "seekElites": false
+    },
+    {
+      "file": "zone25-equipment-control",
+      "groups": [
+        {
+          "route": "normal",
+          "start": 25,
+          "mode": 0,
+          "gear": "Aucun",
+          "runs": 12,
+          "mean": 25,
+          "min": 25,
+          "max": 25,
+          "victories": 0,
+          "censored": 0,
+          "maxEnemies": 67
+        },
+        {
+          "route": "normal",
+          "start": 25,
+          "mode": 0,
+          "gear": "Palier 140 rare T1",
+          "runs": 12,
+          "mean": 25.17,
+          "min": 25,
+          "max": 26,
+          "victories": 0,
+          "censored": 1,
+          "maxEnemies": 220
+        },
+        {
+          "route": "normal",
+          "start": 25,
+          "mode": 0,
+          "gear": "Palier 160 rare T1",
+          "runs": 12,
+          "mean": 26.67,
+          "min": 25,
+          "max": 29,
+          "victories": 0,
+          "censored": 6,
+          "maxEnemies": 221
+        }
+      ],
+      "seeds": 1,
+      "spellLevel": 3,
+      "cap": 28,
+      "seconds": 500,
+      "seekElites": false
+    }
+  ],
+  "damage": [
+    {
+      "classId": "cra",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 76,
+      "spellDps": 46,
+      "summonDps": 0,
+      "attackShare": 62
+    },
+    {
+      "classId": "cra",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 97,
+      "spellDps": 174,
+      "summonDps": 0,
+      "attackShare": 36
+    },
+    {
+      "classId": "cra",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 1587,
+      "spellDps": 2816,
+      "summonDps": 0,
+      "attackShare": 36
+    },
+    {
+      "classId": "cra",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 2422,
+      "spellDps": 10688,
+      "summonDps": 0,
+      "attackShare": 18
+    },
+    {
+      "classId": "iop",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 136,
+      "spellDps": 100,
+      "summonDps": 0,
+      "attackShare": 58
+    },
+    {
+      "classId": "iop",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 810,
+      "spellDps": 395,
+      "summonDps": 0,
+      "attackShare": 67
+    },
+    {
+      "classId": "iop",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 4729,
+      "spellDps": 6760,
+      "summonDps": 0,
+      "attackShare": 41
+    },
+    {
+      "classId": "iop",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 28460,
+      "spellDps": 24757,
+      "summonDps": 0,
+      "attackShare": 53
+    },
+    {
+      "classId": "eniripsa",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 97,
+      "spellDps": 8,
+      "summonDps": 0,
+      "attackShare": 92
+    },
+    {
+      "classId": "eniripsa",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 96,
+      "spellDps": 8,
+      "summonDps": 0,
+      "attackShare": 92
+    },
+    {
+      "classId": "eniripsa",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 2847,
+      "spellDps": 503,
+      "summonDps": 0,
+      "attackShare": 85
+    },
+    {
+      "classId": "eniripsa",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 2817,
+      "spellDps": 481,
+      "summonDps": 0,
+      "attackShare": 85
+    },
+    {
+      "classId": "sacrieur",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 54,
+      "spellDps": 11,
+      "summonDps": 0,
+      "attackShare": 83
+    },
+    {
+      "classId": "sacrieur",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 260,
+      "spellDps": 25,
+      "summonDps": 0,
+      "attackShare": 91
+    },
+    {
+      "classId": "sacrieur",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 842,
+      "spellDps": 715,
+      "summonDps": 0,
+      "attackShare": 54
+    },
+    {
+      "classId": "sacrieur",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 4117,
+      "spellDps": 1313,
+      "summonDps": 0,
+      "attackShare": 76
+    },
+    {
+      "classId": "sram",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 141,
+      "spellDps": 24,
+      "summonDps": 0,
+      "attackShare": 85
+    },
+    {
+      "classId": "sram",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 141,
+      "spellDps": 293,
+      "summonDps": 0,
+      "attackShare": 32
+    },
+    {
+      "classId": "sram",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 4177,
+      "spellDps": 1498,
+      "summonDps": 0,
+      "attackShare": 74
+    },
+    {
+      "classId": "sram",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 4181,
+      "spellDps": 18527,
+      "summonDps": 0,
+      "attackShare": 18
+    },
+    {
+      "classId": "sadida",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 87,
+      "spellDps": 74,
+      "summonDps": 230,
+      "attackShare": 22
+    },
+    {
+      "classId": "sadida",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 87,
+      "spellDps": 437,
+      "summonDps": 233,
+      "attackShare": 11
+    },
+    {
+      "classId": "sadida",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 2932,
+      "spellDps": 4134,
+      "summonDps": 10961,
+      "attackShare": 16
+    },
+    {
+      "classId": "sadida",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 2863,
+      "spellDps": 26227,
+      "summonDps": 11268,
+      "attackShare": 7
+    },
+    {
+      "classId": "ecaflip",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 122,
+      "spellDps": 83,
+      "summonDps": 0,
+      "attackShare": 60
+    },
+    {
+      "classId": "ecaflip",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 139,
+      "spellDps": 463,
+      "summonDps": 0,
+      "attackShare": 23
+    },
+    {
+      "classId": "ecaflip",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 3902,
+      "spellDps": 5238,
+      "summonDps": 0,
+      "attackShare": 43
+    },
+    {
+      "classId": "ecaflip",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 4350,
+      "spellDps": 25361,
+      "summonDps": 0,
+      "attackShare": 15
+    },
+    {
+      "classId": "feca",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 82,
+      "spellDps": 90,
+      "summonDps": 0,
+      "attackShare": 48
+    },
+    {
+      "classId": "feca",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 82,
+      "spellDps": 523,
+      "summonDps": 0,
+      "attackShare": 14
+    },
+    {
+      "classId": "feca",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 2857,
+      "spellDps": 4247,
+      "summonDps": 0,
+      "attackShare": 40
+    },
+    {
+      "classId": "feca",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 2858,
+      "spellDps": 24416,
+      "summonDps": 0,
+      "attackShare": 10
+    },
+    {
+      "classId": "osamodas",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 73,
+      "spellDps": 330,
+      "summonDps": 0,
+      "attackShare": 18
+    },
+    {
+      "classId": "osamodas",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 72,
+      "spellDps": 1011,
+      "summonDps": 0,
+      "attackShare": 7
+    },
+    {
+      "classId": "osamodas",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 2513,
+      "spellDps": 16979,
+      "summonDps": 0,
+      "attackShare": 13
+    },
+    {
+      "classId": "osamodas",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 2531,
+      "spellDps": 40066,
+      "summonDps": 0,
+      "attackShare": 6
+    },
+    {
+      "classId": "enutrof",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 76,
+      "spellDps": 50,
+      "summonDps": 17,
+      "attackShare": 53
+    },
+    {
+      "classId": "enutrof",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 76,
+      "spellDps": 304,
+      "summonDps": 18,
+      "attackShare": 19
+    },
+    {
+      "classId": "enutrof",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 2341,
+      "spellDps": 3323,
+      "summonDps": 1117,
+      "attackShare": 35
+    },
+    {
+      "classId": "enutrof",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 2402,
+      "spellDps": 19397,
+      "summonDps": 1071,
+      "attackShare": 11
+    },
+    {
+      "classId": "xelor",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 82,
+      "spellDps": 18,
+      "summonDps": 0,
+      "attackShare": 82
+    },
+    {
+      "classId": "xelor",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 83,
+      "spellDps": 107,
+      "summonDps": 0,
+      "attackShare": 44
+    },
+    {
+      "classId": "xelor",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 2854,
+      "spellDps": 1176,
+      "summonDps": 0,
+      "attackShare": 71
+    },
+    {
+      "classId": "xelor",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 2875,
+      "spellDps": 6793,
+      "summonDps": 0,
+      "attackShare": 30
+    },
+    {
+      "classId": "pandawa",
+      "level": 20,
+      "targets": 1,
+      "attackDps": 89,
+      "spellDps": 17,
+      "summonDps": 0,
+      "attackShare": 84
+    },
+    {
+      "classId": "pandawa",
+      "level": 20,
+      "targets": 6,
+      "attackDps": 120,
+      "spellDps": 103,
+      "summonDps": 0,
+      "attackShare": 54
+    },
+    {
+      "classId": "pandawa",
+      "level": 200,
+      "targets": 1,
+      "attackDps": 2398,
+      "spellDps": 627,
+      "summonDps": 0,
+      "attackShare": 79
+    },
+    {
+      "classId": "pandawa",
+      "level": 200,
+      "targets": 6,
+      "attackDps": 4440,
+      "spellDps": 3896,
+      "summonDps": 0,
+      "attackShare": 53
+    }
+  ],
+  "performance": {
+    "maps": 132,
+    "minReachable": 0.9998799375675351,
+    "loads": [
+      {
+        "spellLevel": 1,
+        "allBlessings": false,
+        "fullTickP95": 0.6484000000000378,
+        "players": 4,
+        "ticks": 1800,
+        "p50": 0.33950000000004366,
+        "p95": 0.6191000000000031,
+        "p99": 0.9784000000000219,
+        "max": 3.6340000000000146,
+        "peak": 221,
+        "casts": 569
+      },
+      {
+        "spellLevel": 3,
+        "allBlessings": false,
+        "fullTickP95": 0.6248000000000502,
+        "players": 4,
+        "ticks": 1800,
+        "p50": 0.3467000000000553,
+        "p95": 0.593900000000076,
+        "p99": 0.8762000000001535,
+        "max": 1.4662000000000717,
+        "peak": 223,
+        "casts": 1509
+      },
+      {
+        "spellLevel": 3,
+        "allBlessings": true,
+        "fullTickP95": 0.6572999999998501,
+        "players": 4,
+        "ticks": 1800,
+        "p50": 0.344300000000203,
+        "p95": 0.6192000000000917,
+        "p99": 0.8410000000001219,
+        "max": 1.2209000000000287,
+        "peak": 225,
+        "casts": 1513
+      }
+    ]
+  },
+  "nightmareCampaign": {
+    "spellLevel": 3,
+    "rarity": "legendaire",
+    "forge": 3,
+    "seconds": 3600,
+    "samples": [
+      {
+        "outcome": "defeat",
+        "blessings": 8,
+        "route": "normal",
+        "classId": "cra",
+        "mode": 3,
+        "seed": 1,
+        "start": 1,
+        "tier": 9,
+        "gear": "Palier 200 legendaire T3",
+        "zone": 6,
+        "waves": 714,
+        "duration": 2147,
+        "kills": 24284,
+        "censored": false,
+        "maxEnemies": 220
+      },
+      {
+        "outcome": "victory",
+        "blessings": 26,
+        "route": "normal",
+        "classId": "iop",
+        "mode": 3,
+        "seed": 1,
+        "start": 1,
+        "tier": 9,
+        "gear": "Palier 200 legendaire T3",
+        "zone": 33,
+        "waves": 957,
+        "duration": 3078,
+        "kills": 31123,
+        "censored": false,
+        "maxEnemies": 220
+      }
+    ]
+  }
+}

@@ -33,7 +33,7 @@ test('sauvegardes malformées et slots impossibles ne donnent pas de bonus', () 
 });
 test('quatre raretés bornées et légendaire parfait pour toutes les lignes du catalogue', () => {
   for (const [base,definition] of Object.entries(EQUIPMENT_BASES)) {
-    assert.ok(fs.existsSync(`client/public/assets/dofus/items/${base}.png`),base);
+    assert.equal(fs.existsSync(`client/public/assets/dofus/items/${base}.png`),!definition.iconMissing,base);
     for (const rarity of EQUIPMENT_RARITIES) {
       const low = createEquipment(base,rarity);
       const high = createEquipment(base,rarity);
@@ -44,7 +44,7 @@ test('quatre raretés bornées et légendaire parfait pour toutes les lignes du 
   }
 });
 test('les paliers suivent les zones franchies et garantissent une trouvaille du palier atteint', () => {
-  assert.deepEqual([1,2,3,4,5,6,8,9,13,18,20,25,31,33].map(equipmentTier),[0,1,1,2,2,3,3,4,5,6,6,7,8,8]);
+  assert.deepEqual([1,2,3,4,5,6,8,9,13,18,20,25,31,33].map(equipmentTier),[0,0,0,0,0,1,1,2,3,4,5,7,9,9]);
   for (let stage=1;stage<=33;stage++) for (let mode=0;mode<4;mode++) {
     const r=equipmentReward('run',123,stage,mode,50);
     assert.ok(r.gear.length>=1);
@@ -73,7 +73,7 @@ test('serveur : équipement figé pendant la run, récompense à la défaite, ch
   assert.equal(state.phase,PHASE_LOST);
   const rewards=JSON.parse(p.state.rewards);
   assert.equal(rewards.runId,runId);
-  assert.equal(rewards.tier,2);
+  assert.equal(rewards.tier,equipmentTier(4));
   assert.ok(rewards.gear.length>=1);
   sim.setEquipment('player',{});
   sim.restart();
@@ -122,7 +122,7 @@ test('drops : Dofus uniquement sur boss à 3 %, distribution des raretés correc
   }
   assert.ok(Math.abs(gearCount/100000-.03)<.002);
   assert.ok(Math.abs(dofusCount/100000-.03)<.002);
-  for(const rarity of EQUIPMENT_RARITIES) assert.ok(Math.abs(rarities[rarity]/(gearCount+dofusCount)-(.5*DROP_RARITY_CHANCES[rarity]+.3*dropRarityWeights(1)[rarity]+.2*dropRarityWeights(3)[rarity]))<.015);
+  for(const rarity of EQUIPMENT_RARITIES) assert.ok(Math.abs(rarities[rarity]/(gearCount+dofusCount)-DROP_RARITY_CHANCES[rarity])<.015);
 });
 test('attaque automatique : vise un ennemi plutôt qu’une invocation et respecte la recharge',()=>{
   const state=new GameState();const events:{type:string;data:Record<string,unknown>}[]=[];

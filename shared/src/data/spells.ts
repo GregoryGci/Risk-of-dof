@@ -965,6 +965,24 @@ export const SPELLS: Record<string, SpellDef> = define({
   },
 });
 
+/** Compétences d'invocation : noms et formes synchronisés, animations Retro réutilisées. */
+const summonSkills:Record<string,{source:string;patch:Partial<SpellDef>}>= {
+  brasier_dragonnet:{source:'souffle_dragonnet',patch:{name:'Brasier du Dragonnet',damage:[24,30],projectile:undefined,zone:{radius:2},effects:[{type:'burn',dps:5,duration:3}]}},
+  heurt_gardien:{source:'invocation_de_bouftou',patch:{name:'Heurt du Dragonnet Gardien',damage:[28,36],zone:{radius:2.3},range:5,effects:[{type:'slow',factor:.6,duration:2}]}},
+  miasme_folle:{source:'vent_empoisonne',patch:{name:'Miasme de la Folle',damage:[14,18],zone:{radius:1.8},effects:[{type:'burn',dps:4,duration:3}]}},
+  etreinte_bloqueuse:{source:'ronce_apaisante',patch:{name:'Étreinte de la Bloqueuse',damage:[12,16],projectile:undefined,zone:{radius:2.2},range:0,effects:[{type:'stun',duration:.65},{type:'slow',factor:.5,duration:2}]}},
+  heurt_coffre:{source:'pelle_du_jugement',patch:{name:'Heurt du Coffre',damage:[18,24],projectile:undefined,zone:{radius:2},range:0,effects:[{type:'slow',factor:.65,duration:2}]}},
+};
+for(const [id,{source,patch}]of Object.entries(summonSkills))SPELLS[id]={...SPELLS[source],...patch,id};
+
+export const SUMMON_DESCRIPTIONS:Record<string,string>={
+  osa_tofu:'Souffle à distance et brasier de zone toutes les 5,5 s. Hérite de votre puissance, recharge, vitesse d’attaque, déplacement, critiques et PV bonus.',
+  osa_bouftou:'Morsure et heurt de zone ralentissant toutes les 5 s. Provoque les ennemis proches. Hérite de vos bonus.',
+  poupee_folle:'Attaque au contact et miasme de zone empoisonné toutes les 5 s. Hérite de vos bonus.',
+  poupee_bloqueuse:'Attaque au contact et étreinte de zone toutes les 6 s : bref étourdissement puis ralentissement. Provoque à courte portée. Hérite de vos bonus.',
+  poupee_gonflable:'Soin de proximité et bouclier de 4 % de vos PV max lorsqu’un allié est sous 75 % de vie, toutes les 8 s. Hérite de votre puissance et de votre cadence.',
+  coffre_anime:'Attaque au contact et heurt ralentissant toutes les 6 s. Reçoit les dégâts à votre place ; ses PV max sont égaux aux vôtres. Hérite de vos bonus offensifs.',
+};
 export function getSpell(id: string): SpellDef {
   const s = Object.hasOwn(SPELLS,id)?SPELLS[id]:undefined;
   if (!s) throw new Error(`Sort inconnu : ${id}`);

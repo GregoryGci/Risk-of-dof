@@ -1,7 +1,7 @@
 // Génération et collisions de la carte.
 // La carte est générée de façon déterministe à partir d'une graine : le serveur
 // n'envoie que la graine, client et serveur reconstruisent la même carte.
-import { MAP_SIZE } from './constants.ts';
+import { MAP_BASE_SIZE, MAP_SIZE } from './constants.ts';
 import { clamp, type Vec2 } from './iso.ts';
 import { makeRng } from './rng.ts';
 import { zoneForStage } from './data/zones.ts';
@@ -54,9 +54,11 @@ export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
   const idx = (x: number, y: number) => y * size + x;
   const inside = (x: number, y: number) => x >= 0 && y >= 0 && x < size && y < size;
   const center = size / 2;
+  // Même densité de décors quelle que soit la surface, sans agrandir leurs collisions.
+  const areaScale = (size / MAP_BASE_SIZE) ** 2;
 
   // Parterres de fleurs : quelques taches irrégulières.
-  for (let i = 0; i < zone.patches; i++) {
+  for (let i = 0; i < Math.round(zone.patches * areaScale); i++) {
     const cx = Math.floor(rng() * size);
     const cy = Math.floor(rng() * size);
     const r = 1 + rng() * 2.5;
@@ -69,7 +71,7 @@ export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
 
   // Champs de blé rectangulaires, avec parfois des bottes de foin.
   const foin = obstacleIndex('foin');
-  for (let i = 0; i < zone.fields; i++) {
+  for (let i = 0; i < Math.round(zone.fields * areaScale); i++) {
     const w = 5 + Math.floor(rng() * 6);
     const h = 4 + Math.floor(rng() * 5);
     const x0 = 3 + Math.floor(rng() * (size - w - 6));
@@ -106,7 +108,7 @@ export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
   const libre = (x: number, y: number) =>
     inside(x, y) && ground[idx(x, y)] !== GROUND_CHEMIN && ground[idx(x, y)] !== GROUND_BLE && obstacles[idx(x, y)] === 0;
   const arbre = obstacleIndex(zone.trees);
-  for (let i = 0; i < zone.treeClusters; i++) {
+  for (let i = 0; i < Math.round(zone.treeClusters * areaScale); i++) {
     const cx = Math.floor(rng() * size);
     const cy = Math.floor(rng() * size);
     const n = 2 + Math.floor(rng() * 5);
@@ -117,7 +119,7 @@ export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
     }
   }
   const epars = zone.scatter.map(obstacleIndex);
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < Math.round(70 * areaScale); i++) {
     const x = Math.floor(rng() * size);
     const y = Math.floor(rng() * size);
     if (libre(x, y)) obstacles[idx(x, y)] = epars[Math.floor(rng() * epars.length)];
@@ -130,7 +132,7 @@ export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
   }
   if(zone.layout==='temple')for(let y=5;y<size-5;y++)for(let x=5;x<size-5;x++){const dx=Math.abs(x-center),dy=Math.abs(y-center);if(Math.floor(Math.max(dx,dy))%7<2)ground[idx(x,y)]=2;if(dx>5&&dy>5&&x%7===0&&y%7===0)obstacles[idx(x,y)]=obstacleIndex('totem');}
   if(zone.layout==='cave')for(let branch=0;branch<8;branch++){const a=branch*Math.PI/4;for(let r=9;r<size/2-4;r++){const x=Math.round(center+Math.cos(a)*r),y=Math.round(center+Math.sin(a)*r);for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++)if(inside(x+ox,y+oy)){ground[idx(x+ox,y+oy)]=2;obstacles[idx(x+ox,y+oy)]=0;}}}
-  if(zone.layout==='marsh')for(let i=0;i<10;i++){const cx=5+rng()*(size-10),cy=5+rng()*(size-10);for(let y=Math.floor(cy-3);y<=cy+3;y++)for(let x=Math.floor(cx-3);x<=cx+3;x++)if(inside(x,y)&&Math.hypot(x-cx,y-cy)<3)ground[idx(x,y)]=3;}
+  if(zone.layout==='marsh')for(let i=0;i<Math.round(10*areaScale);i++){const cx=5+rng()*(size-10),cy=5+rng()*(size-10);for(let y=Math.floor(cy-3);y<=cy+3;y++)for(let x=Math.floor(cx-3);x<=cx+3;x++)if(inside(x,y)&&Math.hypot(x-cx,y-cy)<3)ground[idx(x,y)]=3;}
   if(zone.layout==='island')for(let y=2;y<size-2;y++)for(let x=2;x<size-2;x++)if(Math.hypot(x-center,y-center)>size*.38)ground[idx(x,y)]=1;
   // Lisière d'arbres tout autour de la carte.
   for (let i = 0; i < size; i++) {
@@ -153,7 +155,9 @@ export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
     if(ground[idx(x,y)]!==GROUND_CHEMIN) continue;
     for(let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++) obstacles[idx(x+ox,y+oy)]=0;
   }
-  const bossArena={x:size-10,y:size-11,radius:7.5};
+  // Le terrain supplémentaire sert aux combats et à l'exploration. Le trajet
+  // obligatoire vers le gardien garde sa longueur, sans ajouter du temps mort.
+  const bossArena={x:Math.min(size-10,center+18),y:Math.min(size-11,center+17),radius:7.5};
   // Corridor et salle de boss garantis praticables, aussi pour les gros gardiens.
   for(let t=0;t<=1;t+=.0125){const cx=center+(bossArena.x-center)*t,cy=center+(bossArena.y-center)*t;for(let y=Math.floor(cy-2);y<=cy+2;y++)for(let x=Math.floor(cx-2);x<=cx+2;x++)if(inside(x,y)){obstacles[idx(x,y)]=0;ground[idx(x,y)]=2;}}
   // Deux clairières reliées offrent de quoi tourner, poser ses glyphes et changer d'angle.
@@ -235,9 +239,16 @@ export function stepMovement(map: GameMap, pos: Vec2, dx: number, dy: number, sp
     // Un pas de 0,2 case maximum empêche le dash de traverser les petits décors.
     const steps=Math.max(1,Math.ceil(Math.abs(distance)/.2));
     for(let i=0;i<steps;i++) {
+      const previousX=pos.x,previousY=pos.y;
       pos.x += (dx / len) * distance/steps;
       pos.y += (dy / len) * distance/steps;
       resolveCollisions(map,pos,radius);
+      // Deux obstacles en diagonale peuvent former un passage trop étroit.
+      // Si leurs corrections se contredisent, rester au dernier point libre
+      // évite de s'enfoncer entre eux et de rebondir au tick suivant.
+      if(isBlocked(map,pos.x,pos.y,radius)&&!isBlocked(map,previousX,previousY,radius)) {
+        pos.x=previousX;pos.y=previousY;
+      }
     }
     return;
   }

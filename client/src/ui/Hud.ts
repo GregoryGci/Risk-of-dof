@@ -1,3 +1,4 @@
+import {innateLifesteal,clampCombatStats,isRangedAttack} from '@rod/shared';
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, kamas, équipe, bandeaux.
 import { affinityProgress, getRoute, CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, FINAL_STAGE, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, zoneForStage, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
@@ -10,6 +11,7 @@ import { EQUIPMENT_BASES, EQUIPMENT_RARITY_NAMES, type GearDrop } from '@rod/sha
 import {leveledSpell,spellEvolutionText,assaultPlan,blessingSpell,parseBlessings} from '@rod/shared';
 import { saveSettings, settings } from '../settings.ts';
 import { DPS_WINDOW, dpsOf } from './dps.ts';
+import { gameSettings } from './GameSettings.ts';
 
 
 const SLOT_KEYS = ['Clic G', 'Clic D', 'Espace', 'R'];
@@ -59,6 +61,12 @@ export function classButtonsHtml(current: string): string {
 }
 
 export class Hud {
+  private ogrineBanner=document.createElement('div');
+  private ogrineTimer?:ReturnType<typeof setTimeout>;
+  announceOgrine(message='UNE OGRINE EST TOMBÉE !'):void {
+    if(!this.ogrineBanner.isConnected){this.ogrineBanner.className='ogrine-announcement';this.ogrineBanner.setAttribute('role','status');$('hud').append(this.ogrineBanner);}
+    this.ogrineBanner.textContent=message;this.ogrineBanner.classList.remove('hidden');clearTimeout(this.ogrineTimer);this.ogrineTimer=setTimeout(()=>this.ogrineBanner.classList.add('hidden'),5500);
+  }
   private spellLevels:Record<string,number>={};
   private blessingRanks:Record<string,number>={};
   private spellEls: HTMLElement[] = [];
@@ -69,6 +77,9 @@ export class Hud {
   private meter: 'dmg' | 'heal' | 'taken' = 'dmg';
   /** Dégâts cumulés de chaque joueur, échantillonnés chaque seconde de jeu (DPS récent). */
   private dpsSamples = new Map<string, { t: number; v: number }[]>();
+  /** Horloge du DPS hors partie (salon, épouvantail) : le temps de run n'y avance pas. */
+  private dpsClock = 0;
+  private dpsClockAt = 0;
   private meterShownAt = 0;
   private roomCode = '';
   private solo=false;
@@ -87,11 +98,11 @@ export class Hud {
     if(EQUIPMENT_BASES[drop.gear.base].kind==='dofus'){
       this.dofusQueue.push(drop);if(!this.dofusTimer)this.showDofus();return;
     }
-    this.toast(`<span class="loot-toast-icon ${drop.gear.rarity}"><img src="assets/dofus/items/${drop.gear.base}.png" alt=""></span><span><b>${escapeHtml(EQUIPMENT_BASES[drop.gear.base].name)}</b><small>${EQUIPMENT_RARITY_NAMES[drop.gear.rarity]}</small></span>`);
+    this.toast(`<span class="loot-toast-icon ${drop.gear.rarity}">${EQUIPMENT_BASES[drop.gear.base].iconMissing?'<span class="gear-no-icon">Visuel indisponible</span>':`<img src="assets/dofus/items/${drop.gear.base}.png" alt="">`}</span><span><b>${escapeHtml(EQUIPMENT_BASES[drop.gear.base].name)}</b><small>${EQUIPMENT_RARITY_NAMES[drop.gear.rarity]}</small></span>`);
   }
   private showDofus():void {
     const drop=this.dofusQueue.shift();if(!drop){this.dofusTimer=undefined;this.dofusBanner.classList.add('hidden');return;}
-    this.dofusBanner.innerHTML=`<span class="dofus-announcement-icon"><img src="assets/dofus/items/${drop.gear.base}.png" alt=""></span><div><small>DOFUS DÉCOUVERT</small><b>${escapeHtml(EQUIPMENT_BASES[drop.gear.base].name)}</b><span>${EQUIPMENT_RARITY_NAMES[drop.gear.rarity]} · Conservé dans votre inventaire</span></div>`;
+    this.dofusBanner.innerHTML=`<span class="dofus-announcement-icon">${EQUIPMENT_BASES[drop.gear.base].iconMissing?'<span class="gear-no-icon">Visuel indisponible</span>':`<img src="assets/dofus/items/${drop.gear.base}.png" alt="">`}</span><div><small>DOFUS DÉCOUVERT</small><b>${escapeHtml(EQUIPMENT_BASES[drop.gear.base].name)}</b><span>${EQUIPMENT_RARITY_NAMES[drop.gear.rarity]} · Conservé dans votre inventaire</span></div>`;
     this.dofusBanner.classList.remove('hidden','show');void this.dofusBanner.offsetWidth;this.dofusBanner.classList.add('show');
     this.dofusTimer=setTimeout(()=>this.showDofus(),6500);
   }
@@ -137,7 +148,22 @@ export class Hud {
     );
     $('btn-restart').addEventListener('click', () => this.callbacks.onRestart(), { signal });
     $('btn-quit').addEventListener('click', () => this.callbacks.onQuit(), { signal });
-    $('details-menu').addEventListener('click', () => this.callbacks.onQuit(), { signal });
+    // Quitter la partie depuis Tab ou Échap : un second clic confirme, la run en cours est perdue.
+    for (const id of ['details-menu', 'game-settings-quit']) {
+      const button = $(id);
+      button.textContent = 'Retour au menu';
+      button.classList.remove('confirm');
+      button.addEventListener('click', () => {
+        if (!button.classList.contains('confirm')) {
+          button.classList.add('confirm');
+          button.textContent = 'Confirmer : quitter la partie';
+          setTimeout(() => { button.classList.remove('confirm'); button.textContent = 'Retour au menu'; }, 4000);
+          return;
+        }
+        gameSettings().toggle(false);
+        this.callbacks.onQuit();
+      }, { signal });
+    }
     $('gameover-gear').addEventListener('click', e => {
       const uid = (e.target as HTMLElement).closest<HTMLElement>('[data-gear]')?.dataset.gear;
       if (uid) this.callbacks.onEquipment(uid);
@@ -159,6 +185,7 @@ export class Hud {
   }
 
   hide(): void {
+    clearTimeout(this.ogrineTimer);this.ogrineBanner.remove();
     clearTimeout(this.dofusTimer);this.dofusQueue=[];this.dofusBanner.remove();document.getElementById('ranking-status')?.remove();document.getElementById('hud-performance')?.remove();
     this.resizeObserver.disconnect();
     $('hud').classList.add('hidden');
@@ -340,6 +367,7 @@ export class Hud {
       ranking.classList.toggle('hidden',!['disabled','failed'].includes(me?.rankStatus??''));
       ranking.textContent=me?.rankStatus==='failed'?'Score non enregistré · historique conservé':'Partie non classée · classement indisponible sur ce serveur';
     }
+    if(me&&this.cache.ogrineGrants!==me.ogrineGrants){this.cache.ogrineGrants=me.ogrineGrants;try{const gain=account.claimOgrines(JSON.parse(me.ogrineGrants));if(gain)this.announceOgrine(`+${gain} Ogrine${gain>1?'s':''} conservée${gain>1?'s':''} · ${account.ogrines} au total`);}catch{/* Patch en cours. */}}
     if(me && this.cache.forgeGrants!==me.forgeGrants) {
       this.cache.forgeGrants=me.forgeGrants;try{account.claimFragments(JSON.parse(me.forgeGrants));}catch{/* Patch en cours. */}
     }
@@ -366,11 +394,11 @@ export class Hud {
     }
 
     // Résumé compact des bonus de run, distinct de la tenue permanente.
-    if (me && this.cache.items !== `${me.bonuses}|${me.equipment}|${me.blessings}`) {
-      this.cache.items = `${me.bonuses}|${me.equipment}|${me.blessings}`;
-      this.stats = playerItemStats(parseRunBonuses(me.bonuses), me.equipment);
-      this.blessingRanks=parseBlessings(me.blessings);this.stats.bounce+=this.blessingRanks.ricochet??0;
-      const run=sumRunStats(parseRunBonuses(me.bonuses));
+    if (me && this.cache.items !== `${me.bonuses}|${me.equipment}|${me.blessings}|${state.stage}|${state.zoneWave}`) {
+      this.cache.items = `${me.bonuses}|${me.equipment}|${me.blessings}|${state.stage}|${state.zoneWave}`;
+      this.stats = playerItemStats(parseRunBonuses(me.bonuses), me.equipment,{stage:state.stage,zoneWave:state.zoneWave,mode:state.mode});
+      this.blessingRanks=parseBlessings(me.blessings);this.stats.bounce+=this.blessingRanks.ricochet??0;this.stats.lifesteal+=innateLifesteal(getSpell(me.spells.split(',')[0]||CLASSES[me.classId].spells[0]));clampCombatStats(this.stats,isRangedAttack(getSpell(me.spells.split(',')[0]||CLASSES[me.classId].spells[0])));
+      const run=sumRunStats(parseRunBonuses(me.bonuses),{stage:state.stage,zoneWave:state.zoneWave,mode:state.mode});
       const lines=Object.entries(run).filter(([,v])=>v>0);
       $('run-gains').innerHTML=lines.length ? `<span class="run-gains-label">BONUS DE RUN</span>${lines.slice(0,3).map(([k,v])=>`<span>${escapeHtml(k==='multishot'?`+${Math.ceil(v)} tirs · ${Math.round(v/Math.ceil(v)*100)} %`:statText(k as StatKey,v))}</span>`).join('')}<small>Tab · récapitulatif complet</small>` : '';
       const affinities=affinityProgress(parseRunBonuses(me.bonuses)).filter(p=>p.count>0);
@@ -411,9 +439,9 @@ export class Hud {
       else {
       // Progression de la campagne : « Zone X/Y », en plus du nom de la zone.
       const zone=`Zone ${state.stage}/${FINAL_STAGE}`;
-      if (state.zaapState === ZAAP_IDLE) objective = `${zone} — trouvez et activez le <b>Zaap</b>`;
-      else if (state.zaapState === ZAAP_CHARGING) objective = `${zone} — <b>Zaap ${Math.floor(state.zaapCharge * 100)} %</b> — vainquez le gardien`;
-      else objective = `${zone} — <b>Zaap prêt</b> : retournez-y`;
+      if (state.zaapState === ZAAP_IDLE) objective = `${state.cursed?'ZONE MAUDITE · ':''}${zone} — trouvez et activez le <b>Zaap</b>`;
+      else if (state.zaapState === ZAAP_CHARGING) objective = `${state.cursed?'ZONE MAUDITE · ':''}${zone} — <b>Zaap ${Math.floor(state.zaapCharge * 100)} %</b> — vainquez le gardien`;
+      else objective = `${state.cursed?'ZONE MAUDITE · ':''}${zone} — <b>Zaap prêt</b> : retournez-y`;
       }
       objective += ` <span class="zone-name">· ${zoneForStage(state.stage).name}${state.intermission?'':` · Assaut ${state.zoneWave}${state.zoneWave>0?' · '+assaultPlan(state.zoneWave,state.stage).name:''} · ${state.waves} au total`}</span>`;
       if(me&&!state.intermission&&state.zaapState===ZAAP_IDLE&&state.stageTime>=45) {
@@ -449,17 +477,24 @@ export class Hud {
       $('boss-roster').innerHTML=roster;$('boss').classList.toggle('multiple',guardians.length>1);
     }
 
-    // Addon de dégâts : totaux depuis le début de la run (dégâts infligés, soins, dégâts subis).
-    // Le total plutôt qu'un DPS glissant : on compare les classes sur toute la run, début comme fin de partie.
+    // Addon de dégâts : totaux depuis le début de la run (dégâts infligés, soins, dégâts subis),
+    // avec le DPS du joueur (moyenne de la run ou des 10 dernières secondes, au choix).
     const now = performance.now();
     const rows: { name: string; slot: number; value: number; dps: number }[] = [];
+    // En partie : temps de jeu (pauses et haltes exclues). Hors partie : horloge réelle, hors pause.
+    if (this.dpsClockAt && !state.paused && state.phase !== PHASE_PLAYING) this.dpsClock += Math.min(1, (now - this.dpsClockAt) / 1000);
+    this.dpsClockAt = now;
+    const clock = state.phase === PHASE_PLAYING ? state.time : this.dpsClock;
     state.players.forEach((p: PlayerView, id: string) => {
-      // Échantillon par seconde de jeu ; une nouvelle run (temps qui recule) repart de zéro.
+      // Échantillon par seconde ; une nouvelle run (temps ou dégâts qui reculent) repart de zéro.
       let samples = this.dpsSamples.get(id);
-      if (!samples || (samples.length && state.time < samples.at(-1)!.t)) { samples = []; this.dpsSamples.set(id, samples); }
-      if (!samples.length || state.time - samples.at(-1)!.t >= 1) { samples.push({ t: state.time, v: p.dmgDealt }); while (samples.length > DPS_WINDOW + 3) samples.shift(); }
+      const last = samples?.at(-1);
+      if (!samples || (last && (clock < last.t || p.dmgDealt < last.v))) { samples = []; this.dpsSamples.set(id, samples); }
+      if (!samples.length || clock - samples.at(-1)!.t >= 1) { samples.push({ t: clock, v: p.dmgDealt }); while (samples.length > DPS_WINDOW + 3) samples.shift(); }
       const value = this.meter === 'dmg' ? p.dmgDealt : this.meter === 'heal' ? p.healDone : p.dmgTaken;
-      rows.push({ name: p.name, slot: p.slot, value, dps: dpsOf(samples, settings.dpsMode, state.time, p.dmgDealt) });
+      // DPS total : depuis le début de la run en partie, depuis le premier coup mesuré hors partie.
+      const elapsed = state.phase === PHASE_PLAYING ? clock : clock - samples[0].t;
+      rows.push({ name: p.name, slot: p.slot, value, dps: settings.dpsMode === 'total' ? (elapsed > 0 ? p.dmgDealt / Math.max(1, elapsed) : 0) : dpsOf(samples, 'recent', clock, p.dmgDealt) });
     });
     for (const id of [...this.dpsSamples.keys()]) if (!state.players.get(id)) this.dpsSamples.delete(id);
     // Affichage rafraîchi une fois par seconde (sauf changement d'onglet) : les chiffres restent lisibles.
@@ -528,7 +563,7 @@ export class Hud {
         if (reward) {
           account.creditRun(reward);
           const next=won?GAME_MODES[state.mode+1]:undefined;
-          $('gameover-reward').innerHTML = `+${reward.kamas} kamas · ${reward.gear.reduce((n,e)=>n+e.quantity,0)} équipements conservés<br><small>Palier ${EQUIPMENT_TIERS[reward.tier].level} · ${mode.name} · Bourse ${account.bank} K</small>${won?`<span class="victory-unlock">${next?`Difficulté débloquée : ${escapeHtml(next.name)}`:'Cauchemar terminé · tous les modes sont débloqués'}</span>`:''}`;
+          $('gameover-reward').innerHTML = `+${reward.kamas} kamas · ${reward.summary?.ogrines??0} Ogrines · ${reward.gear.reduce((n,e)=>n+e.quantity,0)} équipements conservés<br><small>Palier ${EQUIPMENT_TIERS[reward.tier].level} · ${mode.name} · Bourse ${account.bank} K</small>${won?`<span class="victory-unlock">${next?`Difficulté débloquée : ${escapeHtml(next.name)}`:'Cauchemar terminé · tous les modes sont débloqués'}</span>`:''}`;
           $('gameover-gear').innerHTML = reward.gear.map(e => equipmentCard(e)).join('');
         } else { $('gameover-reward').textContent = 'Récupération du butin…'; $('gameover-gear').innerHTML = ''; }
         $('gameover-stats').textContent = `${won?'Kralamoure vaincu · 33 donjons terminés en':'Vous avez tenu'} ${formatTime(state.time)} — ${state.kills} monstres vaincus`;

@@ -136,3 +136,7 @@ body .home-topline > .home-profile .profile-name { font: 15px Georgia, serif; le
 body .home-topline > .home-profile .profile-stat { color: #b9ad8e; }
 body .home-topline > .home-profile .profile-stat b { font: 14px Georgia, serif; color: #e6bf74; margin-right: 3px; }
 body .home-topline > .home-profile .profile-stat.forge b { color: #8bc3aa; }
+
+/* Le pseudo ouvre le compte. */
+body .home-topline > .home-profile button.profile-name { background: none; border: 0; padding: 0; cursor: pointer; border-bottom: 1px dotted #f3e7c860; }
+body .home-topline > .home-profile button.profile-name:hover, body .home-topline > .home-profile button.profile-name:focus-visible { color: #ffe5ae; border-bottom-color: #ffe5ae; }

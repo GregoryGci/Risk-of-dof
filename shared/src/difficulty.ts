@@ -1,5 +1,6 @@
 // Courbe de difficulté façon Risk of Rain : tout dépend du temps écoulé.
 import {ZONES,zoneForStage} from './data/zones.ts';
+import {zoneDifficulty} from './combat-balance.ts';
 export const FINAL_STAGE=ZONES.length;
 export function nextMode(mode:number):number|undefined{return Number.isInteger(mode)&&mode>=0&&mode<GAME_MODES.length-1?mode+1:undefined;}
 /** Une ancienne run au-delà du dernier donjon atteste une boucle terminée. */
@@ -13,7 +14,7 @@ export function unlockedModeFromProgression(raw:unknown):number{
 /** Coefficient de difficulté (1 au départ, croît linéairement avec le temps). */
 export function difficultyAt(seconds: number, playerCount: number, stage=1, stageTime=seconds): number {
   const joueurs = 1 + 0.15 * Math.max(0, playerCount - 1);
-  return 1 + Math.pow(Math.max(0,stage-1),1.12)*1.5 + (seconds/60)*.12*joueurs + Math.floor(stageTime/25)*.09;
+  return zoneDifficulty(stage) + (seconds/60)*.12*joueurs + Math.floor(stageTime/25)*.09;
 }
 
 /** Crédits de spawn gagnés par seconde par le directeur. */
@@ -24,6 +25,8 @@ export function spawnCreditsPerSecond(difficulty: number, playerCount: number,st
 export function monsterHpMultiplier(difficulty: number): number {
   return 1.05*Math.pow(difficulty,1.15);
 }
+/** Le Cauchemar commence au niveau de menace d'un groupe déjà avancé. */
+export function modeDifficulty(difficulty:number,mode:number):number{return difficulty+(mode===3?12:0);}
 export function monsterDamageMultiplier(difficulty: number): number {
   return 1.1*Math.pow(difficulty,.9);
 }
@@ -72,7 +75,7 @@ export const GAME_MODES: GameMode[] = [
   { id: 0, name: 'Facile', description: 'Moins de monstres, moins coriaces.', hp: 0.8, damage: 0.75, spawn: 0.85, reward: 1 },
   { id: 1, name: 'Normal', description: 'Adapté à une première tenue. Plus de monstres à vaincre et ×1,5 kamas en fin de run.', hp: 1.25, damage: 1.15, spawn: 1.15, reward: 1.5 },
   { id: 2, name: 'Difficile', description: 'Conseillé avec une tenue de palier 80 ou plus. Davantage de monstres, ×2,2 kamas en fin de run.', hp: 1.9, damage: 1.65, spawn: 1.5, reward: 2.2 },
-  { id: 3, name: 'Cauchemar', description: 'Fin de jeu : deux gardiens par zone, trois toutes les trois zones. Tenue 190–200 conseillée. Hordes renforcées, ×3,4 kamas en fin de run.', hp: 4.2, damage: 2.8, spawn: 1.95, reward: 3.4, nightmare:true },
+  { id: 3, name: 'Cauchemar', description: 'Fin de jeu : dégâts ennemis ×5 dès le départ, deux gardiens par zone, trois toutes les trois zones. Tenue 190–200 conseillée. Hordes renforcées, ×3,4 kamas en fin de run.', hp: 4.2, damage: 5, spawn: 2.25, reward: 3.4, nightmare:true },
 ];
 
 export function getMode(id: number): GameMode {

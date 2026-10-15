@@ -2,6 +2,8 @@
 // en priorité celles qui provoquent). Les invocations alliées ont leur propre IA (updateAlly).
 import { MAX_MONSTERS, MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getMonster, getSpell, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, resolveCollisions, stepMovement } from '@rod/shared';
 import { updateBoss } from './bosses.ts';
+import {summonPower,trySummonSkill} from './summons.ts';
+import {enemyPopulationLimit} from './spawn-pressure.ts';
 import type { MonsterRt, PlayerRt, Simulation } from './Simulation.ts';
 
 /** Cible d'un monstre : un joueur ou une invocation alliée. */
@@ -35,7 +37,9 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
   // Brûlure : dégâts toutes les demi-secondes.
   if (sim.now < m.burnUntil && sim.now >= m.burnNextTick) {
     m.burnNextTick += 0.5;
+    const actual=Math.min(Math.max(1,Math.round(m.burnDps*.5)),Math.max(0,s.hp));
     sim.damageMonster(m, m.burnDps * 0.5, m.burnOwner);
+    sim.leechDamage(m.burnOwner,actual,!!m.burnAttack);
     if (!sim.monsters.has(m.id)) return;
   }
 
@@ -44,11 +48,13 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
     m.summonAt = sim.now + m.def.summon.interval;
     const def = getMonster(m.def.summon.monster);
     const diff = sim.state.difficulty;
-    for (let i = 0; i < m.def.summon.count && sim.monsters.size < MAX_MONSTERS; i++) {
+    const limit=enemyPopulationLimit(sim.state,sim.players.size);
+    let population=limit<MAX_MONSTERS?[...sim.monsters.values()].filter(other=>!other.state.ally).length:sim.monsters.size;
+    for (let i = 0; i < m.def.summon.count && population < limit; i++) {
       const a = Math.random() * Math.PI * 2;
       const x = s.x + Math.cos(a) * 2;
       const y = s.y + Math.sin(a) * 2;
-      if (!isBlocked(sim.map, x, y, def.radius)) sim.spawnMonster(def, x, y, monsterHpMultiplier(diff), monsterDamageMultiplier(diff), Math.round(diff));
+      if (!isBlocked(sim.map, x, y, def.radius)) {sim.spawnMonster(def, x, y, monsterHpMultiplier(diff), monsterDamageMultiplier(diff), Math.round(diff));population++;}
     }
   }
 
@@ -231,6 +237,8 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
     sim.removeMonster(m.id);
     return;
   }
+  if(m.allyBaseHp){const max=Math.round(m.def.id==='coffre_anime'?owner.state.maxHp:m.allyBaseHp*(1+owner.stats.maxHp/owner.def.maxHp));if(max!==s.maxHp){s.hp=s.hp/Math.max(1,s.maxHp)*max;s.maxHp=max;}}
+  if(owner.stats.regen>0)s.hp=Math.min(s.maxHp,s.hp+owner.stats.regen*dt*s.maxHp/Math.max(1,owner.state.maxHp));
   if (m.push) {
     const pos = { x: s.x, y: s.y };
     stepMovement(sim.map,pos,m.push.vx,m.push.vy,Math.hypot(m.push.vx,m.push.vy),dt,m.def.radius);
@@ -242,7 +250,9 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
   }
   const b = m.def.behavior;
   if(sim.now<(m.attackHoldUntil??0))return;
-  const speed = m.def.speed;
+  const inherited=summonPower(m,owner);
+  m.damageMult=inherited.damage;
+  const speed = inherited.speed;
   const moveTo = (x: number, y: number, stopAt: number) => {
     const d = Math.hypot(x - s.x, y - s.y);
     if (d <= stopAt) return;
@@ -254,11 +264,12 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
   };
 
   if (b.type === 'healer') {
+    if(trySummonSkill(sim,m,owner))return;
     // Poupée soigneuse : reste près de son maître et soigne les joueurs autour d'elle.
     if (sim.now >= m.healAt) {
-      m.healAt = sim.now + b.interval;
+      m.healAt = sim.now + b.interval/inherited.cadence;
       for (const p of sim.players.values()) {
-        if (p.state.alive && Math.hypot(p.state.x - s.x, p.state.y - s.y) <= b.radius) sim.healPlayer(p, b.heal, sim.players.get(m.allyOwner ?? ''));
+        if (p.state.alive && Math.hypot(p.state.x - s.x, p.state.y - s.y) <= b.radius) sim.healPlayer(p, b.heal*inherited.damage, owner);
       }
       sim.broadcast('atk', { id: m.id });
       m.attackHoldUntil=sim.now+.4;
@@ -271,7 +282,7 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
   // Monstre ennemi le plus proche, dans son champ de vision.
   const commanded=sim.mechanics.allyTarget(m);
   let enemy: MonsterRt | null = commanded??null;
-  let best = enemy?Math.hypot(enemy.state.x-s.x,enemy.state.y-s.y):ALLY_SIGHT;
+  let best = enemy?Math.hypot(enemy.state.x-s.x,enemy.state.y-s.y):ALLY_SIGHT+owner.stats.range;
   for (const e of sim.monsters.values()) {
     if (e.state.ally || e.state.carried || commanded) continue;
     const d = Math.hypot(e.state.x - s.x, e.state.y - s.y);
@@ -286,24 +297,29 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
     moveTo(owner.state.x, owner.state.y, 2.5);
     return;
   }
+  if(trySummonSkill(sim,m,owner,enemy))return;
   if (b.type === 'ranged') {
     const spell = getSpell(b.spell);
     s.dir = dirFromVector(enemy.state.x-s.x,enemy.state.y-s.y);
-    if (best <= spell.range && sim.now >= m.specialReadyAt) {
+    if (best <= spell.range+owner.stats.range && sim.now >= m.specialReadyAt) {
       m.attackHoldUntil=sim.now+.4;
-      m.specialReadyAt=sim.now+spell.cooldown/1000;
+      m.specialReadyAt=sim.now+spell.cooldown/1000/inherited.cadence;
       // Le maître reçoit les dégâts/kills ; seule l'invocation joue l'animation.
-      sim.cast(spell,s.x,s.y,enemy.state.x,enemy.state.y,owner.id,true,m.damageMult,0,undefined,undefined,undefined,0,m.id);
-    } else if(best>spell.range) {
-      moveTo(enemy.state.x,enemy.state.y,b.preferredRange);
+      sim.cast(spell,s.x,s.y,enemy.state.x,enemy.state.y,owner.id,true,m.damageMult,inherited.crit,undefined,undefined,inherited.critMult,owner.stats.range,m.id);
+      sim.blessings.mark(owner,enemy);
+    } else if(best>spell.range+owner.stats.range) {
+      moveTo(enemy.state.x,enemy.state.y,b.preferredRange+owner.stats.range*.5);
     }
     return;
   }
   if (best <= m.def.melee.range + enemy.def.radius && sim.now >= m.meleeReadyAt && m.def.melee.damage > 0) {
     m.attackHoldUntil=sim.now+.35;
-    m.meleeReadyAt = sim.now + m.def.melee.cooldown;
+    m.meleeReadyAt = sim.now + m.def.melee.cooldown/inherited.cadence;
     sim.broadcast('atk', { id: m.id });
-    sim.damageMonster(enemy, m.def.melee.damage * m.damageMult, owner.id);
+    const crit=Math.random()<inherited.crit;
+    const actual=Math.min(Math.max(1,Math.round(m.def.melee.damage*m.damageMult*(crit?inherited.critMult:1))),Math.max(0,enemy.state.hp));
+    sim.damageMonster(enemy, m.def.melee.damage * m.damageMult*(crit?inherited.critMult:1), m.id,crit);
+    sim.leechDamage(m.id,actual,false);
   } else if(best>m.def.melee.range+enemy.def.radius) {
     moveTo(enemy.state.x, enemy.state.y, m.def.melee.range+enemy.def.radius);
   }

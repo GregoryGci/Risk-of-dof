@@ -8,20 +8,21 @@ export const PATCH_MS = 50;
 export const SERVER_PORT = 2567;
 export const ROOM_NAME = 'partie';
 /** Cartes et schéma doivent correspondre entre le site et le serveur publié. */
-export const GAME_PROTOCOL_VERSION=6;
+export const GAME_PROTOCOL_VERSION=7;
 export const MAX_PLAYERS = 4;
 export const ROOM_CODE_LENGTH = 4;
 export const NAME_MAX_LENGTH = 16;
 
-/** Taille de la carte en cases (carrée). */
-export const MAP_SIZE = 56;
+/** Surface ×3 par rapport aux anciennes cartes 56×56 (97² / 56² ≈ 3). */
+export const MAP_BASE_SIZE = 56;
+export const MAP_SIZE = Math.round(MAP_BASE_SIZE * Math.sqrt(3));
 /** Dimensions d'une case isométrique à l'écran (px). */
 export const TILE_W = 64;
 export const TILE_H = 32;
 
 export const PLAYER_RADIUS = 0.35;
 /** Nombre maximum de monstres vivants en même temps. */
-export const MAX_MONSTERS = 160;
+export const MAX_MONSTERS = 220;
 
 /** Phases d'une partie. */
 export const PHASE_LOBBY = 0;

@@ -9,6 +9,8 @@ import { Hud, escapeHtml } from './ui/Hud.ts';
 import { TalentsPage } from './ui/Talents.ts';
 import { EquipmentPage } from './ui/EquipmentPage.ts';
 import { EncyclopediaPage } from './ui/EncyclopediaPage.ts';
+import './skin-shop.css';
+import {SkinShop} from './ui/SkinShop.ts';
 import {HistoryPage} from './ui/HistoryPage.ts';
 import {AccountPage} from './ui/AccountPage.ts';
 import {AtlasPage} from './ui/AtlasPage.ts';
@@ -103,7 +105,9 @@ const encyclopedia = new EncyclopediaPage();
 const history=new HistoryPage(),atlas=new AtlasPage();
 $('btn-atlas').onclick=()=>atlas.open();
 const accountPage=new AccountPage(),ladder=new LadderPage();
-$('btn-account').onclick=()=>accountPage.open();
+// Le pseudo en haut à gauche ouvre le compte (le profil est redessiné : écouteur délégué).
+$('home-profile').addEventListener('click',e=>{if((e.target as HTMLElement).closest('#btn-account'))accountPage.open();});
+cloud.subscribe(()=>{if(!cloud.busy)renderProfile();});
 $('btn-ladder').onclick=()=>ladder.open();
 cloud.subscribe(()=>{if(cloud.busy)return;classId=localStorage.getItem('rod.classe')??DEFAULT_CLASS;if(!CLASSES[classId])classId=DEFAULT_CLASS;pseudoInput.value=localStorage.getItem('rod.pseudo')??'';renderClassPicker();renderModes();applyCrosshair();});
 $('btn-history').onclick=()=>history.open();
@@ -117,7 +121,7 @@ function renderProfile(): void {
   const tier = EQUIPMENT_TIERS[account.bestTier];
   const count = Object.keys(account.equipment).length;
   // En haut à gauche : nom de l'invocateur et ses monnaies, rien d'autre.
-  $('home-profile').innerHTML = `<b class="profile-name">${escapeHtml(account.profile.name||pseudoInput.value.trim() || 'Aventurier')}</b><span class="profile-stat"><b>${account.bank.toLocaleString('fr')}</b> kamas</span><span class="profile-stat forge"><b>${account.fragments.toLocaleString('fr')}</b> ◈ forge</span>`;
+  $('home-profile').innerHTML = `<button type="button" class="profile-name" id="btn-account" title="${cloud.session?'Mon compte':'Se connecter'}">${escapeHtml(account.profile.name||pseudoInput.value.trim() || 'Aventurier')}</button><span class="profile-stat"><b>${account.bank.toLocaleString('fr')}</b> kamas</span><span class="profile-stat forge"><b>${account.fragments.toLocaleString('fr')}</b> ◈ forge</span><span class="profile-stat"><b>${account.ogrines}</b> Ogrines</span>`;
   $('home-progress').textContent = `PALIER ${tier.level} · ${account.inventory.length} ÉQUIPEMENTS`;
   $('equipment-summary').textContent = `${count} emplacements équipés · ${account.inventory.length} objets`;
   $('collection-summary').textContent = `${account.discovered.length} / ${account.catalogSize} découverts`;
@@ -157,9 +161,10 @@ $('setup-modes').addEventListener('click', e => {
   if (button&&Number(button.dataset.setupMode)<=account.unlockedMode) { setupMode = Number(button.dataset.setupMode); renderModes(); }
 });
 renderModes();
-// Apparats : banc d'essai local (skins.html), affiché seulement si les atlas ont été extraits sur ce poste.
-$('btn-skins').onclick=()=>{location.href='skins.html';};
-fetch('assets/dofus/skins/skins.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(data=>{if(data&&Object.keys(data).length)$('btn-skins').hidden=false;}).catch(()=>{});
+// Boutique d'apparats : progression permanente et atlas chargés à la demande.
+const skinShop=new SkinShop(()=>{renderProfile();void cloud.flush().then(()=>currentRoom?.send('refreshProgression'));});
+$('btn-skins').hidden=false;$('btn-skins').onclick=()=>skinShop.open(classId);
+fetch('assets/dofus/manifest.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(data=>{if(data&&Object.keys(data).length)$('btn-skins').hidden=false;}).catch(()=>{});
 if (invited) showView('multi');
 
 function setBusy(busy: boolean): void {
@@ -299,6 +304,7 @@ async function startGame(room: Room): Promise<void> {
   });
 
   room.onMessage('gearDrop',(message:{player:string;drop:GearDrop})=>{ if(message.player===room.sessionId) hud.collectDrop(message.drop); });
+  room.onMessage('ogrineDrop',(message:{player:string})=>{if(message.player===room.sessionId)hud.announceOgrine();});
   room.onMessage('forgeGrant',(message:{player:string;grant:import('@rod/shared').ForgeGrant})=>{if(message.player===room.sessionId)account.claimFragments([message.grant]);});
   room.onMessage('runReward',(message:{player:string;reward:RunReward})=>{ if(message.player===room.sessionId) { account.creditRun(message.reward); renderProfile();renderModes(); } });
   room.onMessage('scoreSaved',()=>hud.toast('Votre run est inscrite au classement.'));

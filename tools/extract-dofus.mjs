@@ -25,13 +25,13 @@ const FFDEC = process.env.FFDEC ?? 'C:/Program Files (x86)/FFDec/ffdec.jar';
 const CACHE = path.join(os.tmpdir(), 'rod-extract');
 
 /** Agrandissement à l'export (netteté) ; compensé par l'échelle d'affichage. */
-const ZOOM = 2;
+export const ZOOM = 2;
 /** Une case Dofus fait 53 px de large, une case du jeu TILE_W = 64 px. */
 const GAME_SCALE = 64 / 53;
 /** Agrandissement supplémentaire : en temps réel, les personnages doivent rester bien lisibles. */
 const DISPLAY_BOOST = 1.4;
 /** Au-delà, on saute des frames pour garder des atlas raisonnables. */
-const MAX_FRAMES = 32;
+export const MAX_FRAMES = 32;
 
 /** Entités à extraire : clé du jeu -> numéro de sprite (voir clips/sprites/sprites.xml). */
 export const ENTITIES = {
@@ -88,7 +88,7 @@ const extraFile=path.join(ROOT,'tools/dungeon-sprites.json');
 if(fs.existsSync(extraFile))for(const [id,spec] of Object.entries(JSON.parse(fs.readFileSync(extraFile,'utf8'))))ENTITIES[id]={kind:'monsters',sprite:spec.sprite,maxFrames:12};
 
 /** Animation du jeu -> noms d'animation Dofus à essayer, dans l'ordre. */
-const ANIMS = {
+export const ANIMS = {
   idle: ['static'],
   run: ['run', 'walk'],
   // « hit » n'est pas repris : il affiche une grande étoile rouge, trop envahissante en temps réel.
@@ -99,7 +99,7 @@ const ANIMS = {
 };
 
 /** Suffixes de direction Dofus -> directions du jeu (0 = Est, sens horaire). Les directions Ouest sont en miroir. */
-const DIRS = { S: 0, R: 1, F: 2, B: 6, L: 5 };
+export const DIRS = { S: 0, R: 1, F: 2, B: 6, L: 5 };
 
 function ffdec(args) {
   execFileSync('java', ['-jar', FFDEC, ...args], { stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 });
@@ -109,7 +109,7 @@ function ffdec(args) {
 // Lecture de la structure du SWF
 // ---------------------------------------------------------------------------
 
-function parseSwfXml(xml) {
+export function parseSwfXml(xml) {
   const sprites = new Map();
   const spriteRe = /<item type="DefineSpriteTag"[^>]*?frameCount="(\d+)"[^>]*?spriteId="(\d+)">([\s\S]*?)<\/subTags>/g;
   for (let m; (m = spriteRe.exec(xml)); ) {
@@ -171,7 +171,7 @@ ${close}`;
 }
 
 /** Descend dans les clips « enveloppes » (1 frame, 1 enfant) jusqu'au clip qui porte l'animation. */
-function resolveClip(sprites, id) {
+export function resolveClip(sprites, id) {
   let scale = 1;
   let flip = false;
   for (let depth = 0; depth < 4; depth++) {

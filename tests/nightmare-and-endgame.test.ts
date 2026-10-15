@@ -9,7 +9,7 @@ import {updateBoss} from '../server/src/game/bosses.ts';
 
 test('Fin de jeu : quatre paliers supplémentaires, chacun avec au moins dix objets et leurs vraies icônes livrées',()=>{
   const manifest=JSON.parse(fs.readFileSync('client/public/assets/dofus/manifest.json','utf8'));
-  assert.deepEqual(EQUIPMENT_TIERS.slice(5).map(t=>t.level),[170,180,190,200]);
+  assert.deepEqual(EQUIPMENT_TIERS.map(t=>t.level),[20,40,60,80,100,120,140,160,180,200]);
   for(let tier=5;tier<EQUIPMENT_TIERS.length;tier++){
     const items=Object.entries(EQUIPMENT_BASES).filter(([,b])=>b.tier===tier);assert.ok(items.length>=10);
     for(const[id]of items){assert.equal(manifest.items[id],`items/${id}.png`);assert.ok(fs.statSync(`client/public/assets/dofus/items/${id}.png`).size>100,id);}
@@ -17,16 +17,16 @@ test('Fin de jeu : quatre paliers supplémentaires, chacun avec au moins dix obj
 });
 
 test('Fin de jeu : le budget de PV/dégâts progresse encore au-delà de 160 et les jets restent fixes',()=>{
-  const capes=['cape_chene_mou','cape_minotot','cape_souveraine','cape_erforee','voile_encre'];let hp=0,damage=0;
+  const capes=['cape_bouftou','cape_meulou','cape_souveraine','voile_encre'];let hp=0,damage=0;
   for(const id of capes){const stats=equipmentStats(createEquipment(id,'legendaire'));assert.ok(stats.maxHp!>hp,id);assert.ok(stats.damage!>damage,id);hp=stats.maxHp!;damage=stats.damage!;}
-  assert.ok(hp>EQUIPMENT_BASES.cape_chene_mou.stats.maxHp!*1.8);
+  assert.ok(hp>EQUIPMENT_BASES.cape_bouftou.stats.maxHp!*20);
 });
 
 test('Sauvegardes : ancien palier 160 conservé, palier 200 et piles/fusions conservés à la relecture',()=>{
   const old={version:3,bank:777,fragments:333,bestTier:4,inventory:[{...createEquipment('cape_meulou','rare'),quantity:7}],equipped:{cape:'cape_meulou.rare.1'}};
-  const saved=migrateAccount(old);assert.equal(saved.bestTier,4);assert.equal(saved.inventory[0].quantity,7);assert.equal(saved.equipped.cape,'cape_meulou.rare.1');
+  const saved=migrateAccount(old);assert.equal(saved.bestTier,7);assert.equal(saved.inventory[0].quantity,7);assert.equal(saved.equipped.cape,'cape_meulou.rare.1');
   saved.inventory.push({...createEquipment('kralano','legendaire',3),quantity:10});saved.bestTier=8;saved.equipped.anneau1='kralano.legendaire.3';
-  const loaded=migrateAccount(saved);assert.equal(loaded.bestTier,8);assert.equal(loaded.bank,777);assert.equal(loaded.fragments,333);assert.equal(loaded.inventory[1].quantity,10);assert.equal(loaded.equipped.anneau1,'kralano.legendaire.3');
+  const loaded=migrateAccount(saved);assert.equal(loaded.bestTier,9);assert.equal(loaded.bank,777);assert.equal(loaded.fragments,333);assert.equal(loaded.inventory[1].quantity,10);assert.equal(loaded.equipped.anneau1,'kralano.legendaire.3');
 });
 
 test('Fin de jeu : zones 13/18/25/31 débloquent les nouveaux pools, total 3 % et Dofus toujours partout',()=>{
@@ -36,7 +36,7 @@ test('Fin de jeu : zones 13/18/25/31 débloquent les nouveaux pools, total 3 % e
     assert.deepEqual(dropPool(stage,true),dropPool(1,true));
     assert.equal(equipmentReward('r',123,stage,3,100).tier,EQUIPMENT_TIERS.findLastIndex(t=>stage>=t.stage));
   }
-  assert.equal(equipmentDropChance(30,'kralano','rare'),0);assert.ok(equipmentDropChance(31,'kralano','rare')>0);
+  assert.equal(equipmentDropChance(30,'kralano','rare'),0);assert.ok(equipmentDropChance(33,'kralano','rare')>0);
 });
 
 function encounter(stage:number,mode=3){
