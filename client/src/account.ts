@@ -3,7 +3,7 @@
 import { EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, TALENTS, fusionResult, equippedStats, getClass, isFlexSlot, sanitizeEquipment, sanitizeLoadout, slotKind, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
 import { equippedFromAccount, migrateAccount, type AccountData } from './progression.ts';
 import {forgeCost,recycleValue,type ForgeGrant} from '@rod/shared';
-import {sanitizeRunSummary,compareRuns} from '@rod/shared';
+import {sanitizeRunSummary,compareRuns,unlockedModeFromProgression} from '@rod/shared';
 import {sanitizeProfile} from '@rod/shared';
 import {spellUpgradeCost,MAX_SPELL_LEVEL} from '@rod/shared';
 
@@ -36,6 +36,7 @@ function save(): void {
 save();
 
 export const account = {
+  get unlockedMode(){return data.unlockedMode;},
   get spellLevels(){return structuredClone(data.spellLevels);},
   spellLevel(classId:string,spell:string):number{return data.spellLevels[classId]?.[spell]??1;},
   upgradeSpell(classId:string,spell:string):boolean{
@@ -197,7 +198,7 @@ export const account = {
 
   /** Récompense calculée côté serveur, mémorisée une seule fois par run. */
   creditRun(reward: RunReward): boolean {
-    if(reward?.summary)this.recordRun(reward.summary);
+    if(reward?.summary){const run=sanitizeRunSummary(reward.summary);if(run){const unlocked=unlockedModeFromProgression({history:[run]});if(unlocked>data.unlockedMode){data.unlockedMode=unlocked;save();}this.recordRun(run);}}
     if (!reward || typeof reward.runId !== 'string' || !reward.runId || data.credited.includes(reward.runId)) return false;
     data.bank += Number.isFinite(reward.kamas) ? Math.max(0, Math.floor(reward.kamas)) : 0;
     this.claimDrops(Array.isArray(reward.drops) ? reward.drops : []);

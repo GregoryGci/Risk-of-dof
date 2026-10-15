@@ -218,6 +218,7 @@ export class GameScene extends Phaser.Scene {
       this.hud.toast(`<b>Zone ${e.stage} remportée !</b><small>${e.revived.length ? 'Toute l’équipe est de retour. ' : ''}Le Zaap est ouvert.</small>`);
       this.store.playSound(this,'stage');
     });
+    this.room.onMessage('runVictory',()=>{this.store.playSound(this,'stage');this.controls.releaseAll();});
     this.room.onMessage('bossWarning',(e:{x:number;y:number;radius:number;duration:number;color:number;kind:string})=>{
       if(document.hidden)return;
       this.effects.telegraph(e.x,e.y,e.radius,e.duration,e.color);

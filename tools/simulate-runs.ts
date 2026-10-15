@@ -82,7 +82,7 @@ class RunBot {
 const distance=(a:{x:number;y:number},b:{x:number;y:number})=>Math.hypot(a.x-b.x,a.y-b.y);
 function score(id:string):number {const stats=RUN_BONUSES[id]?.stats??{};return -(stats.damage??0)*100-(stats.maxHp??0)*.5-(stats.armor??0)*15-(stats.haste??0)*50-(stats.bounce??0)*35-(stats.secondaryCharge??0)*20;}
 
-interface Sample {blessings:number;route:string;classId:string;mode:number;seed:number;start:number;gear:string;tier:number;zone:number;waves:number;duration:number;kills:number;censored:boolean;maxEnemies:number}
+interface Sample {outcome:string;blessings:number;route:string;classId:string;mode:number;seed:number;start:number;gear:string;tier:number;zone:number;waves:number;duration:number;kills:number;censored:boolean;maxEnemies:number}
 const original=Math.random,samples:Sample[]=[],startClock=performance.now();
 try {
   for(const route of routes)for(const mode of modes)for(const start of starts)for(const tier of tiers)for(const classId of classes)for(let seed=1;seed<=seeds;seed++) {
@@ -91,11 +91,11 @@ try {
     if(start!==1){state.stage=start;state.seed=Math.floor(Math.random()*0xffffffff);sim.map=generateMap(state.seed,MAP_SIZE,start);(sim as unknown as {setupStage:()=>void}).setupStage();}
     const p=sim.players.get('p')!,bot=new RunBot(sim,p,dangers,route);let maxEnemies=0,tick=0;
     while(state.phase===PHASE_PLAYING&&state.stage<=cap&&state.time<seconds&&tick<seconds*30+3000){if(tick%3===0)bot.drive();sim.update(1/30);if(state.stage>1&&state.stageRoute!==route)throw new Error('Serment non applique dans la simulation: '+route);maxEnemies=Math.max(maxEnemies,sim.monsters.size);tick++;}
-    samples.push({blessings:Object.keys(p.blessingRanks).length,route,classId,mode,seed,start,tier,gear:tier<0?'Aucun':`Palier ${EQUIPMENT_TIERS[tier].level} ${outfitRarity} T${forgeTier}`,zone:state.stage,waves:(state as unknown as {waves?:number}).waves??0,duration:Math.round(state.time),kills:p.state.kills,censored:state.phase===PHASE_PLAYING,maxEnemies});
+    samples.push({outcome:state.outcome,blessings:Object.keys(p.blessingRanks).length,route,classId,mode,seed,start,tier,gear:tier<0?'Aucun':`Palier ${EQUIPMENT_TIERS[tier].level} ${outfitRarity} T${forgeTier}`,zone:state.stage,waves:(state as unknown as {waves?:number}).waves??0,duration:Math.round(state.time),kills:p.state.kills,censored:state.phase===PHASE_PLAYING,maxEnemies});
   }
 }finally{Math.random=original;}
-const groups=[];let md='| Serment | Départ | Mode | Stuff | Runs | Zone moyenne atteinte | Min–max | Runs encore vivantes | Ennemis simultanés max |\n|---|---|---|---|---:|---:|---|---:|---:|\n';
+const groups=[];let md='| Serment | Départ | Mode | Stuff | Runs | Zone moyenne atteinte | Min–max | Victoires | Runs encore vivantes | Ennemis simultanés max |\n|---|---|---|---|---:|---:|---|---:|---:|---:|\n';
 for(const route of routes)for(const mode of modes)for(const start of starts)for(const tier of tiers){const group=samples.filter(s=>s.route===route&&s.mode===mode&&s.start===start&&s.tier===tier),mean=group.reduce((n,s)=>n+s.zone,0)/group.length;
-  const row={route,start,mode,gear:group[0].gear,runs:group.length,mean:Number(mean.toFixed(2)),min:Math.min(...group.map(s=>s.zone)),max:Math.max(...group.map(s=>s.zone)),censored:group.filter(s=>s.censored).length,maxEnemies:Math.max(...group.map(s=>s.maxEnemies))};groups.push(row);md+=`| ${getRoute(route).name} | ${start} | ${mode} | ${row.gear} | ${row.runs} | ${row.mean} | ${row.min}–${row.max} | ${row.censored} | ${row.maxEnemies} |\n`;
+  const row={route,start,mode,gear:group[0].gear,runs:group.length,mean:Number(mean.toFixed(2)),min:Math.min(...group.map(s=>s.zone)),max:Math.max(...group.map(s=>s.zone)),victories:group.filter(s=>s.outcome==='victory').length,censored:group.filter(s=>s.censored).length,maxEnemies:Math.max(...group.map(s=>s.maxEnemies))};groups.push(row);md+=`| ${getRoute(route).name} | ${start} | ${mode} | ${row.gear} | ${row.runs} | ${row.mean} | ${row.min}–${row.max} | ${row.victories} | ${row.censored} | ${row.maxEnemies} |\n`;
 }
 fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync(`${out}.json`,JSON.stringify({seekElites,spellLevel,blessing,seeds,cap,seconds,elapsedSeconds:Math.round((performance.now()-startClock)/1000),groups,samples},null,2));fs.writeFileSync(`${out}.md`,md);console.log('Niveau des sorts : '+spellLevel+' ; benediction : '+blessing);console.log(md);console.log(`Résultats : ${out}.json ; ${samples.length} runs. Une run plafonnée est marquée encore vivante, pas considérée comme une mort.`);

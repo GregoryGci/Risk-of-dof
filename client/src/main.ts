@@ -104,7 +104,7 @@ $('btn-atlas').onclick=()=>atlas.open();
 const accountPage=new AccountPage(),ladder=new LadderPage();
 $('btn-account').onclick=()=>accountPage.open();
 $('btn-ladder').onclick=()=>ladder.open();
-cloud.subscribe(()=>{if(cloud.busy)return;classId=localStorage.getItem('rod.classe')??DEFAULT_CLASS;if(!CLASSES[classId])classId=DEFAULT_CLASS;pseudoInput.value=localStorage.getItem('rod.pseudo')??'';renderClassPicker();applyCrosshair();});
+cloud.subscribe(()=>{if(cloud.busy)return;classId=localStorage.getItem('rod.classe')??DEFAULT_CLASS;if(!CLASSES[classId])classId=DEFAULT_CLASS;pseudoInput.value=localStorage.getItem('rod.pseudo')??'';renderClassPicker();renderModes();applyCrosshair();});
 $('btn-history').onclick=()=>history.open();
 $('btn-encyclopedia').addEventListener('click', () => encyclopedia.open());
 $('equipment-collection').addEventListener('click', () => encyclopedia.open());
@@ -112,6 +112,7 @@ $('btn-equipment').addEventListener('click', () => equipmentPage.open(classId));
 $('btn-go-equipment').addEventListener('click', () => equipmentPage.open(classId));
 
 function renderProfile(): void {
+  renderModes();
   const tier = EQUIPMENT_TIERS[account.bestTier];
   const count = Object.keys(account.equipment).length;
   $('home-profile').innerHTML = `<img src="assets/dofus/portraits/${account.profile.avatar||classId}.png" alt=""><div><b>${escapeHtml(account.profile.name||pseudoInput.value.trim() || 'Aventurier')}</b><span>${CLASSES[classId].name} · ${count} équipements</span></div><span class="profile-bank">${account.bank.toLocaleString('fr')}<small>KAMAS</small><small class="profile-forge">${account.fragments.toLocaleString('fr')} ◈ forge</small></span>`;
@@ -196,11 +197,12 @@ $('home-settings').addEventListener('input', e => {
   $(`${input.name}-value`).textContent = `${input.value} %`;
 });
 function renderModes(): void {
-  $('setup-modes').innerHTML = GAME_MODES.map((m,i) => `<button class="setup-mode${setupMode === m.id ? ' active' : ''}" data-setup-mode="${m.id}" aria-pressed="${setupMode === m.id}" title="${escapeHtml(m.description)}"><span>${['Facile','Normal','Difficile','Cauchemar'][i]}</span><b>${m.name}</b><small>${['Découvrez les champs','Avec une première tenue','Tenue de palier 80 conseillée','2 boss / 3 boss toutes les 3 zones'][i]}</small></button>`).join('');
+  setupMode=Math.min(setupMode,account.unlockedMode);
+  $('setup-modes').innerHTML = GAME_MODES.map((m,i) => {const locked=m.id>account.unlockedMode;return`<button class="setup-mode${setupMode === m.id ? ' active' : ''}${locked?' locked':''}" data-setup-mode="${m.id}" aria-pressed="${setupMode === m.id}" ${locked?'disabled':''} title="${escapeHtml(locked?`Terminez le Kralamoure en ${GAME_MODES[m.id-1].name} pour débloquer ce mode.`:m.description)}"><span>${['Facile','Normal','Difficile','Cauchemar'][i]}${locked?' · Verrouillé':''}</span><b>${m.name}</b><small>${locked?`Vaincre le Krala en ${GAME_MODES[m.id-1].name}`:['Découvrez les champs','Avec une première tenue','Tenue de palier 80 conseillée','2 boss / 3 boss toutes les 3 zones'][i]}</small></button>`;}).join('');
 }
 $('setup-modes').addEventListener('click', e => {
   const button = (e.target as HTMLElement).closest<HTMLElement>('[data-setup-mode]');
-  if (button) { setupMode = Number(button.dataset.setupMode); renderModes(); }
+  if (button&&Number(button.dataset.setupMode)<=account.unlockedMode) { setupMode = Number(button.dataset.setupMode); renderModes(); }
 });
 renderModes();
 if (invited) showView('multi');
@@ -343,7 +345,7 @@ async function startGame(room: Room): Promise<void> {
 
   room.onMessage('gearDrop',(message:{player:string;drop:GearDrop})=>{ if(message.player===room.sessionId) hud.collectDrop(message.drop); });
   room.onMessage('forgeGrant',(message:{player:string;grant:import('@rod/shared').ForgeGrant})=>{if(message.player===room.sessionId)account.claimFragments([message.grant]);});
-  room.onMessage('runReward',(message:{player:string;reward:RunReward})=>{ if(message.player===room.sessionId) { account.creditRun(message.reward); renderProfile(); } });
+  room.onMessage('runReward',(message:{player:string;reward:RunReward})=>{ if(message.player===room.sessionId) { account.creditRun(message.reward); renderProfile();renderModes(); } });
   room.onMessage('scoreSaved',()=>hud.toast('Votre run est inscrite au classement.'));
   room.onMessage('scoreError',(message:{message:string})=>hud.toast(escapeHtml(message.message)));
   room.onMessage('progressionError',(message:{message:string})=>hud.toast(escapeHtml(message.message)));

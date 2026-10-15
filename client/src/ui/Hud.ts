@@ -481,7 +481,7 @@ export class Hud {
         `<div class="lobby-head">` +
         (state.singlePlayer ? `<span class="lobby-title">Préparez votre aventure</span>` : `<span class="lobby-title">Code <span class="big-code">${escapeHtml(this.roomCode)}</span></span>`) +
         `<span class="lobby-count">${state.players.size} joueur${state.players.size > 1 ? 's' : ''} · entraînez-vous</span>` +
-        `<div class="mode-picker">${GAME_MODES.map((m) => `<button class="btn mode-btn${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" ${host ? '' : 'disabled'} title="Difficulté : ${escapeHtml(m.description)}">${m.name}</button>`).join('')}</div>` +
+        `<div class="mode-picker">${GAME_MODES.map((m) => {const locked=m.id>(state.players.get(state.hostId)?.unlockedMode??0);return`<button class="btn mode-btn${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" ${host&&!locked ? '' : 'disabled'} title="${escapeHtml(locked?`L’hôte doit vaincre le Krala en ${GAME_MODES[m.id-1].name}.`:m.description)}">${m.name}${locked?' · Verrouillé':''}</button>`;}).join('')}</div>` +
         `<button class="btn" data-action="equipment">Équipement</button><button class="btn" data-action="talents">Sorts & talents</button>` +
         (host ? `<button class="btn btn-primary" data-action="start">Lancer la partie</button>` : `<span class="lobby-wait">En attente de ${escapeHtml(hostName)}…</span>`) +
         `</div>` +
@@ -502,16 +502,18 @@ export class Hud {
       this.cache.reward = me?.rewards ?? '';
       $('gameover').classList.toggle('hidden', !lost);
       if (lost) {
+        const won=state.outcome==='victory';$('gameover').classList.toggle('victory',won);$('gameover').querySelector('h1')!.textContent=won?'Victoire !':'Défaite';
         // Fin de partie : kamas et bonus de completion, drops déjà conservés durant la run.
         const mode = getMode(state.mode);
         let reward: RunReward | undefined;
         try { reward = me?.rewards ? JSON.parse(me.rewards) as RunReward : undefined; } catch { /* Attend une récompense valide. */ }
         if (reward) {
           account.creditRun(reward);
-          $('gameover-reward').innerHTML = `+${reward.kamas} kamas · ${reward.gear.reduce((n,e)=>n+e.quantity,0)} équipements conservés<br><small>Palier ${EQUIPMENT_TIERS[reward.tier].level} · ${mode.name} · Bourse ${account.bank} K</small>`;
+          const next=won?GAME_MODES[state.mode+1]:undefined;
+          $('gameover-reward').innerHTML = `+${reward.kamas} kamas · ${reward.gear.reduce((n,e)=>n+e.quantity,0)} équipements conservés<br><small>Palier ${EQUIPMENT_TIERS[reward.tier].level} · ${mode.name} · Bourse ${account.bank} K</small>${won?`<span class="victory-unlock">${next?`Difficulté débloquée : ${escapeHtml(next.name)}`:'Cauchemar terminé · tous les modes sont débloqués'}</span>`:''}`;
           $('gameover-gear').innerHTML = reward.gear.map(e => equipmentCard(e)).join('');
         } else { $('gameover-reward').textContent = 'Récupération du butin…'; $('gameover-gear').innerHTML = ''; }
-        $('gameover-stats').textContent = `Vous avez tenu ${formatTime(state.time)} — difficulté ${tier.name} — ${state.kills} monstres vaincus`;
+        $('gameover-stats').textContent = `${won?'Kralamoure vaincu · 33 donjons terminés en':'Vous avez tenu'} ${formatTime(state.time)} — ${state.kills} monstres vaincus`;
         let rows = '';
         state.players.forEach((p: PlayerView) => {
           rows += `<div class="go-row"><span>${escapeHtml(p.name)}</span><span>☠ ${p.kills} &nbsp; ${p.kamas} K</span></div>`;

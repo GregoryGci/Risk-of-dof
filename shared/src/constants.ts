@@ -8,7 +8,7 @@ export const PATCH_MS = 50;
 export const SERVER_PORT = 2567;
 export const ROOM_NAME = 'partie';
 /** Cartes et schéma doivent correspondre entre le site et le serveur publié. */
-export const GAME_PROTOCOL_VERSION=5;
+export const GAME_PROTOCOL_VERSION=6;
 export const MAX_PLAYERS = 4;
 export const ROOM_CODE_LENGTH = 4;
 export const NAME_MAX_LENGTH = 16;
@@ -26,7 +26,9 @@ export const MAX_MONSTERS = 160;
 /** Phases d'une partie. */
 export const PHASE_LOBBY = 0;
 export const PHASE_PLAYING = 1;
-export const PHASE_LOST = 2;
+export const PHASE_FINISHED = 2;
+/** Alias conservé : résultat détaillé dans GameState.outcome. */
+export const PHASE_LOST = PHASE_FINISHED;
 
 /** États d'animation d'un monstre (synchronisés). */
 export const MSTATE_NORMAL = 0;

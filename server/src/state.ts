@@ -9,6 +9,7 @@ export const PlayerState = schema(
     spellLevels:t.string().default('{}'),
     momentum:t.boolean().default(false),
     blessing:t.string().default(''),
+    unlockedMode:t.uint8().default(0),
     blessings:t.string().default('{}'),
     blessingProgress:t.float32().default(0),
     routeChoice:t.string().default('normal'),
@@ -124,6 +125,7 @@ export const GameState = schema(
     intermission: t.boolean().default(false),
     runId: t.string().default(''),
     phase: t.uint8().default(PHASE_LOBBY),
+    outcome:t.string().default(''),
     /** Graine de la carte : le client régénère la même carte que le serveur. */
     seed: t.uint32().default(1),
     /** Temps de jeu écoulé (s). */

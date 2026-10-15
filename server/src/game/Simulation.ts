@@ -3,6 +3,7 @@
 import {
   CHALLENGE_COUNT,
   getBlessing,
+  FINAL_STAGE,GAME_MODES,nextMode,
   blessingPool,blessingPower,
   guardianCount,
   leveledSpell,spellCopies,spellCopyPower,sanitizeSpellLevels,type SpellLevelBook,
@@ -21,6 +22,7 @@ import {
   getMode,
   rollRarity,
   PHASE_LOBBY,
+  PHASE_FINISHED,
   PHASE_LOST,
   PHASE_PLAYING,
   PLAYER_RADIUS,
@@ -278,12 +280,13 @@ export class Simulation {
   // Cycle de vie
   // -------------------------------------------------------------------------
 
-  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, equipment?: unknown, blessing?:unknown, levels?:SpellLevelBook): void {
+  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, equipment?: unknown, blessing?:unknown, levels?:SpellLevelBook,unlockedMode=GAME_MODES.length-1): void {
     // Un nouveau joueur arrive : plus de pause possible.
     this.state.paused = false;
     const def = getClass(classId ?? '');
     const state = new PlayerState();
     state.name = name;
+    state.unlockedMode=Number.isInteger(unlockedMode)?Math.max(0,Math.min(GAME_MODES.length-1,unlockedMode)):0;
     state.classId = def.id;
     state.blessing=getBlessing(blessing)?.id??'';
     const spellLevels=sanitizeSpellLevels(levels)[def.id]??{};state.spellLevels=JSON.stringify(spellLevels);
@@ -354,12 +357,16 @@ export class Simulation {
   setMode(id: string, mode: unknown): void {
     if (this.state.phase !== PHASE_LOBBY || id !== this.state.hostId) return;
     const m = Number(mode);
-    if (Number.isInteger(m) && m >= 0 && m <= 3) this.state.mode = m;
+    if (Number.isInteger(m) && m >= 0 && m <= (this.players.get(id)?.state.unlockedMode??0)) this.state.mode = m;
   }
 
   setSpellLevels(id:string,raw:unknown):void{
     const p=this.players.get(id);if(!p||this.state.phase!==PHASE_LOBBY)return;
     p.spellLevels=sanitizeSpellLevels(raw)[p.def.id]??{};p.state.spellLevels=JSON.stringify(p.spellLevels);
+  }
+  setUnlockedMode(id:string,mode:number):void{
+    const p=this.players.get(id);if(!p||this.state.phase!==PHASE_LOBBY||!Number.isInteger(mode))return;
+    p.state.unlockedMode=Math.max(p.state.unlockedMode,Math.max(0,Math.min(GAME_MODES.length-1,mode)));
   }
 
   setBlessing(id:string,blessing:unknown):void{
@@ -376,6 +383,8 @@ export class Simulation {
   /** L'hôte lance la partie depuis le salon. */
   start(): void {
     if (this.state.phase !== PHASE_LOBBY) return;
+    const host=this.players.get(this.state.hostId);if(host)this.state.mode=Math.min(this.state.mode,host.state.unlockedMode);
+    this.state.outcome='';
     this.removeDummies();
     for (const id of [...this.grounds.keys()]) this.removeGround(id);
     this.state.phase = PHASE_PLAYING;
@@ -442,6 +451,7 @@ export class Simulation {
 
   /** Zone suivante : nouvelle carte, les morts reviennent, la difficulté continue de monter. */
   private completeStage(): void {
+    if(this.state.phase!==PHASE_PLAYING)return;
     this.state.zaapState = ZAAP_READY;
     // La victoire appartient à toute l'équipe : retour immédiat des KO au Zaap.
     for(const id of [...this.monsters.keys()])if(!this.monsters.get(id)!.state.ally)this.removeMonster(id);
@@ -457,7 +467,8 @@ export class Simulation {
       p.secondaryRefillAt=0;p.state.secondaryCharges=p.state.secondaryMax;
       revived.push(p.id);
     }
-    this.broadcast('zoneVictory',{stage:this.state.stage,revived});
+    if(this.state.stage===FINAL_STAGE){this.finishRun('victory');this.broadcast('runVictory',{stage:this.state.stage});}
+    else this.broadcast('zoneVictory',{stage:this.state.stage,revived});
   }
 
   private nextStage(): void {
@@ -521,7 +532,7 @@ export class Simulation {
     // Le gardien apparaît à côté du Zaap ; il est plus résistant quand les joueurs sont nombreux.
     // Gardien différent à chaque zone : Bouftou Royal, Tournesol Affamé, Scarabosse Doré...
     const normal = getMonster(bossForStage(this.state.stage));
-    const rogue = this.state.stage%3===0 && Math.random()<0.15;
+    const rogue = this.state.stage!==FINAL_STAGE && this.state.stage%3===0 && Math.random()<0.15;
     const alternatives=ZONES.map(zone=>zone.boss).filter(id=>id!==normal.id);
     const selected=rogue?getMonster(alternatives[Math.floor(Math.random()*alternatives.length)]):normal;
     const first=rogue?{...selected,melee:{...selected.melee,damage:Math.max(selected.melee.damage,normal.melee.damage)}}:selected;
@@ -548,7 +559,7 @@ export class Simulation {
     this.broadcast('boss', {name:count>1?`${count===3?'Triple':'Double'} gardien · ${names.join(' + ')}`:first.name,rogue,lootMultiplier:rogue?3:1,count});
   }
 
-  /** Relance une partie après une défaite : nouvelle carte, tout le monde revit. */
+  /** Retour au salon après une victoire ou une défaite. */
   restart(): void {
     if (this.state.phase !== PHASE_LOST) return;
     for (const id of [...this.monsters.keys()]) this.removeMonster(id);
@@ -566,6 +577,7 @@ export class Simulation {
       this.resetMeters(p);
     }
     this.state.phase = PHASE_LOBBY;
+    this.state.outcome='';
     this.state.intermission=false;
     this.state.paused = false;
     this.state.time = 0;
@@ -739,6 +751,7 @@ export class Simulation {
    * Retourne la direction normalisée du tir.
    */
   cast(spell: SpellDef, x: number, y: number, tx: number, ty: number, owner: string, fromPlayer: boolean, damageMult: number, critChance = 0, slot?: number, cooldown?: number, critMult = CRIT_MULT, rangeBonus = 0, visualCaster = owner): { x: number; y: number } {
+    if(this.state.phase===PHASE_LOST)return{x:0,y:0};
     const range = spell.range + rangeBonus;
     let dx = tx - x;
     let dy = ty - y;
@@ -928,6 +941,7 @@ export class Simulation {
     this.now += dt;
 
     this.runTimers();
+    if(this.state.phase===PHASE_LOST)return;
     this.updatePlayers(dt);
     if(this.state.intermission)return;
     this.mechanics.update(dt);
@@ -945,10 +959,11 @@ export class Simulation {
       // Le Zaap se charge tout seul une fois activé, mais ne s'ouvre que si son gardien est vaincu.
       if (this.state.zaapState === ZAAP_CHARGING) {
         this.state.zaapCharge = Math.min(1, this.state.zaapCharge + dt / ZAAP_CHARGE_TIME);
-        if (this.state.zaapCharge >= 1 && [...this.guardianIds].every(id=>!this.monsters.has(id))) this.completeStage();
+        if ((this.state.zaapCharge >= 1||this.state.stage===FINAL_STAGE&&this.guardianIds.size>0) && [...this.guardianIds].every(id=>!this.monsters.has(id))) this.completeStage();
       }
       if(this.state.zaapState !== ZAAP_READY) this.director.update(dt);
     }
+    if(this.state.phase===PHASE_LOST)return;
     // Aussi dans le salon : les invocations d'entraînement bougent et expirent.
     updateMonsters(this, dt);
     this.updateProjectiles(dt);
@@ -1116,6 +1131,7 @@ export class Simulation {
 
   /** Applique dégâts et effets d'un sort à une cible. (dirX, dirY) = sens du recul. */
   private applyHit(pr: Projectile, targetId: string, dirX: number, dirY: number): void {
+    if(this.state.phase===PHASE_LOST)return;
     if(pr.areaHits?.has(targetId))return;
     pr.areaHits?.add(targetId);
     const [min, max] = pr.spell.damage;
@@ -1198,6 +1214,7 @@ export class Simulation {
   // -------------------------------------------------------------------------
 
   healPlayer(p: PlayerRt, amount: number, source: PlayerRt | null | undefined = p, fuelMechanic=true): void {
+    if(this.state.phase===PHASE_LOST)return;
     const gain = Math.min(p.state.maxHp - p.state.hp, Math.round(amount));
     if(fuelMechanic&&source)this.mechanics.onHeal(source,amount,Math.max(0,gain));
     if (gain <= 0) return;
@@ -1321,6 +1338,7 @@ export class Simulation {
   // -------------------------------------------------------------------------
 
   damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false): void {
+    if(this.state.phase===PHASE_LOST)return;
     if(!this.monsters.has(m.id))return;
     amount = Math.max(1, Math.round(amount));
     const dealer = m.state.ally ? undefined : this.creditOf(ownerId);
@@ -1395,9 +1413,11 @@ export class Simulation {
     this.removeMonster(m.id);
     if(killer)this.blessings.onKill(killer,m);
     this.mechanics.onEnemyDeath(m);
+    if(this.state.phase===PHASE_PLAYING&&this.state.stage===FINAL_STAGE&&this.guardianIds.has(m.id)&&[...this.guardianIds].every(id=>!this.monsters.has(id)))this.completeStage();
   }
 
   damagePlayer(p: PlayerRt, amount: number, source='Dégâts de combat'): void {
+    if(this.state.phase===PHASE_LOST)return;
     if (!p.state.alive) return;
     if(this.now<p.dodgeUntil){if(!p.dodgeReported){p.dodgeReported=true;this.broadcast('buff',{target:p.id,label:'Esquive !',duration:.5});}return;}
     // Trêve : aucun dégât.
@@ -1442,13 +1462,22 @@ export class Simulation {
   private checkDefeat(): void {
     if (this.state.phase !== PHASE_PLAYING || this.players.size === 0) return;
     for (const p of this.players.values()) if (p.state.alive || p.revivePending) return;
-    this.state.phase = PHASE_LOST;
+    this.finishRun('defeat');
+  }
+
+  private finishRun(outcome:'victory'|'defeat'):void{
+    if(this.state.phase!==PHASE_PLAYING)return;
+    this.state.phase = PHASE_FINISHED;
+    this.state.outcome=outcome;this.state.paused=false;this.timers=[];this.projectiles=[];
     for (const p of this.players.values()) {
+      p.dx=p.dy=0;p.autoAttack=false;p.push=null;p.state.moving=false;p.state.forcedMotion=false;p.state.momentum=false;p.momentumUntil=0;
+      p.state.boonChoices='[]';this.boonQueues.delete(p.id);
+      if(outcome==='victory'){p.state.deathCause='';p.state.unlockedMode=Math.max(p.state.unlockedMode,nextMode(this.state.mode)??this.state.mode);}
       let seed = 2166136261;
       for (const c of `${this.state.runId}:${p.id}`) seed = Math.imul(seed ^ c.charCodeAt(0), 16777619);
       const reward=equipmentReward(this.state.runId, seed >>> 0, this.state.stage, this.state.mode, p.state.kamasEarned,p.loot);
       reward.forgeGrants=JSON.parse(p.state.forgeGrants);
-      reward.summary={runId:this.state.runId,classId:p.def.id,name:p.state.name,startedAt:this.startedAt,duration:Math.floor(this.state.time),partySize:this.partySize,mode:this.state.mode,zone:this.state.stage,zoneName:zoneForStage(this.state.stage).name,waves:this.state.waves,kills:p.state.kills,teamKills:this.state.kills,bossKills:p.state.bossKills,damageDealt:p.state.dmgDealt,healing:p.state.healDone,damageTaken:p.state.dmgTaken,deathCause:p.state.deathCause,bonuses:sumRunStats(p.inventory),blessing:getBlessing(p.state.blessing)?.id,blessings:{...p.blessingRanks},loot:[...p.loot.map(d=>d.gear),...reward.gear]};
+      reward.summary={outcome,runId:this.state.runId,classId:p.def.id,name:p.state.name,startedAt:this.startedAt,duration:Math.floor(this.state.time),partySize:this.partySize,mode:this.state.mode,zone:this.state.stage,zoneName:zoneForStage(this.state.stage).name,waves:this.state.waves,kills:p.state.kills,teamKills:this.state.kills,bossKills:p.state.bossKills,damageDealt:p.state.dmgDealt,healing:p.state.healDone,damageTaken:p.state.dmgTaken,deathCause:p.state.deathCause,bonuses:sumRunStats(p.inventory),blessing:getBlessing(p.state.blessing)?.id,blessings:{...p.blessingRanks},loot:[...p.loot.map(d=>d.gear),...reward.gear]};
       p.state.rewards = JSON.stringify(reward);
       this.broadcast('runReward',{player:p.id,reward});
     }
@@ -1626,7 +1655,7 @@ export class Simulation {
     const due = this.timers.filter((t) => t.at <= this.now);
     if (due.length === 0) return;
     this.timers = this.timers.filter((t) => t.at > this.now);
-    for (const t of due) t.run();
+    for (const t of due){if(this.state.phase===PHASE_LOST)break;t.run();}
   }
 
   // -------------------------------------------------------------------------

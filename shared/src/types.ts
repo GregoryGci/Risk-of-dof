@@ -312,6 +312,7 @@ export interface PlayerView {
   spellLevels:string;
   momentum:boolean;
   blessing:string;
+  unlockedMode:number;
   blessings:string;
   blessingProgress:number;
   routeChoice:string;
@@ -412,6 +413,7 @@ export interface GameStateView {
   /** Identifiant de run, conservé à travers les changements de carte. */
   runId: string;
   phase: number;
+  outcome:string;
   seed: number;
   time: number;
   difficulty: number;
