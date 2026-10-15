@@ -7,6 +7,7 @@ import { spellDetailsHtml } from './spellInfo.ts';
 import { account } from '../account.ts';
 import { equipmentCard } from './equipmentHtml.ts';
 import { EQUIPMENT_BASES, EQUIPMENT_RARITY_NAMES, type GearDrop } from '@rod/shared';
+import {blessingSelector} from './blessingHtml.ts';
 
 const SLOT_KEYS = ['Clic G', 'Clic D', 'Espace', 'R'];
 
@@ -41,6 +42,7 @@ export interface HudCallbacks {
   onQuit(): void;
   onClass(classId: string): void;
   onMode(mode: number): void;
+  onBlessing(id:string):void;
   onEquipment(uid?: string): void;
   onTalents(): void;
   /** Survol d'un sort de la barre (null = plus rien de survolé). */
@@ -123,6 +125,7 @@ export class Hud {
         if (data.action === 'talents') this.callbacks.onTalents();
         if (data.class) this.callbacks.onClass(data.class);
         if (data.mode !== undefined) this.callbacks.onMode(Number(data.mode));
+        const blessing=(e.target as HTMLElement).closest<HTMLElement>('[data-blessing]')?.dataset.blessing;if(blessing)this.callbacks.onBlessing(blessing);
       },
       { signal },
     );
@@ -475,7 +478,7 @@ export class Hud {
         `<button class="btn" data-action="equipment">Équipement</button><button class="btn" data-action="talents">Sorts & talents</button>` +
         (host ? `<button class="btn btn-primary" data-action="start">Lancer la partie</button>` : `<span class="lobby-wait">En attente de ${escapeHtml(hostName)}…</span>`) +
         `</div>` +
-        classButtonsHtml(me?.classId ?? '');
+        classButtonsHtml(me?.classId ?? '')+blessingSelector(me?.blessing??'');
     } else if (me && !me.alive && state.phase !== PHASE_LOST) {
       const target = spectating ? state.players.get(spectating) : undefined;
       banner = `<b>Vous êtes mort.</b><br>` + (target ? `Spectateur de ${escapeHtml(target.name)} — cliquez pour changer.` : '');

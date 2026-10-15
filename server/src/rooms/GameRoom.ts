@@ -56,6 +56,7 @@ export class GameRoom extends Room<{ state: GameState }> {
 
     this.onMessage('ping',(client:Client,message:{sentAt?:unknown})=>{if(typeof message?.sentAt==='number'&&Number.isFinite(message.sentAt))client.send('pong',{sentAt:message.sentAt});});
     this.onMessage('routeChoice',(client:Client,message:{route?:unknown})=>this.sim.chooseRoute(client.sessionId,message?.route));
+    this.onMessage('blessing',(client:Client,message:{blessing?:unknown})=>this.sim.setBlessing(client.sessionId,message?.blessing));
     this.onMessage('input', (client: Client, message: InputMessage) => this.sim.setInput(client.sessionId, message));
     this.onMessage('cast', (client: Client, message: CastMessage) => this.sim.playerCast(client.sessionId, message));
     this.onMessage('class', (client: Client, message: { classId?: string; spells?: string[] }) => this.sim.setClass(client.sessionId, message?.classId, message?.spells));
@@ -78,11 +79,11 @@ export class GameRoom extends Room<{ state: GameState }> {
     console.log(`[salle ${this.roomId}] créée`);
   }
 
-  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown },auth?:{userId?:string}|boolean): void {
+  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown; blessing?:unknown },auth?:{userId?:string}|boolean): void {
     if(auth&&typeof auth==='object'&&auth.userId)this.accounts.set(client.sessionId,auth.userId);
     client.send('cloudStatus',{ranked:this.accounts.has(client.sessionId)&&cloudScoresEnabled});
     const name = cleanName(auth&&typeof auth==='object'&&'name' in auth?auth.name:options?.name);
-    this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.equipment);
+    this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.equipment, options?.blessing);
     this.sim.players.get(client.sessionId)!.state.rankStatus=this.accounts.has(client.sessionId)&&cloudScoresEnabled?'ready':'disabled';
     if (!this.state.hostId) this.state.hostId = client.sessionId;
     console.log(`[salle ${this.roomId}] ${name} a rejoint (${this.state.players.size}/${this.maxClients})`);

@@ -1,7 +1,7 @@
 // Point d'entrée du client : écran d'accueil (DOM), connexion Colyseus, puis lancement de Phaser.
 import Phaser from 'phaser';
 import { Client, type Room } from '@colyseus/sdk';
-import { CLASSES, GAME_PROTOCOL_VERSION, DEFAULT_CLASS, EQUIPMENT_TIERS, GAME_MODES, PHASE_PLAYING, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT, type GearDrop, type RunReward } from '@rod/shared';
+import { BLESSINGS,getBlessing, CLASSES, GAME_PROTOCOL_VERSION, DEFAULT_CLASS, EQUIPMENT_TIERS, GAME_MODES, PHASE_PLAYING, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT, type GearDrop, type RunReward } from '@rod/shared';
 import { ASSET_ROOT, loadManifest } from './assets/manifest.ts';
 import { AssetStore } from './assets/store.ts';
 import { GameScene } from './game/GameScene.ts';
@@ -65,6 +65,12 @@ const invited = new URLSearchParams(location.search).get('code');
 if (invited) codeInput.value = invited.toUpperCase().slice(0, ROOM_CODE_LENGTH);
 let setupMode = 1;
 let currentView = '';
+let blessingId=getBlessing(localStorage.getItem('rod.blessing'))?.id??'ember';
+function renderBlessings():void{
+  const html=`<div class="pact-heading"><span class="eyebrow">VOTRE PREMIER POUVOIR</span><h3>Choisissez votre bénédiction</h3><p>Un effet de combat pour toute la run. Votre classe garde ses propres sorts.</p></div><div class="pact-grid">${Object.values(BLESSINGS).map(b=>`<button class="pact-card${blessingId===b.id?' selected':''}" data-blessing="${b.id}" style="--pact:#${b.color.toString(16)}" aria-pressed="${blessingId===b.id}" title="${escapeHtml(b.description)}"><span class="pact-family">${b.family}<i>${blessingId===b.id?'✓':'◇'}</i></span><img src="assets/dofus/spells/${b.icon}.png" alt=""><b>${b.name}</b><span>${b.short}</span></button>`).join('')}</div><p class="pact-description">${escapeHtml(BLESSINGS[blessingId].description)}</p>`;
+  $('solo-blessings').innerHTML=html;$('multi-blessings').innerHTML=html;
+}
+renderBlessings();
 
 // Classe choisie, mémorisée d'une partie à l'autre.
 let classId = localStorage.getItem('rod.classe') ?? DEFAULT_CLASS;
@@ -138,6 +144,8 @@ function showView(view: string): void {
   if (view) $('view-close').focus();
 }
 menu.addEventListener('click', e => {
+  const choice=(e.target as HTMLElement).closest<HTMLElement>('[data-blessing]')?.dataset.blessing;
+  const blessing=getBlessing(choice);if(blessing){blessingId=blessing.id;localStorage.setItem('rod.blessing',blessingId);renderBlessings();document.querySelector<HTMLElement>(`#view-${currentView} [data-blessing="${blessingId}"]`)?.focus();}
   const button = (e.target as HTMLElement).closest<HTMLElement>('[data-view]');
   if (button?.dataset.view) showView(button.dataset.view);
 });
@@ -162,7 +170,7 @@ function previewVolume(key: VolumeKey): void {
   });
 }
 function renderSettings(): void {
-  $('home-settings').innerHTML = `<label class="home-setting"><div><b>Direction artistique</b><span>Comparez le sanctuaire Hades × Dofus avec le style parchemin.</span></div><select name="uiTheme" aria-label="Direction artistique"><option value="underworld" ${settings.uiTheme==='underworld'?'selected':''}>Sanctuaire</option><option value="retro" ${settings.uiTheme==='retro'?'selected':''}>Parchemin</option></select></label><label class="home-setting"><div><b>Attaque automatique</b><span>L’attaque de base vise l’ennemi le plus proche à portée. Le clic gauche garde la visée manuelle.</span></div><input type="checkbox" name="autoAttack" ${settings.autoAttack ? 'checked' : ''}><i aria-hidden="true"></i></label>
+  $('home-settings').innerHTML = `<label class="home-setting"><div><b>Direction artistique</b><span>Pacte des Douze : illustration infernale, rouge et ivoire. Ou le style parchemin.</span></div><select name="uiTheme" aria-label="Direction artistique"><option value="underworld" ${settings.uiTheme==='underworld'?'selected':''}>Pacte des Douze</option><option value="retro" ${settings.uiTheme==='retro'?'selected':''}>Parchemin</option></select></label><label class="home-setting"><div><b>Attaque automatique</b><span>L’attaque de base vise l’ennemi le plus proche à portée. Le clic gauche garde la visée manuelle.</span></div><input type="checkbox" name="autoAttack" ${settings.autoAttack ? 'checked' : ''}><i aria-hidden="true"></i></label>
     <label class="home-setting"><div><b>Rendu du jeu</b><span>Le changement s’applique à la prochaine partie.</span></div><select name="renderMode" aria-label="Rendu du jeu"><option value="standard" ${settings.renderMode==='standard'?'selected':''}>Standard</option><option value="compatible" ${settings.renderMode==='compatible'?'selected':''}>Compatibilité</option></select></label><label class="home-setting"><div><b>Performances en jeu</b><span>FPS, aller-retour réseau et nombre de créatures pour identifier les ralentissements.</span></div><input type="checkbox" name="showPerformance" ${settings.showPerformance?'checked':''}><i aria-hidden="true"></i></label><label class="home-setting"><div><b>Smart cast</b><span>Espace et R lancent aussitôt le sort vers la souris. Désactivé, un clic confirme votre cible.</span></div><input type="checkbox" name="smartCast" ${settings.smartCast ? 'checked' : ''}><i aria-hidden="true"></i></label>
     ${VOLUME_ROWS.map(([key, name, help]) => `<div class="home-setting setting-wide"><div><b>${name}</b><span>${help}</span></div><input class="setting-range" type="range" name="${key}" min="0" max="100" step="5" value="${Math.round(settings[key] * 100)}" aria-label="Volume : ${name}"><output id="${key}-value">${Math.round(settings[key] * 100)} %</output></div>`).join('')}
     <div class="home-setting setting-wide crosshair-setting"><div><b>Viseur</b><span>Forme et couleur du curseur en jeu.</span>
@@ -248,7 +256,7 @@ async function connect(join: () => Promise<Room>): Promise<void> {
   }
 }
 
-const joinOptions = () => ({ name: pseudo(), classId, spells: account.loadout(classId), equipment: account.equipment,accessToken:cloud.session?.access_token });
+const joinOptions = () => ({ name: pseudo(), classId, spells: account.loadout(classId), equipment: account.equipment,blessing:blessingId,accessToken:cloud.session?.access_token });
 btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, joinOptions())));
 btnSolo.addEventListener('click', () => connect(async () => {
   const room = await client.create(ROOM_NAME, { ...joinOptions(), singlePlayer: true });
@@ -328,6 +336,7 @@ async function startGame(room: Room): Promise<void> {
   const hud = new Hud(store, {
     onStart: () => { room.send('equipment', { equipment: account.equipment }); room.send('start'); },
     onRestart: () => room.send('restart'),
+    onBlessing: id=>{room.send('blessing',{blessing:id});const blessing=getBlessing(id);if(blessing){blessingId=blessing.id;localStorage.setItem('rod.blessing',id);renderBlessings();}},
     onQuit: quit,
     onSpellHover: () => {},
     onMode: (mode) => room.send('mode', { mode }),

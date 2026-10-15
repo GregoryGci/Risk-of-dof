@@ -24,9 +24,12 @@ test('WebSocket : solo fermé aux invités, salon à deux, récompenses fiables 
     const solo=await client.create<GameStateView>('audit_game',{singlePlayer:true,name:'Solo'}); joined.push(solo);solo.onMessage('*',()=>{});
     await assert.rejects(()=>client.joinById(solo.roomId,{name:'Intrus'}));
     await solo.leave();joined.pop();
-    const host=await client.create<GameStateView>('audit_game',{name:'Hôte',equipment:{coiffe:createEquipment('coiffe_bouftou','legendaire')}});joined.push(host);host.onMessage('*',()=>{});
+    const host=await client.create<GameStateView>('audit_game',{name:'Hôte',blessing:'storm',equipment:{coiffe:createEquipment('coiffe_bouftou','legendaire')}});joined.push(host);host.onMessage('*',()=>{});
     const guest=await client.joinById<GameStateView>(host.roomId,{name:'Invité'});joined.push(guest);guest.onMessage('*',()=>{});
     await until(()=>host.state.players.size===2 && guest.state.players.size===2);
+    assert.equal(host.state.players.get(host.sessionId)!.blessing,'storm');
+    guest.send('blessing',{blessing:'thorn'});await until(()=>host.state.players.get(guest.sessionId)!.blessing==='thorn');
+    guest.send('blessing',{blessing:'invalid'});await new Promise(r=>setTimeout(r,40));assert.equal(guest.state.players.get(guest.sessionId)!.blessing,'thorn');
     const rewards:RunReward[]=[];
     host.onMessage('runReward',(e:{player:string;reward:RunReward})=>{if(e.player===host.sessionId) rewards.push(e.reward);});
     host.send('start');await until(()=>host.state.phase===PHASE_PLAYING);

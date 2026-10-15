@@ -304,6 +304,8 @@ export interface SyncMap<T> {
   forEach(cb: (value: T, key: string) => void): void;
 }
 export interface PlayerView {
+  blessing:string;
+  blessingProgress:number;
   routeChoice:string;
   rankStatus:string;
   connected:boolean;

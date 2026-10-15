@@ -1,16 +1,22 @@
 import {affinityForBonus, RARITY_NAMES,CLASS_MECHANICS,getRunBonus,statText,type GameStateView,type MechanicView,type StatKey} from '@rod/shared';
 import {escapeHtml} from './Hud.ts';
+import {getBlessing} from '@rod/shared';
+import {PHASE_PLAYING} from '@rod/shared';
 export class MechanicHud {
   private el=document.getElementById('class-mechanic')!;
   private boons=document.getElementById('boon-choices')!;
   private key='';private boonKey='';private abort=new AbortController();
   private structure='';
+  private blessing=document.createElement('div');private blessingKey='';
   constructor(action:(choice:number)=>void,choose:(choice:number)=>void) {
+    this.blessing.id='blessing-hud';this.el.before(this.blessing);
     this.el.addEventListener('click',e=>{const b=(e.target as HTMLElement).closest<HTMLElement>('[data-class-action]');if(b)action(Number(b.dataset.classAction));},{signal:this.abort.signal});
     this.boons.addEventListener('click',e=>{const b=(e.target as HTMLElement).closest<HTMLElement>('[data-boon]');if(b)choose(Number(b.dataset.boon));},{signal:this.abort.signal});
   }
   update(state:GameStateView,id:string):void {
     const p=state.players.get(id);if(!p)return;
+    const blessing=getBlessing(p.blessing),blessingKey=`${p.blessing}|${p.blessingProgress}|${state.phase}|${state.intermission}`;
+    if(this.blessingKey!==blessingKey){this.blessingKey=blessingKey;this.blessing.classList.toggle('hidden',!blessing||state.phase!==PHASE_PLAYING);if(blessing){const status=state.intermission?'Prochaine zone':blessing.id==='storm'?`${p.blessingProgress} / 4 attaques`:blessing.id==='thorn'?(p.blessingProgress>0?`${p.blessingProgress.toFixed(1)} s`:'Prête'):'Maj · dash';this.blessing.style.setProperty('--pact',`#${blessing.color.toString(16)}`);this.blessing.title=blessing.description;this.blessing.innerHTML=`<img src="assets/dofus/spells/${blessing.icon}.png" alt=""><b>${blessing.name}</b><span>${status}</span>`;}}
     const key=`${p.classId}|${p.mechanic}|${p.alive}|${state.paused}|${state.intermission}`;
     if(key!==this.key) {
       this.key=key;const def=CLASS_MECHANICS[p.classId];let m:MechanicView;
@@ -34,5 +40,5 @@ export class MechanicHud {
       this.boons.innerHTML=choices.length?`<b>Bénédiction du gardien</b><small>Choisissez un bonus pour cette run</small><div>${choices.map((id,i)=>{const bonus=getRunBonus(id);if(!bonus)return '';return`<button class="btn" data-boon="${i}" ${state.paused?'disabled':''}><b>${escapeHtml(bonus.name)}</b><small>${RARITY_NAMES[bonus.rarity]}${affinityForBonus(bonus.base)?` · ${affinityForBonus(bonus.base)!.name}`:''}</small><span>${Object.entries(bonus.stats).map(([k,v])=>escapeHtml(statText(k as StatKey,v))).join(' · ')}</span></button>`;}).join('')}</div>`:'';
     }
   }
-  destroy():void{this.abort.abort();this.el.innerHTML='';this.boons.classList.add('hidden');}
+  destroy():void{this.abort.abort();this.blessing.remove();this.el.innerHTML='';this.boons.classList.add('hidden');}
 }

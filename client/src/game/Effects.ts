@@ -291,6 +291,26 @@ export class Effects {
   }
 
   /** Soin : anneau vert et « + » qui montent. */
+  blessingBolt(x:number,y:number,tx:number,ty:number,color:number):void{
+    if(!this.cosmetic(x,y))return;
+    const a=worldToScreen(x,y),b=worldToScreen(tx,ty),dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
+    const points=[{x:a.x,y:a.y-18}];
+    for(let i=1;i<6;i++){const offset=(i%2?1:-1)*9;points.push({x:a.x+dx*i/6-dy/len*offset,y:a.y+dy*i/6+dx/len*offset-18});}
+    points.push({x:b.x,y:b.y-18});const bolt=this.scene.add.graphics().setDepth(Math.max(a.y,b.y)+60);
+    bolt.lineStyle(7,color,.25).strokePoints(points,false);bolt.lineStyle(2.5,0xf0fff1,1).strokePoints(points,false);
+    this.scene.tweens.add({targets:bolt,alpha:0,duration:230,onComplete:()=>bolt.destroy()});
+  }
+
+  blessingBurst(x:number,y:number,radius:number,color:number):void{
+    if(!this.cosmetic(x,y))return;const p=worldToScreen(x,y),r=radius*TILE_W/2;
+    const seal=this.scene.add.graphics({x:p.x,y:p.y}).setDepth(DEPTH_GROUND_FX+5);
+    seal.lineStyle(3,color,.9).strokeEllipse(0,0,r*2,r);
+    seal.lineStyle(1,0xffe7c5,.8).strokePoints([{x:0,y:-r*.52},{x:r,y:0},{x:0,y:r*.52},{x:-r,y:0}],true);
+    for(let i=0;i<8;i++){const a=i*Math.PI/4;seal.lineBetween(Math.cos(a)*r*.7,Math.sin(a)*r*.35,Math.cos(a)*r*1.08,Math.sin(a)*r*.54);}
+    seal.setScale(.4);this.scene.tweens.add({targets:seal,scale:1.15,alpha:0,duration:420,ease:'Quad.easeOut',onComplete:()=>seal.destroy()});
+  }
+
+  /** Soin : anneau vert et « + » qui montent. */
   healBurst(x: number, y: number, radius: number): void {
     if(!this.cosmetic(x,y))return;
     const p = worldToScreen(x, y);

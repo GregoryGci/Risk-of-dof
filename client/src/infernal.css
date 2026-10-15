@@ -1,0 +1,84 @@
+/* Pacte des Douze : compositions gravées, coupes obliques, rouge de combat et ivoire.
+   Cette couche structurelle complète les composants du sanctuaire. Aucun filtre GPU. */
+.welcome-seals{display:flex;gap:18px;margin:18px 0}
+.pact-heading{margin-top:25px}.pact-heading h3{margin:7px 0}.pact-heading p,.pact-description{font-size:11px;line-height:1.6;color:var(--encre-douce)}
+.pact-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:15px 0 8px}
+.pact-card{--pact:#ec9d60;position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:13px;text-align:left;background:var(--parchemin-fonce);color:var(--encre);border:1px solid var(--bois);cursor:pointer;border-radius:0;min-width:0}
+.pact-family{display:flex;justify-content:space-between;width:100%;font:9px 'Trebuchet MS',sans-serif;letter-spacing:2px}.pact-family i{font-style:normal}.pact-card img{width:38px;height:38px;object-fit:contain}.pact-card b{font:700 15px Georgia,serif}.pact-card>span:last-child{font-size:10px;line-height:1.6}.pact-card.selected{border-color:var(--pact);box-shadow:inset 0 -3px var(--pact)}.pact-description{min-height:54px}
+.lobby-pacts{display:flex;justify-content:center;gap:8px;margin:12px 0 5px}.lobby-pacts button{display:flex;align-items:center;gap:7px}.lobby-pacts img{width:25px;height:25px;object-fit:contain}.lobby-pact-hint{display:block;font-size:10px;line-height:1.5}.blessing-detail{border-left:3px solid var(--pact)!important}
+#blessing-hud{display:flex;align-items:center;gap:9px;max-width:100%;padding:6px 8px;margin-bottom:3px;border-left:2px solid var(--pact);color:var(--encre);font:11px 'Trebuchet MS',sans-serif;background:var(--parchemin-fonce)}#blessing-hud img{width:25px;height:25px;object-fit:contain}#blessing-hud b{color:var(--pact)}#blessing-hud span{margin-left:auto;font-size:10px}
+body.underworld{--parchemin:#1c1a22;--parchemin-fonce:#141219;--parchemin-creux:#100e14;--encre:#f2e4cb;--encre-douce:#b5a9a5;--or:#e7b775;--or-clair:#ffe2a2;--jade:#6ce6d7;--rouge:#db4b3f;--edge:#e6b77955;background:#100e14}
+body.underworld .home-screen{background:#100e14}
+body.underworld .home-background{background:linear-gradient(90deg,#0e0b13bd 0%,#0e0b1370 28%,transparent 53%),linear-gradient(0deg,#100b17c9,transparent 45%),url('/assets/menu/sanctuary-infernal.jpg') center/cover;filter:none}
+body.underworld .home-screen::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(115deg,transparent 0 64%,#e05b3420 64% 64.2%,transparent 64.2% 79%,#e05b3414 79% 85%,transparent 85%),linear-gradient(0deg,#b72e2f14,transparent 50%);border-top:5px solid #ba393b}
+body.underworld .home-topline{color:#d8baa1;padding-top:23px;letter-spacing:3px}
+body.underworld .home-sigil{background:#da4b3e;border-color:#ffac7d;box-shadow:0 0 12px #e84f4d50}
+body.underworld .home-layout{grid-template-columns:minmax(310px,370px) minmax(0,1fr);gap:clamp(35px,6vw,95px);width:min(1350px,92vw);padding:23px 0;min-height:calc(100dvh - 105px)}
+body.underworld .home-brand p{font-size:9px;color:#e77660;letter-spacing:3px}
+body.underworld .home-brand h1{font-family:Impact,'Arial Black',sans-serif;font-size:clamp(78px,7vw,104px);font-style:italic;letter-spacing:-3px;line-height:.88;text-shadow:4px 4px #9a302e,9px 9px #040409;color:#f9e9c9;transform:rotate(-3deg);transform-origin:left}
+body.underworld .home-brand h1>span:first-child{font-size:1.1em}body.underworld .home-brand h1 em{color:#e26a4d;font-size:.38em}
+body.underworld .brand-rule{margin:23px 0 12px;width:100%;height:15px}.brand-rule i{background:#d64b3b;border-color:#d64b3b}
+body.underworld .home-nav{gap:3px}.home-nav-button{transition:background .16s,transform .16s}
+body.underworld .home-nav-button{position:relative;padding:10px 13px;border:0;border-left:3px solid transparent}
+body.underworld .home-nav-button>span:nth-child(2){font:bold italic 23px Georgia,serif;letter-spacing:.2px}
+body.underworld .home-nav-button small{font:10px 'Trebuchet MS',sans-serif;color:#9f9295;letter-spacing:0}
+body.underworld .home-nav-button:first-child{background:linear-gradient(100deg,#9c2d31a8,#6f203e25);border-left-color:#ef6850}
+body.underworld .home-nav-button:hover,body.underworld .home-nav-button.active{background:linear-gradient(100deg,#bb343d99,#6a243137);border-left-color:#ffba79;transform:translateX(5px);color:#fff0ce}
+body.underworld .nav-number{color:#ed916b;font:italic 11px Georgia,serif}body.underworld .nav-arrow{color:#ffca88}
+body.underworld .home-profile{border-color:#d1755a50;margin-top:14px;padding-top:12px}.home-extra{padding-top:5px}
+body.underworld .home-welcome{display:grid;grid-template-columns:1fr;min-height:650px;align-self:center;align-content:end;overflow:visible}
+body.underworld .welcome-caption{width:min(480px,100%);padding:24px 27px 22px;border-left:4px solid #e6664b;background:linear-gradient(110deg,#23131ff2,#1b1320b8);clip-path:polygon(0 0,96% 0,100% 10%,100% 100%,4% 100%,0 91%)}
+body.underworld .welcome-caption h2{font:bold italic clamp(32px,3vw,43px) Georgia,serif;line-height:1.02;color:#ffebc6;margin:15px 0}
+body.underworld .welcome-caption p{font-size:12px;color:#c8b1ae;line-height:1.7}.welcome-seals{font:9px 'Trebuchet MS',sans-serif;letter-spacing:2px;color:#e9b77e}.welcome-seals span:nth-child(2){color:#6ce6d7}.welcome-seals span:nth-child(3){color:#b6da72}
+body.underworld .welcome-link{font:italic bold 15px Georgia,serif;color:#f4bf7b;padding-top:12px;margin-top:0;border-top:1px solid #e7965e45;width:100%;text-align:left}.welcome-link>span{float:right}
+body.underworld .eyebrow{color:#ee926a;letter-spacing:2.5px;font-size:9px}
+body.underworld :is(.home-view,.panel,.sheet,.archive-sheet,.auth-sheet),body.underworld #equipment .equipment-sheet,body.underworld #encyclopedia .encyclopedia-sheet{background:linear-gradient(135deg,#29202bf9,#15131dfc);border-color:#9d615677;border-radius:0;box-shadow:0 22px 80px #000b,inset 0 0 0 3px #e1a76b0b}
+body.underworld :is(.sheet-head,.equipment-sheet .sheet-head){position:relative;background:linear-gradient(105deg,#7d2b34,#28202b 70%);border-bottom:2px solid #d8664c;color:#fce4be;padding:20px 24px;font:bold italic 23px Georgia,serif}
+body.underworld .sheet-head::before{content:'◆';margin-right:12px;color:#f2b87e;font-size:16px}.sheet-head>span{flex:1}
+body.underworld .home-view{border-top:4px solid #d94c3f;border-bottom:2px solid #c98760;padding:26px;max-height:calc(100dvh - 120px)}
+body.underworld :is(.home-view-head h2,.details-head h2,.catalog-detail h3,.details-panel h3,.character-intro h3){font-family:Georgia,serif;font-weight:bold;font-style:italic;color:#f7dbb2}
+body.underworld .home-view-head{border-color:#c5785855}.home-view-head h2{font-size:36px!important}
+body.underworld .btn{background:#28202c;border-color:#9c705b77;border-radius:0;color:#f1d2b1;box-shadow:inset 0 -2px #0004;letter-spacing:.5px}
+body.underworld .btn-primary,body.underworld .btn.active,body.underworld .home-view .btn-primary{background:linear-gradient(110deg,#b63835,#7d2639);border-color:#f08b5b;color:#fff1c9;box-shadow:inset 0 0 0 2px #d78e6420,3px 3px #0c0911}
+body.underworld .home-view .btn-primary:hover{background:linear-gradient(110deg,#d34d3d,#97324b)}
+body.underworld .start-adventure{clip-path:polygon(0 0,97% 0,100% 24%,100% 100%,3% 100%,0 76%);font:bold italic 20px Georgia,serif;padding:18px 23px;letter-spacing:0}
+body.underworld .home-view-head{margin-bottom:13px;padding-bottom:12px}
+body.underworld .view-intro{margin:10px 0 14px}
+body.underworld .setup-character{padding:10px 15px;gap:14px}
+body.underworld .setup-character img{height:47px}
+body.underworld .pact-heading{margin-top:17px}
+body.underworld .pact-heading h3{margin:6px 0}
+body.underworld .pact-heading p{margin:7px 0}
+body.underworld .pact-grid{margin-top:11px}
+body.underworld .start-adventure{position:sticky;bottom:-15px;z-index:3;margin-top:13px;box-shadow:0 -8px 15px #18121f}
+body.underworld :is(.home-class,.spell-card,.talent,.shop-offer,.gear-card,.gear-slot,.catalog-card,.set-summary,.history-card){border-radius:0}
+body.underworld :is(.setup-character,.character-action,.mode-option,.home-class,.spell-card,.talent,.shop-offer,.details-panel section,.gear-character,.gear-inspector,.catalog-detail){background:#13111a8c;border-color:#a4735c50}
+body.underworld :is(.gear-card,.gear-slot,.gear-detail-icon){background:#15121c}
+body.underworld .gear-character{background:radial-gradient(ellipse at 50% 40%,#84293839,transparent 65%),#15121b}
+body.underworld .gear-avatar .avatar-halo{background:radial-gradient(ellipse,#db69462e,transparent 65%)}
+body.underworld .home-class.active,body.underworld .setup-mode.active{background:#9d373636;border-color:#ec9461;box-shadow:inset 0 -2px #e55f46}
+body.underworld .pact-card{background:linear-gradient(145deg,#27202f,#17131d);border-color:#76606466;padding:13px 12px;gap:9px;transition:transform .15s,border-color .15s}
+body.underworld .pact-card.selected{border-color:var(--pact);box-shadow:inset 0 -3px var(--pact);background:linear-gradient(145deg,#47303c,#191820)}
+body.underworld .pact-card:hover{transform:translateY(-3px);border-color:var(--pact)}.pact-card:focus-visible{outline:2px solid var(--pact)!important;outline-offset:3px}
+body.underworld .pact-family{color:var(--pact)}body.underworld .pact-card b{color:#f8dfba;font-style:italic;font-size:17px;line-height:1.1}body.underworld .pact-card>span:last-child{color:#c1aead}
+body.underworld .pact-card img{width:43px;height:43px;filter:drop-shadow(0 2px 8px #0009)}body.underworld .pact-heading h3{font:bold italic 23px Georgia,serif}
+body.underworld .pact-heading p,body.underworld .pact-description{color:#c1afad}.pact-description{border-left:1px solid #8d626366;padding-left:11px}
+body.underworld #hud :is(#hud-team,#hud-timer,#hud-stats,#hud-meter,#hud-minimap),body.underworld #hud-bottom{background:#18121fec;border-color:#bd775a77;border-radius:0;box-shadow:0 5px 15px #0006}
+body.underworld #hud-timer{border-top:3px solid #db5b43!important}body.underworld #hud #timer{font:italic bold 27px Georgia,serif;color:#ffdfb3}
+body.underworld #hud-bottom{border-top:3px solid #dc6448}body.underworld #hud #hud-bar{background:none}
+body.underworld #blessing-hud{background:#29202dd9;border-color:var(--pact);color:#c3b3b0}body.underworld #blessing-hud b{font:bold italic 14px Georgia,serif}
+body.underworld .spell{border-radius:0;background:#261d2b;border-color:#b87e5d}.spell.ready{box-shadow:inset 0 0 0 1px #efc28333}
+body.underworld #boss{background:#1b111aeb;border:1px solid #d65d4e8c;border-bottom:3px solid #b83b3f;border-radius:0;transform:translateX(-50%) skewX(-4deg)}
+body.underworld #boss-name{font:bold italic 17px Georgia,serif;letter-spacing:1px;color:#ffd9ad}body.underworld #boss-bar{background:linear-gradient(90deg,#9b233c,#e96942)}
+body.underworld .overlay{background:#0b0813db;backdrop-filter:none}body.underworld :is(#toast,#prompt,#spell-tip,#boon-choices){background:#201626f5;border-color:#dd8f5b80}
+body.underworld .shop-info b{font:bold italic 22px Georgia,serif;color:#f4d6ac}body.underworld .shop-offer{border-top:2px solid #96654b;background:#19131f}
+body.underworld .shop-actions{background:#201824f5;border-top-color:#bb715a66}body.underworld .route-card.selected{border-color:#ed9d67;background:#833c4130}body.underworld .route-card b{font-style:italic}
+body.underworld #game::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,transparent 55%,#170a233a 100%);box-shadow:inset 0 3px #b8503655}
+body.underworld #boon-choices{width:min(760px,92vw);top:20%;padding:24px;border-top:4px solid #e07a50}body.underworld #boon-choices>b{font:bold italic 26px Georgia,serif;color:#f9dfb3}body.underworld #boon-choices button{border-top:2px solid #db956a;min-height:140px;background:#352332;display:flex;flex-direction:column;gap:9px}
+body.underworld #boon-choices button>b{font:bold italic 21px Georgia,serif;color:#ffe1b1}body.underworld #boon-choices small{color:#c2a8ad}body.underworld #boon-choices button>span{line-height:1.6;color:#e3d1bc}
+body.underworld .history-card{border-left-color:#b6594a}body.underworld .history-card.pinned{border-left-color:#edbe79;background:#7c35401a}
+body.underworld .home-footer{color:#967d81;font-size:8px}
+@media(max-height:800px) and (min-width:761px){body.underworld .home-brand h1{font-size:74px}body.underworld .home-nav-button{padding:8px 12px}body.underworld .home-profile{margin-top:9px}body.underworld .home-welcome{min-height:580px}body.underworld .welcome-caption h2{font-size:34px}}
+@media(max-width:1050px){body.underworld .home-layout{grid-template-columns:300px minmax(0,1fr);gap:30px}body.underworld .welcome-caption{padding:22px}body.underworld .home-brand h1{font-size:80px}.pact-grid{gap:6px}.pact-card{padding:10px!important}}
+@media(max-width:760px){body.underworld .home-layout{grid-template-columns:1fr;gap:28px;min-height:auto}.home-navigation{padding-bottom:0}body.underworld .home-brand h1{display:flex;gap:15px;font-size:65px;letter-spacing:-2px}body.underworld .home-brand h1>span:first-child{font-size:1em}body.underworld .home-welcome{min-height:310px}body.underworld .welcome-caption h2{font-size:36px}body.underworld .home-view{max-height:none;margin-bottom:30px}.pact-card b{font-size:15px!important}.pact-card>span:last-child{font-size:10px}.lobby-pacts{flex-wrap:wrap}.lobby-pacts .btn{font-size:10px}body.underworld #boon-choices{top:16%;padding:17px}body.underworld #boon-choices button{min-height:90px}.home-view-head h2{font-size:30px!important}}
+@media(prefers-reduced-motion:reduce){.pact-card,.home-nav-button{transition:none!important;transform:none!important}}

@@ -2,6 +2,7 @@
 // L'IA des monstres est dans monsters.ts, le spawn dans director.ts.
 import {
   CHALLENGE_COUNT,
+  getBlessing,
   ROUTES, getRoute, resolveRoute, type RouteId,
   CHEST_COUNT,
   MONSTERS,
@@ -63,6 +64,7 @@ import { ChestState, GameState, GroundState, MonsterState, PlayerState, PotionSt
 import { Director } from './director.ts';
 import { updateMonsters } from './monsters.ts';
 import {ClassMechanics} from './ClassMechanics.ts';
+import {Blessings} from './Blessings.ts';
 import { randomUUID } from 'node:crypto';
 
 /** Déplacement forcé (bond, recul) : vitesse appliquée pendant `time` secondes. */
@@ -232,6 +234,7 @@ export class Simulation {
   private partySize=1;
   private boonQueues=new Map<string,string[][]>();
   mechanics=new ClassMechanics(this);
+  blessings=new Blessings(this);
 
   constructor(
     public state: GameState,
@@ -263,13 +266,14 @@ export class Simulation {
   // Cycle de vie
   // -------------------------------------------------------------------------
 
-  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, equipment?: unknown): void {
+  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, equipment?: unknown, blessing?:unknown): void {
     // Un nouveau joueur arrive : plus de pause possible.
     this.state.paused = false;
     const def = getClass(classId ?? '');
     const state = new PlayerState();
     state.name = name;
     state.classId = def.id;
+    state.blessing=getBlessing(blessing)?.id??'';
     state.equipment = JSON.stringify(sanitizeEquipped(equipment));
     // Premier numéro de joueur libre (sert à la couleur).
     const used = new Set([...this.players.values()].map((p) => p.state.slot));
@@ -286,7 +290,7 @@ export class Simulation {
   }
 
   removePlayer(id: string): void {
-    this.mechanics.reset(id);this.boonQueues.delete(id);
+    this.mechanics.reset(id);this.blessings.reset(id);this.boonQueues.delete(id);
     // Ses invocations et ses pièges partent avec lui.
     for (const m of [...this.monsters.values()]) if (m.allyOwner === id) this.removeMonster(m.id);
     for (const g of [...this.grounds.values()]) if (g.owner === id) this.removeGround(g.id);
@@ -338,6 +342,11 @@ export class Simulation {
     if (this.state.phase !== PHASE_LOBBY || id !== this.state.hostId) return;
     const m = Number(mode);
     if (Number.isInteger(m) && m >= 0 && m <= 2) this.state.mode = m;
+  }
+
+  setBlessing(id:string,blessing:unknown):void{
+    const p=this.players.get(id);if(!p||this.state.phase!==PHASE_LOBBY||!getBlessing(blessing))return;
+    p.state.blessing=blessing as string;this.blessings.reset(id);
   }
 
   /** Pause demandée par un joueur : seulement s'il est seul (on ne fige pas les autres). */
@@ -553,6 +562,7 @@ export class Simulation {
   }
 
   private resetPlayer(p: PlayerRt): void {
+    this.blessings.reset(p.id);
     this.mechanics.reset(p.id);p.dodgeUntil=0;
     p.state.forgeGrants='[]';p.state.boonChoices='[]';this.boonQueues.delete(p.id);
     this.placeAtSpawn(p);
@@ -678,6 +688,7 @@ export class Simulation {
     p.dashGlyphActive=true;this.mechanics.beginDash(p);
     const v = DASH_DISTANCE / DASH_DURATION;
     p.push = { vx: (dx / len) * v, vy: (dy / len) * v, time: DASH_DURATION };
+    this.blessings.onDash(p);
     this.broadcast('dash', { id, x: p.state.x, y: p.state.y, tx: p.state.x + (dx / len) * DASH_DISTANCE, ty: p.state.y + (dy / len) * DASH_DISTANCE, cooldown: DASH_COOLDOWN * 1000 });
   }
 
@@ -880,6 +891,7 @@ export class Simulation {
     this.updatePlayers(dt);
     if(this.state.intermission)return;
     this.mechanics.update(dt);
+    this.blessings.update();
     this.updateAutoAttacks();
     this.updatePotions();
     this.updateGrounds();
@@ -1127,6 +1139,7 @@ export class Simulation {
     amount=this.mechanics.onHit(pr,m,amount);
     if(pr.slot===0&&!pr.proc&&['sournoiserie','fouet','attaque_mortelle'].includes(pr.spell.id))this.broadcast('spellImpact',{spell:pr.spell.id,x:m.state.x,y:m.state.y,dx:dirX,dy:dirY});
     if(this.monsters.has(m.id))this.damageMonster(m, amount, pr.owner, crit);
+    if(owner)this.blessings.onHit(owner,pr,m);
     if(owner?.state.alive&&owner.stats.bounce>0&&pr.slot===0&&!pr.proc&&!pr.bounced) {
       pr.bounced=true;
       pr.hit.add(targetId);let from=m.state;
@@ -1358,6 +1371,7 @@ export class Simulation {
     p.state.hp = Math.max(0, p.state.hp - amount);
     p.lastHitAt = this.now;
     this.broadcast('dmg', { target: p.id, amount, absorbed, x: p.state.x, y: p.state.y, player: true });
+    if(amount>0&&p.state.hp>0)this.blessings.onDamage(p);
     if (p.state.hp > 0) return;
     p.state.alive = false;
     p.state.deathCause=source;
@@ -1392,7 +1406,7 @@ export class Simulation {
       for (const c of `${this.state.runId}:${p.id}`) seed = Math.imul(seed ^ c.charCodeAt(0), 16777619);
       const reward=equipmentReward(this.state.runId, seed >>> 0, this.state.stage, this.state.mode, p.state.kamasEarned,p.loot);
       reward.forgeGrants=JSON.parse(p.state.forgeGrants);
-      reward.summary={runId:this.state.runId,classId:p.def.id,name:p.state.name,startedAt:this.startedAt,duration:Math.floor(this.state.time),partySize:this.partySize,mode:this.state.mode,zone:this.state.stage,zoneName:zoneForStage(this.state.stage).name,waves:this.state.waves,kills:p.state.kills,teamKills:this.state.kills,bossKills:p.state.bossKills,damageDealt:p.state.dmgDealt,healing:p.state.healDone,damageTaken:p.state.dmgTaken,deathCause:p.state.deathCause,bonuses:sumRunStats(p.inventory),loot:[...p.loot.map(d=>d.gear),...reward.gear]};
+      reward.summary={runId:this.state.runId,classId:p.def.id,name:p.state.name,startedAt:this.startedAt,duration:Math.floor(this.state.time),partySize:this.partySize,mode:this.state.mode,zone:this.state.stage,zoneName:zoneForStage(this.state.stage).name,waves:this.state.waves,kills:p.state.kills,teamKills:this.state.kills,bossKills:p.state.bossKills,damageDealt:p.state.dmgDealt,healing:p.state.healDone,damageTaken:p.state.dmgTaken,deathCause:p.state.deathCause,bonuses:sumRunStats(p.inventory),blessing:getBlessing(p.state.blessing)?.id,loot:[...p.loot.map(d=>d.gear),...reward.gear]};
       p.state.rewards = JSON.stringify(reward);
       this.broadcast('runReward',{player:p.id,reward});
     }

@@ -26,7 +26,9 @@ L'accueil comporte **Single player → Multiplayer → Character → Classement 
 
 La progression comporte **33 donjons**, des monstres/décors/musiques par zone, des panoplies et des équipements différenciés par niveau. Les drops proviennent de la zone courante et des deux précédentes, avec raretés antérieures ×3 ; les Dofus restent accessibles sur les boss de toutes les zones. Une surprise plus puissante peut remplacer le gardien toutes les trois zones, avec butin ×3.
 
-La DA **Sanctuaire**, inspirée de Hades × Dofus, est active par défaut sur toutes les pages. **Settings → Direction artistique** permet de revenir au parchemin. Les sprites, équipements et sorts Retro restent ceux du jeu. L’atlas de l’accueil présente les 33 donjons et les pools de butin.
+La DA **Pacte des Douze**, inspirée de Hades × Dofus, est active par défaut : illustration Iop/Zaap, rouge/ivoire/obsidienne, formes coupées et HUD de combat. **Settings → Direction artistique** permet de revenir au parchemin. Les sprites, équipements et sorts Retro restent ceux du jeu. L’atlas de l’accueil présente les 33 donjons et les pools de butin.
+
+Avant le départ, chaque joueur choisit un pouvoir de run : **Foulée ardente** transforme le dash en explosion, **Orage en chaîne** décharge tous les quatre coups, **Écorce vengeresse** donne une riposte et un bouclier après un coup reçu. Le choix et ses compteurs restent visibles dans le HUD. [Captures, règles et 192 simulations](docs/DA_PACTE_DES_DOUZE.md).
 
 À la halte marchande, choisissez un **serment** pour la prochaine zone : voie habituelle, renforts +30 % contre kamas +30 %, ou gardien renforcé contre deux bénédictions. En multi, la majorité décide et l’hôte départage les égalités. Les **affinités** Braise, Sève et Wakfu renforcent les builds à 3 puis 5 bonus différents, avec seuils visibles dans Tab. Les doublons comptent une seule fois.
 

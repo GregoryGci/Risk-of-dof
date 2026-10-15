@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/src/theme.css" />
     <link rel="stylesheet" href="/src/archive.css" />
     <link rel="stylesheet" href="/src/underworld.css" />
+    <link rel="stylesheet" href="/src/infernal.css" />
   </head>
   <body class="underworld">
     <!-- Canvas Phaser -->
@@ -32,17 +33,21 @@
           <div class="home-profile" id="home-profile"></div>
           <div class="home-extra"><button id="btn-account">Se connecter ↗</button></div>
         </section>
-        <section class="home-welcome" id="home-welcome"><div class="sanctum-art" aria-hidden="true"><div class="sanctum-portal"><img src="assets/dofus/items/dofus_emeraude.png" alt=""></div><span class="sanctum-caption">UN MONDE À CONQUÉRIR</span></div><div class="welcome-caption"><span class="eyebrow">UN NOUVEAU DÉPART</span><h2>Franchissez le seuil.</h2><p>Les équipements restent. Les bonus de combat se reconstruisent.<br>Une défaite, un nouveau départ.</p><button id="btn-atlas" class="welcome-link">Explorer les 33 donjons ↗</button></div></section>
+        <section class="home-welcome" id="home-welcome">
+          <div class="welcome-caption"><span class="eyebrow">LE PACTE DES DOUZE</span><h2>Mourez. Revenez.<br>Défiez les dieux.</h2><p>33 donjons. Une seule vie.<br>Choisissez votre bénédiction, façonnez votre vengeance.</p><div class="welcome-seals"><span>✦ BRAISE</span><span>ϟ WAKFU</span><span>❖ SÈVE</span></div><button id="btn-atlas" class="welcome-link">Les gardiens vous attendent <span>↗</span></button></div>
+        </section>
         <section id="home-view" class="home-view panel hidden" aria-label="Préparation de l’aventure">
           <div class="home-view-head"><div><span class="eyebrow" id="view-eyebrow"></span><h2 id="view-title"></h2></div><button id="view-close" class="sheet-close" aria-label="Retour à l’accueil">✕</button></div>
           <div id="identity-row" class="identity-row"><label for="pseudo">Votre nom</label><input id="pseudo" type="text" maxlength="16" placeholder="Aventurier" autocomplete="off" /></div>
           <div id="view-solo" class="home-view-content hidden">
             <p class="view-intro">Une run en solo. Des trouvailles pour toutes les suivantes.</p><div id="solo-character" class="setup-character"></div><button class="text-button" data-view="character">Changer de classe ou d’équipement →</button>
             <h3 class="setup-label">Choisissez votre difficulté</h3><div id="setup-modes" class="setup-modes"></div>
+            <div id="solo-blessings"></div>
             <button id="btn-solo" class="btn btn-primary start-adventure">Partir à l’aventure <span>→</span></button>
             <p class="setup-hint">Tab met la partie en pause. Votre butin est conservé après la défaite.</p>
           </div>
           <div id="view-multi" class="home-view-content hidden"><p class="view-intro">Rassemblez votre équipe. Partagez un code et affrontez les vagues ensemble.</p>
+            <div id="multi-blessings"></div>
             <div class="multiplayer-option"><span class="eyebrow">CRÉER UN SALON</span><h3>Une place pour vos amis.</h3><p>Choisissez votre difficulté dans le salon, puis invitez jusqu’à trois joueurs.</p><button id="btn-create" class="btn btn-primary">Créer une partie <span>→</span></button></div>
             <div class="separator"><span>ou rejoindre vos amis</span></div><label for="code">Code du salon</label><div class="row"><input id="code" type="text" maxlength="4" placeholder="ABCD" autocomplete="off" /><button id="btn-join" class="btn">Rejoindre</button></div>
           </div>

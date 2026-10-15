@@ -7,6 +7,7 @@ import { spellDetailsHtml } from './spellInfo.ts';
 import { escapeHtml } from './Hud.ts';
 import {account} from '../account.ts';
 import { saveSettings, settings } from '../settings.ts';
+import {getBlessing} from '@rod/shared';
 
 const SLOT_KEYS = ['Clic gauche', 'Clic droit', 'Espace', 'R'];
 
@@ -86,6 +87,7 @@ export class Details {
       <div>Dégâts subis <b>-${Math.round((1 - Math.pow(0.92, stats.armor)) * 100)} %</b> — PV par victime <b>${stats.killHeal}</b> — kamas <b>+${Math.round(stats.kamas * 100)} %</b></div>
     </section>`;
     html += `</div>`;
+    const blessing=getBlessing(me.blessing);if(blessing)html+=`<section class="blessing-detail" style="--pact:#${blessing.color.toString(16)}"><span class="eyebrow">BÉNÉDICTION DE DÉPART</span><h3>${blessing.name}</h3><p>${escapeHtml(blessing.description)}</p></section>`;
 
     html += `<h3>Options</h3><label class="option"><input type="checkbox" name="smartCast" ${settings.smartCast ? 'checked' : ''}>
       <span><b>Smart cast</b> — Espace et R lancent le sort aussitôt vers la souris. Désactivé : la touche affiche la zone, clic gauche pour lancer, clic droit / Échap pour annuler.</span></label>`;

@@ -260,6 +260,12 @@ export class GameScene extends Phaser.Scene {
       else if(e.kind==='burst')this.effects.explosion(e.x,e.y,e.r,e.color);
       else this.effects.poof(e.x,e.y,e.color);
     });
+    this.room.onMessage('blessingFx',(e:{player:string;kind:string;x:number;y:number;r:number;duration?:number;tx?:number;ty?:number;color:number})=>{
+      if(document.hidden)return;
+      if(e.kind==='warning')this.effects.telegraph(e.x,e.y,e.r,e.duration??.45,e.color);
+      else if(e.kind==='chain'&&e.tx!==undefined&&e.ty!==undefined)this.effects.blessingBolt(e.x,e.y,e.tx,e.ty,e.color);
+      else this.effects.blessingBurst(e.x,e.y,e.r,e.color);
+    });
     this.room.onMessage('attackWarning',(e:{x:number;y:number;tx:number;ty:number;width:number;duration:number;color:number;priority?:boolean})=>{
       if(document.hidden)return;
       if(this.dangerWarnings.size>=8){const ordinary=[...this.dangerWarnings].find(m=>!this.warningPriority.has(m));if(!ordinary&&!e.priority)return;const oldest=ordinary??this.dangerWarnings.values().next().value!;oldest.destroy();this.dangerWarnings.delete(oldest);}

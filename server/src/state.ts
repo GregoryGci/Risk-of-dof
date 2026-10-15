@@ -6,6 +6,8 @@ import { PHASE_LOBBY,GAME_PROTOCOL_VERSION } from '@rod/shared';
 
 export const PlayerState = schema(
   {
+    blessing:t.string().default(''),
+    blessingProgress:t.float32().default(0),
     routeChoice:t.string().default('normal'),
     rankStatus:t.string().default('disabled'),
     connected:t.boolean().default(true),

@@ -23,3 +23,4 @@ export * from './data/profile.ts';
 export * from './data/dungeons.ts';
 export * from './data/routes.ts';
 export * from './data/affinities.ts';
+export * from './data/blessings.ts';
