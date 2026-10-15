@@ -41,7 +41,7 @@ export function updateBoss(sim: Simulation, boss: MonsterRt): boolean {
     const dx = target.x - boss.state.x, dy = target.y - boss.state.y, len = Math.hypot(dx, dy) || 1;
     for (const sign of [-1, 1]) points.push({x: target.x - dy / len * 2.8 * sign, y: target.y + dx / len * 2.8 * sign});
   }
-  const damage = Math.max(8, boss.def.melee.damage) * boss.damageMult * (nova ? 1.35 : 1.7);
+  const damage = Math.max(8, boss.def.melee.damage) * sim.monsterPower(boss) * (nova ? 1.35 : 1.7);
   const hit = new Set<string>();
   for (const point of points) {
     sim.broadcast('bossWarning', {...point, radius, duration, color, kind: nova ? 'nova' : 'meteor'});
@@ -96,7 +96,7 @@ function bossLeap(sim: Simulation, boss: MonsterRt): boolean {
     if (isBlocked(sim.map, land.x, land.y, boss.def.radius)) return;
     boss.state.x = land.x; boss.state.y = land.y;
     sim.broadcast('bossImpact', { ...land, radius, color, kind: 'leap' });
-    const damage = Math.max(6, boss.def.melee.damage) * boss.damageMult * 0.8;
+    const damage = Math.max(6, boss.def.melee.damage) * sim.monsterPower(boss) * 0.8;
     for (const p of sim.players.values()) {
       if (!p.state.alive || Math.hypot(p.state.x - land.x, p.state.y - land.y) > radius + PLAYER_RADIUS) continue;
       sim.damagePlayer(p, damage, `${boss.def.name} · Bond`);

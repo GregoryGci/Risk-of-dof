@@ -78,11 +78,11 @@ const VIEW_H = 600;
 const AIM_OFFSET_Y = 10;
 
 /** Coiffe et cape équipées d'un joueur (JSON de son état), mémorisées par chaîne. */
-const wornCache = new Map<string, [string | undefined, string | undefined]>();
-function wornGear(raw: string): [string | undefined, string | undefined] {
+const wornCache = new Map<string, [string | undefined, string | undefined, string | undefined]>();
+function wornGear(raw: string): [string | undefined, string | undefined, string | undefined] {
   let worn = wornCache.get(raw);
   if (!worn) {
-    try { const e = JSON.parse(raw || '{}') as Record<string, { base?: string } | undefined>; worn = [e.coiffe?.base, e.cape?.base]; } catch { worn = [undefined, undefined]; }
+    try { const e = JSON.parse(raw || '{}') as Record<string, { base?: string } | undefined>; worn = [e.coiffe?.base, e.cape?.base, e.familier?.base]; } catch { worn = [undefined, undefined, undefined]; }
     if (wornCache.size > 64) wornCache.clear();
     wornCache.set(raw, worn);
   }
@@ -583,8 +583,9 @@ export class GameScene extends Phaser.Scene {
       view.setDead(!p.alive);
       view.setInvisible(p.invisible);
       // Apparence : la coiffe et la cape équipées sont portées en jeu, synchronisées par l'état du joueur.
-      const [head, back] = wornGear(p.equipment);
+      const [head, back, pet] = wornGear(p.equipment);
       view.setGear(head, back);
+      view.setPet(this.petTexture(pet));
       view.update(dt);
     });
     for (const [id, view] of this.players) {
@@ -903,6 +904,18 @@ export class GameScene extends Phaser.Scene {
     if (big && d < 10) this.shake(140, 0.0035 * (1 - d / 10));
   }
 
+  /**
+   * Compagnon : l'icône du familier équipé flotte à côté du joueur. Chargée à la demande ;
+   * renvoie la clé de texture une fois prête.
+   */
+  private petTexture(base?: string): string | undefined {
+    if (!base) return;
+    const key = `pet_${base}`;
+    if (this.textures.exists(key)) return key;
+    const url = this.store.itemIconUrl(base);
+    if (url && !this.load.textureManager.exists(key) && !this.load.isLoading()) { this.load.image(key, url); this.load.start(); }
+    return;
+  }
   private shakeUntil = 0;
   /**
    * Secousse de caméra selon le réglage. Une seule à la fois, et un temps mort après chacune :

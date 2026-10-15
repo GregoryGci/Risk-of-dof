@@ -19,7 +19,15 @@ export type SpellEffect =
   /** Étourdit les cibles : elles ne bougent ni n'attaquent pendant une durée (s). */
   | { type: 'stun'; duration: number }
   /** Chance de faire tomber des kamas pour le lanceur à chaque cible touchée. */
-  | { type: 'gold'; chance: number; amount: [number, number] };
+  | { type: 'gold'; chance: number; amount: [number, number] }
+  /** Poison cumulable : chaque application ajoute une dose (jusqu'à `max`), dégâts par seconde × doses. */
+  | { type: 'poison'; dps: number; duration: number; max: number }
+  /** Affaiblit les cibles : leurs dégâts sont réduits de `factor` (0..1) pendant une durée (s). */
+  | { type: 'weaken'; factor: number; duration: number }
+  /** Enracine les cibles : elles ne bougent plus mais attaquent encore. Insensibles 2 s ensuite. */
+  | { type: 'root'; duration: number }
+  /** Rend les cibles vulnérables : elles subissent `bonus` (0..1) de dégâts en plus pendant une durée (s). */
+  | { type: 'vulnerable'; bonus: number; duration: number };
 
 /** Sort défini uniquement en données : la logique serveur est générique. */
 export interface SpellDef {

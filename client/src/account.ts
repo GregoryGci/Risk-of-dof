@@ -1,4 +1,5 @@
-import {skinById,type CurrencyGrant} from '@rod/shared';
+import {getPetAttack,rollPetAttack,petRerollCost,type PetAttackDef} from '@rod/shared';
+import {skinById,skinFits,type CurrencyGrant} from '@rod/shared';
 // Progression entre les parties, mémorisée dans le navigateur :
 // bourse de kamas (gagnée en fin de partie), sorts débloqués et sorts équipés par classe.
 import { EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, TALENTS, fusionResult, equippedStats, getClass, isFlexSlot, sanitizeEquipment, sanitizeLoadout, slotKind, type EquipmentRarity, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
@@ -40,8 +41,8 @@ export const account = {
   get ogrines(){return data.ogrines;},
   get skins(){return [...data.skins];},
   get equippedSkins(){return {...data.equippedSkins};},
-  buySkin(id:string):boolean {const skin=skinById(id);if(!skin||data.skins.includes(id)||data.ogrines<skin.price)return false;data.ogrines-=skin.price;data.skins.push(id);data.equippedSkins[skin.classId]=id;save();return true;},
-  equipSkin(classId:string,id:string):boolean {if(!id){delete data.equippedSkins[classId];save();return true;}const skin=skinById(id);if(skin?.classId!==classId||!data.skins.includes(id))return false;data.equippedSkins[classId]=id;save();return true;},
+  buySkin(id:string,classId?:string):boolean {const skin=skinById(id);if(!skin||data.skins.includes(id)||data.ogrines<skin.price)return false;data.ogrines-=skin.price;data.skins.push(id);const target=skin.classId==='*'?classId:skin.classId;if(target)data.equippedSkins[target]=id;save();return true;},
+  equipSkin(classId:string,id:string):boolean {if(!id){delete data.equippedSkins[classId];save();return true;}const skin=skinById(id);if(!skinFits(skin,classId)||!data.skins.includes(id))return false;data.equippedSkins[classId]=id;save();return true;},
   claimOgrines(grants:CurrencyGrant[]):number {let gained=0;for(const grant of grants){if(!grant||typeof grant.claimId!=='string'||grant.claimId.length>200||grant.amount!==1||data.claimedOgrines.includes(grant.claimId)||data.credited.includes(grant.claimId.split(':')[0]))continue;data.claimedOgrines.push(grant.claimId);data.ogrines++;gained++;}if(gained)save();return gained;},
   get unlockedMode(){return data.unlockedMode;},
   get spellLevels(){return structuredClone(data.spellLevels);},
@@ -162,6 +163,27 @@ export const account = {
     return fused;
   },
   get equipment() { return equippedFromAccount(data); },
+  /** Attaque du compagnon d'un familier : tirée au hasard la première fois, puis conservée. */
+  petAttack(base: string): PetAttackDef | undefined {
+    if (EQUIPMENT_BASES[base]?.kind !== 'familier') return;
+    let entry = data.petAttacks[base];
+    if (!entry || !getPetAttack(entry.attack)) { entry = data.petAttacks[base] = { attack: rollPetAttack().id, rerolls: 0 }; save(); }
+    return getPetAttack(entry.attack);
+  },
+  petRerollCost(base: string): number { return petRerollCost(data.petAttacks[base]?.rerolls ?? 0); },
+  /** Retire l'attaque du compagnon contre des kamas de la bourse (prix croissant). */
+  rerollPet(base: string): PetAttackDef | undefined {
+    const current = this.petAttack(base);if (!current) return;
+    const cost = this.petRerollCost(base);if (data.bank < cost) return;
+    data.bank -= cost;
+    data.petAttacks[base] = { attack: rollPetAttack(Math.random, current.id).id, rerolls: data.petAttacks[base].rerolls + 1 };
+    save();return getPetAttack(data.petAttacks[base].attack);
+  },
+  /** Tenue envoyée au serveur, avec l'attaque du familier équipé. */
+  get equipmentPayload() {
+    const equipment = equippedFromAccount(data), pet = equipment.familier;
+    return { ...equipment, petAttack: pet ? this.petAttack(pet.base)?.id : undefined };
+  },
   get bonuses() { return equippedStats(this.equipment); },
   get bestTier(): number { return data.bestTier; },
   get discovered(): string[] { return [...data.discovered]; },

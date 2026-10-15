@@ -91,8 +91,8 @@ test('passage de Zaap : carte, vagues, élite et cooldowns changent ensemble',()
 test('Dragonnet : attaque à distance créditée au maître, aucun tir sur les alliés',()=>{
   const casts:{caster:string;spell:string}[]=[];
   const state=new GameState(),sim=new Simulation(state,(type,event)=>{if(type==='cast')casts.push(event as {caster:string;spell:string});});sim.addPlayer('p','Test','osamodas');sim.start();const p=sim.players.get('p')!;
-  sim.playerCast('p',{slot:1,tx:p.state.x+1,ty:p.state.y});
-  const dragon=[...sim.monsters.values()].find(m=>m.def.id==='osa_tofu')!;
+  sim.playerCast('p',{slot:3,tx:p.state.x+1,ty:p.state.y});
+  const dragon=[...sim.monsters.values()].find(m=>m.def.id==='osa_dragonnet')!;
   assert.equal(dragon.state.ally,true);assert.equal(dragon.def.behavior.type,'ranged');
   const friendly=sim.spawnMonster(getMonster('osa_bouftou'),p.state.x+2.5,p.state.y,1,1,1);
   friendly.allyOwner=p.id;friendly.expiresAt=sim.now+25;

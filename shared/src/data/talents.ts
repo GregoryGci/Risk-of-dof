@@ -44,6 +44,9 @@ export const TALENTS: Record<string, TalentDef[]> = {
   ],
   sadida: [
     { slot: 0, spell: 'ronce_apaisante', cost: 250 },
+    { slot: 1, spell: 'la_folle', cost: 300 },
+    { slot: 2, spell: 'la_bloqueuse', cost: 300 },
+    { slot: 2, spell: 'tremblement', cost: 450 },
     { slot: 2, spell: 'la_gonflable', cost: 500 },
     { slot: 3, spell: 'ronces_multiples', cost: 800 },
   ],
@@ -58,8 +61,12 @@ export const TALENTS: Record<string, TalentDef[]> = {
     { slot: 1, spell: 'glyphe_paralysant', cost: 350 },
     { slot: 2, spell: 'bouclier_feca', cost: 300 },
     { slot: 2, spell: 'teleportation', cost: 250 },
+    { slot: 2, spell: 'treve', cost: 300 },
+    { slot: 1, spell: 'glyphe_de_ralentissement', cost: 400 },
   ],
-  osamodas: [],
+  osamodas: [
+    { slot: 3, spell: 'laisse_spirituelle', cost: 600 },
+  ],
   enutrof: [],
   xelor: [],
   pandawa: [],

@@ -60,6 +60,19 @@ export class EntityView {
   private gear?: { tracks: GearTracks; manifest: GearManifest; worn: { base: string; head: boolean; img: Phaser.GameObjects.Image; part: Part }[] };
   private gearKey = '';
 
+  private pet?: { key: string; img: Phaser.GameObjects.Image; part: Part };
+  /** Compagnon : icône du familier qui flotte et suit le joueur, un peu derrière lui. */
+  setPet(key?: string): void {
+    if (this.pet?.key === key) return;
+    if (this.pet) { this.pet.img.destroy(); this.parts = this.parts.filter(p => p !== this.pet!.part); this.pet = undefined; }
+    if (!key) return;
+    const img = this.scene.add.image(0, 0, key).setOrigin(.5, 1);
+    img.setScale(Math.min(1, 26 / Math.max(img.width, img.height)));
+    const part: Part = { obj: img, ox: 0, oy: 0, dz: -0.05 };
+    this.parts.push(part);
+    this.pet = { key, img, part };
+  }
+
   /** Objets d'apparence portés (coiffe, cape) ; sans effet sur un placeholder ou un monstre. */
   setGear(head?: string, back?: string): void {
     const key = `${head ?? ''}|${back ?? ''}`;
@@ -331,6 +344,13 @@ export class EntityView {
 
   update(dt: number): void {
     this.clock += dt;
+    if (this.pet) {
+      // Flotte à côté, du côté opposé au regard, avec un léger balancement.
+      const side = this.body.flipX ? 1 : -1;
+      this.pet.part.ox = side * 22;
+      this.pet.part.oy = -8 + Math.sin(this.clock * 3) * 3;
+      this.pet.img.setFlipX(side > 0).setAlpha(this.body.alpha).setVisible(!this.dead);
+    }
     if (this.t < 1) {
       this.t = Math.min(1, this.t + dt / INTERP_S);
       this.wx = this.fromX + (this.toX - this.fromX) * this.t;

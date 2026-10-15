@@ -6,6 +6,8 @@ export * from './rng.ts';
 export * from './map.ts';
 export * from './difficulty.ts';
 export * from './data/spells.ts';
+export * from './data/pet-attacks.ts';
+export * from './data/dofus-effects.ts';
 export * from './data/classes.ts';
 export * from './data/monsters.ts';
 export * from './data/dungeon-monsters.ts';

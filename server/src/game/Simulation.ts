@@ -1,4 +1,4 @@
-import {innateLifesteal,modeDifficulty,skinById,OGRINE_DROP_CHANCE,sourceDamageMultiplier,clampCombatStats,isRangedAttack,lifestealCap,bonusUseful} from '@rod/shared';
+import {skinFits,getPetAttack,lifestealCrowdFactor,LIFESTEAL_HEAL_PER_SECOND,innateLifesteal,modeDifficulty,skinById,OGRINE_DROP_CHANCE,sourceDamageMultiplier,clampCombatStats,isRangedAttack,lifestealCap,bonusUseful} from '@rod/shared';
 // Simulation autoritaire d'une partie : joueurs, sorts, projectiles, dégâts.
 // L'IA des monstres est dans monsters.ts, le spawn dans director.ts.
 import {
@@ -69,6 +69,8 @@ import {
 } from '@rod/shared';
 import { ChestState, GameState, GroundState, MonsterState, PlayerState, PotionState,OgrineState } from '../state.ts';
 import { Director } from './director.ts';
+import {updatePets} from './pets.ts';
+import {dofusAfterHit,dofusBounce,dofusDashCooldown,dofusDodgesProjectile,dofusDropMultiplier,dofusExtraChestItem,dofusHealing,dofusIncoming,dofusOnCast,dofusOnDash,dofusOnHit,dofusOnKill,dofusRegen,updateDofus} from './dofus.ts';
 import { updateMonsters } from './monsters.ts';
 import {ClassMechanics} from './ClassMechanics.ts';
 import {Blessings} from './Blessings.ts';
@@ -86,6 +88,15 @@ export interface PlayerRt {
   skinBook?:Record<string,string>;
   vitalityWave?:string;
   drainRemainder?:number;
+  /** Vol de vie des autos rendu pendant la seconde en cours (plafond par seconde). */
+  /** Cri sauvage de l'Osamodas : ses invocations sont renforcées jusqu'à cette date. */
+  summonRoarUntil?:number;
+  /** Compagnon : attaque tirée pour le familier équipé, prochaine attaque, compteur du bouclier. */
+  petAttack?:string;
+  petAttackAt?:number;
+  petShieldCount?:number;
+  leechSecond?:number;
+  leechHealed?:number;
   blessingRanks:Record<string,number>;
   spellLevels:Record<string,number>;
   momentumUntil:number;
@@ -145,6 +156,17 @@ export interface MonsterRt {
   burnNextTick: number;
   burnOwner: string;
   burnAttack?:boolean;
+  /** Doses de poison cumulées (effet `poison`). */
+  poisonStacks?:number;
+  /** Affaiblissement : dégâts infligés réduits de `weakenFactor`. */
+  weakenUntil?:number;
+  weakenFactor?:number;
+  /** Enracinement : ne bouge plus ; insensible jusqu'à `rootImmuneUntil`. */
+  rootUntil?:number;
+  rootImmuneUntil?:number;
+  /** Vulnérabilité : dégâts subis augmentés de `vulnerableBonus`. */
+  vulnerableUntil?:number;
+  vulnerableBonus?:number;
   slowFactor: number;
   slowUntil: number;
   /** Étourdi (Sablier de Xélor) : ni déplacement ni attaque. */
@@ -213,6 +235,8 @@ export interface Projectile {
 }
 
 type Broadcast = (type: string, message: unknown) => void;
+/** Attaque de compagnon envoyée avec la tenue, validée contre le catalogue. */
+function petAttackFrom(equipment:unknown):string|undefined {return getPetAttack((equipment as {petAttack?:unknown}|null)?.petAttack)?.id;}
 
 const BASE_CRIT_CHANCE = 0.05;
 /** Chaque point d'armure multiplie les dégâts subis par ce facteur. */
@@ -307,12 +331,13 @@ export class Simulation {
     state.blessing=getBlessing(blessing)?.id??'';
     const spellLevels=sanitizeSpellLevels(levels)[def.id]??{};state.spellLevels=JSON.stringify(spellLevels);
     state.equipment = JSON.stringify(sanitizeEquipped(equipment));
+    const petAttack = petAttackFrom(equipment);
     // Premier numéro de joueur libre (sert à la couleur).
     const used = new Set([...this.players.values()].map((p) => p.state.slot));
     let slot = 0;
     while (used.has(slot)) slot++;
     state.slot = slot;
-    const rt: PlayerRt = { blessingRanks:{}, id, state, def, spellLevels,momentumUntil:0, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], secondaryRefillAt:0,dashGlyphActive:false,push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, dodgeUntil:0, pendingInputSeq:0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, bought: new Set(), history: [] };
+    const rt: PlayerRt = { blessingRanks:{}, id, state, def, spellLevels,momentumUntil:0, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], secondaryRefillAt:0,dashGlyphActive:false,push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, dodgeUntil:0, pendingInputSeq:0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, bought: new Set(), history: [], petAttack };
     this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
@@ -343,6 +368,7 @@ export class Simulation {
     const p = this.players.get(id);
     if (!p || this.state.phase === PHASE_PLAYING) return;
     const valid = sanitizeEquipped(equipment);
+    p.petAttack = petAttackFrom(equipment);
     p.state.equipment = JSON.stringify(valid);
     p.meta = equippedStats(valid);
     if (this.state.phase === PHASE_LOBBY) this.resetPlayer(p);
@@ -361,7 +387,7 @@ export class Simulation {
     if (!p || this.state.phase !== PHASE_LOBBY || typeof classId !== 'string') return;
     p.def = getClass(classId);
     p.state.classId = p.def.id;
-    p.state.skin=skinById(p.skinBook?.[p.def.id])?.classId===p.def.id?p.skinBook![p.def.id]:'';
+    p.state.skin=skinFits(skinById(p.skinBook?.[p.def.id]),p.def.id)?p.skinBook![p.def.id]:'';
     this.setSpells(p, loadout);
     const { x, y } = p.state;
     this.resetPlayer(p);
@@ -546,7 +572,7 @@ export class Simulation {
     this.setupStage();this.broadcast('stage',{stage:this.state.stage,name:zoneForStage(this.state.stage).name});
   }
 
-  setSkins(id:string,book:Record<string,string>={}):void {const p=this.players.get(id);if(!p||(this.state.phase!==PHASE_LOBBY&&p.skinBook))return;p.skinBook={...book};p.state.skin=skinById(book[p.def.id])?.classId===p.def.id?book[p.def.id]:'';}
+  setSkins(id:string,book:Record<string,string>={}):void {const p=this.players.get(id);if(!p||(this.state.phase!==PHASE_LOBBY&&p.skinBook))return;p.skinBook={...book};p.state.skin=skinFits(skinById(book[p.def.id]),p.def.id)?book[p.def.id]:'';}
 
   private enterCursedZone():void {
     if(!this.state.hasCursedZaap||this.state.cursed||this.state.zaapState!==ZAAP_IDLE)return;
@@ -737,7 +763,8 @@ export class Simulation {
     const ranged = isRangedAttack(spell);
     const cooldown = spell.cooldown / (1 + p.stats.haste) / (slot === 0 && ranged ? 1 + p.stats.attackSpeed : 1);
     p.readyAt[slot] = this.now + cooldown / 1000;
-    if(slot===1)this.consumeSecondary(p,cooldown);
+    dofusOnCast(this,p,slot);
+    if(slot===1&&this.now<p.readyAt[slot])this.consumeSecondary(p,cooldown);
     const copies=spellCopies(spell),power=copies>1?spellCopyPower(spell.upgradeLevel??1):1;
     let damageMult = sourceDamageMultiplier(p.stats.damage,slot===0)*special.mult*power*this.blessings.castMultiplier(p,slot);
     if(slot===0&&this.now<p.momentumUntil){
@@ -796,7 +823,7 @@ export class Simulation {
     const dy = Number(msg?.dy);
     const len = Math.hypot(dx, dy);
     if (!Number.isFinite(len) || len < 0.01) return;
-    const dashCooldown=DASH_COOLDOWN*this.blessings.dashCooldown(p);p.dashReadyAt = this.now + dashCooldown;
+    const dashCooldown=dofusDashCooldown(p,DASH_COOLDOWN*this.blessings.dashCooldown(p));p.dashReadyAt = this.now + dashCooldown;dofusOnDash(this,p);
     p.dodgeUntil=this.now+.12;p.dodgeReported=false;p.state.motionEpoch++;
     p.dashGlyphActive=true;this.mechanics.beginDash(p);
     p.momentumUntil=this.now+this.blessings.momentumWindow(p);p.state.momentum=true;
@@ -833,7 +860,6 @@ export class Simulation {
 
     const caster = fromPlayer ? this.players.get(owner) : undefined;
     if(caster)this.mechanics.prepareProjectile(caster,pr);
-    if(spell.id==='vent_empoisonne'&&caster)pr.areaHits=new Set();
     if (spell.shield && caster) {
       caster.state.shield = Math.max(caster.state.shield,Math.round(caster.state.maxHp * spell.shield.maxHpFraction));
       caster.shieldUntil = Math.max(caster.shieldUntil,this.now + spell.shield.duration);
@@ -959,7 +985,6 @@ export class Simulation {
         this.after(spell.delay, () => this.explode(pr, zx, zy, radius));
       } else {
         this.explode(pr, event.tx, event.ty, radius);
-        if(spell.id==='vent_empoisonne'&&caster)for(const ally of this.monsters.values())if(ally.allyOwner===caster.id){this.broadcast('cast',{...event,id:this.nextProjectileId++,caster:ally.id,x:ally.state.x,y:ally.state.y,tx:ally.state.x,ty:ally.state.y,slot:undefined,cooldown:undefined});this.explode(pr,ally.state.x,ally.state.y,radius);}
       }
       if (spell.buff && caster) this.applyBuff(caster, spell.buff);
     } else {
@@ -1005,6 +1030,8 @@ export class Simulation {
     this.updatePlayers(dt);
     if(this.state.intermission)return;
     this.mechanics.update(dt);
+    updatePets(this);
+    updateDofus(this);
     this.blessings.update();
     this.updateAutoAttacks();
     this.updatePotions();
@@ -1067,7 +1094,7 @@ export class Simulation {
       s.inputSeq=p.pendingInputSeq;s.positionTime=this.now;
       if (p.history.length === 0 || this.now - p.history[p.history.length - 1].t >= 0.1) p.history.push({ t: this.now, x: s.x, y: s.y, hp: s.hp });
       while (p.history.length > 1 && this.now - p.history[1].t > 6) p.history.shift();
-      if (s.hp < s.maxHp && this.now - p.lastHitAt > REGEN_DELAY) s.hp = Math.min(s.maxHp, s.hp + (p.def.regen + p.stats.regen) * dt);
+      if (s.hp < s.maxHp && this.now - p.lastHitAt > REGEN_DELAY) s.hp = Math.min(s.maxHp, s.hp + dofusRegen(this, p, p.def.regen + p.stats.regen) * dt);
     }
   }
 
@@ -1206,6 +1233,7 @@ export class Simulation {
 
     if (!pr.fromPlayer) {
       const p = this.players.get(targetId);
+      if (p && pr.spell.projectile && dofusDodgesProjectile(this,p)) return;
       if (p) this.damagePlayer(p, amount,`${this.monsters.get(pr.owner)?.def.name??'Monstre'} · ${pr.spell.name}`);
       else {const ally=this.monsters.get(targetId);if(ally?.state.ally)this.damageMonster(ally,amount,'');}
       return;
@@ -1237,11 +1265,28 @@ export class Simulation {
           if (dist > 0.01) m.push = { vx: ((px / dist) * travel) / duration, vy: ((py / dist) * travel) / duration, time: duration };
         }
       } else if (e.type === 'burn') {
+        m.poisonStacks = 0;
         m.burnDps = e.dps*pr.damageMult;
         m.burnUntil = this.now + e.duration;
         m.burnNextTick = this.now + 0.5;
         m.burnOwner = pr.owner;
         m.burnAttack=!!pr.spell.autoAttack;
+      } else if (e.type === 'poison') {
+        // Même empoisonneur : une dose de plus ; sinon le nouveau poison remplace l'ancien.
+        const same=m.burnOwner===pr.owner&&this.now<m.burnUntil&&(m.poisonStacks??0)>0;
+        m.poisonStacks=Math.min(e.max,(same?m.poisonStacks!:0)+1);
+        m.burnDps=e.dps*pr.damageMult*m.poisonStacks;
+        m.burnUntil=this.now+e.duration;
+        if(!same)m.burnNextTick=this.now+.5;
+        m.burnOwner=pr.owner;m.burnAttack=!!pr.spell.autoAttack;
+      } else if (e.type === 'weaken') {
+        m.weakenFactor=Math.max(m.weakenUntil!>this.now?m.weakenFactor??0:0,e.factor);
+        m.weakenUntil=Math.max(m.weakenUntil??0,this.now+e.duration);
+      } else if (e.type === 'vulnerable') {
+        m.vulnerableBonus=Math.max(this.now<(m.vulnerableUntil??0)?m.vulnerableBonus??0:0,e.bonus);
+        m.vulnerableUntil=Math.max(m.vulnerableUntil??0,this.now+e.duration);
+      } else if (e.type === 'root') {
+        if(!m.def.boss&&this.now>=(m.rootImmuneUntil??0)){m.rootUntil=this.now+e.duration;m.rootImmuneUntil=this.now+e.duration+2;}
       } else if (e.type === 'slow') {
         m.slowFactor = e.factor;
         m.slowUntil = this.now + e.duration;
@@ -1261,6 +1306,7 @@ export class Simulation {
 
     amount=this.mechanics.onHit(pr,m,amount);
     if(owner)amount=this.blessings.modifyHit(owner,pr,m,amount,crit);
+    if(owner)amount=dofusOnHit(this,owner,pr,m,amount,crit);
     if(pr.slot===0&&!pr.proc&&['sournoiserie','fouet','attaque_mortelle'].includes(pr.spell.id))this.broadcast('spellImpact',{spell:pr.spell.id,x:m.state.x,y:m.state.y,dx:dirX,dy:dirY});
     if(this.monsters.has(m.id)){
       const actual=Math.min(Math.max(1,Math.round(amount)),Math.max(0,m.state.hp));
@@ -1282,14 +1328,35 @@ export class Simulation {
   // Bonus, pièges et glyphes, invocations
   // -------------------------------------------------------------------------
 
+  /** Multiplicateur de dégâts actuel d'un monstre, affaiblissement compris. */
+  monsterPower(m:MonsterRt):number {return m.damageMult*(this.now<(m.weakenUntil??0)?1-(m.weakenFactor??0):1);}
+  /** Monstres ennemis au contact d'un joueur. */
+  meleeContacts(p:PlayerRt):number {
+    let n=0;
+    for(const m of this.monsters.values())if(!m.state.ally&&m.state.hp>0&&Math.hypot(m.state.x-p.state.x,m.state.y-p.state.y)<=m.def.radius+PLAYER_RADIUS+.6)n++;
+    return n;
+  }
   leechDamage(ownerId:string,actual:number,attack:boolean,intrinsic=0):void {
     const owner=this.creditOf(ownerId);if(!owner?.state.alive||this.state.phase===PHASE_LOST)return;
     if(owner.state.hp>=owner.state.maxHp){owner.drainRemainder=0;return;}
-    const fraction=Math.min(attack?lifestealCap(isRangedAttack(getSpell(owner.spells[0]))):.5,attack?owner.stats.lifesteal:intrinsic+owner.stats.vampirism);
-    if(fraction>0){const drain=Math.max(0,actual)*fraction+(owner.drainRemainder??0);owner.drainRemainder=drain-Math.floor(drain);if(drain>=1)this.healPlayer(owner,Math.floor(drain));}
+    const tank=owner.def.id==='sacrieur',ranged=isRangedAttack(getSpell(owner.spells[0]));
+    let fraction=Math.min(attack?lifestealCap(ranged,tank):.5,attack?owner.stats.lifesteal:intrinsic+owner.stats.vampirism);
+    // Vol de vie des autos (hors Sacrieur) : moins efficace encerclé, et plafonné par seconde.
+    if(attack&&!tank&&fraction>0)fraction*=lifestealCrowdFactor(this.meleeContacts(owner));
+    if(fraction<=0)return;
+    let drain=Math.max(0,actual)*fraction+(owner.drainRemainder??0);
+    if(attack&&!tank){
+      const second=Math.floor(this.now);
+      if(owner.leechSecond!==second){owner.leechSecond=second;owner.leechHealed=0;}
+      const room=Math.max(0,owner.state.maxHp*LIFESTEAL_HEAL_PER_SECOND-(owner.leechHealed??0));
+      if(drain>room)drain=room;
+    }
+    owner.drainRemainder=drain-Math.floor(drain);
+    if(drain>=1){if(attack&&!tank)owner.leechHealed=(owner.leechHealed??0)+Math.floor(drain);this.healPlayer(owner,Math.floor(drain));}
   }
   healPlayer(p: PlayerRt, amount: number, source: PlayerRt | null | undefined = p, fuelMechanic=true): void {
     if(this.state.phase===PHASE_LOST)return;
+    amount = dofusHealing(p, amount);
     const gain = Math.min(p.state.maxHp - p.state.hp, Math.round(amount));
     if(fuelMechanic&&source)this.mechanics.onHeal(source,amount,Math.max(0,gain));
     if (gain <= 0) return;
@@ -1377,6 +1444,12 @@ export class Simulation {
         // Glyphe : applique le sort à tout ce qui est dans la zone, à intervalle régulier.
         g.nextTick = this.now + (def.tick ?? 0.5);
         this.explode(g.pr, x, y, def.radius, true);
+        // Maîtrise des glyphes (Féca) : qui sort d'une glyphe reste ralenti de 20 % pendant 1 s.
+        if(this.players.get(g.owner)?.def.id==='feca')for(const m of this.monsters.values()){
+          if(m.state.ally||Math.hypot(m.state.x-x,m.state.y-y)>def.radius+m.def.radius)continue;
+          if(this.now>=m.slowUntil||m.slowFactor>=.8){m.slowFactor=.8;}
+          m.slowUntil=Math.max(m.slowUntil,this.now+1);
+        }
       }
     }
   }
@@ -1397,6 +1470,8 @@ export class Simulation {
       if(isBlocked(this.map,px,py,def.radius))return;
     }
     if (mine.length >= summon.max) this.removeMonster(mine[0].id);
+    // Lien bestial : l'Osamodas commande 4 invocations au plus, toutes espèces confondues.
+    if(owner.def.id==='osamodas'){const all=[...this.monsters.values()].filter(m=>m.allyOwner===owner.id);if(all.length>=4)this.removeMonster(all[0].id);}
     // Les poupées profitent des dégâts de leur maître et deviennent plus résistantes avec la difficulté.
     const ally = this.spawnMonster(def, px, py, 1+owner.stats.maxHp/owner.def.maxHp, sourceDamageMultiplier(owner.stats.damage,false)*1.6, 1);
     ally.state.ally = true;
@@ -1414,9 +1489,16 @@ export class Simulation {
   // Dégâts et morts
   // -------------------------------------------------------------------------
 
+  /** Ennemi empoisonné par un Sadida (Sève corrompue). */
+  private sadidaPoison(m:MonsterRt):PlayerRt|undefined {
+    if(m.state.ally||this.now>=m.burnUntil||!(m.poisonStacks??0))return;
+    const owner=this.creditOf(m.burnOwner);return owner?.def.id==='sadida'?owner:undefined;
+  }
   damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false): void {
     if(this.state.phase===PHASE_LOST)return;
     if(!this.monsters.has(m.id))return;
+    if(this.sadidaPoison(m))amount*=1.1;
+    if(this.now<(m.vulnerableUntil??0))amount*=1+(m.vulnerableBonus??0);
     amount = Math.max(1, Math.round(amount));
     const dealer = m.state.ally ? undefined : this.creditOf(ownerId);
     if(dealer&&dealer.id!==ownerId)this.blessings.mark(dealer,m);
@@ -1436,6 +1518,12 @@ export class Simulation {
       return;
     }
 
+    if(dealer)dofusOnKill(this,dealer,m,crit);
+    // Sève corrompue : le poison restant passe à l'ennemi le plus proche (4 cases).
+    if(this.sadidaPoison(m)){
+      const next=[...this.monsters.values()].filter(o=>o!==m&&!o.state.ally&&o.state.hp>0&&Math.hypot(o.state.x-m.state.x,o.state.y-m.state.y)<=4).sort((a,b)=>Math.hypot(a.state.x-m.state.x,a.state.y-m.state.y)-Math.hypot(b.state.x-m.state.x,b.state.y-m.state.y))[0];
+      if(next&&(next.poisonStacks??0)<m.poisonStacks!){next.poisonStacks=m.poisonStacks;next.burnDps=m.burnDps;next.burnUntil=m.burnUntil;next.burnNextTick=this.now+.5;next.burnOwner=m.burnOwner;next.burnAttack=m.burnAttack;}
+    }
     // Mort : les kamas sont partagés, chaque joueur reçoit la somme entière.
     const [kMin, kMax] = m.def.kamas;
     const kamas = Math.round(kMin + Math.random() * (kMax - kMin));
@@ -1464,7 +1552,7 @@ export class Simulation {
         }
       }
       for (const p of this.players.values()) {
-        const drops = monsterEquipmentDrops(this.state.stage,!!m.def.boss,Math.random,(p.def.id==='enutrof'?2:1)*m.lootMultiplier,m.dofusMultiplier??1,this.state.mode);
+        const drops = monsterEquipmentDrops(this.state.stage,!!m.def.boss,Math.random,(p.def.id==='enutrof'?2:1)*m.lootMultiplier,(m.dofusMultiplier??1)*dofusDropMultiplier(p),this.state.mode);
         if (!drops.length) continue;
         drops.forEach((gear,index)=>{
           const drop={claimId:`${this.state.runId}:${m.id}:${p.id}:${index}`,gear};
@@ -1502,6 +1590,7 @@ export class Simulation {
     if (p.buffs.some((b) => b.invulnerable && b.until > this.now)) return;
     const chest=[...this.monsters.values()].find(m=>m.allyOwner===p.id&&m.def.id==='coffre_anime'&&m.state.hp>0&&m.expiresAt>this.now);
     if(chest){const intercepted=Math.min(Math.max(1,Math.round(amount)),chest.state.hp);this.damageMonster(chest,intercepted,'');amount-=intercepted;if(amount<=0)return;}
+    amount = dofusIncoming(this,p,amount);
     amount = Math.max(1, Math.round(amount * Math.pow(ARMOR_FACTOR, p.stats.armor)));
     if (this.now >= p.shieldUntil) p.state.shield = 0;
     const absorbed = Math.min(p.state.shield, amount);
@@ -1512,6 +1601,7 @@ export class Simulation {
     p.lastHitAt = this.now;
     this.broadcast('dmg', { target: p.id, amount, absorbed, x: p.state.x, y: p.state.y, player: true });
     if(amount>0&&p.state.hp>0)this.blessings.onDamage(p);
+    if(p.state.hp>0)dofusAfterHit(this,p);
     if (p.state.hp > 0) return;
     p.state.alive = false;
     p.state.deathCause=source;
@@ -1593,7 +1683,8 @@ export class Simulation {
     p.stats.bounce+=p.blessingRanks.ricochet??0;
     for (const b of p.buffs) for (const [k, v] of Object.entries(b.stats)) p.stats[k as StatKey] += v ?? 0;
     p.stats.lifesteal+=innateLifesteal(getSpell(p.spells[0]??p.def.spells[0]));
-    clampCombatStats(p.stats,isRangedAttack(getSpell(p.spells[0]??p.def.spells[0])));
+    p.stats.bounce+=dofusBounce(p);
+    clampCombatStats(p.stats,isRangedAttack(getSpell(p.spells[0]??p.def.spells[0])),p.def.id==='sacrieur');
     p.state.invisible = p.buffs.some((b) => b.invisible);
     const oldMax = p.state.maxHp;
     p.state.maxHp = p.def.maxHp + p.stats.maxHp;
@@ -1623,14 +1714,14 @@ export class Simulation {
   }
 
   giveItem(p: PlayerRt, itemId: string): void {
-    if(!RUN_BONUSES[itemId]||!bonusUseful(RUN_BONUSES[itemId],p.stats,isRangedAttack(getSpell(p.spells[0]))))return;
+    if(!RUN_BONUSES[itemId]||!bonusUseful(RUN_BONUSES[itemId],p.stats,isRangedAttack(getSpell(p.spells[0])),p.def.id==='sacrieur'))return;
     p.inventory.set(itemId, (p.inventory.get(itemId) ?? 0) + 1);
     this.applyStats(p);
     this.refreshBoonChoices(p);
     if(this.state.intermission)this.refreshShop(p);
   }
 
-  private usefulBonuses(p:PlayerRt){return Object.values(RUN_BONUSES).filter(b=>bonusUseful(b,p.stats,isRangedAttack(getSpell(p.spells[0]))));}
+  private usefulBonuses(p:PlayerRt){return Object.values(RUN_BONUSES).filter(b=>bonusUseful(b,p.stats,isRangedAttack(getSpell(p.spells[0])),p.def.id==='sacrieur'));}
   private usefulChoice(p:PlayerRt,id:string):boolean {return !!getBlessing(id)?(p.blessingRanks[id]??0)<3&&(id!=='ricochet'||p.stats.bounce<3):!!RUN_BONUSES[id]&&bonusUseful(RUN_BONUSES[id],p.stats,isRangedAttack(getSpell(p.spells[0])));}
   private refreshBoonChoices(p:PlayerRt):void {
     const queue=this.boonQueues.get(p.id);if(!queue)return;
@@ -1697,9 +1788,10 @@ export class Simulation {
     p.state.kamas -= this.state.chestCost;
     chest.opened = true;
     // La chance du joueur améliore la rareté (communs, rares, épiques).
-    const item = rollRunBonus(p.stats.luck,Math.random,p.stats,isRangedAttack(getSpell(p.spells[0])));
+    const item = rollRunBonus(p.stats.luck,Math.random,p.stats,isRangedAttack(getSpell(p.spells[0])),p.def.id==='sacrieur');
     this.giveItem(p, item.id);
     this.broadcast('item', { player: id, item: item.id, x: chest.x, y: chest.y });
+    if(dofusExtraChestItem(p)){const extra=rollRunBonus(p.stats.luck,Math.random,p.stats,isRangedAttack(getSpell(p.spells[0])),p.def.id==='sacrieur');this.giveItem(p,extra.id);this.broadcast('item',{player:id,item:extra.id,x:chest.x,y:chest.y});}
 
     // Le coffre vide disparaît, un nouveau apparaît ailleurs un peu plus tard.
     this.after(4, () => this.state.chests.delete(bestId));

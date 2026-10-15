@@ -10,7 +10,7 @@ function setup(cls='cra'){
 }
 test('Soins : valeurs exactes par rareté, canaux séparés et plafonds distance / mêlée',()=>{
  for(const [i,r]of RARITIES.entries()){assert.equal(RUN_BONUSES[`vol_de_vie.${r}`].stats.lifesteal,[.003,.005,.008,.01][i]);assert.equal(RUN_BONUSES[`vampirisme.${r}`].stats.vampirism,[.006,.01,.016,.02][i]);}
- for(const ranged of[true,false]){const stats={...emptyStats(),lifesteal:10,vampirism:10,bounce:10,crit:10,multishot:100};clampCombatStats(stats,ranged);assert.equal(stats.lifesteal,ranged?.1:.2);assert.equal(stats.vampirism,.5);assert.equal(stats.bounce,3);assert.equal(stats.crit,.95);assert.equal(stats.multishot,100);}
+ for(const ranged of[true,false]){const stats={...emptyStats(),lifesteal:10,vampirism:10,bounce:10,crit:10,multishot:100};clampCombatStats(stats,ranged);assert.equal(stats.lifesteal,ranged?.1:.12);const tank={...emptyStats(),lifesteal:10};clampCombatStats(tank,ranged,true);assert.equal(tank.lifesteal,ranged?.1:.2,'le Sacrieur garde 20 % au contact');assert.equal(stats.vampirism,.5);assert.equal(stats.bounce,3);assert.equal(stats.crit,.95);assert.equal(stats.multishot,100);}
 });
 test('Bonus au plafond : exclus de 10 000 tirages, projectiles toujours cumulables',()=>{
  const stats={...emptyStats(),lifesteal:.1,vampirism:.5,bounce:3,crit:.95},rng=makeRng(444),seen=new Set<string>();

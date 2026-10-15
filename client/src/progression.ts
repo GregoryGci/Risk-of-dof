@@ -1,3 +1,4 @@
+import {getPetAttack} from '@rod/shared';
 import {sanitizeRunSummary,type RunSummary} from '@rod/shared';
 import {sanitizeProfile,type PlayerProfile} from '@rod/shared';
 import {sanitizeSpellLevels,type SpellLevelBook} from '@rod/shared';
@@ -28,11 +29,21 @@ export interface AccountData {
   equipped: Partial<Record<EquipmentSlot, string>>;
   bestTier: number;
   migrationNotice: boolean;
+  /** Compagnon : attaque tirée pour chaque familier (par base) et nombre de retirages déjà payés. */
+  petAttacks: Record<string, { attack: string; rerolls: number }>;
 }
 const object = (v: unknown): Record<string, unknown> => v && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, unknown> : {};
 const strings = (v: unknown): string[] => Array.isArray(v) ? [...new Set(v.filter(x => typeof x === 'string'))] : [];
 const integer = (v: unknown, max = 1e9): number => typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(max, Math.floor(v))) : 0;
 
+function sanitizePetAttacks(raw: unknown): AccountData['petAttacks'] {
+  const out: AccountData['petAttacks'] = {};
+  for (const [base, value] of Object.entries(object(raw))) {
+    const v = object(value);
+    if (EQUIPMENT_BASES[base]?.kind === 'familier' && getPetAttack(v.attack)) out[base] = { attack: v.attack as string, rerolls: integer(v.rerolls, 100) };
+  }
+  return out;
+}
 export function equippedFromAccount(data: AccountData): EquippedGear {
   const byId = new Map(data.inventory.map(e => [e.uid, e]));
   const used = new Map<string,number>();
@@ -53,7 +64,7 @@ export function migrateAccount(raw: unknown): AccountData {
   for (const [cls, spells] of Object.entries(object(old.loadouts))) loadouts[cls] = strings(spells).slice(0, 4);
   const legacyLevels=[20,40,80,120,160,170,180,190,200],oldTier=integer(old.bestTier,8);
   const migratedTier=old.equipmentCatalogVersion===2?integer(old.bestTier,EQUIPMENT_TIERS.length-1):EQUIPMENT_TIERS.findIndex(t=>t.level>=legacyLevels[oldTier]);
-  const data: AccountData = { version: 3,equipmentCatalogVersion:2,ogrines:integer(old.ogrines),claimedOgrines:strings(old.claimedOgrines),skins:strings(old.skins).filter(id=>!!skinById(id)),equippedSkins:sanitizeSkinBook(old.equippedSkins,old.skins), unlockedMode:unlockedModeFromProgression(old), spellLevels:sanitizeSpellLevels(old.spellLevels), profile:sanitizeProfile(old.profile), history: (Array.isArray(old.history)?old.history:[]).map(sanitizeRunSummary).filter((r):r is RunSummary=>!!r).slice(0,200), bank: integer(old.bank), fragments:integer(old.fragments), claimedFragments:strings(old.claimedFragments), unlocked: strings(old.unlocked), loadouts, credited: strings(old.credited), inventory: [], claimedDrops: strings(old.claimedDrops), discovered: strings(old.discovered).filter(id => !!EQUIPMENT_BASES[id]), equipped: {}, bestTier:Math.max(0,migratedTier), migrationNotice: old.migrationNotice === true };
+  const data: AccountData = { petAttacks: sanitizePetAttacks(old.petAttacks), version: 3,equipmentCatalogVersion:2,ogrines:integer(old.ogrines),claimedOgrines:strings(old.claimedOgrines),skins:strings(old.skins).filter(id=>!!skinById(id)),equippedSkins:sanitizeSkinBook(old.equippedSkins,old.skins), unlockedMode:unlockedModeFromProgression(old), spellLevels:sanitizeSpellLevels(old.spellLevels), profile:sanitizeProfile(old.profile), history: (Array.isArray(old.history)?old.history:[]).map(sanitizeRunSummary).filter((r):r is RunSummary=>!!r).slice(0,200), bank: integer(old.bank), fragments:integer(old.fragments), claimedFragments:strings(old.claimedFragments), unlocked: strings(old.unlocked), loadouts, credited: strings(old.credited), inventory: [], claimedDrops: strings(old.claimedDrops), discovered: strings(old.discovered).filter(id => !!EQUIPMENT_BASES[id]), equipped: {}, bestTier:Math.max(0,migratedTier), migrationNotice: old.migrationNotice === true };
   if (old.version === 2 || old.version === 3) {
     const ids = new Map<string,string>();
     for (const rawItem of Array.isArray(old.inventory) ? old.inventory : []) {

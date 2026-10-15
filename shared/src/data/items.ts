@@ -125,13 +125,13 @@ export function rollRarity(luck: number, random = Math.random): BonusRarity {
 }
 
 /** Un objet au hasard (base uniforme, rareté selon la chance). */
-export function bonusUseful(item:RunBonusDef,stats:Partial<Record<StatKey,number>>,ranged=true):boolean {
-  const caps=statCaps(ranged);
+export function bonusUseful(item:RunBonusDef,stats:Partial<Record<StatKey,number>>,ranged=true,tank=false):boolean {
+  const caps=statCaps(ranged,tank);
   return Object.entries(item.stats).some(([k,v])=>v>0&&(k!=='attackSpeed'||ranged)&&((caps[k as StatKey]??Infinity)-(stats[k as StatKey]??0)>1e-8));
 }
-export function rollRunBonus(luck: number, random = Math.random,stats:Partial<Record<StatKey,number>>={},ranged=true): RunBonusDef {
+export function rollRunBonus(luck: number, random = Math.random,stats:Partial<Record<StatKey,number>>={},ranged=true,tank=false): RunBonusDef {
   const rarity=rollRarity(luck,random);
-  const bases = Object.keys(RUN_BONUS_BASES).filter(base=>{const item=RUN_BONUSES[`${base}.${rarity}`];return !!item&&bonusUseful(item,stats,ranged);});
+  const bases = Object.keys(RUN_BONUS_BASES).filter(base=>{const item=RUN_BONUSES[`${base}.${rarity}`];return !!item&&bonusUseful(item,stats,ranged,tank);});
   const base = bases[Math.floor(random() * bases.length)];
   return RUN_BONUSES[`${base}.${rarity}`];
 }

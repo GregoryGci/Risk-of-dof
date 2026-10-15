@@ -98,7 +98,7 @@ const talents = new TalentsPage(null, classId, async (cls) => {
 });
 $('btn-talents').addEventListener('click', () => talents.open(classId));
 const equipmentPage = new EquipmentPage(() => {
-  currentRoom?.send('equipment', { equipment: account.equipment });
+  currentRoom?.send('equipment', { equipment: account.equipmentPayload });
   renderProfile();
 }, () => !currentRoom || currentRoom.state.phase !== PHASE_PLAYING);
 const encyclopedia = new EncyclopediaPage();
@@ -209,7 +209,7 @@ async function connect(join: () => Promise<Room>): Promise<void> {
   }
 }
 
-const joinOptions = () => ({ name: pseudo(), classId, spells: account.loadout(classId), equipment: account.equipment,accessToken:cloud.session?.access_token });
+const joinOptions = () => ({ name: pseudo(), classId, spells: account.loadout(classId), equipment: account.equipmentPayload,accessToken:cloud.session?.access_token });
 btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, joinOptions())));
 btnSolo.addEventListener('click', () => connect(async () => {
   const room = await client.create(ROOM_NAME, { ...joinOptions(), singlePlayer: true });
@@ -287,7 +287,7 @@ async function startGame(room: Room): Promise<void> {
   };
 
   const hud = new Hud(store, {
-    onStart: async () => {await cloud.flush();room.send('equipment', { equipment: account.equipment }); room.send('start'); },
+    onStart: async () => {await cloud.flush();room.send('equipment', { equipment: account.equipmentPayload }); room.send('start'); },
     onRestart: () => room.send('restart'),
     onQuit: quit,
     onSpellHover: () => {},

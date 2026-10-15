@@ -10077,6 +10077,222 @@
         }
       },
       "shrunk": 0.75
+    },
+    "osa_tofu_meute": {
+      "image": "sprites/tofu.png",
+      "atlas": "sprites/tofu.json",
+      "origin": [
+        0.5,
+        0.8108
+      ],
+      "scale": 0.7907,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 15,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 15,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "osa_bouftou_tank": {
+      "image": "sprites/bouftou.png",
+      "atlas": "sprites/bouftou.json",
+      "origin": [
+        0.4706,
+        0.6667
+      ],
+      "scale": 1.1271,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 40
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "osa_dragonnet": {
+      "image": "sprites/osa_tofu.png",
+      "atlas": "sprites/osa_tofu.json",
+      "origin": [
+        0.4806,
+        0.8859
+      ],
+      "scale": 1.35252,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
     }
   },
   "tiles": {
@@ -10396,7 +10612,12 @@
     "karcham": "spells/karcham.png",
     "ivresse": "spells/ivresse.png",
     "lait_de_bambou": "spells/lait_de_bambou.png",
-    "vitalite": "spells/vitalite.png"
+    "vitalite": "spells/vitalite.png",
+    "ronces_agressives": "spells/ronces_agressives.png",
+    "poison_paralysant": "spells/poison_paralysant.png",
+    "tremblement": "spells/tremblement.png",
+    "glyphe_d_immobilisation": "spells/glyphe_d_immobilisation.png",
+    "invocation_de_dragonnet_rouge": "spells/invocation_de_dragonnet_rouge.png"
   },
   "sounds": {
     "crit": "sounds/critique.mp3",
@@ -11251,7 +11472,61 @@
     "retro_10644": "items/retro_10644.png",
     "retro_10645": "items/retro_10645.png",
     "retro_9451": "items/retro_9451.png",
-    "retro_9452": "items/retro_9452.png"
+    "retro_9452": "items/retro_9452.png",
+    "familier_chienchien": "items/familier_chienchien.png",
+    "familier_croum": "items/familier_croum.png",
+    "familier_fotome": "items/familier_fotome.png",
+    "familier_kouin_kouin": "items/familier_kouin_kouin.png",
+    "familier_minimino": "items/familier_minimino.png",
+    "familier_petit_chienchien_noir": "items/familier_petit_chienchien_noir.png",
+    "familier_abra_kadabra": "items/familier_abra_kadabra.png",
+    "familier_bebe_pandawa": "items/familier_bebe_pandawa.png",
+    "familier_bouloute_du_parrain": "items/familier_bouloute_du_parrain.png",
+    "familier_chacha_angora": "items/familier_chacha_angora.png",
+    "familier_chacha_blanc": "items/familier_chacha_blanc.png",
+    "familier_chacha_tigre": "items/familier_chacha_tigre.png",
+    "familier_chachate_rousse": "items/familier_chachate_rousse.png",
+    "familier_crocodaille": "items/familier_crocodaille.png",
+    "familier_dragoune_noire": "items/familier_dragoune_noire.png",
+    "familier_ecureuil_chenapan": "items/familier_ecureuil_chenapan.png",
+    "familier_feanor": "items/familier_feanor.png",
+    "familier_leopardo": "items/familier_leopardo.png",
+    "familier_marcassin": "items/familier_marcassin.png",
+    "familier_peki": "items/familier_peki.png",
+    "familier_petit_chacha_blanc": "items/familier_petit_chacha_blanc.png",
+    "familier_pioute_bleu": "items/familier_pioute_bleu.png",
+    "familier_pioute_jaune": "items/familier_pioute_jaune.png",
+    "familier_pioute_rose": "items/familier_pioute_rose.png",
+    "familier_pioute_rouge": "items/familier_pioute_rouge.png",
+    "familier_pioute_vert": "items/familier_pioute_vert.png",
+    "familier_pioute_violet": "items/familier_pioute_violet.png",
+    "familier_ross": "items/familier_ross.png",
+    "familier_shushu_de_rushu": "items/familier_shushu_de_rushu.png",
+    "familier_tiwabbit_kiafin": "items/familier_tiwabbit_kiafin.png",
+    "familier_vampyrette": "items/familier_vampyrette.png",
+    "familier_walk": "items/familier_walk.png",
+    "familier_willy_le_relou": "items/familier_willy_le_relou.png",
+    "familier_chienchien_noir": "items/familier_chienchien_noir.png",
+    "familier_el_scarador": "items/familier_el_scarador.png",
+    "familier_mini_wa": "items/familier_mini_wa.png",
+    "familier_gelutin": "items/familier_gelutin.png",
+    "familier_pykur": "items/familier_pykur.png",
+    "familier_raknaille": "items/familier_raknaille.png",
+    "familier_meuch": "items/familier_meuch.png",
+    "dofus_dolmanax": "items/dofus_dolmanax.png",
+    "dofus_abyssal": "items/dofus_abyssal.png",
+    "dofus_domakuro": "items/dofus_domakuro.png",
+    "dofus_dokoko": "items/dofus_dokoko.png",
+    "dofus_dofawa": "items/dofus_dofawa.png",
+    "dofus_dokille": "items/dofus_dokille.png",
+    "dofus_dorigami": "items/dofus_dorigami.png",
+    "dofus_sylvestre": "items/dofus_sylvestre.png",
+    "dofus_veilleurs": "items/dofus_veilleurs.png",
+    "dofus_tachete": "items/dofus_tachete.png",
+    "dofus_argente": "items/dofus_argente.png",
+    "dofus_nebuleux": "items/dofus_nebuleux.png",
+    "dofus_forgelave": "items/dofus_forgelave.png",
+    "dofus_givrefoux": "items/dofus_givrefoux.png"
   },
   "spellfx": {
     "101": {
@@ -18448,6 +18723,912 @@
         }
       },
       "name": "Shushuté"
+    },
+    "costume_bouftou": {
+      "image": "sprites/bouftou.png",
+      "atlas": "sprites/bouftou.json",
+      "origin": [
+        0.4706,
+        0.6667
+      ],
+      "scale": 0.958035,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 40
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_tofu": {
+      "image": "sprites/tofu.png",
+      "atlas": "sprites/tofu.json",
+      "origin": [
+        0.5,
+        0.8108
+      ],
+      "scale": 1.1860499999999998,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 15,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 15,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_wabbit": {
+      "image": "sprites/wabbit.png",
+      "atlas": "sprites/wabbit.json",
+      "origin": [
+        0.487,
+        0.8156
+      ],
+      "scale": 1.03688,
+      "sourceSprite": 1050,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 50
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 50
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 17
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 17
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_bwork": {
+      "image": "sprites/bwork.png",
+      "atlas": "sprites/bwork.json",
+      "origin": [
+        0.4488,
+        0.8498
+      ],
+      "scale": 0.8163849999999999,
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 40
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 40
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_gelee": {
+      "image": "sprites/gelee_fraise.png",
+      "atlas": "sprites/gelee_fraise.json",
+      "origin": [
+        0.5227,
+        0.7922
+      ],
+      "scale": 0.9016000000000001,
+      "sourceSprite": 1066,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 25
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 25
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 13
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 13
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 7,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 7,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 8,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 8,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_chafer": {
+      "image": "sprites/chafer.png",
+      "atlas": "sprites/chafer.json",
+      "origin": [
+        0.5276,
+        0.9107
+      ],
+      "scale": 1.0143900000000001,
+      "sourceSprite": 1014,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 8
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 13
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 13
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 13
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 4,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 4,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 5,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 6,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_abraknyde": {
+      "image": "sprites/abraknyde_ancestral.png",
+      "atlas": "sprites/abraknyde_ancestral.json",
+      "origin": [
+        0.5188,
+        0.8396
+      ],
+      "scale": 0.619905,
+      "sourceSprite": 1458,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 13
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 7,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 7,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 4,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 4,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_scarabosse": {
+      "image": "sprites/scarabosse_dore.png",
+      "atlas": "sprites/scarabosse_dore.json",
+      "origin": [
+        0.5385,
+        0.7764
+      ],
+      "scale": 0.9383250000000001,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 40,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_craqueleur": {
+      "image": "sprites/craqueleur.png",
+      "atlas": "sprites/craqueleur.json",
+      "origin": [
+        0.4467,
+        0.7675
+      ],
+      "scale": 0.72128,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 30,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 7,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 8,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_dragon_cochon": {
+      "image": "sprites/dragon_cochon.png",
+      "atlas": "sprites/dragon_cochon.json",
+      "origin": [
+        0.5,
+        0.7525
+      ],
+      "scale": 0.78897,
+      "sourceSprite": 1037,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 15
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 12
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 10
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 10
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 9,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 8,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 8,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_pichon": {
+      "image": "sprites/pichon_orange.png",
+      "atlas": "sprites/pichon_orange.json",
+      "origin": [
+        0.4897,
+        0.8496
+      ],
+      "scale": 1.01436,
+      "sourceSprite": 1488,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 13
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 13
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 6,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 6,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 3,
+            "frameRate": 3,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 3,
+            "frameRate": 3,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
+    },
+    "costume_coffre": {
+      "image": "sprites/coffre.png",
+      "atlas": "sprites/coffre.json",
+      "origin": [
+        0.4867,
+        0.7762
+      ],
+      "scale": 0.9030400000000001,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 50
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 50
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 50
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 50
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 17,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 17,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75
     }
   }
 }

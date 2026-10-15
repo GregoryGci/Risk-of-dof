@@ -89,3 +89,14 @@
 .gear-grid.picking .gear-card { position: relative; }
 .gear-grid.picking .gear-card::before { content: ''; position: absolute; bottom: 4px; right: 4px; width: 13px; height: 13px; border: 1px solid #e8d7ae; border-radius: 3px; background: #0006; z-index: 2; }
 .gear-grid.picking .gear-card.selected::before { content: '✓'; background: #c9553e; border-color: #ffd9a8; color: #fff; font: bold 11px/13px sans-serif; text-align: center; }
+
+/* Compagnon : attaque du familier sélectionné. */
+.gear-pet { display: grid; gap: 4px; margin: 10px 0; padding: 9px 11px; border: 1px solid #a38c5c66; border-left: 3px solid #9aa58a; border-radius: 4px; background: #0002; }
+.gear-pet.rare { border-left-color: #5fa8e0; } .gear-pet.epique { border-left-color: #b073e0; } .gear-pet.legendaire { border-left-color: #f0a040; }
+.gear-pet-label { font-size: 10px; letter-spacing: .5px; text-transform: uppercase; opacity: .75; }
+.gear-pet small { font-size: 11px; line-height: 1.5; opacity: .85; }
+.gear-pet .btn { justify-self: start; padding: 5px 10px; font-size: 11px; margin-top: 3px; }
+
+/* Effet propre d’un Dofus. */
+.gear-dofus-effect { margin: 10px 0; padding: 8px 11px; border-left: 3px solid #e0b860; background: #0002; font-size: 12px; line-height: 1.5; }
+.gear-dofus-effect b { display: block; font-size: 10px; letter-spacing: .5px; text-transform: uppercase; opacity: .75; }

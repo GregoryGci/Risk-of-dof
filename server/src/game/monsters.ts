@@ -126,11 +126,11 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
       if (Math.hypot(p.state.x - s.x, p.state.y - s.y) > m.def.radius + PLAYER_RADIUS + 0.1) continue;
       m.chargeHit.add(p.id);
       p.push = { vx: m.chargeDx * 9, vy: m.chargeDy * 9, time: 0.15 };
-      sim.damagePlayer(p, b.chargeDamage * m.damageMult,`${m.def.name} · Charge`);
+      sim.damagePlayer(p, b.chargeDamage * sim.monsterPower(m),`${m.def.name} · Charge`);
     }
     for(const ally of [...sim.monsters.values()]) {
       if(!ally.state.ally||m.chargeHit.has(ally.id)||Math.hypot(ally.state.x-s.x,ally.state.y-s.y)>m.def.radius+ally.def.radius+.1)continue;
-      m.chargeHit.add(ally.id);sim.damageMonster(ally,b.chargeDamage*m.damageMult,'');
+      m.chargeHit.add(ally.id);sim.damageMonster(ally,b.chargeDamage*sim.monsterPower(m),'');
     }
     // Fin de charge : temps écoulé ou arrêté net par un obstacle.
     const moved = Math.hypot(s.x - before.x, s.y - before.y);
@@ -153,7 +153,7 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
       if (sim.now >= m.phaseUntil) {
         s.state = MSTATE_NORMAL;
         m.specialReadyAt = sim.now + spell.cooldown / 1000;
-        sim.cast(spell, s.x, s.y, m.aimX??target.x, m.aimY??target.y, m.id, false, m.damageMult);
+        sim.cast(spell, s.x, s.y, m.aimX??target.x, m.aimY??target.y, m.id, false, sim.monsterPower(m));
       }
       return;
     }
@@ -174,7 +174,7 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
       my = -ty;
     }
   } else {
-    if (b.type === 'charger' && dist <= b.chargeRange && dist > 2 && sim.now >= m.specialReadyAt) {
+    if (b.type === 'charger' && dist <= b.chargeRange && dist > 2 && sim.now >= m.specialReadyAt && sim.now >= (m.rootUntil ?? 0)) {
       s.state = MSTATE_WINDUP;
       m.phaseUntil = sim.now + b.windup;
       m.chargeDx=tx;m.chargeDy=ty;
@@ -195,7 +195,8 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
     }
   }
 
-  if (mx !== 0 || my !== 0) {
+  // Enraciné : reste sur place, mais attaque encore.
+  if ((mx !== 0 || my !== 0) && sim.now >= (m.rootUntil ?? 0)) {
     const pos = { x: s.x + mx * speed * dt, y: s.y + my * speed * dt };
     resolveCollisions(sim.map, pos, m.def.radius);
     s.x = pos.x;
@@ -228,8 +229,8 @@ function tryMelee(sim: Simulation, m: MonsterRt, target: Target, dist: number): 
   if (dist > m.def.melee.range || sim.now < m.meleeReadyAt) return;
   m.meleeReadyAt = sim.now + m.def.melee.cooldown;
   sim.broadcast('atk', { id: m.id });
-  if (target.player) sim.damagePlayer(target.player, m.def.melee.damage * m.damageMult,m.def.name);
-  else if (target.ally) sim.damageMonster(target.ally, m.def.melee.damage * m.damageMult, '');
+  if (target.player) sim.damagePlayer(target.player, m.def.melee.damage * sim.monsterPower(m),m.def.name);
+  else if (target.ally) sim.damageMonster(target.ally, m.def.melee.damage * sim.monsterPower(m), '');
 }
 
 /** IA d'une invocation alliée : attaque les monstres proches, soigne, ou suit son maître. */
@@ -254,7 +255,7 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
   }
   const b = m.def.behavior;
   if(sim.now<(m.attackHoldUntil??0))return;
-  const inherited=summonPower(m,owner);
+  const inherited=summonPower(m,owner,sim.now);
   m.damageMult=inherited.damage;
   const speed = inherited.speed;
   const moveTo = (x: number, y: number, stopAt: number) => {

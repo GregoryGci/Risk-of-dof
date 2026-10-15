@@ -30,11 +30,10 @@ test('Bonus exclusivement épiques : un rebond et deux charges indépendantes du
   const ready=p.secondaryRefillAt;sim.playerCast(p.id,{slot:1,tx:a.state.x,ty:a.state.y});assert.equal(p.secondaryRefillAt,ready);
   const period=getSpell(p.spells[1]).cooldown/1000;advance(sim,period+.05);assert.equal(p.state.secondaryCharges,1);advance(sim,period);assert.equal(p.state.secondaryCharges,2);
 });
-test('Sadida : Vent frappe aussi autour des poupées, sans double coup dans les zones superposées',()=>{
-  const {sim,p}=create('sadida');sim.playerCast(p.id,{slot:1,tx:p.state.x-4,ty:p.state.y});const doll=[...sim.monsters.values()].find(m=>m.state.ally)!;doll.state.x=p.state.x-4;
-  const near=sim.spawnMonster(getMonster('epouvantail'),doll.state.x,doll.state.y+1,1,1,1),far=sim.spawnMonster(getMonster('epouvantail'),p.state.x+6,p.state.y,1,1,1);
-  sim.playerCast(p.id,{slot:3,tx:far.state.x,ty:far.state.y});assert.ok(near.burnUntil>0&&far.burnUntil>0);
-  p.readyAt[3]=0;doll.state.x=far.state.x;doll.state.y=far.state.y;const hp=far.state.hp;sim.playerCast(p.id,{slot:3,tx:far.state.x,ty:far.state.y});assert.ok(hp-far.state.hp<=12); // 8 dégâts max × critique 1,5
+test('Sadida : Vent Empoisonné, nuage qui cumule jusqu’à cinq doses',()=>{
+  const {sim,p}=create('sadida');const target=sim.spawnMonster(getMonster('epouvantail'),p.state.x+4,p.state.y,1,1,1);
+  sim.playerCast(p.id,{slot:3,tx:target.state.x,ty:target.state.y});advance(sim,6);
+  assert.equal(target.poisonStacks,5);assert.ok(target.burnUntil>sim.now-3);
 });
 test('Rebond de mêlée : choisit une cible supplémentaire hors des cibles déjà frappées',()=>{
   const {sim,p,events}=create('iop');sim.giveItem(p,'rebond.epique');
@@ -48,7 +47,7 @@ test('Charge gagnée pendant une recharge : réserve utilisable immédiatement, 
   sim.playerCast(p.id,{slot:1,tx:p.state.x+2,ty:p.state.y});assert.equal(p.state.secondaryCharges,0);assert.equal(p.secondaryRefillAt,ready);
 });
 test('Invocations : aggro seulement proche et immobilité pendant leur attaque',()=>{
-  const {sim,p}=create('osamodas');sim.playerCast(p.id,{slot:1,tx:p.state.x+1,ty:p.state.y});const ally=[...sim.monsters.values()].find(m=>m.state.ally)!;
+  const {sim,p}=create('osamodas');sim.playerCast(p.id,{slot:3,tx:p.state.x+1,ty:p.state.y});const ally=[...sim.monsters.values()].find(m=>m.state.ally)!;
   const enemy=sim.spawnMonster(getMonster('boufton'),ally.state.x+4,ally.state.y,1,1,1);enemy.def={...enemy.def,speed:0,melee:{...enemy.def.melee,damage:0}};
   const x=ally.state.x,y=ally.state.y;advance(sim,.25);assert.equal(ally.state.x,x);assert.equal(ally.state.y,y);assert.ok((ally.attackHoldUntil??0)>sim.now);
   for(const id of [...sim.monsters.keys()])if(id!==ally.id)sim.removeMonster(id);

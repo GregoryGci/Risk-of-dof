@@ -97,10 +97,14 @@ test('Sram : attaque à distance et piège sur la mort, pas sur les invocations/
     for(let i=0;i<10;i++){const e=sim.spawnMonster(getMonster('boufton'),p.state.x+4,p.state.y+i*.1,1,1,1);sim.damageMonster(e,10000,p.id);}assert.equal(sim.grounds.size,3);
   }finally{Math.random=original;}
 });
-test('Sadida : poupées sèment des pousses bornées, floraison les consomme et soigne',()=>{
-  const {sim,p}=setup('sadida');cast(sim,p,1,p.state.x,p.state.y);advance(sim,3);
-  assert.ok([...sim.grounds.values()].some(g=>g.state.spell==='jardin_vivant'));p.state.hp-=25;const hp=p.state.hp;action(sim,p);assert.ok(p.state.hp>hp);
-  advance(sim,8);assert.ok([...sim.grounds.values()].filter(g=>g.state.spell==='jardin_vivant').length<=6);
+test('Sadida : poison cumulable, +10 % sur les empoisonnés, propagation à la mort et éclosion',()=>{
+  const {sim,p}=setup('sadida');const target=sim.spawnMonster(getMonster('boufton'),p.state.x,p.state.y+3,1e3,0,1);target.def={...target.def,speed:0};
+  for(let i=0;i<4;i++){cast(sim,p,0,target.state.x,target.state.y);advance(sim,.5);}
+  assert.equal(target.poisonStacks,3,'trois doses au plus');
+  const hp=target.state.hp;sim.damageMonster(target,100,p.id);assert.equal(hp-target.state.hp,110);
+  const next=sim.spawnMonster(getMonster('boufton'),target.state.x+1,target.state.y,1e3,0,1);
+  sim.damageMonster(target,1e9,p.id);assert.equal(next.poisonStacks,3,'le poison passe au voisin');
+  const before=next.state.hp;action(sim,p);assert.ok(next.state.hp<before);assert.equal(next.poisonStacks,0);
 });
 test('Ecaflip : 25 % par auto touchée, cinq cartes distinctes et bonus selon le poker',()=>{
   const {sim,p}=setup('ecaflip'),m=sim.mechanics.get(p),original=Math.random;
@@ -117,11 +121,12 @@ test('Féca : chaque glyphe traversé se réactive une fois par dash et reste en
   p.dashReadyAt=0;sim.playerDash(p.id,{dx:-1,dy:0});advance(sim,.18);assert.equal(events.filter(e=>e.type==='explode'&&e.message.spell==='glyphe_agressif').length,4);
   action(sim,p);assert.equal(sim.grounds.size,2);
 });
-test('Osamodas : Fouet marque, ordre déclenche les souffles, rappel protège',()=>{
+test('Osamodas : Fouet marque, quatre invocations au plus et Cri sauvage',()=>{
   const {sim,p,target}=setup('osamodas');cast(sim,p,1);cast(sim,p,2,p.state.x-1,p.state.y);cast(sim,p,0);
   advance(sim,.1);assert.equal(sim.mechanics.get(p).target,target.id);const ally=[...sim.monsters.values()].find(m=>m.state.ally)!;assert.equal(sim.mechanics.allyTarget(ally)?.id,target.id);
-  assert.equal([...sim.monsters.values()].filter(m=>m.state.ally).length,1);assert.equal(getSpell(p.spells[2]).name,'Frappe du Craqueleur');
-  action(sim,p);assert.equal(sim.mechanics.get(p).target,'');advance(sim,.3);sim.mechanics.get(p).readyAt=0;action(sim,p);assert.ok(p.state.shield>0);
+  assert.equal([...sim.monsters.values()].filter(m=>m.state.ally).length,3,'deux Tofus et un Bouftou');
+  cast(sim,p,1);cast(sim,p,3);assert.equal([...sim.monsters.values()].filter(m=>m.allyOwner===p.id).length,4);
+  action(sim,p);assert.ok((p.summonRoarUntil??0)>sim.now);
 });
 test('Enutrof : coffre aux PV max, intercepte les dégâts puis laisse passer le surplus',()=>{
   const {sim,p}=setup('enutrof');cast(sim,p,2);const chest=[...sim.monsters.values()].find(m=>m.state.ally)!;assert.equal(chest.state.maxHp,p.state.maxHp);assert.equal(chest.def.taunt,false);

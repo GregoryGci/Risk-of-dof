@@ -1,3 +1,4 @@
+import { DOFUS_EFFECTS, PET_ATTACK_RARITY_NAMES } from '@rod/shared';
 import { EQUIPMENT_BASES, EQUIPMENT_RARITIES, EQUIPMENT_RARITY_NAMES, EQUIPMENT_SLOTS, EQUIPMENT_TIERS, FUSION_COST, fusionResult, SLOT_NAMES, equipmentStats, getClass, slotKind, statText, type EquipmentKind, type EquipmentRarity, type EquipmentSlot, type StatKey } from '@rod/shared';
 import { account } from '../account.ts';
 import {forgeCost,recycleValue,equipmentSet,setProgress,setThresholds,type EquipmentSet} from '@rod/shared';
@@ -60,6 +61,7 @@ export class EquipmentPage {
         if (account.recycleMany(this.picked)) { if (!account.inventory.some(e => e.uid === this.selected)) this.selected = ''; this.onChange(); }
         this.picking = false; this.picked.clear(); this.confirmPicked = false;
       }
+      if (button.dataset.action === 'pet-reroll' && button.dataset.base && this.canEdit() && account.rerollPet(button.dataset.base)) this.onChange();
       if (button.dataset.action === 'migration') account.dismissMigration();
       this.render();
     });
@@ -136,6 +138,8 @@ export class EquipmentPage {
         }).join('')}</div>
         ${this.renderSet(equipmentSet(selected.base))}<div class="gear-actions"><select id="gear-target" aria-label="Emplacement">${slots.map(s => `<option value="${s}" ${this.target === s ? 'selected' : ''}>${SLOT_NAMES[s]}</option>`).join('')}</select>
           ${current?.uid === selected.uid ? '<button class="btn" data-action="remove">Déséquiper</button>' : `<button class="btn btn-primary" data-action="equip" ${this.canEdit() ? '' : 'disabled'}>Équiper</button>`}</div>`;
+      if (base.kind === 'familier') html += this.renderPet(selected.base);
+      if (DOFUS_EFFECTS[selected.base]) html += `<p class="gear-dofus-effect"><b>Effet</b> ${escapeHtml(DOFUS_EFFECTS[selected.base])}</p>`;
       const next=fusionResult(selected);
       if (next) html+=`<div class="gear-fusion"><span>10 ${EQUIPMENT_RARITY_NAMES[selected.rarity].toLowerCase()} identiques → ${next.rarity==='legendaire' && selected.rarity==='legendaire' ? `légendaire tier ${next.forgeTier}` : EQUIPMENT_RARITY_NAMES[next.rarity].toLowerCase()}<small>${selected.quantity} / ${FUSION_COST} exemplaires · mêmes stats pour chaque exemplaire</small></span><button class="btn" data-action="fuse" ${selected.quantity<FUSION_COST || !this.canEdit() ? 'disabled' : ''}>Fusionner</button></div>`;
       const cost=forgeCost(selected),worn=Object.values(account.equipment).filter(e=>e.uid===selected.uid).length;
@@ -144,6 +148,12 @@ export class EquipmentPage {
     html += `</aside></div><footer class="gear-footer"><div><b>Palier ${tier.level} débloqué</b><span>${account.bestTier < EQUIPMENT_TIERS.length-1 ? `Atteignez la zone ${EQUIPMENT_TIERS[account.bestTier + 1].stage} pour le palier ${EQUIPMENT_TIERS[account.bestTier + 1].level}.` : 'Tous les paliers sont débloqués.'}</span></div><div class="gear-rarity-legend">${EQUIPMENT_RARITIES.map(r => `<span><i class="${r}"></i>${EQUIPMENT_RARITY_NAMES[r]}</span>`).join('')}</div></footer>`;
     this.body.innerHTML = html;
     this.renderInventory();
+  }
+  /** Compagnon : attaque tirée pour ce familier et retirage contre des kamas. */
+  private renderPet(base: string): string {
+    const attack = account.petAttack(base);if (!attack) return '';
+    const cost = account.petRerollCost(base);
+    return `<div class="gear-pet ${attack.rarity}"><span class="gear-pet-label">Compagnon · attaque ${PET_ATTACK_RARITY_NAMES[attack.rarity].toLowerCase()}</span><b>${escapeHtml(attack.name)}</b><small>${escapeHtml(attack.description)} Il attaque avec vous toutes les 2,5 s, à 40 % de votre puissance.</small><button class="btn" data-action="pet-reroll" data-base="${escapeHtml(base)}" ${account.bank >= cost && this.canEdit() ? '' : 'disabled'} title="Tire une nouvelle attaque (le prix augmente à chaque retirage)">Retirer · ${cost.toLocaleString('fr')} kamas</button></div>`;
   }
   /** Actions groupées : tout fusionner, recycler toute une rareté (avec confirmation). */
   private bulkActions(): string {

@@ -60,6 +60,10 @@ export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number
     else if (e.type === 'burn') lines.push(`Brûle : ${e.dps} dégâts/s pendant ${e.duration} s`);
     else if (e.type === 'slow') lines.push(`Ralentit de ${pct(1 - e.factor)} pendant ${e.duration} s`);
     else if (e.type === 'stun') lines.push(`Fige les ennemis pendant ${e.duration} s`);
+    else if (e.type === 'poison') lines.push(`Empoisonne : ${e.dps} dégâts/s pendant ${e.duration} s, cumulable ${e.max} fois`);
+    else if (e.type === 'weaken') lines.push(`Affaiblit : −${pct(e.factor)} de dégâts ennemis pendant ${e.duration} s`);
+    else if (e.type === 'root') lines.push(`Enracine pendant ${e.duration} s (les ennemis attaquent encore)`);
+    else if (e.type === 'vulnerable') lines.push(`Vulnérable : +${pct(e.bonus)} de dégâts subis pendant ${e.duration} s`);
     else if (e.type === 'gold') lines.push(`${pct(e.chance)} de chances de faire tomber ${e.amount[0]}-${e.amount[1]} kamas`);
     else if (e.type === 'lifesteal') lines.push(`${slot===0?'Vol de vie des autos':'Vampirisme du sort'} : ${pct(Math.min(slot===0?lifestealCap(isRangedAttack(spell)):.5,e.fraction))} des dégâts effectifs (plafond ${slot===0?(isRangedAttack(spell)?10:20):50} %, bonus compris)`);
   }
