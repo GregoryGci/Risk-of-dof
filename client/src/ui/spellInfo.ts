@@ -45,7 +45,7 @@ export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number
 
   if (spell.heal) lines.push(`<span class="heal">Soin ${Math.round(spell.heal[0]*10)/10} à ${Math.round(spell.heal[1]*10)/10} PV</span> aux alliés touchés${copies>1?' par vague':''}`);
   else if (spell.damage[1] > 0) {
-    const [a, b] = spell.damage.map((d) => Math.round(d * damage));
+    const [a, b] = spell.damage.map((d) => Math.round((d + (stats?.flatDamage ?? 0)) * damage));
     lines.push(`<span class="dmg">Dégâts ${a} à ${b}${copies>1?' par frappe':''}</span> — critique ${pct(crit)} (×${critMult.toFixed(2).replace('.', ',')})`);
   }
   lines.push(spellShape(spell));

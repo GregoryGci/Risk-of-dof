@@ -65,6 +65,7 @@ export class EquipmentPage {
       if (button.dataset.action === 'migration') account.dismissMigration();
       this.render();
     });
+    this.setupDrag();
     this.body.addEventListener('change', e => {
       const input = e.target as HTMLSelectElement;
       if (input.id === 'gear-filter') { this.filter = input.value; this.target = undefined; }
@@ -87,6 +88,78 @@ export class EquipmentPage {
     document.getElementById('equipment-close')!.focus();
   }
   close(): void { this.el.classList.add('hidden'); }
+
+  /**
+   * Glisser-déposer à la souris ou au doigt : un objet de l'inventaire vers un emplacement l'équipe,
+   * un emplacement vers un autre du même type échange, un emplacement vers l'inventaire déséquipe.
+   * Événements de pointeur plutôt que le drag HTML5, qui ne démarre pas sur un <button> dans Firefox.
+   */
+  private setupDrag(): void {
+    let drag: { uid: string; from?: EquipmentSlot; x: number; y: number; ghost?: HTMLElement; pointer: number } | undefined;
+    let suppressClick = false;
+    const kindOf = (uid: string) => EQUIPMENT_BASES[account.inventory.find(e => e.uid === uid)?.base ?? '']?.kind;
+    const dropAt = (x: number, y: number) => {
+      const el = document.elementFromPoint(x, y) as HTMLElement | null;
+      const slot = el?.closest<HTMLElement>('.gear-slot.drop-ok');
+      if (slot) return { slot: slot.dataset.slot as EquipmentSlot, el: slot };
+      const grid = el?.closest<HTMLElement>('.gear-inventory.drop-ok');
+      return grid ? { grid: true as const, el: grid } : undefined;
+    };
+    const clear = () => {
+      drag?.ghost?.remove();
+      this.body.classList.remove('gear-dragging');
+      for (const el of this.body.querySelectorAll('.drop-ok,.drop-hover')) el.classList.remove('drop-ok', 'drop-hover');
+      drag = undefined;
+    };
+    this.body.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || this.picking || !this.canEdit()) return;
+      const card = (e.target as HTMLElement).closest<HTMLElement>('[data-gear],[data-slot]');
+      if (!card) return;
+      const from = card.dataset.slot as EquipmentSlot | undefined;
+      const uid = card.dataset.gear ?? (from ? account.equipment[from]?.uid : undefined);
+      if (!uid) return;
+      drag = { uid, from, x: e.clientX, y: e.clientY, pointer: e.pointerId };
+    });
+    window.addEventListener('pointermove', e => {
+      if (!drag || e.pointerId !== drag.pointer) return;
+      if (!drag.ghost) {
+        if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6) return;
+        const icon = this.body.querySelector<HTMLElement>(drag.from ? `[data-slot="${drag.from}"] img` : `[data-gear="${CSS.escape(drag.uid)}"] img`);
+        drag.ghost = document.createElement('div');
+        drag.ghost.className = 'gear-drag-ghost';
+        if (icon) drag.ghost.append(icon.cloneNode(true));
+        document.body.append(drag.ghost);
+        this.body.classList.add('gear-dragging');
+        const kind = kindOf(drag.uid);
+        for (const slot of this.body.querySelectorAll<HTMLElement>('.gear-slot')) if (slotKind(slot.dataset.slot as EquipmentSlot) === kind && slot.dataset.slot !== drag.from) slot.classList.add('drop-ok');
+        if (drag.from) this.body.querySelector('.gear-inventory')?.classList.add('drop-ok');
+      }
+      drag.ghost.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+      const hover = dropAt(e.clientX, e.clientY)?.el;
+      for (const el of this.body.querySelectorAll('.drop-hover')) if (el !== hover) el.classList.remove('drop-hover');
+      hover?.classList.add('drop-hover');
+      e.preventDefault();
+    });
+    window.addEventListener('pointerup', e => {
+      if (!drag || e.pointerId !== drag.pointer) return;
+      const { uid, from, ghost } = drag;
+      const target = ghost ? dropAt(e.clientX, e.clientY) : undefined;
+      clear();
+      if (!ghost) return;
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 0);
+      let changed = false;
+      if (target?.slot) {
+        changed = from ? account.moveGear(from, target.slot) : account.equipGear(uid, target.slot);
+        if (changed) { this.selected = uid; this.target = target.slot; }
+      } else if (target?.grid && from) { account.unequipGear(from); changed = true; this.target = from; }
+      if (changed) this.onChange();
+      this.render();
+    });
+    window.addEventListener('pointercancel', clear);
+    // Le clic qui suit un dépôt ne doit pas sélectionner l'objet sous le pointeur.
+    this.body.addEventListener('click', e => { if (suppressClick) { e.stopImmediatePropagation(); suppressClick = false; } }, true);
+  }
 
   private slot(slot: EquipmentSlot): string {
     const e = account.equipment[slot];

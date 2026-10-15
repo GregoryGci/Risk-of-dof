@@ -170,6 +170,7 @@ export interface MonsterDef {
 /** Statistiques modifiables par les objets. */
 export type StatKey =
   | 'maxHp' // PV max (valeur fixe)
+  | 'flatDamage' // dommages fixes ajoutés à chaque coup, avant les % de dégâts
   | 'damage' // dégâts (+%)
   | 'haste' // vitesse de recharge (+%)
   | 'speed' // vitesse de déplacement (+%)

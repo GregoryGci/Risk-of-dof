@@ -61,6 +61,8 @@ export function statText(key: StatKey, value: number): string {
       return `+${Math.round(value * 10) / 10} de portée`;
     case 'damage':
       return `+${pct(value)} de dégâts`;
+    case 'flatDamage':
+      return `+${String(Math.round(value * 10) / 10).replace('.', ',')} dommages par coup`;
     case 'haste':
       return `+${pct(value)} de vitesse de recharge`;
     case 'attackSpeed':
@@ -150,7 +152,7 @@ export function formatRunBonuses(inv: Map<string, number>): string {
 }
 
 export function emptyStats(): Record<StatKey, number> {
-  return { maxHp: 0, damage: 0, haste: 0, attackSpeed: 0, speed: 0, regen: 0, crit: 0, critDamage: 0, armor: 0, killHeal: 0, kamas: 0, lifesteal: 0,vampirism:0, luck: 0, multishot: 0, range: 0, revive: 0,bounce:0,secondaryCharge:0 };
+  return { maxHp: 0, damage: 0, haste: 0, attackSpeed: 0, speed: 0, regen: 0, crit: 0, critDamage: 0, armor: 0, killHeal: 0, kamas: 0, lifesteal: 0,vampirism:0, luck: 0, multishot: 0, range: 0, revive: 0,bounce:0,secondaryCharge:0,flatDamage:0 };
 }
 
 /** Somme des bonus de tous les objets possédés. */

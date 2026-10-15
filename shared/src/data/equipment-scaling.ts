@@ -7,6 +7,12 @@ export function standaloneEquipmentStats(stats:Partial<Record<StatKey,number>>,l
   const budgets:Partial<Record<StatKey,number>>={haste:.018,attackSpeed:.012,speed:.012,crit:.012,critDamage:.04,range:.15,armor:.3,lifesteal:.003,vampirism:.006,kamas:.018,luck:.012,regen:.2,killHeal:.5};
   for(const [key,budget]of Object.entries(budgets)){const stat=key as StatKey;if(stats[stat])out[stat]=Math.round(budget*(stat==='regen'||stat==='killHeal'?power:soft)*1000)/1000;}return out;
 }
+/**
+ * Dommages fixes d'un objet, ajoutés à chaque coup avant les % de dégâts (comme les « Dommages » de Dofus).
+ * Croissance en racine : les % de dégâts font déjà l'essentiel de la progression en fin de jeu.
+ * Tenue complète : environ +5 au niveau 20 en normal, jusqu'à +20 au niveau 200 en légendaire ; l'arme compte double.
+ */
+export function flatDamageForLevel(level:number,weapon=false):number {return Math.round((.6+.2*Math.sqrt(itemPower(level)))*(weapon?2:1)*10)/10;}
 export function scaleEquipmentStats(stats:Partial<Record<StatKey,number>>,level:number,tier:number,dofus=false):Partial<Record<StatKey,number>> {
   // Les profils historiques 20–160 sont conservés. Ajouter des paliers ne doit
   // pas réduire leur budget en gonflant artificiellement le dénominateur.

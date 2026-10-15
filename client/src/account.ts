@@ -208,6 +208,15 @@ export const account = {
   },
 
   unequipGear(slot: EquipmentSlot): void { delete data.equipped[slot]; save(); },
+  /** Déplace un objet porté vers un autre emplacement du même type, en échangeant s'il est occupé. */
+  moveGear(from: EquipmentSlot, to: EquipmentSlot): boolean {
+    const a = data.equipped[from], b = data.equipped[to];
+    if (!a || a === b || from === to || slotKind(from) !== slotKind(to)) return false;
+    const before = { ...data.equipped };
+    delete data.equipped[from]; delete data.equipped[to];
+    if (!this.equipGear(a, to) || (b && b !== a && !this.equipGear(b, from))) { data.equipped = before; save(); return false; }
+    return true;
+  },
 
   fuseGear(uid: string): string | undefined {
     const source = data.inventory.find(e=>e.uid===uid);

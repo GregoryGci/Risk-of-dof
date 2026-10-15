@@ -7,7 +7,7 @@ import type { StatKey } from '../types.ts';
 import { emptyStats, sumRunStats } from './items.ts';
 import { makeRng } from '../rng.ts';
 import { getMode, FINAL_STAGE } from '../difficulty.ts';
-import {standaloneEquipmentStats,scaleEquipmentStats} from './equipment-scaling.ts';
+import {flatDamageForLevel,standaloneEquipmentStats,scaleEquipmentStats} from './equipment-scaling.ts';
 import {equipmentSet,setBonusStats} from './equipment-sets.ts';
 
 export type EquipmentRarity = 'normal' | 'rare' | 'epique' | 'legendaire';
@@ -250,8 +250,11 @@ Object.assign(EQUIPMENT_BASES,RETRO_ITEMS);
  * vampirisme n'existent que par les bonus de run, plafonnés (voir combat-balance.ts).
  */
 export const ITEM_FORBIDDEN_STATS:readonly StatKey[]=['lifesteal','vampirism'];
-for(const base of Object.values(EQUIPMENT_BASES))
+for(const base of Object.values(EQUIPMENT_BASES)){
   base.stats=Object.fromEntries(Object.entries(base.stats).filter(([k,v])=>v>0&&!ITEM_FORBIDDEN_STATS.includes(k as StatKey)));
+  // Tous les équipements (hors Dofus et familiers) donnent des dommages fixes selon leur niveau.
+  if(base.kind!=='dofus'&&base.kind!=='familier')base.stats.flatDamage=flatDamageForLevel(base.level??EQUIPMENT_TIERS[base.tier].level,base.kind==='arme');
+}
 export interface Equipment {
   uid: string;
   base: string;

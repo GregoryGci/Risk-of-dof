@@ -1229,7 +1229,9 @@ export class Simulation {
     if(pr.areaHits?.has(targetId))return;
     pr.areaHits?.add(targetId);
     const [min, max] = pr.spell.damage;
-    let amount = (min + Math.random() * (max - min)) * pr.damageMult;
+    // Dommages fixes de l'équipement : ajoutés au jet avant les % (sorts de soin exclus).
+    const flat = pr.fromPlayer && max > 0 ? this.players.get(pr.owner)?.stats.flatDamage ?? 0 : 0;
+    let amount = (min + Math.random() * (max - min) + flat) * pr.damageMult;
 
     if (!pr.fromPlayer) {
       const p = this.players.get(targetId);
