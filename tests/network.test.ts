@@ -27,9 +27,8 @@ test('WebSocket : solo fermé aux invités, salon à deux, récompenses fiables 
     const host=await client.create<GameStateView>('audit_game',{name:'Hôte',blessing:'storm',equipment:{coiffe:createEquipment('coiffe_bouftou','legendaire')}});joined.push(host);host.onMessage('*',()=>{});
     const guest=await client.joinById<GameStateView>(host.roomId,{name:'Invité'});joined.push(guest);guest.onMessage('*',()=>{});
     await until(()=>host.state.players.size===2 && guest.state.players.size===2);
-    assert.equal(host.state.players.get(host.sessionId)!.blessing,'storm');
-    guest.send('blessing',{blessing:'thorn'});await until(()=>host.state.players.get(guest.sessionId)!.blessing==='thorn');
-    guest.send('blessing',{blessing:'invalid'});await new Promise(r=>setTimeout(r,40));assert.equal(guest.state.players.get(guest.sessionId)!.blessing,'thorn');
+    assert.equal(host.state.players.get(host.sessionId)!.blessing,'');
+    assert.equal(host.state.players.get(host.sessionId)!.blessings,'{}');
     const rewards:RunReward[]=[];
     host.onMessage('runReward',(e:{player:string;reward:RunReward})=>{if(e.player===host.sessionId) rewards.push(e.reward);});
     host.send('start');await until(()=>host.state.phase===PHASE_PLAYING);
@@ -42,6 +41,7 @@ test('WebSocket : solo fermé aux invités, salon à deux, récompenses fiables 
     host.send('classAction',{tx:p.state.x+2,ty:p.state.y,choice:0});
     await until(()=>JSON.parse(host.state.players.get(host.sessionId)!.mechanic).readyIn>0);
     assert.equal(JSON.parse(host.state.players.get(host.sessionId)!.mechanic).name,'Visée tendue');
+    const elite=room.sim.spawnMonster((await import('@rod/shared')).getMonster('boufton'),p.state.x+2,p.state.y,1,1,1);elite.state.elite=true;room.sim.damageMonster(elite,1e6,p.id);await until(()=>JSON.parse(host.state.players.get(host.sessionId)!.boonChoices).length===3&&JSON.parse(guest.state.players.get(guest.sessionId)!.boonChoices).length===3);const guestChoices=guest.state.players.get(guest.sessionId)!.boonChoices;host.send('boon',{choice:0});await until(()=>host.state.players.get(host.sessionId)!.boonChoices==='[]');assert.equal(guest.state.players.get(guest.sessionId)!.boonChoices,guestChoices);guest.send('boon',{choice:1});await until(()=>guest.state.players.get(guest.sessionId)!.boonChoices==='[]');assert.equal(Object.keys(JSON.parse(host.state.players.get(host.sessionId)!.blessings)).length,1);assert.equal(Object.keys(JSON.parse(guest.state.players.get(guest.sessionId)!.blessings)).length,1);
     room.sim.state.time=59.99;await until(()=>JSON.parse(host.state.players.get(host.sessionId)!.forgeGrants).length===1);
     const boss=room.sim.spawnMonster((await import('@rod/shared')).getMonster('bouftou_royal'),p.state.x+2,p.state.y,1,1,1);
     room.sim.damageMonster(boss,1e6,p.id);

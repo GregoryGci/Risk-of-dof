@@ -1,7 +1,7 @@
 // Effets purement visuels côté client : projectiles, explosions, chiffres de dégâts.
 // Rien ici n'influe sur le jeu : les dégâts sont calculés par le serveur.
 import Phaser from 'phaser';
-import { TILE_H, TILE_W, getSpell, worldToScreen, type CastEvent, type SpellDef } from '@rod/shared';
+import { TILE_H, TILE_W, getSpell, leveledSpell, worldToScreen, type CastEvent, type SpellDef } from '@rod/shared';
 
 type ProjectileShape = NonNullable<SpellDef['projectile']>;
 import type { AssetStore } from '../assets/store.ts';
@@ -95,7 +95,7 @@ export class Effects {
   }
 
   spawnProjectile(e: CastEvent): void {
-    const spell = getSpell(e.spell);
+    const spell = leveledSpell(e.spell,e.level);
     const shape = spell.projectile;
     if (!shape) {
       // Pas de projectile : seul un coup de mêlée a un effet visuel propre (les zones passent par « explode »).

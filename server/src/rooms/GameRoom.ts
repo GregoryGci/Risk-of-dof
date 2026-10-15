@@ -4,8 +4,8 @@ import { Room, type Client } from '@colyseus/core';
 import { MAX_PLAYERS, NAME_MAX_LENGTH, PATCH_MS, ROOM_CODE_LENGTH, TICK_RATE, type CastMessage, type InputMessage } from '@rod/shared';
 import { Simulation } from '../game/Simulation.ts';
 import { GameState } from '../state.ts';
-import {authenticate,recordScore,cloudScoresEnabled} from '../cloud.ts';
-import type {RunReward} from '@rod/shared';
+import {authenticate,recordScore,cloudScoresEnabled,ScoreWriteError} from '../cloud.ts';
+import {PHASE_LOBBY,type SpellLevelBook,type RunReward} from '@rod/shared';
 
 /** Codes des parties en cours, pour éviter les doublons. */
 const activeCodes = new Set<string>();
@@ -34,6 +34,17 @@ export class GameRoom extends Room<{ state: GameState }> {
   private sim!: Simulation;
   private accounts=new Map<string,string>();
   private pausedForReconnect=false;
+  private progression=new Map<string,SpellLevelBook>();
+  private accessTokens=new Map<string,string>();
+  private refreshing=new Map<string,Promise<void>>();
+  private starting=false;
+  private async refreshProgression(id:string):Promise<void>{
+    if(this.state.phase!==PHASE_LOBBY)return;
+    const pending=this.refreshing.get(id);if(pending)return pending;
+    const token=this.accessTokens.get(id);if(!token)return;
+    const request=(async()=>{try{const profile=await authenticate(token);if(profile.userId!==this.accounts.get(id)||this.state.phase!==PHASE_LOBBY)return;this.progression.set(id,profile.spellLevels);this.sim.setSpellLevels(id,profile.spellLevels);}catch{this.clients.find(c=>c.sessionId===id)?.send('progressionError',{message:'Niveaux de sorts : synchronisation indisponible. Le dernier deck synchronisé sera utilisé.'});}finally{this.refreshing.delete(id);}})();
+    this.refreshing.set(id,request);return request;
+  }
   async onAuth(_client:Client,options:{accessToken?:unknown}) {return await authenticate(options?.accessToken)??true;}
 
   onCreate(options?: { singlePlayer?: boolean }): void {
@@ -56,10 +67,10 @@ export class GameRoom extends Room<{ state: GameState }> {
 
     this.onMessage('ping',(client:Client,message:{sentAt?:unknown})=>{if(typeof message?.sentAt==='number'&&Number.isFinite(message.sentAt))client.send('pong',{sentAt:message.sentAt});});
     this.onMessage('routeChoice',(client:Client,message:{route?:unknown})=>this.sim.chooseRoute(client.sessionId,message?.route));
-    this.onMessage('blessing',(client:Client,message:{blessing?:unknown})=>this.sim.setBlessing(client.sessionId,message?.blessing));
     this.onMessage('input', (client: Client, message: InputMessage) => this.sim.setInput(client.sessionId, message));
     this.onMessage('cast', (client: Client, message: CastMessage) => this.sim.playerCast(client.sessionId, message));
-    this.onMessage('class', (client: Client, message: { classId?: string; spells?: string[] }) => this.sim.setClass(client.sessionId, message?.classId, message?.spells));
+    this.onMessage('class', (client: Client, message: { classId?: string; spells?: string[] }) => {this.sim.setClass(client.sessionId, message?.classId, message?.spells);this.sim.setSpellLevels(client.sessionId,this.progression.get(client.sessionId));});
+    this.onMessage('refreshProgression',(client:Client)=>this.refreshProgression(client.sessionId));
     this.onMessage('loadout', (client: Client, message: { spells?: string[] }) => this.sim.setLoadout(client.sessionId, message?.spells));
     this.onMessage('dash', (client: Client, message: { dx?: number; dy?: number }) => this.sim.playerDash(client.sessionId, message));
     this.onMessage('pause', (client: Client, message: { paused?: boolean }) => this.sim.setPaused(client.sessionId, message?.paused));
@@ -71,19 +82,22 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage('interact', (client: Client) => this.sim.interact(client.sessionId));
     this.onMessage('boon',(client:Client,message:{choice?:unknown})=>this.sim.chooseBoon(client.sessionId,message?.choice));
     this.onMessage('classAction',(client:Client,message:{tx?:unknown;ty?:unknown;choice?:unknown})=>this.sim.classAction(client.sessionId,message));
-    this.onMessage('start', (client: Client) => {
-      if (client.sessionId === this.state.hostId) this.sim.start();
+    this.onMessage('start', async (client: Client) => {
+      if(client.sessionId!==this.state.hostId||this.state.phase!==PHASE_LOBBY||this.starting)return;
+      this.starting=true;try{await Promise.all([...this.accounts.keys()].map(id=>this.refreshProgression(id)));if(client.sessionId===this.state.hostId)this.sim.start();}finally{this.starting=false;}
     });
     this.onMessage('restart', () => this.sim.restart());
 
     console.log(`[salle ${this.roomId}] créée`);
   }
 
-  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown; blessing?:unknown },auth?:{userId?:string}|boolean): void {
+  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown; blessing?:unknown;accessToken?:unknown },auth?:{userId?:string;spellLevels?:SpellLevelBook}|boolean): void {
     if(auth&&typeof auth==='object'&&auth.userId)this.accounts.set(client.sessionId,auth.userId);
     client.send('cloudStatus',{ranked:this.accounts.has(client.sessionId)&&cloudScoresEnabled});
     const name = cleanName(auth&&typeof auth==='object'&&'name' in auth?auth.name:options?.name);
-    this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.equipment, options?.blessing);
+    const levels=auth&&typeof auth==='object'?auth.spellLevels:undefined;
+    if(levels)this.progression.set(client.sessionId,levels);if(typeof options?.accessToken==='string')this.accessTokens.set(client.sessionId,options.accessToken);
+    this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.equipment, undefined,levels);
     this.sim.players.get(client.sessionId)!.state.rankStatus=this.accounts.has(client.sessionId)&&cloudScoresEnabled?'ready':'disabled';
     if (!this.state.hostId) this.state.hostId = client.sessionId;
     console.log(`[salle ${this.roomId}] ${name} a rejoint (${this.state.players.size}/${this.maxClients})`);
@@ -99,7 +113,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     if(p)p.state.rankStatus='failed';
     console.error('[classement]',error instanceof Error?error.message:'Enregistrement impossible');
     const message=error instanceof Error&&error.message==='CAUCHEMAR_MIGRATION_REQUIRED'?'Classement Cauchemar : la migration Supabase doit encore être appliquée. Votre historique est conservé.':'Classement : le serveur n’a pas pu enregistrer votre score. Votre historique est conservé.';
-    this.clients.find(c=>c.sessionId===playerId)?.send('scoreError',{message});
+    this.clients.find(c=>c.sessionId===playerId)?.send('scoreError',{message,...(error instanceof ScoreWriteError?{status:error.status}:{})});
   }
 
   onDrop(client:Client):void {
@@ -114,6 +128,7 @@ export class GameRoom extends Room<{ state: GameState }> {
   }
   onLeave(client: Client): void {
     this.accounts.delete(client.sessionId);
+    this.progression.delete(client.sessionId);this.accessTokens.delete(client.sessionId);this.refreshing.delete(client.sessionId);
     this.sim.removePlayer(client.sessionId);
     if(this.pausedForReconnect&&[...this.sim.players.values()].some(p=>p.state.connected)){this.state.paused=false;this.pausedForReconnect=false;}
     // Si l'hôte part, le plus ancien joueur restant prend le relais.

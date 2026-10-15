@@ -23,6 +23,8 @@ export type SpellEffect =
 
 /** Sort défini uniquement en données : la logique serveur est générique. */
 export interface SpellDef {
+  upgradeLevel?:number;
+  dashStrike?:boolean;
   id: string;
   name: string;
   description: string;
@@ -54,7 +56,7 @@ export interface SpellDef {
   /** Si présent, le sort SOIGNE les alliés touchés de [min, max] PV au lieu de blesser les ennemis. */
   heal?: [number, number];
   /** Bouclier sur le lanceur : fraction des PV max absorbée, durée en secondes. */
-  shield?: { maxHpFraction: number; duration: number };
+  shield?: { maxHpFraction: number; duration: number;allies?:number;allyRadius?:number };
   /** Dégâts multipliés par (1 + bonus × part de PV manquants du lanceur). */
   missingHpBonus?: number;
   /** La zone ne frappe qu'après ce délai (s), annoncée au sol en attendant. */
@@ -68,7 +70,7 @@ export interface SpellDef {
    */
   ground?: { kind: 'trap' | 'glyph'; radius: number; duration: number; tick?: number; blast?: number; max?: number; arm?: number; self?: boolean };
   /** Invoque une créature alliée (voir data/monsters.ts, `ally: true`). */
-  summon?: { monster: string; max: number; duration: number };
+  summon?: { monster: string; max: number; duration: number;count?:number };
   /**
    * Bonus temporaire sur le lanceur. `randomOne` : un seul des bonus listés, tiré au hasard.
    * `invisible` : les monstres ignorent le lanceur.
@@ -88,6 +90,7 @@ export interface SpellDef {
   teleport?: boolean;
   /** Ressuscite le joueur mort le plus proche du point visé (le sort n'est pas lancé s'il n'y en a pas). */
   revive?: boolean;
+  reviveCount?:number;
   /** Ramène le lanceur là où il était il y a ce nombre de secondes, avec ses PV d'alors s'ils étaient plus hauts. */
   rewind?: number;
   /** Pari : chance de multiplier les dégâts par `win`, sinon par `lose`. */
@@ -215,6 +218,8 @@ export interface CastMessage {
 
 /** Serveur -> clients : un sort est lancé (le client affiche le projectile). */
 export interface CastEvent {
+  level?:number;
+  dashStrike?:boolean;
   /** Identifiant du projectile. */
   id: number;
   /** sessionId du joueur ou id du monstre. */
@@ -304,7 +309,10 @@ export interface SyncMap<T> {
   forEach(cb: (value: T, key: string) => void): void;
 }
 export interface PlayerView {
+  spellLevels:string;
+  momentum:boolean;
   blessing:string;
+  blessings:string;
   blessingProgress:number;
   routeChoice:string;
   rankStatus:string;

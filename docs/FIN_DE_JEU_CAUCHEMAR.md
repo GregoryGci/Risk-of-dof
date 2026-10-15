@@ -52,6 +52,6 @@ npm.cmd run simulate:runs -- --seeds=2 --classes=cra,iop,feca,osamodas --tiers=8
 
 ## Classement Cauchemar : migration nécessaire
 
-Le serveur public confirme maintenant `ranking: true`. La base existante accepte les scores normaux, mais un essai réel avec un utilisateur temporaire refuse encore `difficulty = 3` : contrainte `rod_runs_difficulty_check`. Il faut exécuter [la migration Cauchemar](../supabase/migrations/202610150002_nightmare.sql) dans le SQL Editor Supabase. Elle étend la contrainte à 0–3 et ne supprime aucun score. La fonction de classement existante sait déjà filtrer le quatrième mode.
+Le serveur public annonce `ranking: true`, ce qui confirme seulement la présence d'une clé de classement. Un essai d'écriture normal via Railway a échoué malgré ce drapeau ; une écriture via le serveur local et sa clé a réussi. La configuration de la clé publique déployée reste donc à vérifier. La base existante refuse également `difficulty = 3` avec la contrainte `rod_runs_difficulty_check`. Il faut exécuter [la migration Cauchemar](../supabase/migrations/202610150002_nightmare.sql) dans le SQL Editor Supabase. Elle étend la contrainte à 0–3 et ne supprime aucun score. La fonction de classement existante sait déjà filtrer le quatrième mode.
 
 Les sauvegardes de progression et l'historique privé du compte n'ont pas besoin de cette migration. En cas de tentative de score Cauchemar avant migration, le jeu conserve ces données et affiche un message précis ; il n'enregistre pas la run sous une autre difficulté.

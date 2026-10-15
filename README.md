@@ -30,7 +30,9 @@ La progression comporte **33 donjons**, des monstres/décors/musiques par zone, 
 
 La DA **Pacte des Douze**, inspirée de Hades × Dofus, est active par défaut : illustration Iop/Zaap, rouge/ivoire/obsidienne, formes coupées et HUD de combat. **Settings → Direction artistique** permet de revenir au parchemin. Les sprites, équipements et sorts Retro restent ceux du jeu. L’atlas de l’accueil présente les 33 donjons et les pools de butin.
 
-Avant le départ, chaque joueur choisit un pouvoir de run : **Foulée ardente** transforme le dash en explosion, **Orage en chaîne** décharge tous les quatre coups, **Écorce vengeresse** donne une riposte et un bouclier après un coup reçu. Le choix et ses compteurs restent visibles dans le HUD. [Captures, règles et 192 simulations](docs/DA_PACTE_DES_DOUZE.md).
+Les **élites** donnent un choix personnel parmi **trois bénédictions issues d'un catalogue de 30** : dash explosif, marques retardées, réactions sur les victimes, contrôles et synergies. Elles restent actives pendant la run et peuvent être renforcées au rang 3. Les gardiens gardent leurs récompenses de stats. Le choix de bénédiction au départ a été supprimé.
+
+Dans **Character → Talents**, les kamas permanents achètent les **niveaux 2 et 3 des sorts**. Exemple : Flèche Magique tire deux puis trois flèches ; Tempête et Épée Céleste frappent deux puis trois fois. Après un dash, une attaque de base dans les 0,65 s reçoit l'**élan** : +15 % de dégâts, projectiles perforants ou cône de mêlée élargi. [Règles, catalogue et audit du level design](docs/SORTS_ELITES_LEVEL_DESIGN.md).
 
 À la halte marchande, choisissez un **serment** pour la prochaine zone : voie habituelle, renforts +30 % contre kamas +30 %, ou gardien renforcé contre deux bénédictions. En multi, la majorité décide et l’hôte départage les égalités. Les **affinités** Braise, Sève et Wakfu renforcent les builds à 3 puis 5 bonus différents, avec seuils visibles dans Tab. Les doublons comptent une seule fois.
 
@@ -85,7 +87,7 @@ place de Tempête : un bouclier absorbe jusqu'à **50 % des PV max** pendant **5
   monstres ont plus de PV et de dégâts.
 - **Kamas et coffres** : chaque monstre vaincu rapporte des kamas à tous les joueurs. Un coffre
   (points dorés de la mini-carte) coûte de plus en plus cher et donne directement un **bonus de stats**
-  cumulable (PV, dégâts, vitesse de recharge, critiques...). Le marchand et les élites donnent
+  cumulable (PV, dégâts, vitesse de recharge, critiques...). Le marchand et les gardiens donnent
   aussi des bonus. **Tab** affiche leur total ; ils disparaissent à la run suivante.
 - **Zaap** : chaque zone contient un Zaap (losange bleu de la mini-carte). L'activer fait
   apparaître le gardien de la région et lance une charge de 45 s. Une fois le Zaap
@@ -95,14 +97,16 @@ place de Tempête : un bouclier absorbe jusqu'à **50 % des PV max** pendant **5
   champs du Tournesol, plaine des Scarafeuilles, montagnes des Craqueleurs, camp des Bworks.
   La boucle recommence ensuite avec une nouvelle carte et une difficulté croissante.
 - **Balises de défi** : des petits autels surmontés d'un crâne remplacent les anciennes
-  Cawottes. Appuyez sur **E** pour invoquer un élite de la région ; les participants
-  qui le frappent reçoivent un bonus de stats à sa mort. Interaction gratuite et facultative.
+  Cawottes. Appuyez sur **E** pour invoquer un élite de la région. À sa mort, **chaque joueur**
+  choisit une bénédiction parmi **trois propositions issues de 30 pouvoirs**. Les choix sont
+  personnels, conservés en file d'attente, actifs jusqu'à la fin de la run et visibles sur Tab.
+  Un pouvoir déjà possédé peut être renforcé jusqu'au rang 3. Interaction gratuite et facultative.
 - **Osamodas** : ses invocations utilisent le Dragonnet rouge de Retro : un attaquant
   à distance et un gardien qui provoque. Les identifiants historiques des sorts sont
   conservés pour les sauvegardes.
 - **Mort** : un joueur mort devient spectateur (clic pour changer de joueur observé). La partie
   est perdue quand tout le monde est mort ; n'importe qui peut alors la relancer.
-- **Potions de vie** : les monstres ennemis ont **8 %** de chances d'en laisser une à leur mort.
+- **Potions de vie** : les monstres ennemis ont **2 %** de chances d'en laisser une à leur mort, six au sol maximum.
   Marchez dessus pour récupérer **50 % de vos PV max**, sans dépasser le maximum.
   Elles restent au sol **30 s** ; un joueur avec tous ses PV les laisse pour ses alliés.
   Le flacon utilise le visuel officiel de la **Potion de Mini Soin Supérieure** de Retro.

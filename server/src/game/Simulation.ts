@@ -3,7 +3,9 @@
 import {
   CHALLENGE_COUNT,
   getBlessing,
+  blessingPool,blessingPower,
   guardianCount,
+  leveledSpell,spellCopies,spellCopyPower,sanitizeSpellLevels,type SpellLevelBook,
   ROUTES, getRoute, resolveRoute, type RouteId,
   CHEST_COUNT,
   MONSTERS,
@@ -77,6 +79,9 @@ export interface Push {
 
 /** Données serveur d'un joueur qui ne sont pas synchronisées. */
 export interface PlayerRt {
+  blessingRanks:Record<string,number>;
+  spellLevels:Record<string,number>;
+  momentumUntil:number;
   id: string;
   state: PlayerState;
   def: ClassDef;
@@ -273,7 +278,7 @@ export class Simulation {
   // Cycle de vie
   // -------------------------------------------------------------------------
 
-  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, equipment?: unknown, blessing?:unknown): void {
+  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, equipment?: unknown, blessing?:unknown, levels?:SpellLevelBook): void {
     // Un nouveau joueur arrive : plus de pause possible.
     this.state.paused = false;
     const def = getClass(classId ?? '');
@@ -281,13 +286,14 @@ export class Simulation {
     state.name = name;
     state.classId = def.id;
     state.blessing=getBlessing(blessing)?.id??'';
+    const spellLevels=sanitizeSpellLevels(levels)[def.id]??{};state.spellLevels=JSON.stringify(spellLevels);
     state.equipment = JSON.stringify(sanitizeEquipped(equipment));
     // Premier numéro de joueur libre (sert à la couleur).
     const used = new Set([...this.players.values()].map((p) => p.state.slot));
     let slot = 0;
     while (used.has(slot)) slot++;
     state.slot = slot;
-    const rt: PlayerRt = { id, state, def, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], secondaryRefillAt:0,dashGlyphActive:false,push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, dodgeUntil:0, pendingInputSeq:0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, bought: new Set(), history: [] };
+    const rt: PlayerRt = { blessingRanks:{}, id, state, def, spellLevels,momentumUntil:0, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], secondaryRefillAt:0,dashGlyphActive:false,push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, dodgeUntil:0, pendingInputSeq:0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, bought: new Set(), history: [] };
     this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
@@ -349,6 +355,11 @@ export class Simulation {
     if (this.state.phase !== PHASE_LOBBY || id !== this.state.hostId) return;
     const m = Number(mode);
     if (Number.isInteger(m) && m >= 0 && m <= 3) this.state.mode = m;
+  }
+
+  setSpellLevels(id:string,raw:unknown):void{
+    const p=this.players.get(id);if(!p||this.state.phase!==PHASE_LOBBY)return;
+    p.spellLevels=sanitizeSpellLevels(raw)[p.def.id]??{};p.state.spellLevels=JSON.stringify(p.spellLevels);
   }
 
   setBlessing(id:string,blessing:unknown):void{
@@ -573,6 +584,8 @@ export class Simulation {
   }
 
   private resetPlayer(p: PlayerRt): void {
+    p.blessingRanks={};p.state.blessings='{}';
+    p.momentumUntil=0;p.state.momentum=false;
     this.blessings.reset(p.id);
     this.mechanics.reset(p.id);p.dodgeUntil=0;
     p.state.forgeGrants='[]';p.state.boonChoices='[]';this.boonQueues.delete(p.id);
@@ -639,7 +652,7 @@ export class Simulation {
     if (this.now < p.readyAt[slot]) return;
     if(slot===1&&p.state.secondaryMax>1&&p.state.secondaryCharges===0)return;
 
-    let spell = getSpell(p.spells[slot]);
+    let spell = this.blessings.prepareSpell(p,leveledSpell(p.spells[slot],p.spellLevels[p.spells[slot]]??1));
     if (spell.revive && !this.deadAllyNear(p, tx, ty, spell.range + p.stats.range)) return;
     const special=this.mechanics.beforeCast(p,spell,slot,tx,ty);spell=special.spell;
     if(special.handled) {
@@ -653,12 +666,29 @@ export class Simulation {
     const cooldown = spell.cooldown / (1 + p.stats.haste) / (slot === 0 && ranged ? 1 + p.stats.attackSpeed : 1);
     p.readyAt[slot] = this.now + cooldown / 1000;
     if(slot===1)this.consumeSecondary(p,cooldown);
-    let damageMult = (1 + p.stats.damage)*special.mult;
+    const copies=spellCopies(spell),power=copies>1?spellCopyPower(spell.upgradeLevel??1):1;
+    let damageMult = (1 + p.stats.damage)*special.mult*power*this.blessings.castMultiplier(p,slot);
+    if(slot===0&&this.now<p.momentumUntil){
+      p.momentumUntil=0;p.state.momentum=false;spell={...spell,dashStrike:true,projectile:spell.projectile?{...spell.projectile,pierce:true}:undefined,melee:spell.melee?{arc:Math.min(360,spell.melee.arc+30)}:undefined};damageMult*=this.blessings.momentumDamage(p);
+      this.broadcast('momentum',{player:id,x:p.state.x,y:p.state.y});
+    }
     if (spell.missingHpBonus) damageMult *= 1 + spell.missingHpBonus * (1 - p.state.hp / p.state.maxHp);
     const critChance = BASE_CRIT_CHANCE + p.stats.crit;
     const critMult = CRIT_MULT + p.stats.critDamage;
     const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, critChance, slot, cooldown, critMult, p.stats.range);
     this.mechanics.afterCast(p,spell,slot,tx,ty);
+    this.blessings.onCast(p,slot);
+    const stage=this.state.stage,run=this.state.runId,origin={x:p.state.x,y:p.state.y};
+    for(let k=1;k<copies;k++){
+      const launch=()=>{
+        if(!p.state.alive||this.players.get(id)!==p||this.state.phase===PHASE_LOST||this.state.intermission||this.state.stage!==stage||this.state.runId!==run)return;
+        let cx=spell.ground?origin.x:p.state.x,cy=spell.ground?origin.y:p.state.y,targetX=tx,targetY=ty;
+        if(spell.projectile&&!spell.projectile.toTarget){const a=Math.atan2(ty-cy,tx-cx)+(k%2?1:-1)*.085*Math.ceil(k/2),r=Math.max(1,Math.hypot(tx-cx,ty-cy));targetX=cx+Math.cos(a)*r;targetY=cy+Math.sin(a)*r;}
+        if(spell.ground){const a=k*Math.PI*2/copies;targetX+=Math.cos(a)*1.25;targetY+=Math.sin(a)*1.25;}
+        this.cast(spell,cx,cy,targetX,targetY,id,true,damageMult,critChance,undefined,undefined,critMult,p.stats.range);
+      };
+      if(spell.projectile&&!spell.projectile.toTarget)launch();else this.after(.22*k,launch);
+    }
     // Bonus Échos : projectiles en éventail, ou frappes supplémentaires un instant après.
     if (slot === 0 && p.stats.multishot > 0) {
       const extra = Math.ceil(p.stats.multishot);
@@ -667,10 +697,10 @@ export class Simulation {
         if (spell.projectile) {
           const a = Math.atan2(ty - p.state.y, tx - p.state.x) + (k % 2 ? 1 : -1) * 0.18 * Math.ceil(k / 2);
           const d = Math.max(1, Math.hypot(tx - p.state.x, ty - p.state.y));
-          this.cast(spell, p.state.x, p.state.y, p.state.x + Math.cos(a) * d, p.state.y + Math.sin(a) * d, id, true, damageMult * share, critChance, undefined, undefined, critMult, p.stats.range);
+          this.cast(spell, p.state.x, p.state.y, p.state.x + Math.cos(a) * d, p.state.y + Math.sin(a) * d, id, true, damageMult * share / power, critChance, undefined, undefined, critMult, p.stats.range);
         } else {
           this.after(0.15 * k, () => {
-            if (p.state.alive) this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult * share, critChance, undefined, undefined, critMult, p.stats.range);
+            if (p.state.alive&&this.players.get(id)===p&&this.state.phase!==PHASE_LOST&&!this.state.intermission&&this.state.stage===stage&&this.state.runId===run) this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult * share / power, critChance, undefined, undefined, critMult, p.stats.range);
           });
         }
       }
@@ -694,13 +724,14 @@ export class Simulation {
     const dy = Number(msg?.dy);
     const len = Math.hypot(dx, dy);
     if (!Number.isFinite(len) || len < 0.01) return;
-    p.dashReadyAt = this.now + DASH_COOLDOWN;
+    const dashCooldown=DASH_COOLDOWN*this.blessings.dashCooldown(p);p.dashReadyAt = this.now + dashCooldown;
     p.dodgeUntil=this.now+.12;p.dodgeReported=false;p.state.motionEpoch++;
     p.dashGlyphActive=true;this.mechanics.beginDash(p);
+    p.momentumUntil=this.now+this.blessings.momentumWindow(p);p.state.momentum=true;
     const v = DASH_DISTANCE / DASH_DURATION;
     p.push = { vx: (dx / len) * v, vy: (dy / len) * v, time: DASH_DURATION };
     this.blessings.onDash(p);
-    this.broadcast('dash', { id, x: p.state.x, y: p.state.y, tx: p.state.x + (dx / len) * DASH_DISTANCE, ty: p.state.y + (dy / len) * DASH_DISTANCE, cooldown: DASH_COOLDOWN * 1000 });
+    this.broadcast('dash', { id, x: p.state.x, y: p.state.y, tx: p.state.x + (dx / len) * DASH_DISTANCE, ty: p.state.y + (dy / len) * DASH_DISTANCE, cooldown: dashCooldown * 1000 });
   }
 
   /**
@@ -721,7 +752,7 @@ export class Simulation {
     }
     const id = this.nextProjectileId++;
     const pr: Projectile = { id, spell, owner, fromPlayer, x, y, dx, dy, remaining: 0, damageMult, critChance, critMult, hit: new Set(),slot,proc:slot===undefined };
-    const event: CastEvent = { id, caster: visualCaster, spell: spell.id, x, y, tx: x + dx, ty: y + dy };
+    const event: CastEvent = { id, caster: visualCaster, spell: spell.id, x, y, tx: x + dx, ty: y + dy,level:spell.upgradeLevel,dashStrike:spell.dashStrike };
     if (slot !== undefined) {
       event.slot = slot;
       event.cooldown = cooldown ?? spell.cooldown;
@@ -737,6 +768,8 @@ export class Simulation {
       event.ty = y;
       this.broadcast('cast', event);
       this.broadcast('buff', { target: owner, label: `Bouclier +${caster.state.shield}`, duration: spell.shield.duration });
+      const allies=[...this.players.values()].filter(p=>p.id!==owner&&p.state.alive&&Math.hypot(p.state.x-x,p.state.y-y)<=(spell.shield!.allyRadius??4)).sort((a,b)=>Math.hypot(a.state.x-x,a.state.y-y)-Math.hypot(b.state.x-x,b.state.y-y)).slice(0,spell.shield.allies??0);
+      for(const ally of allies){if(this.now>=ally.shieldUntil)ally.state.shield=0;ally.state.shield=Math.max(ally.state.shield,Math.round(ally.state.maxHp*spell.shield.maxHpFraction*.5));ally.shieldUntil=Math.max(ally.shieldUntil,this.now+spell.shield.duration);}
       return { x: dx, y: dy };
     }
     // Point visé, limité par la portée.
@@ -762,12 +795,8 @@ export class Simulation {
       event.tx = target?.state.x ?? aimX;
       event.ty = target?.state.y ?? aimY;
       this.broadcast('cast', event);
-      if (target) {
-        target.state.alive = true;
-        target.state.hp = target.state.maxHp * 0.5;
-        target.revivePending = false;
-        this.broadcast('buff', { target: target.id, label: 'Ressuscité !', duration: 2 });
-      }
+      const others=[...this.players.values()].filter(p=>!p.state.alive&&p.id!==target?.id&&Math.hypot(p.state.x-tx,p.state.y-ty)<=3&&Math.hypot(p.state.x-x,p.state.y-y)<=range);
+      for(const revived of(target?[target,...others].slice(0,spell.reviveCount??1):[])){revived.state.alive=true;revived.state.hp=revived.state.maxHp*.5;revived.revivePending=false;this.broadcast('buff',{target:revived.id,label:'Ressuscité !',duration:2});}
       return { x: dx, y: dy };
     }
     if (spell.rewind && caster) {
@@ -790,7 +819,7 @@ export class Simulation {
       event.tx = aimX;
       event.ty = aimY;
       this.broadcast('cast', event);
-      this.summonAlly(caster, spell.summon, aimX, aimY);
+      for(let i=0;i<(spell.summon.count??1);i++){const a=i*Math.PI*2/(spell.summon.count??1),r=i?.9:0;this.summonAlly(caster,spell.summon,aimX+Math.cos(a)*r,aimY+Math.sin(a)*r);}
       return { x: dx, y: dy };
     }
     if (spell.ground) {
@@ -928,6 +957,7 @@ export class Simulation {
   private updatePlayers(dt: number): void {
     for (const p of this.players.values()) {
       const s = p.state;
+      if(s.momentum&&this.now>=p.momentumUntil)s.momentum=false;
       this.updateSecondary(p);
       s.cooldowns=JSON.stringify([...p.readyAt,p.dashReadyAt].map((at,i)=>Math.round(Math.max(0,(i===1&&s.secondaryMax>1?p.secondaryRefillAt:at)-this.now)*10)/10));
       if (s.shield > 0 && this.now >= p.shieldUntil) s.shield = 0;
@@ -954,7 +984,7 @@ export class Simulation {
       s.y = pos.y;
       s.inputSeq=p.pendingInputSeq;s.positionTime=this.now;
       if (p.history.length === 0 || this.now - p.history[p.history.length - 1].t >= 0.1) p.history.push({ t: this.now, x: s.x, y: s.y, hp: s.hp });
-      while (p.history.length > 1 && this.now - p.history[1].t > 4) p.history.shift();
+      while (p.history.length > 1 && this.now - p.history[1].t > 6) p.history.shift();
       if (s.hp < s.maxHp && this.now - p.lastHitAt > REGEN_DELAY) s.hp = Math.min(s.maxHp, s.hp + (p.def.regen + p.stats.regen) * dt);
     }
   }
@@ -1099,6 +1129,7 @@ export class Simulation {
     }
     const m = this.monsters.get(targetId);
     if (!m) return;
+    if(pr.spell.dashStrike&&!m.def.boss)m.stunUntil=Math.max(m.stunUntil,this.now+.18);
     let crit = Math.random() < pr.critChance;
     if (crit) amount *= pr.critMult;
     // Pari (Ecaflip) : gagné, les dégâts s'envolent et s'affichent comme un critique.
@@ -1148,6 +1179,7 @@ export class Simulation {
     const owner = this.players.get(pr.owner);
     if (owner?.state.alive && owner.stats.lifesteal > 0) this.healPlayer(owner, Math.min(amount, Math.max(0, m.state.hp)) * owner.stats.lifesteal);
     amount=this.mechanics.onHit(pr,m,amount);
+    if(owner)amount=this.blessings.modifyHit(owner,pr,m,amount,crit);
     if(pr.slot===0&&!pr.proc&&['sournoiserie','fouet','attaque_mortelle'].includes(pr.spell.id))this.broadcast('spellImpact',{spell:pr.spell.id,x:m.state.x,y:m.state.y,dx:dirX,dy:dirY});
     if(this.monsters.has(m.id))this.damageMonster(m, amount, pr.owner, crit);
     if(owner)this.blessings.onHit(owner,pr,m);
@@ -1170,6 +1202,7 @@ export class Simulation {
     if(fuelMechanic&&source)this.mechanics.onHeal(source,amount,Math.max(0,gain));
     if (gain <= 0) return;
     p.state.hp += gain;
+    this.blessings.onHeal(p,gain);
     if (source) source.state.healDone += gain;
     this.broadcast('heal', { target: p.id, amount: gain, x: p.state.x, y: p.state.y });
   }
@@ -1280,6 +1313,7 @@ export class Simulation {
     ally.meleeReadyAt = this.now;
     ally.specialReadyAt = this.now;
     if(def.id==='coffre_anime')ally.state.hp=ally.state.maxHp=owner.state.maxHp;
+    else if(owner.blessingRanks.legion)ally.state.hp=ally.state.maxHp=Math.round(ally.state.maxHp*(1+.35*blessingPower(owner.blessingRanks.legion)));
   }
 
   // -------------------------------------------------------------------------
@@ -1287,8 +1321,10 @@ export class Simulation {
   // -------------------------------------------------------------------------
 
   damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false): void {
+    if(!this.monsters.has(m.id))return;
     amount = Math.max(1, Math.round(amount));
     const dealer = m.state.ally ? undefined : this.creditOf(ownerId);
+    if(dealer&&dealer.id!==ownerId)this.blessings.mark(dealer,m);
     if (dealer) dealer.state.dmgDealt += Math.min(amount, Math.max(0, m.def.behavior.type === 'dummy' ? amount : m.state.hp));
     m.state.hp -= amount;
     if (m.state.elite && this.players.has(ownerId)) m.hitBy.add(ownerId);
@@ -1344,14 +1380,8 @@ export class Simulation {
       }
     }
     if (m.state.elite) {
-      // Récompense d'élite : un objet pour chaque joueur qui l'a frappé.
-      for (const pid of m.hitBy) {
-        const p = this.players.get(pid);
-        if (!p) continue;
-        const item = rollRunBonus(p.stats.luck + 0.05);
-        this.giveItem(p, item.id);
-        this.broadcast('item', { player: pid, item: item.id, x: m.state.x, y: m.state.y });
-      }
+      // Choix personnel pour chaque membre, y compris les soutiens et joueurs KO.
+      if(this.state.phase===PHASE_PLAYING)for(const p of this.players.values())this.offerBlessings(p);
     }
     this.broadcast('death', { id: m.id, player: false, x: m.state.x, y: m.state.y, kamas });
     if (this.state.phase === PHASE_PLAYING && this.state.potions.size < MAX_GROUND_POTIONS && Math.random() < POTION_DROP_CHANCE) {
@@ -1363,6 +1393,7 @@ export class Simulation {
       this.potionExpires.set(id, this.now + POTION_LIFETIME);
     }
     this.removeMonster(m.id);
+    if(killer)this.blessings.onKill(killer,m);
     this.mechanics.onEnemyDeath(m);
   }
 
@@ -1417,7 +1448,7 @@ export class Simulation {
       for (const c of `${this.state.runId}:${p.id}`) seed = Math.imul(seed ^ c.charCodeAt(0), 16777619);
       const reward=equipmentReward(this.state.runId, seed >>> 0, this.state.stage, this.state.mode, p.state.kamasEarned,p.loot);
       reward.forgeGrants=JSON.parse(p.state.forgeGrants);
-      reward.summary={runId:this.state.runId,classId:p.def.id,name:p.state.name,startedAt:this.startedAt,duration:Math.floor(this.state.time),partySize:this.partySize,mode:this.state.mode,zone:this.state.stage,zoneName:zoneForStage(this.state.stage).name,waves:this.state.waves,kills:p.state.kills,teamKills:this.state.kills,bossKills:p.state.bossKills,damageDealt:p.state.dmgDealt,healing:p.state.healDone,damageTaken:p.state.dmgTaken,deathCause:p.state.deathCause,bonuses:sumRunStats(p.inventory),blessing:getBlessing(p.state.blessing)?.id,loot:[...p.loot.map(d=>d.gear),...reward.gear]};
+      reward.summary={runId:this.state.runId,classId:p.def.id,name:p.state.name,startedAt:this.startedAt,duration:Math.floor(this.state.time),partySize:this.partySize,mode:this.state.mode,zone:this.state.stage,zoneName:zoneForStage(this.state.stage).name,waves:this.state.waves,kills:p.state.kills,teamKills:this.state.kills,bossKills:p.state.bossKills,damageDealt:p.state.dmgDealt,healing:p.state.healDone,damageTaken:p.state.dmgTaken,deathCause:p.state.deathCause,bonuses:sumRunStats(p.inventory),blessing:getBlessing(p.state.blessing)?.id,blessings:{...p.blessingRanks},loot:[...p.loot.map(d=>d.gear),...reward.gear]};
       p.state.rewards = JSON.stringify(reward);
       this.broadcast('runReward',{player:p.id,reward});
     }
@@ -1432,6 +1463,7 @@ export class Simulation {
     p.stats = sumRunStats(p.inventory);
     for (const [k, v] of Object.entries(p.meta)) p.stats[k as StatKey] += v;
     p.stats.armor += p.def.armor ?? 0;
+    p.stats.bounce+=p.blessingRanks.ricochet??0;
     for (const b of p.buffs) for (const [k, v] of Object.entries(b.stats)) p.stats[k as StatKey] += v ?? 0;
     p.state.invisible = p.buffs.some((b) => b.invisible);
     const oldMax = p.state.maxHp;
@@ -1555,8 +1587,18 @@ export class Simulation {
   chooseBoon(id:string,choice:unknown):void {
     const p=this.players.get(id),queue=this.boonQueues.get(id),index=Number(choice);
     if(!p?.state.alive||this.state.paused||this.state.phase!==PHASE_PLAYING||!queue?.length||!Number.isInteger(index)||index<0||index>2)return;
-    this.giveItem(p,queue.shift()![index]);p.state.boonChoices=JSON.stringify(queue[0]??[]);
-    this.broadcast('buff',{target:id,label:'Bénédiction du gardien',duration:2});
+    const selected=queue[0][index];if(!selected)return;queue.shift();
+    if(getBlessing(selected)){p.blessingRanks[selected]=Math.min(3,(p.blessingRanks[selected]??0)+1);p.state.blessings=JSON.stringify(p.blessingRanks);this.applyStats(p);}else this.giveItem(p,selected);
+    if(queue[0]?.some(id=>getBlessing(id)&&(p.blessingRanks[id]??0)>=3)){
+      const pool=blessingPool(p.spells.map(getSpell),p.blessingRanks);queue[0]=queue[0].filter(id=>(p.blessingRanks[id]??0)<3);while(queue[0].length<3&&pool.some(id=>!queue[0].includes(id))){const eligible=pool.filter(id=>!queue[0].includes(id));queue[0].push(eligible[Math.floor(Math.random()*eligible.length)]);}if(!queue[0].length)queue.shift();
+    }
+    p.state.boonChoices=JSON.stringify(queue[0]??[]);
+    this.broadcast('buff',{target:id,label:getBlessing(selected)?.name??'Récompense du gardien',duration:2});
+  }
+  private offerBlessings(p:PlayerRt):void{
+    const pool=blessingPool(p.spells.map(getSpell),p.blessingRanks),offers:string[]=[];
+    while(offers.length<3&&pool.length)offers.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+    if(!offers.length)return;const queue=this.boonQueues.get(p.id)??[];queue.push(offers);this.boonQueues.set(p.id,queue);p.state.boonChoices=JSON.stringify(queue[0]);
   }
 
   /** Achat chez le marchand (une fois par offre et par joueur, à côté du marchand). */

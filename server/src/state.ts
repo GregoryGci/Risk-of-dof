@@ -6,7 +6,10 @@ import { PHASE_LOBBY,GAME_PROTOCOL_VERSION } from '@rod/shared';
 
 export const PlayerState = schema(
   {
+    spellLevels:t.string().default('{}'),
+    momentum:t.boolean().default(false),
     blessing:t.string().default(''),
+    blessings:t.string().default('{}'),
     blessingProgress:t.float32().default(0),
     routeChoice:t.string().default('normal'),
     rankStatus:t.string().default('disabled'),

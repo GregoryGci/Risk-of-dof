@@ -130,5 +130,5 @@ export const CLASSES: Record<string, ClassDef> = {
 export const DEFAULT_CLASS = 'cra';
 
 export function getClass(id: string): ClassDef {
-  return CLASSES[id] ?? CLASSES[DEFAULT_CLASS];
+  return Object.hasOwn(CLASSES,id)?CLASSES[id]:CLASSES[DEFAULT_CLASS];
 }

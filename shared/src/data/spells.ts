@@ -966,7 +966,7 @@ export const SPELLS: Record<string, SpellDef> = define({
 });
 
 export function getSpell(id: string): SpellDef {
-  const s = SPELLS[id];
+  const s = Object.hasOwn(SPELLS,id)?SPELLS[id]:undefined;
   if (!s) throw new Error(`Sort inconnu : ${id}`);
   return s;
 }

@@ -7,7 +7,7 @@ import { spellDetailsHtml } from './spellInfo.ts';
 import { account } from '../account.ts';
 import { equipmentCard } from './equipmentHtml.ts';
 import { EQUIPMENT_BASES, EQUIPMENT_RARITY_NAMES, type GearDrop } from '@rod/shared';
-import {blessingSelector} from './blessingHtml.ts';
+import {leveledSpell,spellEvolutionText,assaultPlan,blessingSpell,parseBlessings} from '@rod/shared';
 
 const SLOT_KEYS = ['Clic G', 'Clic D', 'Espace', 'R'];
 
@@ -42,7 +42,6 @@ export interface HudCallbacks {
   onQuit(): void;
   onClass(classId: string): void;
   onMode(mode: number): void;
-  onBlessing(id:string):void;
   onEquipment(uid?: string): void;
   onTalents(): void;
   /** Survol d'un sort de la barre (null = plus rien de survolé). */
@@ -57,6 +56,8 @@ export function classButtonsHtml(current: string): string {
 }
 
 export class Hud {
+  private spellLevels:Record<string,number>={};
+  private blessingRanks:Record<string,number>={};
   private spellEls: HTMLElement[] = [];
   private cdEls: HTMLElement[] = [];
   private wasReady: boolean[] = [];
@@ -125,7 +126,6 @@ export class Hud {
         if (data.action === 'talents') this.callbacks.onTalents();
         if (data.class) this.callbacks.onClass(data.class);
         if (data.mode !== undefined) this.callbacks.onMode(Number(data.mode));
-        const blessing=(e.target as HTMLElement).closest<HTMLElement>('[data-blessing]')?.dataset.blessing;if(blessing)this.callbacks.onBlessing(blessing);
       },
       { signal },
     );
@@ -177,7 +177,8 @@ export class Hud {
   }
 
   /** Construit la barre de sorts à partir des données de la classe. */
-  setSpells(spellIds: string[]): void {
+  setSpells(spellIds: string[],levels:Record<string,number>={}): void {
+    this.spellLevels=levels;
     this.spellIds = spellIds;
     const bar = $('spellbar');
     bar.innerHTML = '';
@@ -185,7 +186,7 @@ export class Hud {
     this.cdEls = [];
     this.wasReady = [];
     spellIds.forEach((id, slot) => {
-      const spell = getSpell(id);
+      const spell = leveledSpell(id,levels[id]);
       const url = this.store.spellIconUrl(spell.icon);
       const el = document.createElement('div');
       el.className = 'spell ready';
@@ -193,7 +194,7 @@ export class Hud {
       void stats;
       el.addEventListener('mouseenter', () => this.showTip(slot));
       el.addEventListener('mouseleave', () => this.showTip(null));
-      el.innerHTML = `<div class="spell-icon">${url ? `<img alt="">` : spellIconSvg(spell)}<div class="spell-cd"></div></div><div class="spell-key">${SLOT_KEYS[slot] ?? ''}</div>`;
+      el.innerHTML = `<div class="spell-icon">${url ? `<img alt="">` : spellIconSvg(spell)}<div class="spell-cd"></div></div><span class="spell-level">${levels[id]??1}</span><div class="spell-key">${SLOT_KEYS[slot] ?? ''}</div>`;
       if (url) {
         // Icône fournie ; si elle ne se charge pas, on retombe sur le placeholder.
         const img = el.querySelector('img')!;
@@ -248,8 +249,8 @@ export class Hud {
       tip.classList.add('hidden');
       return;
     }
-    const spell = getSpell(this.spellIds[slot]);
-    tip.innerHTML = `<div class="tip-name">${escapeHtml(spell.name)} <small>${SLOT_KEYS[slot] ?? ''}</small></div><div class="tip-desc">${escapeHtml(spell.description)}</div>${spellDetailsHtml(spell, this.stats, slot)}`;
+    const spell = blessingSpell(leveledSpell(this.spellIds[slot],this.spellLevels[this.spellIds[slot]]),this.blessingRanks),level=spell.upgradeLevel??1;
+    tip.innerHTML = `<div class="tip-name">${escapeHtml(spell.name)} <small>${SLOT_KEYS[slot] ?? ''} · NIV. ${level}</small></div><div class="tip-desc">${escapeHtml(spell.description)}</div><p class="spell-evolution">${escapeHtml(spellEvolutionText(spell.id,level))}</p>${spellDetailsHtml(spell, this.stats, slot)}`;
     // Toujours juste au-dessus de la barre du bas, quelle que soit sa hauteur (objets sur plusieurs lignes).
     tip.style.bottom = `${$('hud-bottom').offsetHeight + 18}px`;
     tip.classList.remove('hidden');
@@ -359,9 +360,10 @@ export class Hud {
     }
 
     // Résumé compact des bonus de run, distinct de la tenue permanente.
-    if (me && this.cache.items !== `${me.bonuses}|${me.equipment}`) {
-      this.cache.items = `${me.bonuses}|${me.equipment}`;
+    if (me && this.cache.items !== `${me.bonuses}|${me.equipment}|${me.blessings}`) {
+      this.cache.items = `${me.bonuses}|${me.equipment}|${me.blessings}`;
       this.stats = playerItemStats(parseRunBonuses(me.bonuses), me.equipment);
+      this.blessingRanks=parseBlessings(me.blessings);this.stats.bounce+=this.blessingRanks.ricochet??0;
       const run=sumRunStats(parseRunBonuses(me.bonuses));
       const lines=Object.entries(run).filter(([,v])=>v>0);
       $('run-gains').innerHTML=lines.length ? `<span class="run-gains-label">BONUS DE RUN</span>${lines.slice(0,3).map(([k,v])=>`<span>${escapeHtml(k==='multishot'?`+${Math.ceil(v)} tirs · ${Math.round(v/Math.ceil(v)*100)} %`:statText(k as StatKey,v))}</span>`).join('')}<small>Tab · récapitulatif complet</small>` : '';
@@ -403,7 +405,7 @@ export class Hud {
       else if (state.zaapState === ZAAP_IDLE) objective = `Zone ${state.stage} — trouvez et activez le <b>Zaap</b>`;
       else if (state.zaapState === ZAAP_CHARGING) objective = `Zone ${state.stage} — <b>Zaap ${Math.floor(state.zaapCharge * 100)} %</b>${state.zaapCharge >= 1 ? ' — vainquez le gardien' : ''}`;
       else objective = `Zone ${state.stage} — <b>Zaap prêt</b> : retournez-y`;
-      objective += ` <span class="zone-name">· ${zoneForStage(state.stage).name}${state.intermission?'':` · Assaut ${state.zoneWave} · ${state.waves} au total`}</span>`;
+      objective += ` <span class="zone-name">· ${zoneForStage(state.stage).name}${state.intermission?'':` · Assaut ${state.zoneWave}${state.zoneWave>0?' · '+assaultPlan(state.zoneWave,state.stage).name:''} · ${state.waves} au total`}</span>`;
       if(me&&!state.intermission&&state.zaapState===ZAAP_IDLE&&state.stageTime>=45) {
         const dx=state.zaapX-me.x,dy=state.zaapY-me.y;
         const direction=Math.round(Math.atan2((dx+dy)*.5,dx-dy)/(Math.PI/4));
@@ -483,7 +485,7 @@ export class Hud {
         `<button class="btn" data-action="equipment">Équipement</button><button class="btn" data-action="talents">Sorts & talents</button>` +
         (host ? `<button class="btn btn-primary" data-action="start">Lancer la partie</button>` : `<span class="lobby-wait">En attente de ${escapeHtml(hostName)}…</span>`) +
         `</div>` +
-        classButtonsHtml(me?.classId ?? '')+blessingSelector(me?.blessing??'');
+        classButtonsHtml(me?.classId ?? '')+'<p class="lobby-pact-hint">Vainquez les élites : chacun choisit une bénédiction parmi trois propositions, issues de 30 pouvoirs.</p>';
     } else if (me && !me.alive && state.phase !== PHASE_LOST) {
       const target = spectating ? state.players.get(spectating) : undefined;
       banner = `<b>Vous êtes mort.</b><br>` + (target ? `Spectateur de ${escapeHtml(target.name)} — cliquez pour changer.` : '');

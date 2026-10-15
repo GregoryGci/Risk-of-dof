@@ -1,13 +1,13 @@
 // Panneau « détails de la partie » ouvert avec Tab : stats, objets et sorts détaillés.
 // Il libère la souris ; en solo, la partie est mise en pause.
-import { affinityProgress, getRunBonus, CLASSES, CLASS_MECHANICS, difficultyTier, getClass, getSpell, parseRunBonuses, playerItemStats, sumRunStats, statText, type StatKey, type GameStateView } from '@rod/shared';
+import { affinityProgress, getRunBonus, CLASSES, CLASS_MECHANICS, difficultyTier, getClass, leveledSpell, parseSpellLevels,spellEvolutionText, parseRunBonuses, playerItemStats, sumRunStats, statText, type StatKey, type GameStateView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { spellIconSvg } from './icons.ts';
 import { spellDetailsHtml } from './spellInfo.ts';
 import { escapeHtml } from './Hud.ts';
 import {account} from '../account.ts';
 import { saveSettings, settings } from '../settings.ts';
-import {getBlessing} from '@rod/shared';
+import {getBlessing,parseBlessings,blessingDescription,blessingSpell} from '@rod/shared';
 
 const SLOT_KEYS = ['Clic gauche', 'Clic droit', 'Espace', 'R'];
 
@@ -63,7 +63,7 @@ export class Details {
     const me = state.players.get(myId);
     if (!me) return;
     const inventory = parseRunBonuses(me.bonuses);
-    const stats = playerItemStats(inventory, me.equipment);
+    const stats = playerItemStats(inventory, me.equipment);stats.bounce+=parseBlessings(me.blessings).ricochet??0;
     const cls = getClass(me.classId);
     stats.armor += cls.armor ?? 0;
     const tier = difficultyTier(state.difficulty);
@@ -87,7 +87,7 @@ export class Details {
       <div>Dégâts subis <b>-${Math.round((1 - Math.pow(0.92, stats.armor)) * 100)} %</b> — PV par victime <b>${stats.killHeal}</b> — kamas <b>+${Math.round(stats.kamas * 100)} %</b></div>
     </section>`;
     html += `</div>`;
-    const blessing=getBlessing(me.blessing);if(blessing)html+=`<section class="blessing-detail" style="--pact:#${blessing.color.toString(16)}"><span class="eyebrow">BÉNÉDICTION DE DÉPART</span><h3>${blessing.name}</h3><p>${escapeHtml(blessing.description)}</p></section>`;
+    html+='<h3>Bénédictions des élites</h3><div class="run-blessings">'+Object.entries(parseBlessings(me.blessings)).map(([id,rank])=>{const b=getBlessing(id)!;return`<section class="blessing-detail" style="--pact:#${b.color.toString(16)}"><img src="assets/dofus/spells/${b.icon}.png" alt=""><h3>${b.name} <small>Rang ${rank}</small></h3><p>${escapeHtml(blessingDescription(id,rank))}</p></section>`;}).join('')+'</div>';
 
     html += `<h3>Options</h3><label class="option"><input type="checkbox" name="smartCast" ${settings.smartCast ? 'checked' : ''}>
       <span><b>Smart cast</b> — Espace et R lancent le sort aussitôt vers la souris. Désactivé : la touche affiche la zone, clic gauche pour lancer, clic droit / Échap pour annuler.</span></label>`;
@@ -96,12 +96,12 @@ export class Details {
 
     html += `<h3>Sorts <small>(survolez pour voir la zone en jeu)</small></h3><div class="details-spells">`;
     (me.spells ? me.spells.split(',') : cls.spells).forEach((id, slot) => {
-      const spell = getSpell(id);
+      const level=parseSpellLevels(me.spellLevels)[id]??1,spell = blessingSpell(leveledSpell(id,level),parseBlessings(me.blessings));
       const url = this.store.spellIconUrl(spell.icon);
       html += `<div class="spell-card" data-slot="${slot}">
         <div class="spell-card-icon">${url ? `<img src="${url}" alt="">` : spellIconSvg(spell)}</div>
-        <div><div class="spell-card-name">${escapeHtml(spell.name)} <small>${SLOT_KEYS[slot]}</small></div>
-        <div class="spell-card-desc">${escapeHtml(spell.description)}</div>${spellDetailsHtml(spell, stats, slot)}</div>
+        <div><div class="spell-card-name">${escapeHtml(spell.name)} <small>${SLOT_KEYS[slot]} · NIV. ${level}</small></div>
+        <div class="spell-card-desc">${escapeHtml(spell.description)}</div><p class="spell-evolution">${escapeHtml(spellEvolutionText(id,level))}</p>${spellDetailsHtml(spell, stats, slot)}</div>
       </div>`;
     });
     // Mécanique de classe : sa description n'est affichée qu'ici, pas sous la barre de sorts.
@@ -116,7 +116,7 @@ export class Details {
     html+=`<h3>Affinités de la run</h3><p class="run-gains-help">Collectionnez 3 puis 5 bonus différents d’une famille. Les doublons et leurs qualités comptent une seule fois ; les avantages sont inclus dans vos stats.</p><div class="affinity-grid">${affinityProgress(inventory).map(({affinity,count})=>`<section class="affinity-card" style="--affinity:${affinity.color}"><h3>${affinity.icon} ${affinity.name} <small>${count}/${affinity.bases.length}</small></h3>${affinity.thresholds.map(t=>`<p class="${count>=t.count?'active':''}">${count>=t.count?'✓':'◇'} ${t.count} différents · ${Object.entries(t.stats).map(([key,value])=>escapeHtml(statText(key as StatKey,value))).join(' · ')}</p>`).join('')}<small>${affinity.bases.map(base=>getRunBonus(base+'.commun')?.name??getRunBonus(base+'.epique')?.name??base).map(escapeHtml).join(' · ')}</small></section>`).join('')}</div>`;
     const run=sumRunStats(inventory);
     const gains=Object.entries(run).filter(([,v])=>v>0);
-    html += `<h3>Bonus gagnés pendant cette run</h3><p class="run-gains-help">Coffres, marchand et élites : ces bonus s’additionnent à votre tenue et disparaissent à la prochaine run.</p><div class="run-stats-recap">${gains.length ? gains.map(([k,v])=>`<div><span>✦</span>${escapeHtml(statText(k as StatKey,v))}</div>`).join('') : '<p>Aucun bonus pour le moment. Ouvrez des coffres avec vos kamas.</p>'}</div>`;
+    html += `<h3>Bonus gagnés pendant cette run</h3><p class="run-gains-help">Coffres, marchand et gardiens : ces stats s’additionnent à votre tenue jusqu’à la fin de la run. Les élites donnent les bénédictions affichées plus haut.</p><div class="run-stats-recap">${gains.length ? gains.map(([k,v])=>`<div><span>✦</span>${escapeHtml(statText(k as StatKey,v))}</div>`).join('') : '<p>Aucun bonus pour le moment. Ouvrez des coffres avec vos kamas.</p>'}</div>`;
 
     if (html !== this.lastHtml && !this.body.contains(document.activeElement)) {
       this.lastHtml = html;

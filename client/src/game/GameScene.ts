@@ -21,6 +21,9 @@ import {
   RARITY_NAMES,
   getMonster,
   getSpell,
+  leveledSpell,
+  parseSpellLevels,
+  blessingSpell,parseBlessings,
   screenToWorld,
   stepMovement,
   worldToScreen,
@@ -109,6 +112,8 @@ export class GameScene extends Phaser.Scene {
   /** Sorts équipés (tels que synchronisés par le serveur). */
   private mySpells: string[] = [];
   private mySpellsKey = '';
+  private myLevelsKey = '';
+  private myLevels:Record<string,number> = {};
   private dashCdEnd = 0;
   private chests = new Map<string, { image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite; opened: boolean }>();
   private potions = new Map<string, Phaser.GameObjects.Image>();
@@ -204,6 +209,7 @@ export class GameScene extends Phaser.Scene {
     // Événements ponctuels envoyés par le serveur.
     this.room.onMessage('pong',(e:{sentAt:number})=>{this.ping=Math.max(0,Math.round(performance.now()-e.sentAt));});
     this.room.onMessage('cast', (e: CastEvent) => this.onCast(e));
+    this.room.onMessage('momentum',(e:{player:string;x:number;y:number})=>{if(!document.hidden)this.effects.blessingBurst(e.x,e.y,1,0xffd58a);});
     this.room.onMessage('projEnd', (e: ProjEndEvent) => this.effects.endProjectile(e.id, e.x, e.y));
     this.room.onMessage('explode', (e: ExplodeEvent) => this.onExplode(e));
     this.room.onMessage('spellImpact',(e:{spell:string;x:number;y:number;dx:number;dy:number})=>{if(!document.hidden)this.effects.playSpellFx(e.spell,e.x,e.y,e.dx,e.dy);});
@@ -334,12 +340,13 @@ export class GameScene extends Phaser.Scene {
     this.lastFrameTime = time;
     const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !progressionOpen && !this.details.isOpen && !this.shop.isOpen && !state.paused && !document.hidden && document.hasFocus();
 
-    if (myState && (myState.classId !== this.myClass || myState.spells !== this.mySpellsKey)) {
+    if (myState && (myState.classId !== this.myClass || myState.spells !== this.mySpellsKey || myState.spellLevels !== this.myLevelsKey)) {
       // Première frame, changement de classe ou de sorts équipés : la barre de sorts suit.
       this.myClass = myState.classId;
       this.mySpellsKey = myState.spells;
       this.mySpells = myState.spells ? myState.spells.split(',') : getClass(myState.classId).spells;
-      this.hud.setSpells(this.mySpells);
+      this.myLevelsKey=myState.spellLevels;this.myLevels=parseSpellLevels(myState.spellLevels);
+      this.hud.setSpells(this.mySpells,this.myLevels);
       this.cdEnd = [0, 0, 0, 0];
     }
     if (myState) this.updateLocalPlayer(time, dt, myState, canAct);
@@ -359,8 +366,8 @@ export class GameScene extends Phaser.Scene {
     // Aperçu de la zone d'effet du sort survolé, depuis la position du joueur dans la direction visée.
     const hovered = this.previewSlot !== null && myState ? this.mySpells[this.previewSlot] : undefined;
     const targeted = this.targeting !== null && myState ? this.mySpells[this.targeting] : undefined;
-    if (hovered) this.preview.draw(getSpell(hovered), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y,undefined,this.hud.playerStats.range);
-    else if (targeted) this.preview.draw(getSpell(targeted), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y, Math.hypot(this.aimPos.x - this.me.x, this.aimPos.y - this.me.y),this.hud.playerStats.range);
+    if (hovered) this.preview.draw(blessingSpell(leveledSpell(hovered,this.myLevels[hovered]),parseBlessings(myState?.blessings)), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y,undefined,this.hud.playerStats.range);
+    else if (targeted) this.preview.draw(blessingSpell(leveledSpell(targeted,this.myLevels[targeted]),parseBlessings(myState?.blessings)), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y, Math.hypot(this.aimPos.x - this.me.x, this.aimPos.y - this.me.y),this.hud.playerStats.range);
     else this.preview.hide();
     this.hud.updateCooldowns(time, this.cdEnd, this.cdTotal);
     if(myState)this.hud.updateCharges(myState.secondaryCharges,myState.secondaryMax);
@@ -708,7 +715,7 @@ export class GameScene extends Phaser.Scene {
     if (!canAct || !myState || state.phase !== PHASE_PLAYING) return '';
     if (nearestChallenge <= INTERACT_RANGE && nearestChallenge <= nearestChest) {
       if (pressed) this.room.send('interact');
-      return `<b>E</b> — Activer la balise de défi : vaincre un élite de la région pour gagner un bonus de stats`;
+      return `<b>E</b> — Balise de défi : vaincre un élite pour choisir une bénédiction parmi trois`;
     }
     if (nearestChest > INTERACT_RANGE) return '';
     const affordable = myState.kamas >= state.chestCost;
@@ -803,7 +810,7 @@ export class GameScene extends Phaser.Scene {
   private onCast(e: CastEvent): void {
     // Onglet en arrière-plan : la boucle de rendu est en pause, on n'empile pas d'effets.
     if (!document.hidden) this.effects.spawnProjectile(e);
-    const spell = getSpell(e.spell);
+    const spell = leveledSpell(e.spell,e.level);
     // Animation officielle Dofus : sur le lanceur pour les bonus (type 10), au point visé sinon.
     // Les projectiles l'ont déjà en vol (clip « move ») ; les zones à retardement la jouent à l'impact.
     // Pièges : l'animation joue quand ils se déclenchent (événement « explode »), pas à la pose.

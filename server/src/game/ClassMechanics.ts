@@ -32,8 +32,8 @@ export class ClassMechanics {
     if(p.def.id==='pandawa'&&spell.id==='karcham') {
       if(m.carried) {
         const enemy=this.sim.monsters.get(m.carried);this.release(m);
-        if(enemy){const x=p.state.x,y=p.state.y,d=Math.hypot(tx-x,ty-y)||1,pos={x,y};stepMovement(this.sim.map,pos,tx-x,ty-y,Math.min(5,d),1,enemy.def.radius);enemy.state.x=pos.x;enemy.state.y=pos.y;enemy.stunUntil=now+.5;this.pulse(p,pos.x,pos.y,2,now<m.drunkUntil?36:28);this.fx(p,'line',x,y,1,pos.x,pos.y);}
-        return{spell,mult,handled:true,cooldown:5000/(1+p.stats.haste)};
+        if(enemy){const x=p.state.x,y=p.state.y,d=Math.hypot(tx-x,ty-y)||1,pos={x,y};stepMovement(this.sim.map,pos,tx-x,ty-y,Math.min(5,d),1,enemy.def.radius);enemy.state.x=pos.x;enemy.state.y=pos.y;enemy.stunUntil=now+.5;this.pulse(p,pos.x,pos.y,2+.5*((spell.upgradeLevel??1)-1),now<m.drunkUntil?36:28);this.fx(p,'line',x,y,1,pos.x,pos.y);}
+        return{spell,mult,handled:true,cooldown:5000*((spell.upgradeLevel??1)===2?.9:(spell.upgradeLevel??1)>=3?.8:1)/(1+p.stats.haste)};
       }
       const enemy=this.enemies(p.state.x,p.state.y,2.3).filter(e=>!e.def.boss&&!e.state.elite).sort((a,b)=>Math.hypot(a.state.x-tx,a.state.y-ty)-Math.hypot(b.state.x-tx,b.state.y-ty))[0];
       if(enemy){m.carried=enemy.id;m.carryUntil=now+3;enemy.state.carried=true;enemy.push=null;this.fx(p,'charge');}

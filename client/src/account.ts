@@ -5,6 +5,7 @@ import { equippedFromAccount, migrateAccount, type AccountData } from './progres
 import {forgeCost,recycleValue,type ForgeGrant} from '@rod/shared';
 import {sanitizeRunSummary,compareRuns} from '@rod/shared';
 import {sanitizeProfile} from '@rod/shared';
+import {spellUpgradeCost,MAX_SPELL_LEVEL} from '@rod/shared';
 
 let KEY = 'rod.compte';
 const listeners=new Set<()=>void>();
@@ -35,6 +36,14 @@ function save(): void {
 save();
 
 export const account = {
+  get spellLevels(){return structuredClone(data.spellLevels);},
+  spellLevel(classId:string,spell:string):number{return data.spellLevels[classId]?.[spell]??1;},
+  upgradeSpell(classId:string,spell:string):boolean{
+    if(!this.isUnlocked(classId,spell))return false;
+    const next=this.spellLevel(classId,spell)+1,cost=spellUpgradeCost(classId,spell,next);
+    if(next>MAX_SPELL_LEVEL||data.bank<cost||!Number.isFinite(cost))return false;
+    data.bank-=cost;(data.spellLevels[classId]??={})[spell]=next;save();return true;
+  },
   get profile(){return structuredClone(data.profile);},
   setProfile(name:string,avatar:string):boolean {
     const profile=sanitizeProfile({name,avatar,complete:true});if(!profile.complete)return false;

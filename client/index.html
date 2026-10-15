@@ -42,17 +42,17 @@
           <div id="view-solo" class="home-view-content hidden">
             <p class="view-intro">Une run en solo. Des trouvailles pour toutes les suivantes.</p><div id="solo-character" class="setup-character"></div><button class="text-button" data-view="character">Changer de classe ou d’équipement →</button>
             <h3 class="setup-label">Choisissez votre difficulté</h3><div id="setup-modes" class="setup-modes"></div>
-            <div id="solo-blessings"></div>
+            <p class="lobby-pact-hint">Vainquez les élites et choisissez vos bénédictions pendant la run : 3 propositions parmi 30 pouvoirs.</p>
             <button id="btn-solo" class="btn btn-primary start-adventure">Partir à l’aventure <span>→</span></button>
             <p class="setup-hint">Tab met la partie en pause. Votre butin est conservé après la défaite.</p>
           </div>
           <div id="view-multi" class="home-view-content hidden"><p class="view-intro">Rassemblez votre équipe. Partagez un code et affrontez les vagues ensemble.</p>
-            <div id="multi-blessings"></div>
+            <p class="lobby-pact-hint">À chaque élite vaincue, chaque joueur choisit sa propre bénédiction parmi trois propositions.</p>
             <div class="multiplayer-option"><span class="eyebrow">CRÉER UN SALON</span><h3>Une place pour vos amis.</h3><p>Choisissez votre difficulté dans le salon, puis invitez jusqu’à trois joueurs.</p><button id="btn-create" class="btn btn-primary">Créer une partie <span>→</span></button></div>
             <div class="separator"><span>ou rejoindre vos amis</span></div><label for="code">Code du salon</label><div class="row"><input id="code" type="text" maxlength="4" placeholder="ABCD" autocomplete="off" /><button id="btn-join" class="btn">Rejoindre</button></div>
           </div>
           <div id="view-character" class="home-view-content hidden"><div class="character-intro"><div><h3 id="character-name"></h3><p id="class-desc"></p></div><img id="character-portrait" alt=""></div><div id="class-picker" class="home-class-picker"></div>
-            <div class="character-actions"><button id="btn-equipment" class="character-action"><span>◈</span><div><b>Équipement</b><small id="equipment-summary"></small></div><span>→</span></button><button id="btn-talents" class="character-action"><span>✦</span><div><b>Arbre de talents</b><small id="talents-summary"></small></div><span>→</span></button></div>
+            <div class="character-actions"><button id="btn-equipment" class="character-action"><span>◈</span><div><b>Équipement</b><small id="equipment-summary"></small></div><span>→</span></button><button id="btn-talents" class="character-action"><span>✦</span><div><b>Sorts et deck</b><small id="talents-summary"></small></div><span>→</span></button></div>
             <button id="btn-encyclopedia" class="collection-link">Encyclopédie des équipements <span id="collection-summary"></span><span>→</span></button>
           </div>
           <div id="view-settings" class="home-view-content hidden"><p class="view-intro">Vos préférences vous suivent dans chaque aventure.</p><div id="home-settings"></div><h3 class="setup-label">À portée de main</h3><div class="home-controls"><div><kbd>ZQSD</kbd><span>Se déplacer · WASD / flèches</span></div><div><kbd>Souris</kbd><span>Viser · clics gauche et droit : sorts</span></div><div><kbd>Espace / R</kbd><span>Sorts équipés · R : ultime</span></div><div><kbd>Maj</kbd><span>Dash</span></div><div><kbd>E</kbd><span>Coffres · Zaap · marchand</span></div><div><kbd>Tab</kbd><span>Détails · pause en solo · options</span></div></div></div>
@@ -66,7 +66,7 @@
     <div id="talents" class="overlay hidden">
       <div class="panel details-panel talents-panel">
         <div class="details-head">
-          <h2>Arbre de talents</h2>
+          <h2>Grimoire de combat</h2>
           <button id="talents-close" class="btn">Fermer</button>
         </div>
         <div id="talents-body"></div>

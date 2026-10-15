@@ -1,6 +1,6 @@
 // Description lisible d'un sort, générée à partir de ses données (shared/src/data/spells.ts).
 // Les valeurs tiennent compte de la tenue et des bonus de run.
-import { statText, type SpellDef, type StatKey } from '@rod/shared';
+import { statText,spellCopies,spellCopyPower, type SpellDef, type StatKey } from '@rod/shared';
 
 const BASE_CRIT = 0.05;
 
@@ -36,17 +36,17 @@ export function spellShape(spell: SpellDef): string {
 
 /** Lignes de détail d'un sort, en HTML. */
 export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number>, slot?: number): string {
-  const damage = 1 + (stats?.damage ?? 0);
+  const copies=spellCopies(spell),damage = (1 + (stats?.damage ?? 0))*(copies>1?spellCopyPower(spell.upgradeLevel??1):1);
   const ranged = !spell.melee && !spell.zone?.self;
   const haste = (1 + (stats?.haste ?? 0)) * (ranged && slot===0 ? 1 + (stats?.attackSpeed ?? 0) : 1);
   const crit = Math.min(1,BASE_CRIT + (stats?.crit ?? 0));
   const critMult = 1.5 + (stats?.critDamage ?? 0);
   const lines: string[] = [];
 
-  if (spell.heal) lines.push(`<span class="heal">Soin ${spell.heal[0]} à ${spell.heal[1]} PV</span> aux alliés touchés`);
+  if (spell.heal) lines.push(`<span class="heal">Soin ${Math.round(spell.heal[0]*10)/10} à ${Math.round(spell.heal[1]*10)/10} PV</span> aux alliés touchés${copies>1?' par vague':''}`);
   else if (spell.damage[1] > 0) {
     const [a, b] = spell.damage.map((d) => Math.round(d * damage));
-    lines.push(`<span class="dmg">Dégâts ${a} à ${b}</span> — critique ${pct(crit)} (×${critMult.toFixed(2).replace('.', ',')})`);
+    lines.push(`<span class="dmg">Dégâts ${a} à ${b}${copies>1?' par frappe':''}</span> — critique ${pct(crit)} (×${critMult.toFixed(2).replace('.', ',')})`);
   }
   lines.push(spellShape(spell));
   if (spell.shield) lines.push(`Absorbe ${pct(spell.shield.maxHpFraction)} de vos PV max en dégâts`);

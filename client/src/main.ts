@@ -1,7 +1,7 @@
 // Point d'entrée du client : écran d'accueil (DOM), connexion Colyseus, puis lancement de Phaser.
 import Phaser from 'phaser';
 import { Client, type Room } from '@colyseus/sdk';
-import { BLESSINGS,getBlessing, CLASSES, GAME_PROTOCOL_VERSION, DEFAULT_CLASS, EQUIPMENT_TIERS, GAME_MODES, PHASE_PLAYING, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT, type GearDrop, type RunReward } from '@rod/shared';
+import { CLASSES, GAME_PROTOCOL_VERSION, DEFAULT_CLASS, EQUIPMENT_TIERS, GAME_MODES, PHASE_PLAYING, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT, type GearDrop, type RunReward } from '@rod/shared';
 import { ASSET_ROOT, loadManifest } from './assets/manifest.ts';
 import { AssetStore } from './assets/store.ts';
 import { GameScene } from './game/GameScene.ts';
@@ -65,13 +65,6 @@ const invited = new URLSearchParams(location.search).get('code');
 if (invited) codeInput.value = invited.toUpperCase().slice(0, ROOM_CODE_LENGTH);
 let setupMode = 1;
 let currentView = '';
-let blessingId=getBlessing(localStorage.getItem('rod.blessing'))?.id??'ember';
-function renderBlessings():void{
-  const html=`<div class="pact-heading"><span class="eyebrow">VOTRE PREMIER POUVOIR</span><h3>Choisissez votre bénédiction</h3><p>Un effet de combat pour toute la run. Votre classe garde ses propres sorts.</p></div><div class="pact-grid">${Object.values(BLESSINGS).map(b=>`<button class="pact-card${blessingId===b.id?' selected':''}" data-blessing="${b.id}" style="--pact:#${b.color.toString(16)}" aria-pressed="${blessingId===b.id}" title="${escapeHtml(b.description)}"><span class="pact-family">${b.family}<i>${blessingId===b.id?'✓':'◇'}</i></span><img src="assets/dofus/spells/${b.icon}.png" alt=""><b>${b.name}</b><span>${b.short}</span></button>`).join('')}</div><p class="pact-description">${escapeHtml(BLESSINGS[blessingId].description)}</p>`;
-  $('solo-blessings').innerHTML=html;$('multi-blessings').innerHTML=html;
-}
-renderBlessings();
-
 // Classe choisie, mémorisée d'une partie à l'autre.
 let classId = localStorage.getItem('rod.classe') ?? DEFAULT_CLASS;
 if (!CLASSES[classId]) classId = DEFAULT_CLASS;
@@ -97,8 +90,8 @@ renderClassPicker();
 
 // Arbre de talents : depuis l'accueil, ou depuis le salon (les sorts équipés sont alors envoyés au serveur).
 let currentRoom: Room | null = null;
-const talents = new TalentsPage(null, classId, (cls) => {
-  if (currentRoom && cls === classId) currentRoom.send('loadout', { spells: account.loadout(cls) });
+const talents = new TalentsPage(null, classId, async (cls) => {
+  if (currentRoom && cls === classId){currentRoom.send('loadout', { spells: account.loadout(cls) });await cloud.flush();currentRoom?.send('refreshProgression');}
 });
 $('btn-talents').addEventListener('click', () => talents.open(classId));
 const equipmentPage = new EquipmentPage(() => {
@@ -144,8 +137,6 @@ function showView(view: string): void {
   if (view) $('view-close').focus();
 }
 menu.addEventListener('click', e => {
-  const choice=(e.target as HTMLElement).closest<HTMLElement>('[data-blessing]')?.dataset.blessing;
-  const blessing=getBlessing(choice);if(blessing){blessingId=blessing.id;localStorage.setItem('rod.blessing',blessingId);renderBlessings();document.querySelector<HTMLElement>(`#view-${currentView} [data-blessing="${blessingId}"]`)?.focus();}
   const button = (e.target as HTMLElement).closest<HTMLElement>('[data-view]');
   if (button?.dataset.view) showView(button.dataset.view);
 });
@@ -256,7 +247,7 @@ async function connect(join: () => Promise<Room>): Promise<void> {
   }
 }
 
-const joinOptions = () => ({ name: pseudo(), classId, spells: account.loadout(classId), equipment: account.equipment,blessing:blessingId,accessToken:cloud.session?.access_token });
+const joinOptions = () => ({ name: pseudo(), classId, spells: account.loadout(classId), equipment: account.equipment,accessToken:cloud.session?.access_token });
 btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, joinOptions())));
 btnSolo.addEventListener('click', () => connect(async () => {
   const room = await client.create(ROOM_NAME, { ...joinOptions(), singlePlayer: true });
@@ -334,9 +325,8 @@ async function startGame(room: Room): Promise<void> {
   };
 
   const hud = new Hud(store, {
-    onStart: () => { room.send('equipment', { equipment: account.equipment }); room.send('start'); },
+    onStart: async () => {await cloud.flush();room.send('equipment', { equipment: account.equipment }); room.send('start'); },
     onRestart: () => room.send('restart'),
-    onBlessing: id=>{room.send('blessing',{blessing:id});const blessing=getBlessing(id);if(blessing){blessingId=blessing.id;localStorage.setItem('rod.blessing',id);renderBlessings();}},
     onQuit: quit,
     onSpellHover: () => {},
     onMode: (mode) => room.send('mode', { mode }),
@@ -356,6 +346,7 @@ async function startGame(room: Room): Promise<void> {
   room.onMessage('runReward',(message:{player:string;reward:RunReward})=>{ if(message.player===room.sessionId) { account.creditRun(message.reward); renderProfile(); } });
   room.onMessage('scoreSaved',()=>hud.toast('Votre run est inscrite au classement.'));
   room.onMessage('scoreError',(message:{message:string})=>hud.toast(escapeHtml(message.message)));
+  room.onMessage('progressionError',(message:{message:string})=>hud.toast(escapeHtml(message.message)));
   room.onMessage('cloudStatus',()=>{});
   menu.classList.add('hidden');
   hud.show(room.roomId);

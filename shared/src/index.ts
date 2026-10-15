@@ -24,3 +24,5 @@ export * from './data/dungeons.ts';
 export * from './data/routes.ts';
 export * from './data/affinities.ts';
 export * from './data/blessings.ts';
+export * from './data/spell-upgrades.ts';
+export * from './data/assaults.ts';

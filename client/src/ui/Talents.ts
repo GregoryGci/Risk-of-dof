@@ -2,7 +2,7 @@
 // Clic gauche (attaque de base) et R (ultime) se choisissent parmi leurs variantes. Clic droit et Espace
 // puisent dans un lot commun : on glisse un sort sur l'un des deux emplacements (ou on utilise ses boutons),
 // et on peut glisser un emplacement sur l'autre pour les échanger.
-import { CLASSES, FLEX_SLOTS, TALENTS, flexSpells, getClass, getSpell, isFlexSlot } from '@rod/shared';
+import { leveledSpell,spellEvolutionText,spellUpgradeCost,CLASSES, FLEX_SLOTS, TALENTS, flexSpells, getClass, getSpell, isFlexSlot } from '@rod/shared';
 import { account } from '../account.ts';
 import type { AssetStore } from '../assets/store.ts';
 import { spellIconSvg } from './icons.ts';
@@ -31,6 +31,7 @@ export class TalentsPage {
       const { act, spell, slot, cls } = btn.dataset;
       if (act === 'class' && cls) this.classId = cls;
       if (act === 'buy' && spell) account.buy(this.classId, spell);
+      if(act==='upgrade'&&spell&&account.upgradeSpell(this.classId,spell))this.onChange(this.classId);
       if (act === 'equip' && spell && slot !== undefined) this.equip(Number(slot), spell);
       this.render();
     });
@@ -97,12 +98,15 @@ export class TalentsPage {
 
   /** Carte d'un sort : en-tête, détails, puis `action` (boutons ou état). */
   private card(spellId: string, action: string, opts: { equipped: boolean; draggable: boolean }): string {
-    const spell = getSpell(spellId);
+    const level=account.spellLevel(this.classId,spellId),spell = leveledSpell(spellId,level);
     const unlocked = account.isUnlocked(this.classId, spellId);
     return `<div class="talent${opts.equipped ? ' equipped' : ''}${unlocked ? '' : ' locked'}${opts.draggable ? ' draggable' : ''}"${opts.draggable ? ` draggable="true" data-drag-spell="${spellId}" title="Glissez sur Clic droit ou Espace"` : ''}>
       <div class="talent-head"><div class="spell-card-icon">${this.icon(spellId)}</div>
       <div><div class="spell-card-name">${escapeHtml(spell.name)}</div><div class="spell-card-desc">${escapeHtml(spell.description)}</div></div></div>
+      <div class="spell-ranks" aria-label="Niveau ${level} sur 3">${[1,2,3].map(n=>`<i class="${n<=level?'active':''}">${n}</i>`).join('')}<b>Niveau ${level}</b></div>
+      <p class="spell-evolution">${escapeHtml(spellEvolutionText(spellId,level))}</p>
       <div class="talent-details">${spellDetailsHtml(spell)}</div>
+      ${unlocked?`<div class="spell-upgrade">${level<3?`<small>Prochain niveau · ${escapeHtml(spellEvolutionText(spellId,level+1))}</small><button class="btn btn-primary" data-act="upgrade" data-spell="${spellId}" ${account.bank<spellUpgradeCost(this.classId,spellId,level+1)?'disabled':''}>Niveau ${level+1} · ${spellUpgradeCost(this.classId,spellId,level+1).toLocaleString('fr')} K</button>`:'<span class="talent-state">Maîtrise complète</span>'}</div>`:''}
       <div class="talent-action">${action}</div>
     </div>`;
   }
@@ -132,7 +136,7 @@ export class TalentsPage {
   private render(): void {
     const cls = getClass(this.classId);
     const equipped = account.loadout(cls.id);
-    let html = `<div class="talents-bank">Bourse : <b>${account.bank} kamas</b> <small>— gagnés à la fin de chaque partie</small></div>`;
+    let html = `<div class="talents-bank">Bourse : <b>${account.bank.toLocaleString('fr')} kamas</b> <small>Gagnés en fin de run. Les niveaux de sorts sont permanents, propres à chaque classe. Les deux emplacements libres forment votre deck.</small></div>`;
     html += `<div class="talents-classes">${Object.values(CLASSES)
       .map((c) => `<button class="btn${c.id === cls.id ? ' active' : ''}" data-act="class" data-cls="${c.id}">${escapeHtml(c.name)}</button>`)
       .join('')}</div>`;
@@ -144,7 +148,7 @@ export class TalentsPage {
         const spell = getSpell(id);
         return `<div class="bar-slot${flex ? ' flex' : ''}"${flex ? ` data-drop-slot="${slot}" draggable="true" data-drag-spell="${id}" title="Déposez un sort ici, ou glissez vers l'autre emplacement pour échanger"` : ` title="Se change parmi ses variantes, plus bas"`}>
           <div class="spell-card-icon">${this.icon(id)}</div>
-          <div><small>${SLOT_KEYS[slot]}</small><b>${escapeHtml(spell.name)}</b></div>
+          <div><small>${SLOT_KEYS[slot]} · NIV. ${account.spellLevel(cls.id,id)}</small><b>${escapeHtml(spell.name)}</b></div>
         </div>`;
       })
       .join('')}</div>`;

@@ -153,10 +153,13 @@ export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
     if(ground[idx(x,y)]!==GROUND_CHEMIN) continue;
     for(let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++) obstacles[idx(x+ox,y+oy)]=0;
   }
-  const bossArena={x:size-10,y:size-11,radius:5.5};
+  const bossArena={x:size-10,y:size-11,radius:7.5};
   // Corridor et salle de boss garantis praticables, aussi pour les gros gardiens.
   for(let t=0;t<=1;t+=.0125){const cx=center+(bossArena.x-center)*t,cy=center+(bossArena.y-center)*t;for(let y=Math.floor(cy-2);y<=cy+2;y++)for(let x=Math.floor(cx-2);x<=cx+2;x++)if(inside(x,y)){obstacles[idx(x,y)]=0;ground[idx(x,y)]=2;}}
-  for(let y=Math.floor(bossArena.y-6);y<=bossArena.y+6;y++)for(let x=Math.floor(bossArena.x-6);x<=bossArena.x+6;x++)if(inside(x,y)&&Math.hypot(x-bossArena.x,y-bossArena.y)<=bossArena.radius){obstacles[idx(x,y)]=0;ground[idx(x,y)]=Math.hypot(x-bossArena.x,y-bossArena.y)>4.5?1:2;}
+  // Deux clairières reliées offrent de quoi tourner, poser ses glyphes et changer d'angle.
+  for(const t of [.32,.65]){const cx=center+(bossArena.x-center)*t,cy=center+(bossArena.y-center)*t;for(let y=Math.floor(cy-4.5);y<=cy+4.5;y++)for(let x=Math.floor(cx-4.5);x<=cx+4.5;x++)if(inside(x,y)&&Math.hypot(x-cx,y-cy)<=4.5)obstacles[idx(x,y)]=0;}
+  const extent=Math.ceil(bossArena.radius);
+  for(let y=Math.floor(bossArena.y-extent);y<=bossArena.y+extent;y++)for(let x=Math.floor(bossArena.x-extent);x<=bossArena.x+extent;x++)if(inside(x,y)&&Math.hypot(x-bossArena.x,y-bossArena.y)<=bossArena.radius){obstacles[idx(x,y)]=0;ground[idx(x,y)]=Math.hypot(x-bossArena.x,y-bossArena.y)>bossArena.radius-1?1:2;}
   return { size, seed, zoneId:zone.id, ground, obstacles,bossArena };
 }
 

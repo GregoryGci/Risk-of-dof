@@ -1,6 +1,6 @@
 // Directeur de spawn façon Risk of Rain : il accumule des crédits avec le temps
 // (de plus en plus vite) et les dépense en vagues de monstres autour des joueurs.
-import { getRoute, MAX_MONSTERS, MONSTERS, ZAAP_CHARGING, getMode, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
+import { assaultPlan, getRoute, MAX_MONSTERS, ZAAP_CHARGING, getMode, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
 import type { Simulation } from './Simulation.ts';
 
 /** Distance d'apparition par rapport au joueur (hors écran). */
@@ -53,40 +53,48 @@ export class Director {
     if (eligible.length === 0) return;
     const fast=[...eligible].sort((a,b)=>b.speed-a.speed)[0];
     const ranged=eligible.find(m=>m.behavior.type==='ranged');
-    const def = this.wave%4===1 ? fast : pickWeighted(eligible);
+    const plan=assaultPlan(this.wave,sim.state.stage),def = plan.fast ? fast : pickWeighted(eligible);
     // Une vague mixte sur quatre : arrière-garde à distance, mêlée devant.
     const maxPack = sim.state.stage===1?(this.wave<3?2:4):Math.min(18,8+Math.floor(diff*1.5));
     const count = Math.min(Math.floor(this.credits / def.cost), maxPack, MAX_MONSTERS - sim.monsters.size);
     if (count <= 0) return;
-    const center = this.pickSpawnPoint(def.radius);
-    if (!center) return;
+    const alive=[...sim.players.values()].filter(p=>p.state.alive);if(!alive.length)return;
+    const anchor=alive[Math.floor(Math.random()*alive.length)].state,angle=Math.random()*Math.PI*2;
+    // Les deux ailes occupent 120 degrés : le côté opposé reste une issue.
+    const centers=Array.from({length:plan.groups},(_,i)=>this.pickSpawnPoint(def.radius,angle+(plan.groups===2?(i?1:-1)*Math.PI/3:0),anchor));
+    if(centers.every(c=>!c))return;
+    let spawned=0;
 
     for (let i = 0; i < count; i++) {
-      const member=this.wave%4===2&&i===count-1&&ranged&&ranged.cost<=this.credits?ranged:def;
+      const member=plan.ranged&&i>=count-plan.groups&&ranged&&ranged.cost<=this.credits?ranged:def;
       if(member.cost>this.credits)break;
+      const center=centers[i%centers.length];if(!center)continue;
       // Chaque membre du groupe est légèrement décalé.
       for (let attempt = 0; attempt < 8; attempt++) {
         const x = center.x + (Math.random() - 0.5) * 3;
         const y = center.y + (Math.random() - 0.5) * 3;
         if (isBlocked(sim.map, x, y, member.radius)) continue;
+        if(alive.some(p=>Math.hypot(p.state.x-x,p.state.y-y)<10.5))continue;
         sim.spawnMonster(member, x, y, monsterHpMultiplier(diff), monsterDamageMultiplier(diff), Math.round(diff));
         this.credits -= member.cost;
+        spawned++;
         break;
       }
     }
+    if(spawned&&this.wave>2)sim.broadcast('assault',{wave:sim.state.zoneWave,kind:plan.kind,name:plan.name});
   }
 
   /** Point libre à bonne distance d'un joueur vivant choisi au hasard. */
-  private pickSpawnPoint(radius: number): { x: number; y: number } | null {
+  private pickSpawnPoint(radius: number,preferredAngle?:number,preferredAnchor?:{x:number;y:number}): { x: number; y: number } | null {
     const sim = this.sim;
     const alive = [...sim.players.values()].filter((p) => p.state.alive);
     if (alive.length === 0) return null;
-    const anchor = alive[Math.floor(Math.random() * alive.length)];
+    const anchor = preferredAnchor??alive[Math.floor(Math.random() * alive.length)].state;
     for (let attempt = 0; attempt < 20; attempt++) {
-      const angle = Math.random() * Math.PI * 2;
+      const angle = preferredAngle===undefined?Math.random()*Math.PI*2:preferredAngle+(Math.random()-.5)*.65;
       const d = SPAWN_MIN_DIST + Math.random() * (SPAWN_MAX_DIST - SPAWN_MIN_DIST);
-      const x = anchor.state.x + Math.cos(angle) * d;
-      const y = anchor.state.y + Math.sin(angle) * d;
+      const x = anchor.x + Math.cos(angle) * d;
+      const y = anchor.y + Math.sin(angle) * d;
       if (isBlocked(sim.map, x, y, radius)) continue;
       // Pas d'apparition sous le nez d'un autre joueur.
       const near = sim.nearestPlayer(x, y);
