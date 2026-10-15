@@ -69,7 +69,7 @@ export class Minimap {
     // 30 Hz suffit pour les marqueurs ; le jeu et les déplacements restent à la
     // fréquence de l'écran. Évite un redessin du canvas à chaque frame à 240 Hz.
     const now=performance.now();
-    if(now-this.lastDraw<1000/30) return;
+    if(now-this.lastDraw<1000/15) return;
     this.lastDraw=now;
     this.discover(state);
     const c = this.ctx;

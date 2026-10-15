@@ -52,7 +52,7 @@ export function statText(key: StatKey, value: number): string {
     case 'killHeal':
       return `+${Math.round(value*10)/10} PV par monstre vaincu`;
     case 'multishot':
-      return `+1 projectile à ${Math.round(Math.min(1, value) * 100)} % des dégâts${value > 1 ? ' (+1 de plus)' : ''}`;
+      return `+${Math.ceil(value)} projectile${value > 1 ? 's' : ''} à ${Math.round(value / Math.ceil(value) * 100)} % des dégâts chacun (cumul sans limite)`;
     case 'range':
       return `+${Math.round(value * 10) / 10} de portée`;
     case 'damage':
@@ -146,10 +146,10 @@ export function sumRunStats(inv: Map<string, number>): Record<StatKey, number> {
 
 /** Prix d'un coffre : augmente avec la difficulté, comme dans Risk of Rain. */
 export function chestCost(difficulty: number): number {
-  return Math.round(35 * Math.pow(difficulty, 1.25));
+  return Math.round(90 * Math.pow(difficulty, 1.35));
 }
 
 /** Prix d'un objet chez le marchand. */
 export function merchantPrice(item: RunBonusDef, difficulty: number): number {
-  return Math.round(chestCost(difficulty) * { commun: 1.5, rare: 3, epique: 6 }[item.rarity]);
+  return Math.round(chestCost(difficulty) * { commun: 2, rare: 4, epique: 8 }[item.rarity]);
 }

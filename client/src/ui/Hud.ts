@@ -64,13 +64,28 @@ export class Hud {
   private meterShownAt = 0;
   private roomCode = '';
   private solo=false;
+  private dofusBanner=document.createElement('div');
+  private dofusQueue:GearDrop[]=[];
+  private dofusTimer:ReturnType<typeof setTimeout>|undefined;
   /** Bonus d'objets du joueur local (pour les infobulles). */
   private stats: Record<StatKey, number> = sumRunStats(new Map());
   private spellIds: string[] = [];
   get playerStats(): Record<StatKey,number> { return this.stats; }
   collectDrop(drop:GearDrop): void {
     if (!account.claimDrops([drop])) return;
+    this.announceDrop(drop);
+  }
+  private announceDrop(drop:GearDrop):void {
+    if(EQUIPMENT_BASES[drop.gear.base].kind==='dofus'){
+      this.dofusQueue.push(drop);if(!this.dofusTimer)this.showDofus();return;
+    }
     this.toast(`<span class="loot-toast-icon ${drop.gear.rarity}"><img src="assets/dofus/items/${drop.gear.base}.png" alt=""></span><span><b>${escapeHtml(EQUIPMENT_BASES[drop.gear.base].name)}</b><small>${EQUIPMENT_RARITY_NAMES[drop.gear.rarity]}</small></span>`);
+  }
+  private showDofus():void {
+    const drop=this.dofusQueue.shift();if(!drop){this.dofusTimer=undefined;this.dofusBanner.classList.add('hidden');return;}
+    this.dofusBanner.innerHTML=`<span class="dofus-announcement-icon"><img src="assets/dofus/items/${drop.gear.base}.png" alt=""></span><div><small>DOFUS DÉCOUVERT</small><b>${escapeHtml(EQUIPMENT_BASES[drop.gear.base].name)}</b><span>${EQUIPMENT_RARITY_NAMES[drop.gear.rarity]} · Conservé dans votre inventaire</span></div>`;
+    this.dofusBanner.classList.remove('hidden','show');void this.dofusBanner.offsetWidth;this.dofusBanner.classList.add('show');
+    this.dofusTimer=setTimeout(()=>this.showDofus(),6500);
   }
   private abort = new AbortController();
   private bottomHeight=0;
@@ -80,6 +95,9 @@ export class Hud {
     private store: AssetStore,
     private callbacks: HudCallbacks,
   ) {
+    this.dofusBanner.id='dofus-announcement';this.dofusBanner.className='hidden';this.dofusBanner.setAttribute('role','status');
+    $('hud').append(this.dofusBanner);
+    const ranking=document.createElement('div');ranking.id='ranking-status';ranking.className='hidden';ranking.setAttribute('role','status');$('hud').append(ranking);
     this.resizeObserver=new ResizeObserver(entries=>{this.bottomHeight=entries[0].contentRect.height;});
     this.resizeObserver.observe($('hud-bottom'));
     const signal = this.abort.signal;
@@ -131,6 +149,7 @@ export class Hud {
   }
 
   hide(): void {
+    clearTimeout(this.dofusTimer);this.dofusQueue=[];this.dofusBanner.remove();document.getElementById('ranking-status')?.remove();
     this.resizeObserver.disconnect();
     $('hud').classList.add('hidden');
     $('gameover').classList.add('hidden');
@@ -289,6 +308,12 @@ export class Hud {
 
   update(state: GameStateView, myId: string, spectating: string | null, prompt = ''): void {
     const me = state.players.get(myId);
+    const ranking=$('ranking-status');
+    if(this.cache.rankStatus!==me?.rankStatus){
+      this.cache.rankStatus=me?.rankStatus??'';
+      ranking.classList.toggle('hidden',!['disabled','failed'].includes(me?.rankStatus??''));
+      ranking.textContent=me?.rankStatus==='failed'?'Score non enregistré · historique conservé':'Partie non classée · classement indisponible sur ce serveur';
+    }
     if(me && this.cache.forgeGrants!==me.forgeGrants) {
       this.cache.forgeGrants=me.forgeGrants;try{account.claimFragments(JSON.parse(me.forgeGrants));}catch{/* Patch en cours. */}
     }
@@ -302,9 +327,7 @@ export class Hud {
       this.cache.runLoot=me.runLoot;
       try {
         const drops=JSON.parse(me.runLoot) as GearDrop[];
-        const gained=account.claimDrops(drops);
-        const last=drops.at(-1);
-        if (gained && last) this.toast(`<span class="loot-toast-icon ${last.gear.rarity}"><img src="assets/dofus/items/${last.gear.base}.png" alt=""></span><span><b>${escapeHtml(EQUIPMENT_BASES[last.gear.base].name)}</b><small>${EQUIPMENT_RARITY_NAMES[last.gear.rarity]}</small></span>`);
+        for(const drop of drops)this.collectDrop(drop);
       } catch { /* Attend l'état complet. */ }
     }
 

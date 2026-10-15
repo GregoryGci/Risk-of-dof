@@ -25,10 +25,11 @@ function pathTo(map:GameMap,x:number,y:number,tx:number,ty:number):{x:number;y:n
   for(let i=0;i<queue.length&&parents[dest]<0;i++){const cell=queue[i],cx=cell%size,cy=Math.floor(cell/size);for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=cx+dx,ny=cy+dy,next=ny*size+nx;if(nx<1||ny<1||nx>=size-1||ny>=size-1||parents[next]>=0||isBlocked(map,nx+.5,ny+.5,PLAYER_RADIUS))continue;parents[next]=cell;queue.push(next);}}
   if(parents[dest]<0)return[];const route=[];for(let cell=dest;cell!==source;cell=parents[cell])route.push({x:cell%size+.5,y:Math.floor(cell/size)+.5});return route.reverse();
 }
+interface Danger{x:number;y:number;radius:number;until:number}
 class RunBot {
   private route:{x:number;y:number}[]=[];private routeKey='';private routeAt=0;
   private aim:{x:number;y:number}|undefined;
-  constructor(private sim:Simulation,private p:PlayerRt){}
+  constructor(private sim:Simulation,private p:PlayerRt,private dangers:Danger[]){}
   drive():void {
     const {sim,p}=this,s=sim.state,ps=p.state;if(!ps.alive)return;
     if(s.intermission){const offers=ps.shop.split(',').map((o,index)=>({index,price:Number(o.split(':')[1]),id:o.split(':')[0]})).sort((a,b)=>score(a.id)-score(b.id));for(const offer of offers)sim.buy(p.id,offer.index);sim.shopReady(p.id);this.routeKey='';return;}
@@ -58,6 +59,7 @@ class RunBot {
       for(const m of near.slice(0,14)){const d=Math.hypot(px-m.state.x,py-m.state.y);value-=Math.max(0,2.2-d)*(m.def.boss?2.5:1.5);
         const b=m.def.behavior;if(b.type==='charger'&&m.state.state>0){const vx=px-m.state.x,vy=py-m.state.y,along=vx*m.chargeDx+vy*m.chargeDy,cross=Math.abs(vx*m.chargeDy-vy*m.chargeDx);if(along>-.5&&along<b.chargeSpeed*b.chargeDuration)value-=Math.max(0,m.def.radius+PLAYER_RADIUS+.5-cross)*8;}
       }
+      for(const danger of this.dangers)if(sim.now<danger.until)value-=Math.max(0,danger.radius+PLAYER_RADIUS+.5-Math.hypot(px-danger.x,py-danger.y))*12;
       if(enemy&&!pursuingPortal)value-=Math.abs(Math.hypot(px-enemy.state.x,py-enemy.state.y)-comfortable)*.8;
       if(px<3||py<3||px>MAP_SIZE-3||py>MAP_SIZE-3)value-=3;
       if(value>best.score)best={dx,dy,score:value};
@@ -74,9 +76,9 @@ const original=Math.random,samples:Sample[]=[],startClock=performance.now();
 try {
   for(const mode of modes)for(const start of starts)for(const tier of tiers)for(const classId of classes)for(let seed=1;seed<=seeds;seed++) {
     Math.random=makeRng(seed*197+mode*11);const state=new GameState();state.mode=mode;
-    const sim=new Simulation(state,()=>{});sim.addPlayer('p','Bot',classId,undefined,botOutfit(tier));sim.start();
+    const dangers:Danger[]=[];const sim=new Simulation(state,(type,message)=>{if(type==='bossWarning'){const d=message as Danger&{duration:number};dangers.push({...d,until:sim.now+d.duration});}while(dangers.length&&dangers[0].until<sim.now)dangers.shift();});sim.addPlayer('p','Bot',classId,undefined,botOutfit(tier));sim.start();
     if(start!==1){state.stage=start;state.seed=Math.floor(Math.random()*0xffffffff);sim.map=generateMap(state.seed,MAP_SIZE,start);(sim as unknown as {setupStage:()=>void}).setupStage();}
-    const p=sim.players.get('p')!,bot=new RunBot(sim,p);let maxEnemies=0,tick=0;
+    const p=sim.players.get('p')!,bot=new RunBot(sim,p,dangers);let maxEnemies=0,tick=0;
     while(state.phase===PHASE_PLAYING&&state.stage<=cap&&state.time<seconds&&tick<seconds*30+3000){if(tick%3===0)bot.drive();sim.update(1/30);maxEnemies=Math.max(maxEnemies,sim.monsters.size);tick++;}
     samples.push({classId,mode,seed,start,tier,gear:tier<0?'Aucun':`Palier ${EQUIPMENT_TIERS[tier].level} rare`,zone:state.stage,waves:(state as unknown as {waves?:number}).waves??0,duration:Math.round(state.time),kills:p.state.kills,censored:state.phase===PHASE_PLAYING,maxEnemies});
   }

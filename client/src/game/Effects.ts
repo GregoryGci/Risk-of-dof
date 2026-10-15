@@ -33,6 +33,27 @@ interface ProjectileView {
 
 export class Effects {
   private projectiles = new Map<number, ProjectileView>();
+  private budgetAt=-1;
+  private cosmeticBudget=0;
+  private textBudget=0;
+  private trailBudget=0;
+  private textPool:Phaser.GameObjects.Text[]=[];
+  private activeTexts=new Set<Phaser.GameObjects.Text>();
+
+  private refillBudget():void {
+    const bucket=Math.floor(this.scene.time.now/100);
+    if(bucket===this.budgetAt)return;
+    this.budgetAt=bucket;
+    this.cosmeticBudget=6;this.textBudget=4;this.trailBudget=8;
+  }
+  private visible(x:number,y:number):boolean {
+    const p=worldToScreen(x,y),view=this.scene.cameras.main.worldView;
+    return p.x>=view.left-200&&p.x<=view.right+200&&p.y>=view.top-250&&p.y<=view.bottom+200;
+  }
+  private cosmetic(x:number,y:number):boolean {
+    this.refillBudget();
+    return !document.hidden&&this.visible(x,y)&&this.cosmeticBudget-->0;
+  }
 
   constructor(
     private scene: Phaser.Scene,
@@ -48,6 +69,7 @@ export class Effects {
    * Retourne faux si le sort n'en a pas.
    */
   playSpellFx(spellId: string, x: number, y: number, dirX = 1, dirY = 0): boolean {
+    if(!this.cosmetic(x,y))return false;
     const fx = this.store.spellFx(this.scene, spellId);
     if (!fx?.main) return false;
     const p = worldToScreen(x, y);
@@ -165,7 +187,9 @@ export class Effects {
       // Traînée lumineuse.
       pv.trailTimer -= dt;
       if (pv.trailTimer <= 0) {
-        pv.trailTimer = 0.03;
+        pv.trailTimer = this.projectiles.size>24 ? 0.16 : 0.08;
+        this.refillBudget();
+        if(!this.visible(pv.x,pv.y)||this.trailBudget--<=0)continue;
         const dot = this.scene.add.image(pv.sprite.x, pv.sprite.y, 'ph_dot').setTint(pv.spell.color).setDepth(pv.sprite.depth - 1).setAlpha(0.7);
         this.scene.tweens.add({ targets: dot, alpha: 0, scale: 0.2, duration: 220, onComplete: () => dot.destroy() });
       }
@@ -203,6 +227,7 @@ export class Effects {
 
   /** Coup de mêlée : éventail lumineux au sol, dans la direction du coup. */
   private slash(e: CastEvent, spell: SpellDef, arcDeg: number): void {
+    if(!this.cosmetic(e.x,e.y))return;
     const angle = Math.atan2(e.ty - e.y, e.tx - e.x);
     const half = ((arcDeg / 2) * Math.PI) / 180;
     const dirIndex = ((Math.round(angle / ((Math.PI * 2) / 16)) % 16) + 16) % 16;
@@ -216,7 +241,7 @@ export class Effects {
       .setScale(scale * 0.55);
     this.scene.tweens.add({ targets: fan, scale: scale * 1.08, alpha: 0, duration: 320, ease: 'Cubic.easeOut', onComplete: () => fan.destroy() });
     // Étincelles au bout de l'arc.
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 4; i++) {
       const a = angle + (Math.random() - 0.5) * half * 2;
       const end = worldToScreen(e.x + Math.cos(a) * spell.range * 1.1, e.y + Math.sin(a) * spell.range * 1.1);
       const dot = this.scene.add.image(origin.x, origin.y - 14, 'ph_dot').setTint(i % 2 ? spell.color : 0xffffff).setDepth(origin.y + 31).setScale(1.4);
@@ -255,7 +280,8 @@ export class Effects {
 
   /** Traînée de poussière le long d'un bond (Bond, Assaut, Flèche de Recul). */
   dashTrail(x0: number, y0: number, x1: number, y1: number, color: number): void {
-    const steps = 10;
+    if(!this.cosmetic(x0,y0))return;
+    const steps = 5;
     for (let i = 0; i <= steps; i++) {
       const p = worldToScreen(x0 + ((x1 - x0) * i) / steps, y0 + ((y1 - y0) * i) / steps);
       const dot = this.scene.add.image(p.x, p.y - 8, 'ph_glow').setTint(i % 2 ? color : 0xffffff).setBlendMode(Phaser.BlendModes.ADD).setScale(0.45).setAlpha(0).setDepth(p.y + 5);
@@ -265,6 +291,7 @@ export class Effects {
 
   /** Soin : anneau vert et « + » qui montent. */
   healBurst(x: number, y: number, radius: number): void {
+    if(!this.cosmetic(x,y))return;
     const p = worldToScreen(x, y);
     for (let i = 0; i < 10; i++) {
       const a = Math.random() * Math.PI * 2;
@@ -288,6 +315,13 @@ export class Effects {
       fill.destroy();
       outline.destroy();
     } });
+  }
+
+  /** Météore : chute calée sur la fin du télégraphe serveur. */
+  meteor(x:number,y:number,duration:number,color:number):void {
+    const p=worldToScreen(x,y);
+    const glow=this.scene.add.image(p.x,p.y-260,'ph_glow').setTint(color).setDepth(p.y+50).setScale(.5,1.4).setVisible(false);
+    this.scene.tweens.add({targets:glow,y:p.y,delay:Math.max(0,duration*1000-300),duration:300,ease:'Quad.easeIn',onStart:()=>glow.setVisible(true),onComplete:()=>glow.destroy()});
   }
 
   /** Piège ou glyphe posé au sol : retourne un objet à mettre à jour puis détruire. */
@@ -326,6 +360,7 @@ export class Effects {
 
   /** Colonne de lumière qui tombe du ciel (sorts de zone offensifs). */
   beam(x: number, y: number, color: number): void {
+    if(!this.cosmetic(x,y))return;
     const p = worldToScreen(x, y);
     const beam = this.scene.add.image(p.x, p.y - 90, 'ph_glow').setTint(color).setBlendMode(Phaser.BlendModes.ADD).setScale(0.9, 5).setDepth(p.y + 45).setAlpha(0.9);
     this.scene.tweens.add({ targets: beam, scaleX: 0.2, alpha: 0, duration: 380, ease: 'Cubic.easeIn', onComplete: () => beam.destroy() });
@@ -344,7 +379,7 @@ export class Effects {
     const flash = this.scene.add.image(p.x, p.y - 10, 'ph_glow').setTint(color).setBlendMode(Phaser.BlendModes.ADD).setScale(radius * 1.6).setDepth(p.y + 40);
     this.scene.tweens.add({ targets: flash, alpha: 0, scale: radius * 2.6, duration: 320, onComplete: () => flash.destroy() });
     // Éclats.
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 5; i++) {
       const a = Math.random() * Math.PI * 2;
       const d = (0.4 + Math.random() * 0.6) * radius;
       const end = worldToScreen(x + Math.cos(a) * d, y + Math.sin(a) * d);
@@ -361,6 +396,7 @@ export class Effects {
 
   /** Petit nuage à la mort d'un monstre. */
   poof(x: number, y: number, color: number): void {
+    if(!this.cosmetic(x,y))return;
     const p = worldToScreen(x, y);
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;
@@ -372,23 +408,31 @@ export class Effects {
 
   /** Texte flottant (dégâts, kamas). */
   floatText(x: number, y: number, text: string, color: string, size = 14, rise = 34): void {
+    this.refillBudget();
+    if(document.hidden||!this.visible(x,y)||this.textBudget--<=0)return;
     const p = worldToScreen(x, y);
-    const t = this.scene.add
-      .text(p.x + (Math.random() - 0.5) * 16, p.y - 40, text, {
+    const t = this.textPool.pop() ?? this.scene.add
+      .text(0, 0, '', {
         fontFamily: 'Verdana, sans-serif',
-        fontSize: `${size}px`,
+        fontSize: '14px',
         fontStyle: 'bold',
-        color,
+        color: '#ffffff',
         stroke: '#000000',
         strokeThickness: 3,
         resolution: 2,
       })
       .setOrigin(0.5)
       .setDepth(DEPTH_TEXT);
-    this.scene.tweens.add({ targets: t, y: t.y - rise, alpha: { from: 1, to: 0 }, duration: 750, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
+    t.setPosition(p.x + (Math.random()-.5)*16,p.y-40).setText(text).setColor(color).setFontSize(size).setAlpha(1).setVisible(true);
+    this.activeTexts.add(t);
+    this.scene.tweens.add({targets:t,y:t.y-rise,alpha:0,duration:750,ease:'Cubic.easeOut',onComplete:()=>{
+      this.activeTexts.delete(t);t.setVisible(false);this.textPool.push(t);
+    }});
   }
 
   clear(): void {
+    for(const t of this.activeTexts){this.scene.tweens.killTweensOf(t);t.setVisible(false);this.textPool.push(t);}
+    this.activeTexts.clear();
     for (const pv of [...this.projectiles.values()]) this.removeProjectile(pv);
   }
 }

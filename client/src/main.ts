@@ -355,6 +355,7 @@ async function startGame(room: Room): Promise<void> {
     // créer une texture en cours de partie (chiffre de dégâts, effet...) faisait disparaître les sprites
     // des personnages. Le sol est pré-dessiné dans une seule texture pour limiter le coût (MapView).
     render: { antialias: true, roundPixels: false, maxTextures: 1 },
+    fps: { target: 60, limit: 60 },
     audio: { context: audioContext },
     // La scène reçoit la salle, les assets et le HUD par son constructeur.
     scene: new GameScene({ room, store, hud }),

@@ -135,6 +135,8 @@ export class GameScene extends Phaser.Scene {
   private lastIntermission=false;
   private lastCooldownState='';
   private nextMusicCheck=0;
+  private nextAssetCheck=0;
+  private nextHudUpdate=0;
 
   constructor(private ctx: GameContext) {
     super('game');
@@ -198,6 +200,18 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('explode', (e: ExplodeEvent) => this.onExplode(e));
     this.room.onMessage('spellImpact',(e:{spell:string;x:number;y:number;dx:number;dy:number})=>{if(!document.hidden)this.effects.playSpellFx(e.spell,e.x,e.y,e.dx,e.dy);});
     this.room.onMessage('bounce',(e:{spell:string;x:number;y:number;tx:number;ty:number})=>{if(!document.hidden)this.effects.dashTrail(e.x,e.y,e.tx,e.ty,getSpell(e.spell).color);});
+    this.room.onMessage('zoneVictory',(e:{stage:number;revived:string[]})=>{
+      this.hud.toast(`<b>Zone ${e.stage} remportée !</b><small>${e.revived.length ? 'Toute l’équipe est de retour. ' : ''}Le Zaap est ouvert.</small>`);
+      this.store.playSound(this,'stage');
+    });
+    this.room.onMessage('bossWarning',(e:{x:number;y:number;radius:number;duration:number;color:number;kind:string})=>{
+      if(document.hidden)return;
+      this.effects.telegraph(e.x,e.y,e.radius,e.duration,e.color);
+      if(e.kind==='meteor')this.effects.meteor(e.x,e.y,e.duration,e.color);
+    });
+    this.room.onMessage('bossImpact',(e:{x:number;y:number;radius:number;color:number})=>{
+      if(!document.hidden)this.effects.explosion(e.x,e.y,e.radius,e.color);
+    });
     this.room.onMessage('merchant',()=>this.hud.toast('<b>Halte marchande</b> — prenez le temps de choisir vos bonus'));
     this.room.onMessage('dmg', (e: DamageEvent) => this.onDamage(e));
     this.room.onMessage('death', (e: DeathEvent) => this.onDeath(e));
@@ -268,15 +282,19 @@ export class GameScene extends Phaser.Scene {
   update(time: number, deltaMs: number): void {
     const state = this.state;
     if (!state || !state.players) return;
-    const dt = Math.min(deltaMs / 1000, 0.1);
+    const dt = state.paused ? 0 : Math.min(deltaMs / 1000, 0.1);
+    this.tweens.timeScale=state.paused?0:1;
 
     // La carte est régénérée à partir de la graine (et à chaque nouvelle partie).
     if (!this.mapView || this.map.seed !== state.seed || this.map.zoneId !== zoneForStage(state.stage).id) this.rebuildMap(state.seed);
 
     const myState = state.players.get(this.room.sessionId);
+    if(time>=this.nextAssetCheck){
+    this.nextAssetCheck=time+150;
     const monsterIds:string[]=[];state.monsters.forEach(m=>monsterIds.push(m.type));
     if(state.intermission){const next=zoneForStage(state.stage+1);monsterIds.push(...next.monsters,next.boss);}
     this.store.loadMonsters(this,monsterIds);
+    }
     if(state.intermission!==this.lastIntermission){this.lastIntermission=state.intermission;this.shop.toggle(state.intermission);this.controls.releaseAll();this.targeting=null;}
     if(myState&&myState.cooldowns!==this.lastCooldownState){this.lastCooldownState=myState.cooldowns;try{const cds:number[]=JSON.parse(myState.cooldowns);for(let i=0;i<4;i++)this.cdEnd[i]=i===1&&myState.secondaryMax>1&&myState.secondaryCharges>0?0:time+(cds[i]??0)*1000;this.dashCdEnd=time+(cds[4]??0)*1000;}catch{/* Attend le patch. */}}
     const progressionOpen = ['equipment','talents','encyclopedia'].some(id => !document.getElementById(id)!.classList.contains('hidden'));
@@ -328,8 +346,11 @@ export class GameScene extends Phaser.Scene {
     this.hud.updateCooldowns(time, this.cdEnd, this.cdTotal);
     if(myState)this.hud.updateCharges(myState.secondaryCharges,myState.secondaryMax);
     this.hud.updateDash(time, this.dashCdEnd);
-    this.hud.update(state, this.room.sessionId, myState && !myState.alive ? this.spectating : null, prompt);
-    this.mechanicHud.update(state,this.room.sessionId);
+    if(time>=this.nextHudUpdate){
+      this.nextHudUpdate=time+100;
+      this.hud.update(state, this.room.sessionId, myState && !myState.alive ? this.spectating : null, prompt);
+      this.mechanicHud.update(state,this.room.sessionId);
+    }
     this.updateMusic(state, time);
   }
 
@@ -574,7 +595,7 @@ export class GameScene extends Phaser.Scene {
       let image = this.potions.get(id);
       if (!image) {
         const v = this.store.potionVisual(this);
-        image = this.add.image(0, 0, v.key).setOrigin(v.origin[0], v.origin[1]).setScale(v.scale);
+        image = this.add.image(0, 0, v.key).setOrigin(0.5, 1).setScale(24 / this.textures.get(v.key).getSourceImage().height);
         this.potions.set(id, image);
       }
       const p = worldToScreen(potion.x, potion.y);

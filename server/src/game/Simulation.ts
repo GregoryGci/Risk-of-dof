@@ -132,6 +132,9 @@ export interface MonsterRt {
   // Comportement (charge, tir)
   specialReadyAt: number;
   attackHoldUntil?:number;
+  bossReadyAt?:number;
+  bossHoldUntil?:number;
+  bossPattern?:number;
   aimX?:number;
   aimY?:number;
   phaseUntil: number;
@@ -195,7 +198,8 @@ const ARMOR_FACTOR = 0.92;
 const CRIT_MULT = 1.5;
 /** Délai sans dégât avant que la régénération reprenne (s). */
 const REGEN_DELAY = 4;
-const POTION_DROP_CHANCE = 0.08;
+const POTION_DROP_CHANCE = 0.02;
+const MAX_GROUND_POTIONS = 6;
 const POTION_LIFETIME = 30;
 const POTION_PICKUP_RANGE = 0.8;
 /** Dash (Maj) : distance, durée et temps de recharge. */
@@ -407,6 +411,25 @@ export class Simulation {
   }
 
   /** Zone suivante : nouvelle carte, les morts reviennent, la difficulté continue de monter. */
+  private completeStage(): void {
+    this.state.zaapState = ZAAP_READY;
+    // La victoire appartient à toute l'équipe : retour immédiat des KO au Zaap.
+    for(const id of [...this.monsters.keys()])if(!this.monsters.get(id)!.state.ally)this.removeMonster(id);
+    this.projectiles=this.projectiles.filter(pr=>pr.fromPlayer);
+    const revived:string[]=[];
+    for(const p of this.players.values()) {
+      if(p.state.alive)continue;
+      p.state.alive=true;p.state.hp=p.state.maxHp;p.state.shield=0;
+      p.state.x=this.state.zaapX;p.state.y=this.state.zaapY;
+      p.state.motionEpoch++;p.state.forcedMotion=false;p.push=null;p.dx=0;p.dy=0;
+      p.revivePending=false;p.dodgeUntil=this.now+3;
+      p.readyAt=[this.now,this.now,this.now,this.now];p.dashReadyAt=this.now;
+      p.secondaryRefillAt=0;p.state.secondaryCharges=p.state.secondaryMax;
+      revived.push(p.id);
+    }
+    this.broadcast('zoneVictory',{stage:this.state.stage,revived});
+  }
+
   private nextStage(): void {
     if(this.state.intermission)return;
     for (const id of [...this.monsters.keys()]) this.removeMonster(id);
@@ -423,7 +446,7 @@ export class Simulation {
       this.placeAtSpawn(p);
       if (!p.state.alive) {
         p.state.alive = true;
-        p.state.hp = p.state.maxHp * 0.5;
+        p.state.hp = p.state.maxHp;
       }
     }
     // L'étape marchande n'augmente ni le palier de loot ni la difficulté.
@@ -860,9 +883,9 @@ export class Simulation {
       // Le Zaap se charge tout seul une fois activé, mais ne s'ouvre que si son gardien est vaincu.
       if (this.state.zaapState === ZAAP_CHARGING) {
         this.state.zaapCharge = Math.min(1, this.state.zaapCharge + dt / ZAAP_CHARGE_TIME);
-        if (this.state.zaapCharge >= 1 && !this.monsters.has(this.bossId)) this.state.zaapState = ZAAP_READY;
+        if (this.state.zaapCharge >= 1 && !this.monsters.has(this.bossId)) this.completeStage();
       }
-      this.director.update(dt);
+      if(this.state.zaapState !== ZAAP_READY) this.director.update(dt);
     }
     // Aussi dans le salon : les invocations d'entraînement bougent et expirent.
     updateMonsters(this, dt);
@@ -1295,7 +1318,7 @@ export class Simulation {
       }
     }
     this.broadcast('death', { id: m.id, player: false, x: m.state.x, y: m.state.y, kamas });
-    if (this.state.phase === PHASE_PLAYING && Math.random() < POTION_DROP_CHANCE) {
+    if (this.state.phase === PHASE_PLAYING && this.state.potions.size < MAX_GROUND_POTIONS && Math.random() < POTION_DROP_CHANCE) {
       const id = `p${this.nextPotionId++}`;
       const potion = new PotionState();
       potion.x = m.state.x;
@@ -1564,6 +1587,8 @@ export class Simulation {
       slowUntil: 0,
       stunUntil: 0,
       specialReadyAt: this.now + 1 + Math.random() * 2,
+      bossReadyAt: this.now + 2.5,
+      bossPattern: 0,
       phaseUntil: 0,
       chargeDx: 0,
       chargeDy: 0,

@@ -156,7 +156,9 @@ export class EntityView {
   }
 
   setHp(hp: number, maxHp: number): void {
-    this.hpRatio = Phaser.Math.Clamp(hp / (maxHp || 1), 0, 1);
+    const ratio=Phaser.Math.Clamp(hp / (maxHp || 1), 0, 1);
+    if(ratio===this.hpRatio)return;
+    this.hpRatio=ratio;
     this.layoutBars();
   }
 
@@ -165,7 +167,9 @@ export class EntityView {
    * Sa longueur suit la valeur du bouclier : un bouclier égal aux PV max fait la longueur de la barre.
    */
   setShield(shield: number, maxHp: number): void {
-    this.shieldRatio = Phaser.Math.Clamp(shield / (maxHp || 1), 0, 1);
+    const ratio=Phaser.Math.Clamp(shield / (maxHp || 1), 0, 1);
+    if(ratio===this.shieldRatio)return;
+    this.shieldRatio=ratio;
     this.layoutBars();
   }
 
@@ -300,7 +304,8 @@ export class EntityView {
       const extraX = part.obj === this.body ? this.bodyX : 0;
       const extraY = part.obj === this.body ? this.bodyY : 0;
       part.obj.setPosition(p.x + part.ox + extraX, p.y + part.oy + extraY);
-      part.obj.setDepth(p.y + part.dz);
+      const depth=p.y+part.dz;
+      if(part.obj.depth!==depth)part.obj.setDepth(depth);
     }
   }
 

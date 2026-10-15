@@ -48,7 +48,7 @@ export class GameRoom extends Room<{ state: GameState }> {
       this.broadcast(type,message);
       if(type==='runReward'){
         const result=message as {player:string;reward:RunReward},userId=this.accounts.get(result.player),run=result.reward.summary;
-        if(userId&&run)void recordScore(userId,run).then(()=>this.clients.find(c=>c.sessionId===result.player)?.send('scoreSaved',{runId:run.runId}),()=>this.clients.find(c=>c.sessionId===result.player)?.send('scoreError',{message:'Le classement n’a pas pu enregistrer cette run. Votre historique reste sauvegardé.'}));
+        if(userId&&run)void this.saveScore(userId,result.player,run);
       }
     });
     this.setPatchRate(PATCH_MS);
@@ -81,8 +81,21 @@ export class GameRoom extends Room<{ state: GameState }> {
     client.send('cloudStatus',{ranked:this.accounts.has(client.sessionId)&&cloudScoresEnabled});
     const name = cleanName(auth&&typeof auth==='object'&&'name' in auth?auth.name:options?.name);
     this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.equipment);
+    this.sim.players.get(client.sessionId)!.state.rankStatus=this.accounts.has(client.sessionId)&&cloudScoresEnabled?'ready':'disabled';
     if (!this.state.hostId) this.state.hostId = client.sessionId;
     console.log(`[salle ${this.roomId}] ${name} a rejoint (${this.state.players.size}/${this.maxClients})`);
+  }
+
+  private async saveScore(userId:string,playerId:string,run:import('@rod/shared').RunSummary):Promise<void>{
+    const p=this.sim.players.get(playerId);if(p)p.state.rankStatus='pending';
+    let error:unknown;
+    for(let attempt=0;attempt<3;attempt++){
+      try{await recordScore(userId,run);if(p)p.state.rankStatus='saved';this.clients.find(c=>c.sessionId===playerId)?.send('scoreSaved',{runId:run.runId});return;}
+      catch(e){error=e;if(!cloudScoresEnabled)break;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,500*(attempt+1)));}
+    }
+    if(p)p.state.rankStatus='failed';
+    console.error('[classement]',error instanceof Error?error.message:'Enregistrement impossible');
+    this.clients.find(c=>c.sessionId===playerId)?.send('scoreError',{message:'Classement : le serveur n’a pas pu enregistrer votre score. Votre historique est conservé.'});
   }
 
   onDrop(client:Client):void {

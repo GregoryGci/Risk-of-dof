@@ -6,6 +6,7 @@ import { PHASE_LOBBY,GAME_PROTOCOL_VERSION } from '@rod/shared';
 
 export const PlayerState = schema(
   {
+    rankStatus:t.string().default('disabled'),
     connected:t.boolean().default(true),
     equipment: t.string().default('{}'),
     rewards: t.string().default(''),
@@ -131,7 +132,7 @@ export const GameState = schema(
     chests: t.map(ChestState),
     grounds: t.map(GroundState),
     potions: t.map(PotionState),
-    chestCost: t.uint16().default(35),
+    chestCost: t.uint32().default(90),
     stage: t.uint8().default(1),
     paused: t.boolean().default(false),
     mode: t.uint8().default(1),

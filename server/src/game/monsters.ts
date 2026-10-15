@@ -1,6 +1,7 @@
 // IA des monstres : chaque monstre cible le joueur visible le plus proche (ou une invocation alliée,
 // en priorité celles qui provoquent). Les invocations alliées ont leur propre IA (updateAlly).
 import { MAX_MONSTERS, MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getMonster, getSpell, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, resolveCollisions, stepMovement } from '@rod/shared';
+import { updateBoss } from './bosses.ts';
 import type { MonsterRt, PlayerRt, Simulation } from './Simulation.ts';
 
 /** Cible d'un monstre : un joueur ou une invocation alliée. */
@@ -22,11 +23,12 @@ const RANGED_WINDUP = 0.45;
 
 export function updateMonsters(sim: Simulation, dt: number): void {
   // Copie : un monstre peut mourir (brûlure) pendant la boucle.
-  for (const m of [...sim.monsters.values()]) updateMonster(sim, m, dt);
+  const list=[...sim.monsters.values()],allies=list.filter(m=>m.state.ally);
+  for (const m of list)if(sim.monsters.has(m.id))updateMonster(sim, m, dt, allies);
   separate(sim);
 }
 
-function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
+function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:MonsterRt[]): void {
   const s = m.state;
   if(s.carried)return;
 
@@ -79,7 +81,9 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
     return;
   }
 
-  const target = chooseTarget(sim, m);
+  if (updateBoss(sim, m)) return;
+
+  const target = chooseTarget(sim, m, allies);
   if (!target) {
     s.state = MSTATE_NORMAL;
     return;
@@ -193,13 +197,13 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number): void {
 }
 
 /** Joueur visible le plus proche, sauf si une invocation est plus proche (ou provoque à portée). */
-function chooseTarget(sim: Simulation, m: MonsterRt): Target | null {
+function chooseTarget(sim: Simulation, m: MonsterRt, allies:MonsterRt[]): Target | null {
   const s = m.state;
   let best: Target | null = null;
   const near = sim.nearestPlayer(s.x, s.y, false);
   if (near) best = { x: near.player.state.x, y: near.player.state.y, dist: near.dist, player: near.player };
-  for (const a of sim.monsters.values()) {
-    if (!a.state.ally) continue;
+  for (const a of allies) {
+    if (!sim.monsters.has(a.id)) continue;
     const d = Math.hypot(a.state.x - s.x, a.state.y - s.y);
     if(d>TAUNT_RANGE)continue;
     // Une poupée qui provoque compte comme beaucoup plus proche qu'elle ne l'est.
@@ -308,10 +312,15 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
 /** Écarte les monstres qui se chevauchent pour qu'ils ne s'empilent pas. */
 function separate(sim: Simulation): void {
   const list = [...sim.monsters.values()];
+  // Voisins possibles : 9 cellules au lieu de toutes les paires de la carte.
+  const cellSize=Math.max(1,...list.map(m=>m.def.radius*2)),buckets=new Map<string,number[]>();
+  const cells=list.map((m,i)=>{const x=Math.floor(m.state.x/cellSize),y=Math.floor(m.state.y/cellSize),key=`${x}:${y}`;const bucket=buckets.get(key)??[];bucket.push(i);buckets.set(key,bucket);return{x,y};});
   for (let i = 0; i < list.length; i++) {
     const a = list[i];
     if (a.state.carried || a.state.state === MSTATE_CHARGE || a.def.behavior.type === 'dummy') continue;
-    for (let j = i + 1; j < list.length; j++) {
+    const neighbors:number[]=[];
+    for(let y=-1;y<=1;y++)for(let x=-1;x<=1;x++)for(const j of buckets.get(`${cells[i].x+x}:${cells[i].y+y}`)??[])if(j>i)neighbors.push(j);
+    for (const j of neighbors) {
       const b = list[j];
       if (b.state.carried || b.state.state === MSTATE_CHARGE || b.def.behavior.type === 'dummy') continue;
       const dx = b.state.x - a.state.x;

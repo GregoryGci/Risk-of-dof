@@ -9,10 +9,11 @@ for(const url of [new URL('../../.env',import.meta.url),new URL('../.env',import
   const file=fileURLToPath(url);if(!fs.existsSync(file))continue;
   for(const [key,value] of Object.entries(parseEnv(fs.readFileSync(file,'utf8'))))if(value&&!process.env[key])process.env[key]=value;
 }
-const url=process.env.SUPABASE_URL??'https://gwhorrgwaefsvayctqig.supabase.co';
+const url=(process.env.SUPABASE_URL??'https://gwhorrgwaefsvayctqig.supabase.co').trim().replace(/\/$/,'');
 const publicKey=process.env.SUPABASE_PUBLISHABLE_KEY??'sb_publishable_aUJ7d827aJ7JAXoEuHjSyg_Hlw9uVJX';
-const secret=process.env.SUPABASE_SECRET_KEY??'';
+const secret=(process.env.SUPABASE_SECRET_KEY??process.env.SUPABASE_SERVICE_ROLE_KEY??'').trim();
 export const cloudScoresEnabled=!!secret;
+if(!cloudScoresEnabled)console.warn('[classement] SUPABASE_SECRET_KEY (ou SUPABASE_SERVICE_ROLE_KEY) manque sur ce serveur.');
 export async function authenticate(token:unknown):Promise<{userId:string;name:string;avatar:string}>{
   if(!token)throw new Error('Connectez-vous à votre compte pour jouer.');
   if(typeof token!=='string'||token.length>16000)throw new Error('Session invalide.');
