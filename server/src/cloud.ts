@@ -15,6 +15,15 @@ const secret=process.env.SUPABASE_SECRET_KEY?.trim()||process.env.SUPABASE_SERVI
 export const cloudScoresEnabled=!!secret;
 /** Diagnostic limité à un code HTTP : aucune réponse fournisseur ni clé n'est exposée. */
 export class ScoreWriteError extends Error{constructor(readonly status:number){super(`Enregistrement du score indisponible (${status}).`);}}
+export function scoreFailureCode(error:unknown):string{
+  if(error instanceof ScoreWriteError)return `HTTP_${error.status}`;
+  if(!(error instanceof Error))return 'UNKNOWN';
+  if(error.message==='CAUCHEMAR_MIGRATION_REQUIRED')return 'DATABASE_MIGRATION';
+  if(error.name==='TimeoutError'||error.name==='AbortError')return 'UPSTREAM_TIMEOUT';
+  if(error instanceof TypeError&&/ByteString|header/i.test(error.message))return 'INVALID_SERVER_KEY_FORMAT';
+  if(error instanceof TypeError&&/fetch failed/i.test(error.message))return 'UPSTREAM_NETWORK';
+  return 'SCORE_WRITE_FAILED';
+}
 if(!cloudScoresEnabled)console.warn('[classement] SUPABASE_SECRET_KEY (ou SUPABASE_SERVICE_ROLE_KEY) manque sur ce serveur.');
 export async function authenticate(token:unknown):Promise<{userId:string;name:string;avatar:string;spellLevels:SpellLevelBook}>{
   if(!token)throw new Error('Connectez-vous à votre compte pour jouer.');

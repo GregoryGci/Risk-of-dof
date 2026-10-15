@@ -4,7 +4,7 @@ import { Room, type Client } from '@colyseus/core';
 import { MAX_PLAYERS, NAME_MAX_LENGTH, PATCH_MS, ROOM_CODE_LENGTH, TICK_RATE, type CastMessage, type InputMessage } from '@rod/shared';
 import { Simulation } from '../game/Simulation.ts';
 import { GameState } from '../state.ts';
-import {authenticate,recordScore,cloudScoresEnabled,ScoreWriteError} from '../cloud.ts';
+import {authenticate,recordScore,cloudScoresEnabled,ScoreWriteError,scoreFailureCode} from '../cloud.ts';
 import {PHASE_LOBBY,type SpellLevelBook,type RunReward} from '@rod/shared';
 
 /** Codes des parties en cours, pour éviter les doublons. */
@@ -113,7 +113,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     if(p)p.state.rankStatus='failed';
     console.error('[classement]',error instanceof Error?error.message:'Enregistrement impossible');
     const message=error instanceof Error&&error.message==='CAUCHEMAR_MIGRATION_REQUIRED'?'Classement Cauchemar : la migration Supabase doit encore être appliquée. Votre historique est conservé.':'Classement : le serveur n’a pas pu enregistrer votre score. Votre historique est conservé.';
-    this.clients.find(c=>c.sessionId===playerId)?.send('scoreError',{message,...(error instanceof ScoreWriteError?{status:error.status}:{})});
+    this.clients.find(c=>c.sessionId===playerId)?.send('scoreError',{message,code:scoreFailureCode(error),...(error instanceof ScoreWriteError?{status:error.status}:{})});
   }
 
   onDrop(client:Client):void {
