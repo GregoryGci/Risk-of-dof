@@ -1,6 +1,6 @@
 // Compteur de DPS de l'addon de dégâts (sans dépendance au DOM, testable).
 /** Fenêtre du DPS récent (s). */
-export const DPS_WINDOW = 10;
+export const DPS_WINDOW = 5;
 /** DPS d'un joueur : moyenne de la run, ou sur les DPS_WINDOW dernières secondes à partir d'échantillons (temps de jeu, dégâts cumulés). */
 export function dpsOf(samples: { t: number; v: number }[], mode: 'total' | 'recent', time: number, total: number): number {
   if (mode === 'total') return time > 0 ? total / Math.max(1, time) : 0;

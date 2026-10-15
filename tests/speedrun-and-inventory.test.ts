@@ -46,7 +46,7 @@ test('Gardiens : cadence plus vive avec la difficulté et la progression',()=>{
   assert.ok(bossPace(3,33)>.5&&bossPace(3,33)<.6);
 });
 
-test('DPS : moyenne de la run ou des 10 dernières secondes',()=>{
+test('DPS : moyenne de la run ou des 5 dernières secondes',()=>{
   assert.equal(dpsOf([],'total',100,5000),50);
   // 100 dégâts par seconde pendant 20 s, puis 500 par seconde pendant les 10 dernières.
   const samples=[] as {t:number;v:number}[];let v=0;

@@ -900,7 +900,19 @@ export class GameScene extends Phaser.Scene {
     if (spell.zone && big && !original) this.effects.beam(e.x, e.y, spell.color);
     // Secousse légère, seulement pour les grosses explosions proches.
     const d = Math.hypot(e.x - this.me.x, e.y - this.me.y);
-    if (big && d < 10) this.cameras.main.shake(140, 0.0035 * (1 - d / 10));
+    if (big && d < 10) this.shake(140, 0.0035 * (1 - d / 10));
+  }
+
+  private shakeUntil = 0;
+  /**
+   * Secousse de caméra selon le réglage. Une seule à la fois, et un temps mort après chacune :
+   * sous une pluie de coups, l'écran ne tremble plus en continu.
+   */
+  private shake(duration: number, intensity: number): void {
+    const factor = { off: 0, light: 0.5, normal: 1 }[settings.screenShake];
+    if (!factor || this.time.now < this.shakeUntil) return;
+    this.shakeUntil = this.time.now + duration + 350;
+    this.cameras.main.shake(duration, intensity * factor);
   }
 
   private onDamage(e: DamageEvent): void {
@@ -912,7 +924,7 @@ export class GameScene extends Phaser.Scene {
       this.effects.floatText(e.x, e.y, `-${e.amount}`, '#ff5040', 15,34,e.target===this.room.sessionId);
       if (e.target === this.room.sessionId) {
         this.hud.hitFlash();
-        this.cameras.main.shake(90, 0.002);
+        this.shake(70, 0.0007);
         this.store.playSound(this, 'player_hit');
         // Un coup ordinaire garde la prediction. Les reculs sont signales par forcedMotion/motionEpoch.
       }

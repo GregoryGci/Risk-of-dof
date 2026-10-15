@@ -132,7 +132,7 @@ l'encyclopédie. Les réglages d'attaque automatique et de smart cast sont mémo
 
 - **750 équipements, 142 panoplies vérifiées**, paliers **20/40/60/80/100/120/140/160/180/200**
   accessibles aux zones **1/6/9/13/16/19/22/25/27/31**. Seuls le palier et le donjon actuels donnent leurs objets.
-  Les niveaux réels des pièces de panoplie sont conservés. Les anciens objets hors panoplie gardent leur palier adapté au fan game. Quatre icônes originales indisponibles sont listées dans
+  Les niveaux réels des pièces de panoplie sont conservés. Les anciens objets hors panoplie gardent leur palier adapté au fan game. Deux icônes originales indisponibles sont listées dans
   [ASSETS_PANOPLIES_MANQUANTS.md](docs/ASSETS_PANOPLIES_MANQUANTS.md), sans visuel inventé.
 - Tout monstre ennemi possède **3 %** de chance de donner un équipement permanent.
   Tout boss possède en plus **3 %** de chance de donner un Dofus : aucun Dofus dans les coffres.

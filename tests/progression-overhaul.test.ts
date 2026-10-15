@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {EQUIPMENT_BASES,EQUIPMENT_RARITIES,ZONES,createEquipment,dropPool,dropSources,dropRarityWeights,equipmentDropChance,equippedStats,setProgress,monsterHpMultiplier,monsterDamageMultiplier,bossHpBudget,PHASE_LOST,compareRuns,sanitizeRunSummary,type EquippedGear} from '@rod/shared';
+import {EQUIPMENT_BASES,dropLevel,EQUIPMENT_RARITIES,ZONES,createEquipment,dropPool,dropSources,dropRarityWeights,equipmentDropChance,equippedStats,setProgress,monsterHpMultiplier,monsterDamageMultiplier,bossHpBudget,PHASE_LOST,compareRuns,sanitizeRunSummary,type EquippedGear} from '@rod/shared';
 import {Simulation} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 import {migrateAccount} from '../client/src/progression.ts';
@@ -24,17 +24,19 @@ test('panoplie : seuils cumulatifs et deux anneaux identiques comptent pour une 
   const ring=createEquipment('blopanneau_royal','rare');
   assert.equal(setProgress({anneau1:ring,anneau2:ring}).find(p=>p.set.id==='blop')!.count,1);
 });
-test('drops : uniquement le palier et le donjon courants, Dofus partout',()=>{
+test('drops : tranche de niveau selon la difficulté, rareté selon la zone, Dofus partout',()=>{
   assert.deepEqual(dropSources(9).map(s=>s.zone),[9]);
-  assert.deepEqual(new Set(dropPool(9,false).map(id=>EQUIPMENT_BASES[id].tier)),new Set([2]));
-  assert.ok(dropPool(12,false).every(id=>EQUIPMENT_BASES[id].tier===2));
-  assert.equal(dropPool(1,true).length,10);
+  const bands=[[0,50],[51,100],[101,150],[151,200]];
+  for(let mode=0;mode<4;mode++)assert.ok(dropPool(9,false,mode).every(id=>dropLevel(id)>=bands[mode][0]&&dropLevel(id)<=bands[mode][1]));
+  assert.equal(dropPool(1,true).length,dropPool(1,true,3).length);
+  assert.ok(dropSources(33)[0].rarityBoost>dropSources(1)[0].rarityBoost);
+  assert.ok(equipmentDropChance(33,dropPool(33,false)[0],'legendaire')>equipmentDropChance(1,dropPool(1,false)[0],'legendaire'));
   const boosted=dropRarityWeights(3);assert.ok(Math.abs(boosted.normal-.4)<1e-9);assert.equal(boosted.rare,.48);assert.equal(boosted.legendaire,.015);
   for(const stage of [1,2,4,9,12]){
     const total=dropPool(stage,false).reduce((n,id)=>n+EQUIPMENT_RARITIES.reduce((p,r)=>p+equipmentDropChance(stage,id,r),0),0);
     assert.ok(Math.abs(total-.03)<1e-10);
   }
-  assert.ok(Math.abs(equipmentDropChance(1,'dofus_emeraude','normal')-.0024)<1e-10);
+  assert.ok(Math.abs(equipmentDropChance(1,'dofus_emeraude','normal')-.03*.8/dropPool(1,true).length)<1e-10);
   for(const id of dropPool(9,false))for(const rarity of EQUIPMENT_RARITIES)assert.ok(Math.abs(equipmentDropChance(9,id,rarity,2)-equipmentDropChance(9,id,rarity)*2)<1e-10);
 });
 test('gardien surprise : seulement tous les trois donjons, puissance et butin ×3',()=>{

@@ -1,4 +1,4 @@
-import { PLAYER_RADIUS, PHASE_PLAYING, ZAAP_READY } from '@rod/shared';
+import { PLAYER_RADIUS, PHASE_PLAYING, ZAAP_READY, isBlocked } from '@rod/shared';
 import type { MonsterRt, Simulation } from './Simulation.ts';
 
 /**
@@ -15,6 +15,7 @@ export function bossPace(mode: number, stage: number): number {
 export function updateBoss(sim: Simulation, boss: MonsterRt): boolean {
   if (!boss.def.boss || boss.state.ally || sim.state.phase !== PHASE_PLAYING || sim.state.zaapState === ZAAP_READY) return false;
   if (sim.now < (boss.bossHoldUntil ?? 0)) return true;
+  if (bossLeap(sim, boss)) return true;
   if (sim.now < (boss.bossReadyAt ?? Infinity)) return false;
   const targets = [...sim.players.values()].filter(p => p.state.alive && p.state.connected);
   if (!targets.length) return false;
@@ -59,5 +60,47 @@ export function updateBoss(sim: Simulation, boss: MonsterRt): boolean {
       }
     });
   }
+  return true;
+}
+
+/** Distance (cases) au-delà de laquelle un gardien mobile bondit sur le joueur le plus proche. */
+export const BOSS_LEAP_RANGE = 7;
+/** Annonce au sol du point d'atterrissage (s). */
+export const BOSS_LEAP_WARNING = 0.8;
+
+/**
+ * Bond : un gardien distancé annonce son point de chute près du joueur le plus proche, puis y atterrit
+ * en infligeant de légers dégâts autour de lui. Recharge plus courte avec la difficulté.
+ */
+function bossLeap(sim: Simulation, boss: MonsterRt): boolean {
+  if (boss.def.speed <= 0 || sim.now < (boss.bossLeapAt ?? 0)) return false;
+  let target: { x: number; y: number } | undefined;
+  for (const p of sim.players.values()) {
+    if (!p.state.alive || !p.state.connected) continue;
+    const d = Math.hypot(p.state.x - boss.state.x, p.state.y - boss.state.y);
+    if (d > BOSS_LEAP_RANGE && (!target || d < Math.hypot(target.x - boss.state.x, target.y - boss.state.y))) target = { x: p.state.x, y: p.state.y };
+  }
+  // Bondit seulement si aucun joueur n'est déjà à portée.
+  for (const p of sim.players.values()) if (p.state.alive && p.state.connected && Math.hypot(p.state.x - boss.state.x, p.state.y - boss.state.y) <= BOSS_LEAP_RANGE) return false;
+  if (!target) return false;
+  const pace = bossPace(sim.state.mode, sim.state.stage);
+  // Atterrit un peu avant la cible, du côté d'où il vient : le joueur a le temps de s'écarter.
+  const dx = boss.state.x - target.x, dy = boss.state.y - target.y, len = Math.hypot(dx, dy) || 1;
+  const land = { x: target.x + dx / len * 1.6, y: target.y + dy / len * 1.6 };
+  const radius = 1.6, color = 0xd9853b;
+  boss.bossLeapAt = sim.now + 7 * pace;
+  boss.bossHoldUntil = sim.now + BOSS_LEAP_WARNING;
+  sim.broadcast('bossWarning', { ...land, radius, duration: BOSS_LEAP_WARNING, color, kind: 'leap' });
+  sim.after(BOSS_LEAP_WARNING, () => {
+    if (!sim.monsters.has(boss.id) || sim.state.intermission || sim.state.zaapState === ZAAP_READY) return;
+    if (isBlocked(sim.map, land.x, land.y, boss.def.radius)) return;
+    boss.state.x = land.x; boss.state.y = land.y;
+    sim.broadcast('bossImpact', { ...land, radius, color, kind: 'leap' });
+    const damage = Math.max(6, boss.def.melee.damage) * boss.damageMult * 0.8;
+    for (const p of sim.players.values()) {
+      if (!p.state.alive || Math.hypot(p.state.x - land.x, p.state.y - land.y) > radius + PLAYER_RADIUS) continue;
+      sim.damagePlayer(p, damage, `${boss.def.name} · Bond`);
+    }
+  });
   return true;
 }

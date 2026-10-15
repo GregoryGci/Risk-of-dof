@@ -5,8 +5,10 @@ export function isRangedAttack(spell:SpellDef):boolean{return !spell.melee&&!spe
 export function lifestealCap(ranged:boolean):number{return ranged?.10:.20;}
 export function innateLifesteal(spell:SpellDef):number{return (spell.effects??[]).reduce((n,e)=>n+(e.type==='lifesteal'?e.fraction:0),0);}
 /** Les seules statistiques plafonnées. Les projectiles et les charges restent cumulables. */
+/** Chaque point d'armure multiplie les dégâts subis par 0,92 : ce plafond limite la réduction à 50 %. */
+export const ARMOR_FACTOR=.92,MAX_DAMAGE_REDUCTION=.5,ARMOR_CAP=Math.log(1-MAX_DAMAGE_REDUCTION)/Math.log(ARMOR_FACTOR);
 export function statCaps(ranged:boolean):Partial<Record<StatKey,number>> {
-  return {lifesteal:lifestealCap(ranged),vampirism:.5,bounce:3,crit:1-BASE_CRIT_CHANCE,luck:(.10-.005)/.03,revive:1};
+  return {lifesteal:lifestealCap(ranged),vampirism:.5,armor:ARMOR_CAP,bounce:3,crit:1-BASE_CRIT_CHANCE,luck:(.10-.005)/.03,revive:1};
 }
 export function clampCombatStats(stats:Record<StatKey,number>,ranged:boolean):void {
   for(const [key,cap]of Object.entries(statCaps(ranged)))stats[key as StatKey]=Math.max(0,Math.min(cap,stats[key as StatKey]));

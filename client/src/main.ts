@@ -108,7 +108,7 @@ const accountPage=new AccountPage(),ladder=new LadderPage();
 // Le pseudo en haut à gauche ouvre le compte (le profil est redessiné : écouteur délégué).
 $('home-profile').addEventListener('click',e=>{if((e.target as HTMLElement).closest('#btn-account'))accountPage.open();});
 cloud.subscribe(()=>{if(!cloud.busy)renderProfile();});
-$('btn-ladder').onclick=()=>ladder.open();
+$('btn-ladder').onclick=()=>ladder.open(setupMode);
 cloud.subscribe(()=>{if(cloud.busy)return;classId=localStorage.getItem('rod.classe')??DEFAULT_CLASS;if(!CLASSES[classId])classId=DEFAULT_CLASS;pseudoInput.value=localStorage.getItem('rod.pseudo')??'';renderClassPicker();renderModes();applyCrosshair();});
 $('btn-history').onclick=()=>history.open();
 $('btn-encyclopedia').addEventListener('click', () => encyclopedia.open());

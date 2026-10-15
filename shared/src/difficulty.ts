@@ -26,12 +26,34 @@ export function monsterHpMultiplier(difficulty: number): number {
   return 1.05*Math.pow(difficulty,1.15);
 }
 /** Le Cauchemar commence au niveau de menace d'un groupe déjà avancé. */
-export function modeDifficulty(difficulty:number,mode:number):number{return difficulty+(mode===3?12:0);}
+/** Le Cauchemar démarre comme une fin de partie : +12 au coefficient de difficulté (PV, dégâts, vitesse). */
+export const NIGHTMARE_DIFFICULTY_BONUS=12;
+export function modeDifficulty(difficulty:number,mode:number):number{return difficulty+(mode===3?NIGHTMARE_DIFFICULTY_BONUS:0);}
 export function monsterDamageMultiplier(difficulty: number): number {
   return 1.1*Math.pow(difficulty,.9);
 }
 /** Les mêlées restent lisibles au départ ; le scaling finit par rattraper le kite sans équipement. */
-export function monsterSpeedMultiplier(difficulty:number):number {return Math.min(1.95,1.05+difficulty*.055);}
+/**
+ * Vitesse des monstres ordinaires. Le Cauchemar ajoute +12 au coefficient de difficulté (dégâts, PV) :
+ * la vitesse n'en garde qu'une partie (×1,6 au départ, ×1,7 au plus) pour rester esquivable.
+ */
+export function monsterSpeedMultiplier(difficulty:number,mode=0):number {
+  return mode===3?Math.min(1.55,1+(difficulty-3)*.045):Math.min(1.6,1+difficulty*.045);
+}
+/**
+ * Vitesse maximale d'un monstre ordinaire (cases/s), hors charge : un peu sous celle d'un joueur (~4,6).
+ * En ligne droite il suit à peine ; il regagne du terrain dès que le joueur tourne, car il coupe au plus court.
+ */
+export const MONSTER_MAX_SPEED=4.2;
+/**
+ * Apparition des monstres en Cauchemar : ×0,6 en zone 1, puis montée jusqu'à ×1 en zone 7. La pression
+ * reste forte ensuite, mais le début n'est plus injouable.
+ */
+export function nightmareSpawnRamp(mode:number,stage:number):number {return mode===3?Math.min(1,.6+.4*Math.max(0,stage-1)/6):1;}
+/** Vitesse minimale d'un gardien mobile (cases/s) : les joueurs courent à ~4,6. */
+export const BOSS_MIN_SPEED=3.2;
+/** Multiplicateur de vitesse des gardiens : Facile ×1 à Cauchemar ×1,24, avant les bonus surprise ou maudit. */
+export function bossSpeedMultiplier(mode:number):number {return 1+Math.max(0,Math.min(3,mode))*.08;}
 /** Budget cohérent des gardiens : les PV Retro bruts ne sont pas comparables entre donjons. */
 export function bossHpBudget(stage:number):number {return 400+stage*110;}
 
@@ -67,15 +89,19 @@ export interface GameMode {
   spawn: number;
   /** Multiplicateur des kamas de fin de partie. Le mode améliore aussi le butin permanent. */
   reward: number;
+  /** Kamas gagnés pendant la run (monstres) : plus de besoins en coffres et marchands. */
+  runKamas: number;
+  /** Prix des coffres et du marchand : moins élevé que la hausse des gains. */
+  chestPrice: number;
   /** Gardiens simultanés (trois toutes les trois zones pour le Cauchemar). */
   nightmare?:boolean;
 }
 
 export const GAME_MODES: GameMode[] = [
-  { id: 0, name: 'Facile', description: 'Moins de monstres, moins coriaces.', hp: 0.8, damage: 0.75, spawn: 0.85, reward: 1 },
-  { id: 1, name: 'Normal', description: 'Adapté à une première tenue. Plus de monstres à vaincre et ×1,5 kamas en fin de run.', hp: 1.25, damage: 1.15, spawn: 1.15, reward: 1.5 },
-  { id: 2, name: 'Difficile', description: 'Conseillé avec une tenue de palier 80 ou plus. Davantage de monstres, ×2,2 kamas en fin de run.', hp: 1.9, damage: 1.65, spawn: 1.5, reward: 2.2 },
-  { id: 3, name: 'Cauchemar', description: 'Fin de jeu : dégâts ennemis ×5 dès le départ, deux gardiens par zone, trois toutes les trois zones. Tenue 190–200 conseillée. Hordes renforcées, ×3,4 kamas en fin de run.', hp: 4.2, damage: 5, spawn: 2.25, reward: 3.4, nightmare:true },
+  { id: 0, name: 'Facile', description: 'Moins de monstres, moins coriaces.', hp: 0.8, damage: 0.75, spawn: 0.85, reward: 1, runKamas: 1, chestPrice: 1 },
+  { id: 1, name: 'Normal', description: 'Adapté à une première tenue. Plus de monstres à vaincre et ×1,5 kamas en fin de run.', hp: 1.25, damage: 1.15, spawn: 1.15, reward: 1.5, runKamas: 1.25, chestPrice: 1.15 },
+  { id: 2, name: 'Difficile', description: 'Conseillé avec une tenue de palier 80 ou plus. Davantage de monstres, ×2,2 kamas en fin de run.', hp: 1.9, damage: 1.65, spawn: 1.5, reward: 2.2, runKamas: 1.6, chestPrice: 1.4 },
+  { id: 3, name: 'Cauchemar', description: 'Fin de jeu : dégâts ennemis ×6 dès le départ, deux gardiens par zone, trois toutes les trois zones. Tenue 190–200 conseillée. Hordes renforcées, ×3,4 kamas en fin de run.', hp: 4.2, damage: 6, spawn: 2.25, reward: 3.4, nightmare:true, runKamas: 2.1, chestPrice: 1.7 },
 ];
 
 export function getMode(id: number): GameMode {

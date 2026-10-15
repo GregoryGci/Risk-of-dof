@@ -1,6 +1,6 @@
 // Directeur de spawn façon Risk of Rain : il accumule des crédits avec le temps
 // (de plus en plus vite) et les dépense en vagues de monstres autour des joueurs.
-import { assaultPlan, getRoute, ZAAP_CHARGING, getMode, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
+import { assaultPlan, getRoute, nightmareSpawnRamp, ZAAP_CHARGING, getMode, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
 import type { Simulation } from './Simulation.ts';
 import {enemyPopulationLimit,introductoryZone} from './spawn-pressure.ts';
 
@@ -65,7 +65,7 @@ export class Director {
     const introduction=introductoryZone(sim.state),bossIntroduction=introduction&&sim.state.zaapState===ZAAP_CHARGING;
     const pressure=bossIntroduction?Math.min(this.pressure,1.25):this.pressure;
     const rush = sim.state.zaapState === ZAAP_CHARGING ? (bossIntroduction?.8:1.8) : 1;
-    this.credits = Math.min(introduction?18:300,this.credits+spawnCreditsPerSecond(diff, sim.players.size,sim.state.stage) * rush * pressure * getMode(sim.state.mode).spawn * getRoute(sim.state.stageRoute).spawn * dt);
+    this.credits = Math.min(introduction?18:300,this.credits+spawnCreditsPerSecond(diff, sim.players.size,sim.state.stage) * rush * pressure * getMode(sim.state.mode).spawn * nightmareSpawnRamp(sim.state.mode,sim.state.stage) * getRoute(sim.state.stageRoute).spawn * dt);
 
     this.nextWaveIn -= dt;
     if (this.nextWaveIn <= 0) {

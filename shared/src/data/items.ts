@@ -1,6 +1,7 @@
 // Bonus de run : les coffres et le marchand donnent directement des statistiques.
 // Les compteurs internes permettent de recalculer leur total, sans inventaire d'objets.
 import {affinityStats} from './affinities.ts';
+import {getMode,NIGHTMARE_DIFFICULTY_BONUS} from '../difficulty.ts';
 import {runVitalityScale,statCaps,type RunStatContext} from '../combat-balance.ts';
 import type { RunBonusDef, BonusRarity, StatKey } from '../types.ts';
 
@@ -164,12 +165,16 @@ export function sumRunStats(inv: Map<string, number>,context:RunStatContext={}):
   return total;
 }
 
-/** Prix d'un coffre : augmente avec la difficulté, comme dans Risk of Rain. */
-export function chestCost(difficulty: number): number {
-  return Math.round(90 * Math.pow(difficulty, 1.35));
+/**
+ * Prix d'un coffre : augmente avec la difficulté, comme dans Risk of Rain. Le bonus de départ du
+ * Cauchemar n'y compte pas, et chaque mode a son coefficient de prix (voir GAME_MODES).
+ */
+export function chestCost(difficulty: number, mode = 0): number {
+  const m = getMode(mode);
+  return Math.round(90 * Math.pow(Math.max(1, difficulty - (m.nightmare ? NIGHTMARE_DIFFICULTY_BONUS : 0)), 1.35) * m.chestPrice);
 }
 
 /** Prix d'un objet chez le marchand. */
-export function merchantPrice(item: RunBonusDef, difficulty: number): number {
-  return Math.round(chestCost(difficulty) * { commun: 2, rare: 4, epique: 8,legendaire:12 }[item.rarity]);
+export function merchantPrice(item: RunBonusDef, difficulty: number, mode = 0): number {
+  return Math.round(chestCost(difficulty, mode) * { commun: 2, rare: 4, epique: 8,legendaire:12 }[item.rarity]);
 }

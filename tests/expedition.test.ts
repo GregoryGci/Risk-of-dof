@@ -33,7 +33,7 @@ test('Serment du gardien : difficulté réelle et deux choix de bénédiction co
 });
 
 test('Chasse : kamas ×1,3 pour chacun, sans augmentation de la probabilité des Dofus',()=>{
-  const {sim,state,p}=create();state.stageRoute='hunt';sim.addPlayer('q','Q','iop');
+  const {sim,state,p}=create();state.stageRoute='hunt';state.mode=0;sim.addPlayer('q','Q','iop');
   const saved=Math.random;try{Math.random=()=>.5;sim.damageMonster(sim.spawnMonster(getMonster('boufton'),10,10,1,1,1),1e6,p.id);}finally{Math.random=saved;}
   for(const player of sim.players.values())assert.equal(player.state.kamas,4);
 });

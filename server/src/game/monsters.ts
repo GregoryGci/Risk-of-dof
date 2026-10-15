@@ -1,6 +1,6 @@
 // IA des monstres : chaque monstre cible le joueur visible le plus proche (ou une invocation alliée,
 // en priorité celles qui provoquent). Les invocations alliées ont leur propre IA (updateAlly).
-import { MAX_MONSTERS, MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getMonster, getSpell, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, resolveCollisions, stepMovement } from '@rod/shared';
+import { BOSS_MIN_SPEED, MONSTER_MAX_SPEED, MAX_MONSTERS, MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getMonster, getSpell, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, resolveCollisions, stepMovement } from '@rod/shared';
 import { updateBoss } from './bosses.ts';
 import {summonPower,trySummonSkill} from './summons.ts';
 import {enemyPopulationLimit} from './spawn-pressure.ts';
@@ -97,7 +97,10 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
   const dist = target.dist;
   const tx = (target.x - s.x) / (dist || 1);
   const ty = (target.y - s.y) / (dist || 1);
-  const speed = m.def.speed * m.speedMult * (sim.now < m.slowUntil ? m.slowFactor : 1);
+  // Un gardien mobile ne traîne jamais loin derrière les joueurs (les gardiens immobiles le restent).
+  const guardian = !!m.def.boss && !s.ally;
+  const baseSpeed = guardian && m.def.speed > 0 ? Math.max(m.def.speed, BOSS_MIN_SPEED) : m.def.speed;
+  const speed = Math.min(guardian || s.ally ? Infinity : MONSTER_MAX_SPEED, baseSpeed * m.speedMult) * (sim.now < m.slowUntil ? m.slowFactor : 1);
   const b = m.def.behavior;
 
   if (b.type === 'charger' && s.state === MSTATE_WINDUP) {
@@ -161,11 +164,12 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
       if(m.def.boss||s.elite||spell.area)sim.broadcast('attackWarning',{x:s.x,y:s.y,tx:target.x,ty:target.y,width:.45,duration:RANGED_WINDUP,color:0xe78558,priority:!!m.def.boss||s.elite});
       return;
     }
-    // Garde ses distances : approche si trop loin, recule si trop près.
-    if (dist > b.preferredRange) {
+    // Garde ses distances : approche si trop loin, recule si trop près. Un gardien reste au contact et ne recule pas.
+    const preferred = guardian ? Math.min(b.preferredRange, 3.5) : b.preferredRange;
+    if (dist > preferred) {
       mx = tx;
       my = ty;
-    } else if (dist < b.preferredRange * 0.5) {
+    } else if (!guardian && dist < b.preferredRange * 0.5) {
       mx = -tx;
       my = -ty;
     }

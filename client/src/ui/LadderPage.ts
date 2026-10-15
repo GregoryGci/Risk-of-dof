@@ -9,7 +9,8 @@ export class LadderPage {
   private el=document.getElementById('ladder')!;private body=document.getElementById('ladder-body')!;private multiplayer=false;private mode=1;private request=0;
   private cache=new Map<string,string>();
   constructor(){document.getElementById('ladder-close')!.onclick=()=>this.el.classList.add('hidden');this.body.onclick=event=>{const target=(event.target as HTMLElement).closest<HTMLElement>('button');if(target?.dataset.ladderParty!==undefined){this.multiplayer=target.dataset.ladderParty==='multi';void this.render();}if(target?.dataset.ladderMode!==undefined){this.mode=Number(target.dataset.ladderMode);void this.render();}};}
-  open():void {this.el.classList.remove('hidden');document.getElementById('ladder-close')!.focus();void this.render();}
+  /** S'ouvre sur la difficulté choisie à l'accueil : un nouveau compte ne joue d'abord qu'en Facile. */
+  open(mode=this.mode):void {this.mode=mode;this.el.classList.remove('hidden');document.getElementById('ladder-close')!.focus();void this.render();}
   private skeleton():HTMLElement{
     let results=document.getElementById('ladder-results');
     if(results)return results;

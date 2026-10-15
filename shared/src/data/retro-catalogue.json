@@ -5017,7 +5017,11 @@
           "damage": 0.095,
           "haste": 0.008
         },
-        "sourceId": 9451
+        "sourceId": 9451,
+        "icon": {
+          "type": 17,
+          "gfx": 159
+        }
       },
       {
         "id": "retro_9452",
@@ -5033,7 +5037,11 @@
           "haste": 0.025,
           "kamas": 0.025
         },
-        "sourceId": 9452
+        "sourceId": 9452,
+        "icon": {
+          "type": 9,
+          "gfx": 164
+        }
       },
       {
         "id": "retro_9453",

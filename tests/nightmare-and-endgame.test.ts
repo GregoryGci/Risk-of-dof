@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {EQUIPMENT_BASES,EQUIPMENT_TIERS,EQUIPMENT_RARITIES,GEAR_DROP_CHANCE,dropSources,dropPool,equipmentDropChance,equipmentReward,equipmentStats,createEquipment,guardianCount,PHASE_PLAYING,ZAAP_CHARGING,ZAAP_READY,sanitizeRunSummary} from '@rod/shared';
+import {EQUIPMENT_BASES,dropLevel,EQUIPMENT_TIERS,EQUIPMENT_RARITIES,GEAR_DROP_CHANCE,dropSources,dropPool,equipmentDropChance,equipmentReward,equipmentStats,createEquipment,guardianCount,PHASE_PLAYING,ZAAP_CHARGING,ZAAP_READY,sanitizeRunSummary} from '@rod/shared';
 import {migrateAccount} from '../client/src/progression.ts';
 import {Simulation} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
@@ -29,14 +29,16 @@ test('Sauvegardes : ancien palier 160 conservé, palier 200 et piles/fusions con
   const loaded=migrateAccount(saved);assert.equal(loaded.bestTier,9);assert.equal(loaded.bank,777);assert.equal(loaded.fragments,333);assert.equal(loaded.inventory[1].quantity,10);assert.equal(loaded.equipped.anneau1,'kralano.legendaire.3');
 });
 
-test('Fin de jeu : zones 13/18/25/31 débloquent les nouveaux pools, total 3 % et Dofus toujours partout',()=>{
+test('Fin de jeu : le Cauchemar ne donne que des objets 151-200, total 3 % et Dofus toujours partout',()=>{
   for(const stage of [13,18,25,31,33]){
-    const sources=dropSources(stage),pool=dropPool(stage,false);assert.ok(pool.every(id=>sources.some(s=>s.tier===EQUIPMENT_BASES[id].tier)));
-    const total=pool.reduce((sum,id)=>sum+EQUIPMENT_RARITIES.reduce((n,r)=>n+equipmentDropChance(stage,id,r),0),0);assert.ok(Math.abs(total-GEAR_DROP_CHANCE)<1e-10);
-    assert.deepEqual(dropPool(stage,true),dropPool(1,true));
+    const [min,max]=dropSources(stage,3)[0].levels,pool=dropPool(stage,false,3);assert.ok(pool.every(id=>dropLevel(id)>=min&&dropLevel(id)<=max));
+    assert.equal(min,151);
+    const total=pool.reduce((sum,id)=>sum+EQUIPMENT_RARITIES.reduce((n,r)=>n+equipmentDropChance(stage,id,r,1,3),0),0);assert.ok(Math.abs(total-GEAR_DROP_CHANCE)<1e-10);
+    assert.deepEqual(dropPool(stage,true,3),dropPool(1,true,0));
     assert.equal(equipmentReward('r',123,stage,3,100).tier,EQUIPMENT_TIERS.findLastIndex(t=>stage>=t.stage));
   }
-  assert.equal(equipmentDropChance(30,'kralano','rare'),0);assert.ok(equipmentDropChance(33,'kralano','rare')>0);
+  // Kralano (niveau 200) : jamais en Facile, partout en Cauchemar.
+  assert.equal(equipmentDropChance(33,'kralano','rare',1,0),0);assert.ok(equipmentDropChance(1,'kralano','rare',1,3)>0);
 });
 
 function encounter(stage:number,mode=3){

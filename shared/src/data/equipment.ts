@@ -6,7 +6,7 @@ import {RETRO_ITEMS} from './retro-equipment.ts';
 import type { StatKey } from '../types.ts';
 import { emptyStats, sumRunStats } from './items.ts';
 import { makeRng } from '../rng.ts';
-import { getMode } from '../difficulty.ts';
+import { getMode, FINAL_STAGE } from '../difficulty.ts';
 import {standaloneEquipmentStats,scaleEquipmentStats} from './equipment-scaling.ts';
 import {equipmentSet,setBonusStats} from './equipment-sets.ts';
 
@@ -189,6 +189,13 @@ for(const [id,base]of Object.entries(EQUIPMENT_BASES)){
   if(rawStats.attackSpeed)base.stats.attackSpeed=scaleEquipmentStats(rawStats,level,legacyTier).attackSpeed;
 }
 Object.assign(EQUIPMENT_BASES,RETRO_ITEMS);
+/**
+ * Aucun malus sur les objets (valeurs négatives : perte de kamas, de PV…) ; le vol de vie et le
+ * vampirisme n'existent que par les bonus de run, plafonnés (voir combat-balance.ts).
+ */
+export const ITEM_FORBIDDEN_STATS:readonly StatKey[]=['lifesteal','vampirism'];
+for(const base of Object.values(EQUIPMENT_BASES))
+  base.stats=Object.fromEntries(Object.entries(base.stats).filter(([k,v])=>v>0&&!ITEM_FORBIDDEN_STATS.includes(k as StatKey)));
 export interface Equipment {
   uid: string;
   base: string;
@@ -282,30 +289,53 @@ export function dropRarity(random = Math.random,boost=1): EquipmentRarity {
   for (const rarity of EQUIPMENT_RARITIES) { roll -= weights[rarity]; if (roll < 0) return rarity; }
   return 'legendaire';
 }
-export function dropSources(stage:number):{zone:number;tier:number;weight:number;rarityBoost:number}[] {
-  return [{zone:stage,tier:equipmentTier(stage),weight:1,rarityBoost:1}];
+/**
+ * Tranche de niveau des équipements selon la difficulté : farmer en Cauchemar ne donne jamais
+ * d'objets bas niveau. Les Dofus restent droppables partout.
+ */
+export const DROP_LEVEL_BANDS:readonly (readonly [number,number])[]=[[0,50],[51,100],[101,150],[151,200]];
+export function dropLevelBand(mode:number):readonly [number,number]{return DROP_LEVEL_BANDS[Math.max(0,Math.min(DROP_LEVEL_BANDS.length-1,mode))];}
+/** Facteur de rareté selon l'avancée dans la run : ×1 en zone 1, ×3,5 en dernière zone. */
+export function stageRarityBoost(stage:number):number{return 1+2.5*Math.min(1,Math.max(0,stage-1)/(FINAL_STAGE-1));}
+export function dropSources(stage:number,mode=0):{zone:number;tier:number;weight:number;rarityBoost:number;levels:readonly [number,number]}[] {
+  return [{zone:stage,tier:equipmentTier(stage),weight:1,rarityBoost:stageRarityBoost(stage),levels:dropLevelBand(mode)}];
 }
-export function dropPool(stage: number, dofus: boolean): string[] {
-  const tiers=new Set(dropSources(stage).map(s=>s.tier));
-  return Object.keys(EQUIPMENT_BASES).filter(id => dofus?EQUIPMENT_BASES[id].kind==='dofus':EQUIPMENT_BASES[id].kind!=='dofus'&&tiers.has(EQUIPMENT_BASES[id].tier)&&(!EQUIPMENT_BASES[id].zone||EQUIPMENT_BASES[id].zone===stage));
+/**
+ * Niveau de drop d'un équipement : une panoplie tombe entière dans une seule difficulté, celle de sa
+ * pièce la plus haute ; un objet hors panoplie suit son propre niveau.
+ */
+export function dropLevel(id:string):number {
+  const set=equipmentSet(id);
+  return set?Math.max(...set.members.map(m=>EQUIPMENT_BASES[m]?.level??0)):EQUIPMENT_BASES[id]?.level??0;
+}
+/** Difficulté qui fait tomber cet équipement (les Dofus tombent partout). */
+export function dropModeOf(id:string):number {
+  const level=dropLevel(id);return Math.max(0,DROP_LEVEL_BANDS.findIndex(([min,max])=>level>=min&&level<=max));
+}
+const dropPools=new Map<string,string[]>();
+export function dropPool(_stage: number, dofus: boolean, mode=0): string[] {
+  const band=Math.max(0,Math.min(DROP_LEVEL_BANDS.length-1,mode)),key=`${dofus}:${band}`;
+  let pool=dropPools.get(key);
+  if(!pool)dropPools.set(key,pool=Object.keys(EQUIPMENT_BASES).filter(id => {const b=EQUIPMENT_BASES[id];return dofus?b.kind==='dofus':b.kind!=='dofus'&&dropModeOf(id)===band;}));
+  return pool;
 }
 /** Probabilité exacte d'un objet/rareté par ennemi éligible, pour les tableaux et simulations. */
-export function equipmentDropChance(stage:number,base:string,rarity:EquipmentRarity,multiplier=1):number {
+export function equipmentDropChance(stage:number,base:string,rarity:EquipmentRarity,multiplier=1,mode=0):number {
   const def=EQUIPMENT_BASES[base];if(!def)return 0;
-  if(def.kind!=='dofus'&&!dropPool(stage,false).includes(base))return 0;
-  if(def.kind==='dofus')return Math.min(1,DOFUS_DROP_CHANCE*multiplier)*DROP_RARITY_CHANCES[rarity]/dropPool(stage,true).length;
-  return Math.min(1,GEAR_DROP_CHANCE*multiplier)*dropSources(stage).filter(s=>s.tier===def.tier).reduce((n,s)=>n+s.weight*dropRarityWeights(s.rarityBoost)[rarity]/dropPool(stage,false).length,0);
+  const weights=dropRarityWeights(stageRarityBoost(stage));
+  if(def.kind==='dofus')return Math.min(1,DOFUS_DROP_CHANCE*multiplier)*weights[rarity]/dropPool(stage,true,mode).length;
+  const pool=dropPool(stage,false,mode);if(!pool.includes(base))return 0;
+  return Math.min(1,GEAR_DROP_CHANCE*multiplier)*weights[rarity]/pool.length;
 }
 /** Deux tirages indépendants : équipement sur tout ennemi, Dofus sur boss uniquement. */
-export function monsterEquipmentDrops(stage: number, boss: boolean, random = Math.random, lootMultiplier = 1,dofusMultiplier=1): Equipment[] {
+export function monsterEquipmentDrops(stage: number, boss: boolean, random = Math.random, lootMultiplier = 1,dofusMultiplier=1,mode=0): Equipment[] {
   const items: Equipment[] = [];
   for (const dofus of [false,true]) {
     if (dofus && !boss) continue;
     if (random() >= Math.min(1,(dofus ? DOFUS_DROP_CHANCE : GEAR_DROP_CHANCE)*lootMultiplier*(dofus?dofusMultiplier:1))) continue;
-    let pool=dropPool(stage,dofus),rarityBoost=1;
-    if(!dofus){let roll=random();const sources=dropSources(stage),source=sources.find(s=>(roll-=s.weight)<0)??sources.at(-1)!;pool=pool.filter(id=>EQUIPMENT_BASES[id].tier===source.tier);rarityBoost=source.rarityBoost;}
+    const pool=dropPool(stage,dofus,mode);
     if (!pool.length) continue;
-    items.push(createEquipment(pool[Math.floor(random()*pool.length)],dropRarity(random,rarityBoost)));
+    items.push(createEquipment(pool[Math.floor(random()*pool.length)],dropRarity(random,stageRarityBoost(stage))));
   }
   return items;
 }
@@ -313,8 +343,8 @@ export function monsterEquipmentDrops(stage: number, boss: boolean, random = Mat
 export function equipmentReward(runId: string, seed: number, stage: number, modeId: number, kamasEarned: number, loot: GearDrop[] = []): RunReward {
   const tier = equipmentTier(stage);
   const random = makeRng(seed);
-  const candidates = dropPool(stage,false);
-  const bonus = createEquipment(candidates[Math.floor(random()*candidates.length)],dropRarity(random));
+  const candidates = dropPool(stage,false,modeId);
+  const bonus = createEquipment(candidates[Math.floor(random()*candidates.length)],dropRarity(random,stageRarityBoost(stage)));
   const drops = [...loot,{claimId:`${runId}:${seed}:completion`,gear:bonus}];
   return { runId, stage, tier, kamas: Math.max(0, Math.round((kamasEarned + (stage - 1) * 100) * getMode(modeId).reward)), gear: stackEquipment(drops.map(d=>d.gear)), drops };
 }

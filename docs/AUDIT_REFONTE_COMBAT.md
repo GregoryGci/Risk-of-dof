@@ -102,7 +102,7 @@ Catalogue initial tiré de [SunDofus 1.29](https://github.com/nicopetit95/sundof
 
 - [Répartition montrée avant intégration](PANOPLIES_REPARTITION.md).
 - [Tableau de 3 000 jets fixes et taux](OBJETS_DROPS.md), [CSV](objets-drops.csv).
-- [Quatre icônes manquantes](ASSETS_PANOPLIES_MANQUANTS.md). L’illustration de la monnaie Ogrine est absente : texte seul, aucune icône inventée.
+- [Deux icônes manquantes](ASSETS_PANOPLIES_MANQUANTS.md). Cape Cristaline et Anneau Cristalin récupérés depuis leurs dessins SWF hors champ. L’illustration de la monnaie Ogrine est absente : texte seul, aucune icône inventée.
 
 ## Reproduction
 
@@ -128,3 +128,7 @@ L'arrivée du gardien laisse six secondes avant les prochains renforts, sans inj
 Nouvelle exécution des 24 scénarios sans équipement, sorts 1, mêmes graines et paramètres : zone moyenne **2,00**, minimum 1, maximum 3, aucun survivant à la limite. La moyenne précédente était 1,96. Les autres lignes du tableau initial n'ont pas été rejouées pour cette correction ciblée. Cinq tests supplémentaires vérifient délai, groupes, population, invocations du boss, adaptation multi et absence de ralentissement des modes supérieurs : **138 tests passent**, ainsi que TypeScript et le build.
 
 Les lignes provenaient du filtrage aux bords des textures de sol de 512 px. Chaque portion dispose désormais d'une marge de deux pixels réellement dessinée, puis recadrée sans superposer les portions. Comparaison navigateur avec un rendu continu de référence : zones 2 et 5, normales et maudites, zooms 0,85 / 1 / 1,25, caméra sur des coordonnées fractionnaires. Les erreurs de raccord supérieures à 3 niveaux par canal passent de 917–2 749 pixels par vue à **zéro**. À zoom 1 et 1,25 les rendus sont identiques ; à 0,85 l'écart maximal est 2/255. Le cache reste limité à 24 textures de 516 × 516 pixels. Les deux modes de rendu WebGL ont été contrôlés.
+
+## Finitions après report des tests
+
+À la demande de l’utilisateur, aucun nouveau test, build ou scénario de simulation n’est lancé après ce point. Les modifications suivantes restent à vérifier lors de la prochaine session de tests : récupération des deux icônes Cristaline, déclaration dans le catalogue et le manifeste, correction de l’extracteur pour les formes Flash hors champ. Les nombres de tests et de runs ci-dessus décrivent l’état antérieur à ces finitions.

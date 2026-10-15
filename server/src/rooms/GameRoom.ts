@@ -129,6 +129,8 @@ export class GameRoom extends Room<{ state: GameState }> {
     if(this.pausedForReconnect){this.state.paused=false;this.pausedForReconnect=false;}
   }
   onLeave(client: Client): void {
+    // Run quittée en cours : le score part au classement avant que le compte soit oublié.
+    this.sim.abandonRun(client.sessionId);
     this.accounts.delete(client.sessionId);
     this.progression.delete(client.sessionId);this.accessTokens.delete(client.sessionId);this.refreshing.delete(client.sessionId);
     this.sim.removePlayer(client.sessionId);

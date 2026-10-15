@@ -412,13 +412,13 @@ export const SPELLS: Record<string, SpellDef> = define({
   },
   invisibilite: {
     name: 'Invisibilité',
-    description: 'Les monstres vous perdent de vue pendant 3 s et vous courez plus vite.',
+    description: 'Les monstres vous perdent de vue pendant 1,5 s et vous courez plus vite : de quoi se replacer ou préparer un coup.',
     color: 0xd0c0ff,
     element: 'air',
-    cooldown: 12000,
+    cooldown: 16000,
     range: 0,
     damage: [0, 0],
-    buff: { stats: { speed: 0.4 }, duration: 3, invisible: true, label: 'Invisible' },
+    buff: { stats: { speed: 0.5 }, duration: 1.5, invisible: true, label: 'Invisible' },
   },
   piege_de_masse: {
     name: 'Piège de Masse',

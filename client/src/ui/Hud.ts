@@ -478,7 +478,7 @@ export class Hud {
     }
 
     // Addon de dégâts : totaux depuis le début de la run (dégâts infligés, soins, dégâts subis),
-    // avec le DPS du joueur (moyenne de la run ou des 10 dernières secondes, au choix).
+    // avec le DPS du joueur (moyenne de la run ou des 5 dernières secondes, au choix).
     const now = performance.now();
     const rows: { name: string; slot: number; value: number; dps: number }[] = [];
     // En partie : temps de jeu (pauses et haltes exclues). Hors partie : horloge réelle, hors pause.

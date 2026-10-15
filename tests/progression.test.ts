@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { EQUIPMENT_BASES, EQUIPMENT_RARITIES, equipmentReward, equipmentStats, equipmentTier, equippedStats, getClass, getMonster, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, createEquipment, sanitizeEquipped, sanitizeEquipment, monsterEquipmentDrops, makeRng, DROP_RARITY_CHANCES, fusionResult, rollRunBonus, dropRarityWeights } from '@rod/shared';
+import { EQUIPMENT_BASES, EQUIPMENT_RARITIES, dropPool, equipmentReward, equipmentStats, equipmentTier, equippedStats, getClass, getMonster, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, createEquipment, sanitizeEquipped, sanitizeEquipment, monsterEquipmentDrops, makeRng, DROP_RARITY_CHANCES, fusionResult, rollRunBonus, dropRarityWeights } from '@rod/shared';
 import { migrateAccount, equippedFromAccount } from '../client/src/progression.ts';
 import { Simulation } from '../server/src/game/Simulation.ts';
 import { GameState, PotionState } from '../server/src/state.ts';
@@ -43,13 +43,12 @@ test('quatre raretés bornées et légendaire parfait pour toutes les lignes du 
     }
   }
 });
-test('les paliers suivent les zones franchies et garantissent une trouvaille du palier atteint', () => {
+test('les paliers suivent les zones franchies ; la trouvaille garantie suit la tranche de la difficulté', () => {
   assert.deepEqual([1,2,3,4,5,6,8,9,13,18,20,25,31,33].map(equipmentTier),[0,0,0,0,0,1,1,2,3,4,5,7,9,9]);
   for (let stage=1;stage<=33;stage++) for (let mode=0;mode<4;mode++) {
     const r=equipmentReward('run',123,stage,mode,50);
     assert.ok(r.gear.length>=1);
-    assert.equal(EQUIPMENT_BASES[r.gear[0].base].tier,equipmentTier(stage));
-    assert.ok(r.gear.every(e=>EQUIPMENT_BASES[e.base].tier<=r.tier));
+    assert.ok(dropPool(stage,false,mode).includes(r.gear[0].base));
     assert.deepEqual(r,equipmentReward('run',123,stage,mode,50));
   }
 });
@@ -113,11 +112,11 @@ test('drops : Dofus uniquement sur boss à 3 %, distribution des raretés correc
   let gearCount=0,dofusCount=0;
   const rarities={normal:0,rare:0,epique:0,legendaire:0};
   for(let i=0;i<100000;i++) {
-    for(const e of monsterEquipmentDrops(9,true,random)) {
+    for(const e of monsterEquipmentDrops(1,true,random)) {
       if(EQUIPMENT_BASES[e.base].kind==='dofus') dofusCount++; else gearCount++;
       rarities[e.rarity]++;
     }
-    assert.ok(monsterEquipmentDrops(9,false,random).every(e=>EQUIPMENT_BASES[e.base].kind!=='dofus'));
+    assert.ok(monsterEquipmentDrops(1,false,random).every(e=>EQUIPMENT_BASES[e.base].kind!=='dofus'));
     assert.ok(!rollRunBonus(0,random).base.startsWith('dofus'));
   }
   assert.ok(Math.abs(gearCount/100000-.03)<.002);

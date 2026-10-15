@@ -30,7 +30,7 @@ export function leveledSpell(id:string,rawLevel=1):SpellDef{
   if(s.summon){const chest=s.summon.monster==='coffre_anime';s.summon={...s.summon,max:chest?s.summon.max:s.summon.max+level-1,duration:s.summon.duration*(1+.2*(level-1)),count:chest?1:level};}
   else if(s.shield)s.shield={...s.shield,duration:s.shield.duration*(1+.2*(level-1)),allies:level-1,allyRadius:4};
   else if(s.revive)s.reviveCount=level;
-  else if(s.buff){s.buff={...s.buff,duration:s.buff.duration*(1+.2*(level-1)),...(level===3&&!s.buff.invisible&&!s.buff.invulnerable?{zone:Math.max(4,s.buff.zone??0)}:{})};}
+  else if(s.buff){s.buff={...s.buff,duration:s.buff.invisible?s.buff.duration+.25*(level-1):s.buff.duration*(1+.2*(level-1)),...(level===3&&!s.buff.invisible&&!s.buff.invulnerable?{zone:Math.max(4,s.buff.zone??0)}:{})};}
   else if(s.rewind){s.rewind+=level-1;s.cooldown*=level===2?.9:.8;}
   else if(id==='karcham')s.cooldown*=level===2?.9:.8;
   else if(s.teleport||s.effects?.some(e=>e.type==='dash')){
@@ -51,6 +51,7 @@ export function spellEvolutionText(id:string,level:number):string{
   if(s.summon)return s.summon.monster==='coffre_anime'?`Le coffre dure ${Math.round(s.summon.duration*(1+.2*(n-1)))} s. Ses PV restent égaux à vos PV max.`:`Invoque ${n} créatures par lancement, limite +${n-1}, durée +${20*(n-1)} %.`;
   if(s.shield)return`Durée +${20*(n-1)} % ; partage aussi un demi-bouclier avec ${n-1} allié${n>2?'s':''} à 4 cases.`;
   if(s.revive)return`Ressuscite jusqu’à ${n} alliés proches du point visé.`;
+  if(s.buff?.invisible)return`Durée +${((n-1)*.25).toLocaleString('fr')} s.`;
   if(s.buff)return`Durée +${20*(n-1)} %${n===3&&!s.buff.invisible&&!s.buff.invulnerable?' ; devient une aura de 4 cases':''}.`;
   if(s.rewind)return`Retour jusqu’à ${s.rewind+n-1} s en arrière ; recharge −${n===2?10:20} %.`;
   if(s.teleport||s.effects?.some(e=>e.type==='dash'))return`Portée du déplacement +${n-1} case${n>2?'s':''}, recharge −${n===2?10:20} %.`;

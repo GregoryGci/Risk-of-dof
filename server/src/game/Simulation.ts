@@ -46,6 +46,7 @@ import {
   monsterDamageMultiplier,
   monsterHpMultiplier,
   monsterSpeedMultiplier,
+  bossSpeedMultiplier,
   equippedStats,
   sanitizeEquipped,
   equipmentReward,
@@ -153,6 +154,8 @@ export interface MonsterRt {
   attackHoldUntil?:number;
   bossReadyAt?:number;
   bossHoldUntil?:number;
+  /** Prochain bond possible vers un joueur éloigné. */
+  bossLeapAt?:number;
   bossPattern?:number;
   aimX?:number;
   aimY?:number;
@@ -519,7 +522,7 @@ export class Simulation {
   private rollShop(p:PlayerRt,reroll=false):void {
     const old=p.state.shop.split(','),excluded=reroll?new Set(old.map(o=>RUN_BONUSES[o.split(':')[0]]?.base)):new Set();
     const bases=[...new Set(this.usefulBonuses(p).map(b=>b.base))].filter(b=>!excluded.has(b)),offers:string[]=[];
-    for(let i=0;i<SHOP_SIZE;i++){if(reroll&&p.bought.has(i)){offers.push(old[i]);continue;}const base=bases.splice(Math.floor(Math.random()*bases.length),1)[0];if(!base)break;const variants=this.usefulBonuses(p).filter(b=>b.base===base),rarity=rollRarity(p.stats.luck+.15);const item=variants.find(b=>b.rarity===rarity)??variants[0];offers.push(`${item.id}:${merchantPrice(item,this.state.difficulty)}`);}
+    for(let i=0;i<SHOP_SIZE;i++){if(reroll&&p.bought.has(i)){offers.push(old[i]);continue;}const base=bases.splice(Math.floor(Math.random()*bases.length),1)[0];if(!base)break;const variants=this.usefulBonuses(p).filter(b=>b.base===base),rarity=rollRarity(p.stats.luck+.15);const item=variants.find(b=>b.rarity===rarity)??variants[0];offers.push(`${item.id}:${merchantPrice(item,this.state.difficulty,this.state.mode)}`);}
     p.state.shop=offers.join(',');
   }
   rerollShop(id:string):void {
@@ -1013,7 +1016,7 @@ export class Simulation {
       const minute=Math.floor(this.state.time/60);
       if(minute>this.forgeMinute){this.forgeMinute=minute;this.awardFragments(`minute:${minute}`,minuteFragments(this.state.stage));}
       this.state.difficulty = modeDifficulty(difficultyAt(this.state.time, this.players.size,this.state.stage,this.state.stageTime),this.state.mode);
-      this.state.chestCost = chestCost(this.state.difficulty);
+      this.state.chestCost = chestCost(this.state.difficulty,this.state.mode);
       // Le Zaap se charge tout seul une fois activé, et s'ouvre dès que ses gardiens sont vaincus
       // (sans attendre la fin de la charge : on enchaîne les zones en speedrun).
       if (this.state.zaapState === ZAAP_CHARGING) {
@@ -1437,7 +1440,7 @@ export class Simulation {
     const [kMin, kMax] = m.def.kamas;
     const kamas = Math.round(kMin + Math.random() * (kMax - kMin));
     for (const p of this.players.values()) {
-      const gain = Math.round(kamas * (1 + p.stats.kamas) * getRoute(this.state.stageRoute).kamas);
+      const gain = Math.round(kamas * (1 + p.stats.kamas) * getRoute(this.state.stageRoute).kamas * getMode(this.state.mode).runKamas);
       p.state.kamas += gain;
       p.state.kamasEarned += gain;
     }
@@ -1461,7 +1464,7 @@ export class Simulation {
         }
       }
       for (const p of this.players.values()) {
-        const drops = monsterEquipmentDrops(this.state.stage,!!m.def.boss,Math.random,(p.def.id==='enutrof'?2:1)*m.lootMultiplier,m.dofusMultiplier??1);
+        const drops = monsterEquipmentDrops(this.state.stage,!!m.def.boss,Math.random,(p.def.id==='enutrof'?2:1)*m.lootMultiplier,m.dofusMultiplier??1,this.state.mode);
         if (!drops.length) continue;
         drops.forEach((gear,index)=>{
           const drop={claimId:`${this.state.runId}:${m.id}:${p.id}:${index}`,gear};
@@ -1549,6 +1552,23 @@ export class Simulation {
       p.dx=p.dy=0;p.autoAttack=false;p.push=null;p.state.moving=false;p.state.forcedMotion=false;p.state.momentum=false;p.momentumUntil=0;
       p.state.boonChoices='[]';this.boonQueues.delete(p.id);
       if(outcome==='victory'){p.state.deathCause='';p.state.unlockedMode=Math.max(p.state.unlockedMode,nextMode(this.state.mode)??this.state.mode);}
+      this.grantRunReward(p,outcome);
+    }
+  }
+
+  /**
+   * Joueur qui quitte une run en cours (menu, onglet fermé, connexion perdue) : sa run compte
+   * comme une défaite. Son score part au classement et sa récompense est calculée comme à la fin.
+   */
+  abandonRun(id:string):void{
+    const p=this.players.get(id);
+    if(!p||this.state.phase!==PHASE_PLAYING||p.state.rewards)return;
+    if(!p.state.deathCause)p.state.deathCause='Abandon';
+    this.grantRunReward(p,'defeat');
+  }
+
+  private grantRunReward(p:PlayerRt,outcome:'victory'|'defeat'):void{
+    {
       let seed = 2166136261;
       for (const c of `${this.state.runId}:${p.id}`) seed = Math.imul(seed ^ c.charCodeAt(0), 16777619);
       const reward=equipmentReward(this.state.runId, seed >>> 0, this.state.stage, this.state.mode, p.state.kamasEarned,p.loot);
@@ -1788,7 +1808,7 @@ export class Simulation {
       state,
       def,
       damageMult,
-      speedMult:def.ally||def.behavior.type==='dummy'?1:monsterSpeedMultiplier(this.state.difficulty),
+      speedMult:def.ally||def.behavior.type==='dummy'?1:def.boss?bossSpeedMultiplier(this.state.mode):monsterSpeedMultiplier(this.state.difficulty,this.state.mode),
       lootMultiplier:1,
       // Petit délai avant la première attaque pour éviter les coups « à l'apparition ».
       meleeReadyAt: this.now + 0.5,

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {RUN_BONUSES,RARITIES,emptyStats,clampCombatStats,bonusUseful,rollRunBonus,sumRunStats,sourceDamageMultiplier,makeRng,getSpell,getMonster,ZAAP_IDLE,ZAAP_CHARGING,monsterEquipmentDrops,EQUIPMENT_BASES,EQUIPMENT_SETS,dropPool,equipmentTier,statCaps,monsterHpMultiplier,monsterDamageMultiplier} from '@rod/shared';
+import {RUN_BONUSES,dropModeOf,RARITIES,emptyStats,clampCombatStats,bonusUseful,rollRunBonus,sumRunStats,sourceDamageMultiplier,makeRng,getSpell,getMonster,ZAAP_IDLE,ZAAP_CHARGING,monsterEquipmentDrops,EQUIPMENT_BASES,EQUIPMENT_SETS,dropPool,equipmentTier,statCaps,monsterHpMultiplier,monsterDamageMultiplier} from '@rod/shared';
 import {Simulation,type PlayerRt} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 import {summonPower} from '../server/src/game/summons.ts';
@@ -63,10 +63,10 @@ test('Plafonds : vol de vie natif inclus, offres du marchand et récompenses dé
  assert.ok(!offers.some(id=>id.startsWith('attaque.')));assert.ok(!offers.some(id=>id.startsWith('chance.')));
 });
 
-test('Panoplies : 142 ensembles complets vérifiés et aucun drop hors du palier/donjon courant',()=>{
+test('Panoplies : 142 ensembles complets vérifiés, chaque pièce droppable dans la tranche de niveau de sa difficulté',()=>{
  assert.equal(EQUIPMENT_SETS.length,142);assert.equal(new Set(EQUIPMENT_SETS.map(s=>s.id)).size,142);
- for(const set of EQUIPMENT_SETS){assert.ok(set.members.length>=2);for(const id of set.members){assert.equal(EQUIPMENT_BASES[id].set,set.id);assert.equal(EQUIPMENT_BASES[id].zone,set.zone);assert.ok(dropPool(set.zone!,false).includes(id));}}
- for(let stage=1;stage<=33;stage++){const pool=dropPool(stage,false);assert.ok(pool.length>0);for(const id of pool){const b=EQUIPMENT_BASES[id];assert.equal(b.tier,equipmentTier(stage));assert.ok(!b.zone||b.zone===stage);}}
+ for(const set of EQUIPMENT_SETS){assert.ok(set.members.length>=2);for(const id of set.members){assert.equal(EQUIPMENT_BASES[id].set,set.id);assert.equal(EQUIPMENT_BASES[id].zone,set.zone);assert.ok(dropPool(1,false,dropModeOf(id)).includes(id));assert.equal(dropModeOf(id),dropModeOf(set.members[0]),'une panoplie tombe entière dans une difficulté');}}
+ for(let mode=0;mode<4;mode++)for(let stage=1;stage<=33;stage++){const pool=dropPool(stage,false,mode);assert.ok(pool.length>0);assert.deepEqual(pool,dropPool(1,false,mode),'la zone ne change pas le pool');}
 });
 
 test('Cauchemar : un ennemi de départ peut tuer un Iop nu en un coup, contrairement au mode Normal',()=>{
