@@ -55,17 +55,22 @@ export interface GameMode {
   spawn: number;
   /** Multiplicateur des kamas de fin de partie. Le mode améliore aussi le butin permanent. */
   reward: number;
+  /** Gardiens simultanés (trois toutes les trois zones pour le Cauchemar). */
+  nightmare?:boolean;
 }
 
 export const GAME_MODES: GameMode[] = [
   { id: 0, name: 'Piou', description: 'Facile : moins de monstres, moins coriaces.', hp: 0.8, damage: 0.75, spawn: 0.85, reward: 1 },
   { id: 1, name: 'Prespic', description: 'Normal : adapté à une première tenue. Plus de monstres à vaincre et ×1,5 kamas en fin de run.', hp: 1.25, damage: 1.15, spawn: 1.15, reward: 1.5 },
   { id: 2, name: 'Bworker', description: 'Difficile : conseillé avec une tenue de palier 80 ou plus. Davantage de monstres, ×2,2 kamas en fin de run.', hp: 1.9, damage: 1.65, spawn: 1.5, reward: 2.2 },
+  { id: 3, name: 'Cauchemar', description: 'Fin de jeu : deux gardiens par zone, trois toutes les trois zones. Tenue 190–200 conseillée. Hordes renforcées, ×3,4 kamas en fin de run.', hp: 4.2, damage: 2.8, spawn: 1.95, reward: 3.4, nightmare:true },
 ];
 
 export function getMode(id: number): GameMode {
   return GAME_MODES[id] ?? GAME_MODES[0];
 }
+
+export function guardianCount(mode:number,stage:number):number{return getMode(mode).nightmare?(stage%3===0?3:2):1;}
 
 /** Gardien du Zaap selon la zone : la liste tourne en boucle (de plus en plus forts avec la difficulté). */
 export const BOSS_SEQUENCE = ZONES.map(z=>z.boss);

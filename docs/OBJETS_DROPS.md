@@ -1,6 +1,6 @@
 # Équipements, taux de drop et jets parfaits
 
-Catalogue : **82 objets**, dont **10 Dofus**. Paliers 20/40/80/120/160 ouverts aux zones 1/2/4/6/9.
+Catalogue : **131 objets**, dont **10 Dofus**. Paliers 20/40/80/120/160/170/180/190/200 ouverts aux zones 1/2/4/6/9/13/18/25/31.
 
 - Chaque ennemi : **3 %** de chance d'équipement permanent. Puis on choisit la source : zone courante (**60 %**), précédente (**25 %**) ou celle d'avant (**15 %**), puis un équipement uniforme de son palier. Au début, on renormalise les sources disponibles.
 - Source courante : **80 % normal / 16 % rare / 3,5 % épique / 0,5 % légendaire**. Sources antérieures : chances rare/épique/légendaire ×3, soit **40 % / 48 % / 10,5 % / 1,5 %**. Les contributions s'additionnent si les zones correspondent au même palier.
@@ -125,3 +125,72 @@ Tous les jets et taux sont dans [objets-drops.csv](objets-drops.csv).
 | Bottes du Meulou | bottes | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +604 PV max ; +155.2 % de dégâts ; +35.3 % de vitesse |
 | Dofus Ebène | dofus (boss) | 0,24 % | 0,048 % | 0,0105 % | 0,0015 % | +33.6 % de dégâts ; +1.3 % de vol de vie |
 | Dofus Ivoire | dofus (boss) | 0,24 % | 0,048 % | 0,0105 % | 0,0015 % | -18 % de dégâts subis |
+
+## Palier 170 — zone 13
+
+| Objet | Type | Normal | Rare | Épique | Légendaire | Jet parfait T1 |
+|---|---|---:|---:|---:|---:|---|
+| Coiffe du Minotot | coiffe | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +988 PV max ; +266 % de dégâts ; +26.2 % de vitesse de recharge |
+| Cape du Minotot | cape | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +912 PV max ; +247 % de dégâts ; +17.4 % de critiques |
+| Collier du Minotot | amulette | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +798 PV max ; +266 % de dégâts ; +37.1 % de vitesse de recharge |
+| Bracelet du Minotot | anneau | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +665 PV max ; +228 % de dégâts ; +8.4 % de chance pour la qualité des bonus de run |
+| Ceinture du Minotot | ceinture | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +950 PV max ; -30 % de dégâts subis ; +19.6 % de vitesse de recharge |
+| Sandales du Minotot | bottes | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +760 PV max ; +41.4 % de vitesse ; +190 % de dégâts |
+| Sceptre du Minotot | arme | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +380 % de dégâts ; +6.1 % de vol de vie ; +17.4 % de vitesse de recharge |
+| Rod Gerse | arme | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +418 % de dégâts ; +17.4 % de critiques ; +69.7 % de dégâts critiques |
+| Dagues Eudin | arme | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +323 % de dégâts ; +32.7 % de vitesse d'attaque à distance ; +7.8 % de vol de vie |
+| Cape Itaineflam | cape | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +760 PV max ; +266 % de dégâts ; -33 % de dégâts subis |
+| Miniminotot | familier | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +665 PV max ; +209 % de dégâts ; +8.6 PV/s |
+| Bouclier trophée du Kimbo | bouclier | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | -42 % de dégâts subis ; +285 PV max |
+
+## Palier 180 — zone 18
+
+| Objet | Type | Normal | Rare | Épique | Légendaire | Jet parfait T1 |
+|---|---|---:|---:|---:|---:|---|
+| Capuche Souveraine du Roissingue | coiffe | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +1166 PV max ; +312.3 % de dégâts ; -26 % de dégâts subis |
+| Cape Souveraine du Roissingue | cape | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +1083 PV max ; +291.5 % de dégâts ; +34.2 % de vitesse de recharge |
+| Sceau Souverain du Roissingue | anneau | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +833 PV max ; +270.7 % de dégâts ; +22.8 % de critiques |
+| Amulette Ripage | amulette | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +916 PV max ; +333.1 % de dégâts ; +41.1 % de vitesse de recharge |
+| Anneau Chevelu | anneau | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +791 PV max ; +301.9 % de dégâts ; +59.3 % de dégâts critiques |
+| Bottines des sous-bois | bottes | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +999 PV max ; +45.6 % de vitesse ; +229 % de dégâts |
+| Tranche des Sous-bois | ceinture | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +1124 PV max ; +270.7 % de dégâts ; -32 % de dégâts subis |
+| Sangle Cible | ceinture | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +937 PV max ; +50.2 % de vitesse de recharge ; +5.7 de portée |
+| Rhizome du Tynril | arme | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +478.9 % de dégâts ; +8.2 % de vol de vie ; +8.3 PV/s |
+| Bâton Champmanique | arme | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +499.7 % de dégâts ; +20.5 % de critiques ; -20 % de dégâts subis |
+| Tifoux | familier | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | +54.8 % de vitesse de recharge ; +187.4 % de dégâts ; +10.4 PV/s |
+| Bouclier trophée du Rasboul | bouclier | 0,12 % | 0,024 % | 0,00525 % | 0,00075 % | -47 % de dégâts subis ; +416 PV max |
+
+## Palier 190 — zone 25
+
+| Objet | Type | Normal | Rare | Épique | Légendaire | Jet parfait T1 |
+|---|---|---:|---:|---:|---:|---|
+| Ougalurette | coiffe | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | +1362 PV max ; +385.9 % de dégâts ; -24 % de dégâts subis |
+| Ougamulette | amulette | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | +1135 PV max ; +385.9 % de dégâts ; +47.6 % de vitesse de recharge |
+| Ougature | ceinture | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | +1362 PV max ; +340.5 % de dégâts ; -35 % de dégâts subis |
+| Ougarteau | arme | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | +613 % de dégâts ; +9.5 % de vol de vie ; +76.2 % de dégâts critiques |
+| Bracelet Ventré | anneau | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | +954 PV max ; +363.2 % de dégâts ; +26.2 % de critiques |
+| Ceinture Mycosine | ceinture | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | +1249 PV max ; +363.2 % de dégâts ; +6.7 de portée |
+| Chaussons Pignons | bottes | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | +1135 PV max ; +317.8 % de dégâts ; +52.4 % de vitesse |
+| Anneau Bliteré | anneau | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | +908 PV max ; +351.9 % de dégâts ; +33.4 % de vitesse de recharge |
+| Cape Erforée | cape | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | +1271 PV max ; +363.2 % de dégâts ; +21.4 % de critiques |
+| Bworky | familier | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | +1476 PV max ; -38 % de dégâts subis |
+| Bouclier trophée du Bworker | bouclier | 0,130909 % | 0,026182 % | 0,005727 % | 0,000818 % | -52 % de dégâts subis ; +568 PV max |
+
+## Palier 200 — zone 31
+
+| Objet | Type | Normal | Rare | Épique | Légendaire | Jet parfait T1 |
+|---|---|---:|---:|---:|---:|---|
+| Kralamansion | amulette | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1429 PV max ; +468.2 % de dégâts ; +57.1 % de vitesse de recharge ; +4 de portée |
+| Kralano | anneau | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1183 PV max ; +443.6 % de dégâts ; +29.8 % de critiques |
+| Annolamour | anneau | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1331 PV max ; +419 % de dégâts ; -31 % de dégâts subis |
+| Voile d'encre | cape | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1602 PV max ; +468.2 % de dégâts ; +27.3 % de critiques ; -28 % de dégâts subis |
+| Chapignon | coiffe | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1528 PV max ; +468.2 % de dégâts ; +29.8 % de critiques |
+| Casque Harnage | coiffe | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1676 PV max ; +443.6 % de dégâts ; +39.7 % de vitesse de recharge |
+| Bottes Répané | bottes | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1479 PV max ; +394.3 % de dégâts ; +59.6 % de vitesse |
+| Ceinture Toré | ceinture | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1602 PV max ; +419 % de dégâts ; -39 % de dégâts subis |
+| Sandales Circulaires du Kimbo | bottes | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1282 PV max ; +443.6 % de dégâts ; +62.1 % de vitesse |
+| Ceinture Rasboulaire du Rasboul | ceinture | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1429 PV max ; +468.2 % de dégâts ; +29.8 % de critiques |
+| Az'tech | arme | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +764 % de dégâts ; +12.4 % de vol de vie ; +99.3 % de dégâts critiques |
+| Couteaux à Champignons | arme | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +616.1 % de dégâts ; +54.6 % de vitesse d'attaque à distance ; +32.3 % de critiques |
+| Kralaffect | familier | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | +1109 PV max ; +369.7 % de dégâts ; +37.2 % de vitesse de recharge |
+| Bouclier trophée du Kralamour Géant | bouclier | 0,102857 % | 0,020571 % | 0,0045 % | 0,000643 % | -57 % de dégâts subis ; +739 PV max |

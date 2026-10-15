@@ -413,23 +413,28 @@ export class Hud {
     }
     this.setHtml('objective', objective);
 
-    // Barre de vie du boss, ou à défaut d'un monstre d'élite, avec les PV en nombre.
+    // Rencontre complète : ne masquer ni les gardiens secondaires ni leurs PV.
     let bossName = '';
     let bossPct = 0;
     let bossHp = '';
+    const guardians:{id:string;name:string;hp:number;maxHp:number}[]=[];
     state.monsters.forEach((m) => {
       const def = getMonster(m.type);
+      if(def.boss&&!m.ally)guardians.push({id:m.type,name:m.rogue?`${def.name} · Surprise ×3`:def.name,hp:Math.max(0,m.hp),maxHp:m.maxHp});
       if ((!def.boss && !m.elite) || (bossName && !def.boss)) return;
       bossName = m.rogue ? `${def.name} · Surprise · Butin ×3` : m.elite ? `${def.name} d'élite` : def.name;
       bossPct = Math.round((Math.max(0, m.hp) / (m.maxHp || 1)) * 1000) / 10;
       bossHp = `${Math.max(0, Math.ceil(m.hp))} / ${m.maxHp}`;
     });
-    const bossKey = `${bossName}|${bossHp}`;
+    if(guardians.length>1){const hp=guardians.reduce((sum,b)=>sum+b.hp,0),max=guardians.reduce((sum,b)=>sum+b.maxHp,0);bossName=`CAUCHEMAR · ${guardians.length} GARDIENS`;bossPct=hp/max*100;bossHp=`${Math.ceil(hp)} / ${max}`;}
+    const roster=guardians.length>1?guardians.map(b=>`<div class="boss-line"><span>${escapeHtml(b.name)}</span><small>${Math.ceil(b.hp)} / ${b.maxHp}</small><i style="--hp:${b.hp/b.maxHp*100}%"></i></div>`).join(''):'';
+    const bossKey = `${bossName}|${bossHp}|${roster}`;
     if (this.cache.boss !== bossKey) {
       this.cache.boss = bossKey;
       $('boss').classList.toggle('hidden', bossName === '');
       $('boss-name').innerHTML = bossName ? `${escapeHtml(bossName)} <small>${bossHp}</small>` : '';
       $('boss-bar').style.width = `${bossPct}%`;
+      $('boss-roster').innerHTML=roster;$('boss').classList.toggle('multiple',guardians.length>1);
     }
 
     // Addon de dégâts : totaux depuis le début de la run (dégâts infligés, soins, dégâts subis).

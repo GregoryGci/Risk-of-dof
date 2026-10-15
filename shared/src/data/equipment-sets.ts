@@ -14,6 +14,12 @@ export const EQUIPMENT_SETS:EquipmentSet[]=[
   {id:'dragon_cochon',name:'Panoplie du Dragon Cochon',level:120,members:['anneau_dragon_cochon','cape_dragon_cochon','collier_dragon_cochon','mules_dragon_cochon']},
   {id:'meulou',name:'Panoplie du Meulou',level:160,members:['coiffe_meulou','cape_meulou','anneau_meulou','ceinture_meulou','bottes_meulou']},
   {id:'chene_mou',name:'Panoplie du Chêne Mou',level:160,members:['coiffe_chene_mou','cape_chene_mou','talisman_chene_mou','anneau_chene_mou','string_chene_mou','tongues_chene_mou']},
+  {id:'minotot',name:'Panoplie du Minotot',level:170,members:['coiffe_minotot','cape_minotot','collier_minotot','bracelet_minotot','ceinture_minotot','sandales_minotot','sceptre_minotot']},
+  {id:'souveraine',name:'Panoplie Souveraine',level:180,members:['capuche_souveraine','cape_souveraine','sceau_souverain']},
+  {id:'ougah',name:'Panoplie Ougah',level:190,members:['ougalurette','ougamulette','ougature','ougarteau']},
+  {id:'berserker',name:'Panoplie du Bworker Berserker',level:190,members:['chapignon','bracelet_ventre','ceinture_mycosine','chaussons_pignons']},
+  {id:'gladiateur',name:'Panoplie du Bworker Gladiateur',level:200,members:['casque_harnage','anneau_blitere','ceinture_tore','bottes_repane']},
+  {id:'ventouse',name:'Panoplie Ventouse',level:200,members:['kralamansion','kralano','annolamour']},
 ];
 export function equipmentSet(base:string):EquipmentSet|undefined {return EQUIPMENT_SETS.find(s=>s.members.includes(base));}
 export interface SetThreshold {pieces:number;stats:Partial<Record<StatKey,number>>}

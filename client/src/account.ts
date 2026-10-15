@@ -1,6 +1,6 @@
 // Progression entre les parties, mémorisée dans le navigateur :
 // bourse de kamas (gagnée en fin de partie), sorts débloqués et sorts équipés par classe.
-import { EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, TALENTS, fusionResult, equippedStats, getClass, isFlexSlot, sanitizeEquipment, sanitizeLoadout, slotKind, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
+import { EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, TALENTS, fusionResult, equippedStats, getClass, isFlexSlot, sanitizeEquipment, sanitizeLoadout, slotKind, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
 import { equippedFromAccount, migrateAccount, type AccountData } from './progression.ts';
 import {forgeCost,recycleValue,type ForgeGrant} from '@rod/shared';
 import {sanitizeRunSummary,compareRuns} from '@rod/shared';
@@ -193,7 +193,7 @@ export const account = {
     data.bank += Number.isFinite(reward.kamas) ? Math.max(0, Math.floor(reward.kamas)) : 0;
     this.claimDrops(Array.isArray(reward.drops) ? reward.drops : []);
     this.claimFragments(Array.isArray(reward.forgeGrants)?reward.forgeGrants:[]);
-    data.bestTier = Math.max(data.bestTier, Math.min(4, Math.max(0, Math.floor(reward.tier) || 0)));
+    data.bestTier = Math.max(data.bestTier, Math.min(EQUIPMENT_TIERS.length-1, Math.max(0, Math.floor(reward.tier) || 0)));
     data.credited.push(reward.runId);
     // Le crédit de run suffit à reconnaître ses anciens drops : retirer leurs longues clés.
     data.claimedDrops=data.claimedDrops.filter(id=>!id.startsWith(`${reward.runId}:`));

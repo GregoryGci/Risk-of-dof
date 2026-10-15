@@ -3,6 +3,7 @@
 import {
   CHALLENGE_COUNT,
   getBlessing,
+  guardianCount,
   ROUTES, getRoute, resolveRoute, type RouteId,
   CHEST_COUNT,
   MONSTERS,
@@ -224,8 +225,14 @@ export class Simulation {
   private potionExpires = new Map<string, number>();
   /** Actions différées (réapparition des coffres...). */
   private timers: { at: number; run: () => void }[] = [];
-  /** Id du gardien du Zaap en vie ('' sinon). */
-  private bossId = '';
+  /** Tous les gardiens de la rencontre doivent tomber avant la victoire. */
+  private guardianIds=new Set<string>();
+  private bossTelegraphUntil=0;
+  tryBossTelegraph(duration:number):boolean{
+    if(this.guardianIds.size<2)return true;
+    if(this.now<this.bossTelegraphUntil)return false;
+    this.bossTelegraphUntil=this.now+duration+.45;return true;
+  }
   grounds = new Map<string, GroundRt>();
   private nextGroundId = 1;
   private director = new Director(this);
@@ -341,7 +348,7 @@ export class Simulation {
   setMode(id: string, mode: unknown): void {
     if (this.state.phase !== PHASE_LOBBY || id !== this.state.hostId) return;
     const m = Number(mode);
-    if (Number.isInteger(m) && m >= 0 && m <= 2) this.state.mode = m;
+    if (Number.isInteger(m) && m >= 0 && m <= 3) this.state.mode = m;
   }
 
   setBlessing(id:string,blessing:unknown):void{
@@ -395,7 +402,7 @@ export class Simulation {
     this.potionExpires.clear();
     this.director.reset();
     this.timers = [];
-    this.bossId = '';
+    this.guardianIds.clear();this.bossTelegraphUntil=0;
     if(this.map.bossArena){this.state.zaapX=this.map.bossArena.x;this.state.zaapY=this.map.bossArena.y;}
     for (const id of [...this.state.chests.keys()]) this.state.chests.delete(id);
     for (let i = 0; i < CHEST_COUNT; i++) this.spawnChest();
@@ -462,7 +469,7 @@ export class Simulation {
       }
     }
     // L'étape marchande n'augmente ni le palier de loot ni la difficulté.
-    this.timers=[];this.bossId='';this.state.chests.clear();this.state.potions.clear();this.potionExpires.clear();
+    this.timers=[];this.guardianIds.clear();this.bossTelegraphUntil=0;this.state.chests.clear();this.state.potions.clear();this.potionExpires.clear();
     this.state.intermission=true;this.state.zaapX=0;this.state.zaapY=0;this.state.zaapState=ZAAP_IDLE;
     this.state.merchantX=MAP_SIZE/2;this.state.merchantY=MAP_SIZE/2;
     this.state.shop='personal';
@@ -506,24 +513,28 @@ export class Simulation {
     const rogue = this.state.stage%3===0 && Math.random()<0.15;
     const alternatives=ZONES.map(zone=>zone.boss).filter(id=>id!==normal.id);
     const selected=rogue?getMonster(alternatives[Math.floor(Math.random()*alternatives.length)]):normal;
-    const def=rogue?{...selected,melee:{...selected.melee,damage:Math.max(selected.melee.damage,normal.melee.damage)}}:selected;
+    const first=rogue?{...selected,melee:{...selected.melee,damage:Math.max(selected.melee.damage,normal.melee.damage)}}:selected;
     const diff = this.state.difficulty;
-    let x = this.state.zaapX;
-    let y = this.state.zaapY;
-    for (let attempt = 0; attempt < 30; attempt++) {
-      const a = Math.random() * Math.PI * 2;
-      const px = this.state.zaapX + Math.cos(a) * 4;
-      const py = this.state.zaapY + Math.sin(a) * 4;
-      if (isBlocked(this.map, px, py, def.radius)) continue;
-      x = px;
-      y = py;
-      break;
-    }
+    const count=guardianCount(this.state.mode,this.state.stage),names:string[]=[];
+    const pool=[...new Set([1,2,3].map(offset=>bossForStage(Math.max(1,this.state.stage-offset))))].filter(id=>id!==first.id);
+    if(pool.length<count-1)for(const zone of ZONES)if(zone.boss!==first.id&&!pool.includes(zone.boss)){pool.push(zone.boss);if(pool.length>=count-1)break;}
     const hpMult = monsterHpMultiplier(diff) * (1 + 0.5 * (this.players.size - 1));
-    const boss=this.spawnMonster({...def,hp:bossHpBudget(this.state.stage)}, x, y, hpMult*(rogue?1.75:1), monsterDamageMultiplier(diff)*(rogue?1.4:1), Math.round(diff));
-    boss.state.rogue=rogue;boss.lootMultiplier=rogue?3:1;boss.speedMult*=rogue?1.1:1;
-    this.bossId=boss.id;
-    this.broadcast('boss', { name: def.name, rogue, lootMultiplier:boss.lootMultiplier });
+    for(let i=0;i<count;i++){
+      const companion=i?getMonster(pool[(i-1)%pool.length]):first;
+      const def=i?{...companion,melee:{...companion.melee,damage:normal.melee.damage}}:first;
+      let x=this.state.zaapX,y=this.state.zaapY;
+      for(let attempt=0;attempt<40;attempt++){
+        const a=count===1?Math.random()*Math.PI*2:i*Math.PI*2/count+attempt*.43,r=4+Math.floor(attempt/12)*1.5,px=this.state.zaapX+Math.cos(a)*r,py=this.state.zaapY+Math.sin(a)*r;
+        if(isBlocked(this.map,px,py,def.radius)||[...this.guardianIds].some(id=>{const other=this.monsters.get(id)!;return Math.hypot(other.state.x-px,other.state.y-py)<other.def.radius+def.radius+1;}))continue;
+        x=px;y=py;break;
+      }
+      const surprise=rogue&&i===0,share=count===3?.56:count===2?.72:1;
+      const boss=this.spawnMonster({...def,hp:bossHpBudget(this.state.stage)},x,y,hpMult*share*(surprise?1.75:1),monsterDamageMultiplier(diff)*(surprise?1.4:1),Math.round(diff));
+      boss.state.rogue=surprise;boss.lootMultiplier=surprise?3:1;boss.speedMult*=surprise?1.1:1;
+      boss.bossReadyAt=this.now+2.5+i*1.65;boss.bossPattern=i;
+      this.guardianIds.add(boss.id);names.push(def.name);
+    }
+    this.broadcast('boss', {name:count>1?`${count===3?'Triple':'Double'} gardien · ${names.join(' + ')}`:first.name,rogue,lootMultiplier:rogue?3:1,count});
   }
 
   /** Relance une partie après une défaite : nouvelle carte, tout le monde revit. */
@@ -905,7 +916,7 @@ export class Simulation {
       // Le Zaap se charge tout seul une fois activé, mais ne s'ouvre que si son gardien est vaincu.
       if (this.state.zaapState === ZAAP_CHARGING) {
         this.state.zaapCharge = Math.min(1, this.state.zaapCharge + dt / ZAAP_CHARGE_TIME);
-        if (this.state.zaapCharge >= 1 && !this.monsters.has(this.bossId)) this.completeStage();
+        if (this.state.zaapCharge >= 1 && [...this.guardianIds].every(id=>!this.monsters.has(id))) this.completeStage();
       }
       if(this.state.zaapState !== ZAAP_READY) this.director.update(dt);
     }

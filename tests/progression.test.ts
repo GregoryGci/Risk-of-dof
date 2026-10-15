@@ -44,8 +44,8 @@ test('quatre raretés bornées et légendaire parfait pour toutes les lignes du 
   }
 });
 test('les paliers suivent les zones franchies et garantissent une trouvaille du palier atteint', () => {
-  assert.deepEqual([1,2,3,4,5,6,8,9,20].map(equipmentTier),[0,1,1,2,2,3,3,4,4]);
-  for (let stage=1;stage<=12;stage++) for (let mode=0;mode<3;mode++) {
+  assert.deepEqual([1,2,3,4,5,6,8,9,13,18,20,25,31,33].map(equipmentTier),[0,1,1,2,2,3,3,4,5,6,6,7,8,8]);
+  for (let stage=1;stage<=33;stage++) for (let mode=0;mode<4;mode++) {
     const r=equipmentReward('run',123,stage,mode,50);
     assert.ok(r.gear.length>=1);
     assert.equal(EQUIPMENT_BASES[r.gear[0].base].tier,equipmentTier(stage));

@@ -205,7 +205,7 @@ $('home-settings').addEventListener('input', e => {
   $(`${input.name}-value`).textContent = `${input.value} %`;
 });
 function renderModes(): void {
-  $('setup-modes').innerHTML = GAME_MODES.map((m,i) => `<button class="setup-mode${setupMode === m.id ? ' active' : ''}" data-setup-mode="${m.id}" aria-pressed="${setupMode === m.id}" title="${escapeHtml(m.description)}"><span>${['Facile','Normal','Difficile'][i]}</span><b>${m.name}</b><small>${['Découvrez les champs','Avec une première tenue','Tenue de palier 80 conseillée'][i]}</small></button>`).join('');
+  $('setup-modes').innerHTML = GAME_MODES.map((m,i) => `<button class="setup-mode${setupMode === m.id ? ' active' : ''}" data-setup-mode="${m.id}" aria-pressed="${setupMode === m.id}" title="${escapeHtml(m.description)}"><span>${['Facile','Normal','Difficile','Cauchemar'][i]}</span><b>${m.name}</b><small>${['Découvrez les champs','Avec une première tenue','Tenue de palier 80 conseillée','2 boss / 3 boss toutes les 3 zones'][i]}</small></button>`).join('');
 }
 $('setup-modes').addEventListener('click', e => {
   const button = (e.target as HTMLElement).closest<HTMLElement>('[data-setup-mode]');

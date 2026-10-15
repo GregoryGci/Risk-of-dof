@@ -98,7 +98,8 @@ export class GameRoom extends Room<{ state: GameState }> {
     }
     if(p)p.state.rankStatus='failed';
     console.error('[classement]',error instanceof Error?error.message:'Enregistrement impossible');
-    this.clients.find(c=>c.sessionId===playerId)?.send('scoreError',{message:'Classement : le serveur n’a pas pu enregistrer votre score. Votre historique est conservé.'});
+    const message=error instanceof Error&&error.message==='CAUCHEMAR_MIGRATION_REQUIRED'?'Classement Cauchemar : la migration Supabase doit encore être appliquée. Votre historique est conservé.':'Classement : le serveur n’a pas pu enregistrer votre score. Votre historique est conservé.';
+    this.clients.find(c=>c.sessionId===playerId)?.send('scoreError',{message});
   }
 
   onDrop(client:Client):void {

@@ -30,5 +30,11 @@ export async function recordScore(userId:string,run:RunSummary):Promise<void>{
   if(!secret)throw new Error('Classement non configuré sur ce serveur.');
   const row={run_id:run.runId,user_id:userId,player_name:run.name,class_id:run.classId,party_size:run.partySize,difficulty:run.mode,zone:run.zone,waves:run.waves,kills:run.teamKills,duration:run.duration,started_at:run.startedAt,summary:run};
   const response=await fetch(`${url}/rest/v1/rod_runs?on_conflict=run_id,user_id`,{method:'POST',headers:{apikey:secret,...(secret.startsWith('sb_secret_')?{}:{Authorization:`Bearer ${secret}`}),'Content-Type':'application/json',Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(row),signal:AbortSignal.timeout(10000)});
-  if(!response.ok)throw new Error(`Enregistrement du score indisponible (${response.status}).`);
+  if(!response.ok){
+    if(run.mode===3&&response.status===400){
+      const failure=await response.json().catch(()=>({})) as {code?:string;message?:string};
+      if(failure.code==='23514'&&failure.message?.includes('rod_runs_difficulty_check'))throw new Error('CAUCHEMAR_MIGRATION_REQUIRED');
+    }
+    throw new Error(`Enregistrement du score indisponible (${response.status}).`);
+  }
 }

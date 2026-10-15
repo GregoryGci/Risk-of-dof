@@ -8,6 +8,7 @@ Projet : https://supabase.com/dashboard/project/gwhorrgwaefsvayctqig
 4. Recharger le jeu, créer son compte, confirmer l'adresse e-mail puis se connecter.
 5. Lors de la première connexion, choisir son pseudo et son avatar. Le jeu exige un profil terminé, côté navigateur et serveur. Le profil est conservé dans la sauvegarde du compte ; aucune migration SQL supplémentaire n'est nécessaire.
 6. Pour le serveur publié : ajouter `SUPABASE_SECRET_KEY` dans **Railway → service du jeu → Variables** (ou Render → Environment si le client utilise Render), avec la même clé secrète que dans `server/.env`. Le fichier local n'est pas envoyé sur GitHub. Sans cette variable, les comptes peuvent jouer et sauvegarder, mais le serveur publié ne peut pas inscrire les runs au classement.
+7. Pour une base déjà créée avant le mode Cauchemar, exécuter [la migration Cauchemar](../supabase/migrations/202610150002_nightmare.sql). Elle autorise le quatrième mode dans les scores sans effacer les précédents. Les sauvegardes d'objets et l'historique privé fonctionnent sans cette modification.
 
 La clé publique fournie permet la connexion et la sauvegarde du compte connecté. Elle ne permet ni la création des tables ni l'écriture des scores protégés. Les comptes ne lisent pas la sauvegarde des autres joueurs. Les invités continuent à utiliser leur sauvegarde du navigateur.
 

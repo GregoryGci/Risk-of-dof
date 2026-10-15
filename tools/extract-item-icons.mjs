@@ -39,6 +39,10 @@ const found = {};
 const DECOR = { potion_vie: 'Potion de Mini Soin Supérieure' };
 for (const [key, name] of Object.entries(DECOR)) ours[`decor_${key}`] = name;
 for (const [id, name] of Object.entries(ours)) {
+  if(process.argv.includes('--missing')){
+    const existing=id.startsWith('decor_')?path.join(OUT,'objects',`${id.slice(6)}.png`):path.join(OUT,'items',`${id}.png`);
+    if(fs.existsSync(existing))continue;
+  }
   const entry = dofus.get(name);
   if (!entry) {
     console.warn(`introuvable dans Dofus : ${name}`);
@@ -78,21 +82,27 @@ const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
 manifest.items ??= {};
 const objects = {};
 for (const id of Object.keys(found)) {
-  const png = path.join(output, `${id}.swf`, '1.png');
-  if (!fs.existsSync(png)) continue;
+  const frames=path.join(output,`${id}.swf`);if(!fs.existsSync(frames))continue;
+  let icon;
+  for(const file of fs.readdirSync(frames).filter(f=>f.endsWith('.png')).sort((a,b)=>parseInt(a)-parseInt(b))){
+    try{icon=trimIcon(path.join(frames,file));break;}catch{/* Certains objets animés commencent sur une frame transparente. */}
+  }
+  if(!icon){console.warn(`Icône vide : ${id}`);continue;}
   if (id.startsWith('decor_')) {
     const key = id.slice(6);
     fs.mkdirSync(path.join(OUT, 'objects'), { recursive: true });
-    fs.writeFileSync(path.join(OUT, 'objects', `${key}.png`), trimIcon(png));
+    fs.writeFileSync(path.join(OUT, 'objects', `${key}.png`), icon);
     objects[key] = [{ image: `objects/${key}.png`, origin: [0.5, key === 'potion_vie' ? 1 : 0.85], scale: key === 'potion_vie' ? 0.75 : 0.96 }];
     console.log(`décor ${key} <- ${found[id]}`);
     continue;
   }
-  fs.writeFileSync(path.join(OUT, 'items', `${id}.png`), trimIcon(png));
+  fs.writeFileSync(path.join(OUT, 'items', `${id}.png`), icon);
   manifest.items[id] = `items/${id}.png`;
   console.log(`${id} <- ${found[id]}`);
 }
 updateManifest((fresh) => {
   fresh.items = { ...fresh.items, ...manifest.items };
+  // Répare aussi l'index après une extraction interrompue entre deux objets.
+  for(const id of Object.keys(ours))if(!id.startsWith('decor_')&&fs.existsSync(path.join(OUT,'items',`${id}.png`)))fresh.items[id]=`items/${id}.png`;
   fresh.objects = { ...fresh.objects, ...objects };
 });

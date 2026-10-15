@@ -26,7 +26,7 @@ create table if not exists public.rod_runs (
   player_name text not null,
   class_id text not null,
   party_size integer not null check (party_size between 1 and 4),
-  difficulty integer not null check (difficulty between 0 and 2),
+  difficulty integer not null check (difficulty between 0 and 3),
   zone integer not null check (zone between 1 and 255),
   waves integer not null check (waves >= 0),
   kills integer not null check (kills >= 0),

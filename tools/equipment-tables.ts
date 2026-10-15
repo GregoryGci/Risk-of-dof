@@ -7,7 +7,7 @@ const csv=(s:unknown)=>`"${String(s).replaceAll('"','""')}"`;
 const rows=['Objet;Type;Palier;Zone de mesure;Source;Rareté;Tier de forge;Taux par monstre;Statistiques fixes'];
 let doc=`# Équipements, taux de drop et jets parfaits
 
-Catalogue : **${Object.keys(EQUIPMENT_BASES).length} objets**, dont **10 Dofus**. Paliers 20/40/80/120/160 ouverts aux zones 1/2/4/6/9.
+Catalogue : **${Object.keys(EQUIPMENT_BASES).length} objets**, dont **10 Dofus**. Paliers ${EQUIPMENT_TIERS.map(t=>t.level).join('/')} ouverts aux zones ${EQUIPMENT_TIERS.map(t=>t.stage).join('/')}.
 
 - Chaque ennemi : **3 %** de chance d'équipement permanent. Puis on choisit la source : zone courante (**60 %**), précédente (**25 %**) ou celle d'avant (**15 %**), puis un équipement uniforme de son palier. Au début, on renormalise les sources disponibles.
 - Source courante : **80 % normal / 16 % rare / 3,5 % épique / 0,5 % légendaire**. Sources antérieures : chances rare/épique/légendaire ×3, soit **40 % / 48 % / 10,5 % / 1,5 %**. Les contributions s'additionnent si les zones correspondent au même palier.

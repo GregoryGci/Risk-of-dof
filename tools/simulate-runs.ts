@@ -1,14 +1,19 @@
 // Runs complètes sans rendu : le bot utilise exclusivement les actions publiques.
 import fs from 'node:fs';
 import {performance} from 'node:perf_hooks';
-import {getBlessing,ROUTES,getRoute,CLASSES,EQUIPMENT_BASES,EQUIPMENT_SLOTS,EQUIPMENT_TIERS,PHASE_PLAYING,ZAAP_IDLE,ZAAP_READY,ZAAP_RANGE,INTERACT_RANGE,MAP_SIZE,PLAYER_RADIUS,getSpell,createEquipment,equipmentTier,slotKind,makeRng,isBlocked,generateMap,RUN_BONUSES,type EquippedGear,type GameMap} from '@rod/shared';
+import {EQUIPMENT_RARITIES,type EquipmentRarity,getBlessing,ROUTES,getRoute,CLASSES,EQUIPMENT_BASES,EQUIPMENT_SLOTS,EQUIPMENT_TIERS,PHASE_PLAYING,ZAAP_IDLE,ZAAP_READY,ZAAP_RANGE,INTERACT_RANGE,MAP_SIZE,PLAYER_RADIUS,getSpell,createEquipment,equipmentTier,slotKind,makeRng,isBlocked,generateMap,RUN_BONUSES,type EquippedGear,type GameMap} from '@rod/shared';
 import {Simulation,type PlayerRt,type MonsterRt} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 
 const arg=(name:string,fallback:string)=>process.argv.find(a=>a.startsWith(`--${name}=`))?.split('=')[1]??fallback;
 const seeds=Number(arg('seeds','8')),cap=Number(arg('cap','12')),seconds=Number(arg('seconds','1800'));
 const classes=arg('classes',Object.keys(CLASSES).join(',')).split(','),starts=arg('starts','1').split(',').map(Number);
-const tiers=arg('tiers','-1,0,1,2,3,4').split(',').map(Number),modes=arg('modes','1').split(',').map(Number);
+const tiers=arg('tiers',[-1,...EQUIPMENT_TIERS.map((_,i)=>i)].join(',')).split(',').map(Number),modes=arg('modes','1').split(',').map(Number);
+const outfitRarity=arg('rarity','rare') as EquipmentRarity,forgeTier=Number(arg('forge','1'));
+if(!EQUIPMENT_RARITIES.includes(outfitRarity)||!Number.isInteger(forgeTier)||forgeTier<1||forgeTier>3)throw new Error('Qualite ou tier de forge invalide');
+if(forgeTier>1&&outfitRarity!=='legendaire')throw new Error('Seuls les legendaires peuvent avoir un tier de forge superieur a 1');
+for(const tier of tiers)if(!Number.isInteger(tier)||tier< -1||tier>=EQUIPMENT_TIERS.length)throw new Error('Palier inconnu : '+tier);
+for(const mode of modes)if(!Number.isInteger(mode)||mode<0||mode>3)throw new Error('Mode inconnu : '+mode);
 const routes=arg('routes','normal').split(',');
 const blessing=arg('blessing','none');if(blessing!=='none'&&!getBlessing(blessing))throw new Error('Benediction inconnue : '+blessing);
 for(const id of classes)if(!CLASSES[id])throw new Error('Classe inconnue : '+id);
@@ -18,8 +23,8 @@ export function botOutfit(tier:number):EquippedGear {
   if(tier<0)return{};const equipment:EquippedGear={},used=new Set<string>();
   for(const slot of EQUIPMENT_SLOTS){if(slot.startsWith('dofus'))continue;
     const candidates=Object.keys(EQUIPMENT_BASES).filter(id=>EQUIPMENT_BASES[id].tier<=tier&&EQUIPMENT_BASES[id].kind===slotKind(slot)&&!used.has(id))
-      .sort((a,b)=>EQUIPMENT_BASES[b].tier-EQUIPMENT_BASES[a].tier||Number(EQUIPMENT_BASES[b].set===['aventurier','bouftou','blop','ancestral','chene_mou'][tier])-Number(EQUIPMENT_BASES[a].set===['aventurier','bouftou','blop','ancestral','chene_mou'][tier])||a.localeCompare(b));
-    if(candidates[0]){used.add(candidates[0]);equipment[slot]=createEquipment(candidates[0],'rare');}
+      .sort((a,b)=>EQUIPMENT_BASES[b].tier-EQUIPMENT_BASES[a].tier||Number(EQUIPMENT_BASES[b].set===['aventurier','bouftou','blop','ancestral','chene_mou','minotot','souveraine','ougah','gladiateur'][tier])-Number(EQUIPMENT_BASES[a].set===['aventurier','bouftou','blop','ancestral','chene_mou','minotot','souveraine','ougah','gladiateur'][tier])||a.localeCompare(b));
+    if(candidates[0]){used.add(candidates[0]);equipment[slot]=createEquipment(candidates[0],outfitRarity,forgeTier);}
   }return equipment;
 }
 
@@ -84,7 +89,7 @@ try {
     if(start!==1){state.stage=start;state.seed=Math.floor(Math.random()*0xffffffff);sim.map=generateMap(state.seed,MAP_SIZE,start);(sim as unknown as {setupStage:()=>void}).setupStage();}
     const p=sim.players.get('p')!,bot=new RunBot(sim,p,dangers,route);let maxEnemies=0,tick=0;
     while(state.phase===PHASE_PLAYING&&state.stage<=cap&&state.time<seconds&&tick<seconds*30+3000){if(tick%3===0)bot.drive();sim.update(1/30);if(state.stage>1&&state.stageRoute!==route)throw new Error('Serment non applique dans la simulation: '+route);maxEnemies=Math.max(maxEnemies,sim.monsters.size);tick++;}
-    samples.push({route,classId,mode,seed,start,tier,gear:tier<0?'Aucun':`Palier ${EQUIPMENT_TIERS[tier].level} rare`,zone:state.stage,waves:(state as unknown as {waves?:number}).waves??0,duration:Math.round(state.time),kills:p.state.kills,censored:state.phase===PHASE_PLAYING,maxEnemies});
+    samples.push({route,classId,mode,seed,start,tier,gear:tier<0?'Aucun':`Palier ${EQUIPMENT_TIERS[tier].level} ${outfitRarity} T${forgeTier}`,zone:state.stage,waves:(state as unknown as {waves?:number}).waves??0,duration:Math.round(state.time),kills:p.state.kills,censored:state.phase===PHASE_PLAYING,maxEnemies});
   }
 }finally{Math.random=original;}
 const groups=[];let md='| Serment | Départ | Mode | Stuff | Runs | Zone moyenne atteinte | Min–max | Runs encore vivantes | Ennemis simultanés max |\n|---|---|---|---|---:|---:|---|---:|---:|\n';

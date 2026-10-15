@@ -10,9 +10,11 @@ export function updateBoss(sim: Simulation, boss: MonsterRt): boolean {
   if (!targets.length) return false;
   const enraged = boss.state.hp <= boss.state.maxHp * .5;
   const pattern = boss.bossPattern ?? 0;
-  boss.bossPattern = pattern + 1;
   const nova = pattern % 3 === 0;
   const duration = nova ? 1.1 : 1.3;
+  // Les grosses attaques de plusieurs gardiens alternent : il reste une fenêtre d'esquive.
+  if(!sim.tryBossTelegraph(duration))return false;
+  boss.bossPattern = pattern + 1;
   const radius = nova ? (enraged ? 3.8 : 3.2) : (enraged ? 1.7 : 1.4);
   const color = nova ? 0xe96045 : 0xeeb248;
   boss.bossHoldUntil = sim.now + duration;
