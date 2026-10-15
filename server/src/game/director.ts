@@ -1,6 +1,6 @@
 // Directeur de spawn façon Risk of Rain : il accumule des crédits avec le temps
 // (de plus en plus vite) et les dépense en vagues de monstres autour des joueurs.
-import { MAX_MONSTERS, MONSTERS, ZAAP_CHARGING, getMode, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
+import { getRoute, MAX_MONSTERS, MONSTERS, ZAAP_CHARGING, getMode, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
 import type { Simulation } from './Simulation.ts';
 
 /** Distance d'apparition par rapport au joueur (hors écran). */
@@ -29,7 +29,7 @@ export class Director {
     const diff = sim.state.difficulty;
     // Pendant la charge du Zaap, les monstres affluent.
     const rush = sim.state.zaapState === ZAAP_CHARGING ? 1.4 : 1;
-    this.credits += spawnCreditsPerSecond(diff, sim.players.size,sim.state.stage) * rush * getMode(sim.state.mode).spawn * dt;
+    this.credits += spawnCreditsPerSecond(diff, sim.players.size,sim.state.stage) * rush * getMode(sim.state.mode).spawn * getRoute(sim.state.stageRoute).spawn * dt;
 
     this.nextWaveIn -= dt;
     if (this.nextWaveIn <= 0) {

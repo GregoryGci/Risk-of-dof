@@ -11,7 +11,7 @@ for(const url of [new URL('../../.env',import.meta.url),new URL('../.env',import
 }
 const url=(process.env.SUPABASE_URL??'https://gwhorrgwaefsvayctqig.supabase.co').trim().replace(/\/$/,'');
 const publicKey=process.env.SUPABASE_PUBLISHABLE_KEY??'sb_publishable_aUJ7d827aJ7JAXoEuHjSyg_Hlw9uVJX';
-const secret=(process.env.SUPABASE_SECRET_KEY??process.env.SUPABASE_SERVICE_ROLE_KEY??'').trim();
+const secret=process.env.SUPABASE_SECRET_KEY?.trim()||process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()||'';
 export const cloudScoresEnabled=!!secret;
 if(!cloudScoresEnabled)console.warn('[classement] SUPABASE_SECRET_KEY (ou SUPABASE_SERVICE_ROLE_KEY) manque sur ce serveur.');
 export async function authenticate(token:unknown):Promise<{userId:string;name:string;avatar:string}>{

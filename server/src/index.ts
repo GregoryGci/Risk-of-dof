@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { Server } from '@colyseus/core';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import express from 'express';
-import { ROOM_NAME, SERVER_PORT } from '@rod/shared';
+import { GAME_PROTOCOL_VERSION, ROOM_NAME, SERVER_PORT } from '@rod/shared';
 import { GameRoom } from './rooms/GameRoom.ts';
 import {cloudScoresEnabled} from './cloud.ts';
 
@@ -18,7 +18,7 @@ const server = new Server({
   greet: false,
   express: (app) => {
     app.get('/sante', (_req, res) => {
-      res.json({ ok: true, ranking:cloudScoresEnabled, protocol:2 });
+      res.json({ ok: true, ranking:cloudScoresEnabled, protocol:GAME_PROTOCOL_VERSION });
     });
     if (existsSync(clientDist)) app.use(express.static(clientDist));
   },

@@ -54,6 +54,8 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.setPatchRate(PATCH_MS);
     this.setSimulationInterval((deltaMs) => this.sim.update(deltaMs / 1000), 1000 / TICK_RATE);
 
+    this.onMessage('ping',(client:Client,message:{sentAt?:unknown})=>{if(typeof message?.sentAt==='number'&&Number.isFinite(message.sentAt))client.send('pong',{sentAt:message.sentAt});});
+    this.onMessage('routeChoice',(client:Client,message:{route?:unknown})=>this.sim.chooseRoute(client.sessionId,message?.route));
     this.onMessage('input', (client: Client, message: InputMessage) => this.sim.setInput(client.sessionId, message));
     this.onMessage('cast', (client: Client, message: CastMessage) => this.sim.playerCast(client.sessionId, message));
     this.onMessage('class', (client: Client, message: { classId?: string; spells?: string[] }) => this.sim.setClass(client.sessionId, message?.classId, message?.spells));

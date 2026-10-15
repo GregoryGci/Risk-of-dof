@@ -304,6 +304,7 @@ export interface SyncMap<T> {
   forEach(cb: (value: T, key: string) => void): void;
 }
 export interface PlayerView {
+  routeChoice:string;
   rankStatus:string;
   connected:boolean;
   bossKills:number;
@@ -391,6 +392,7 @@ export interface PotionView {
   y: number;
 }
 export interface GameStateView {
+  stageRoute:string;
   protocolVersion:number;
   waves:number;
   zoneWave:number;

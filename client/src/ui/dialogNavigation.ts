@@ -1,6 +1,6 @@
 // Les fenêtres gardent le clavier : Tab parcourt leurs commandes, Échap ferme la plus haute.
 export function setupDialogNavigation(): void {
-  const closes:Record<string,string>={equipment:'equipment-close',encyclopedia:'encyclopedia-close',talents:'talents-close',details:'details-close',shop:'shop-close',history:'history-close','account-panel':'account-close',ladder:'ladder-close'};
+  const closes:Record<string,string>={equipment:'equipment-close',encyclopedia:'encyclopedia-close',talents:'talents-close',details:'details-close',shop:'shop-close',history:'history-close','account-panel':'account-close',ladder:'ladder-close',atlas:'atlas-close'};
   document.addEventListener('keydown',event=>{
     if(event.key!=='Tab' && event.key!=='Escape') return;
     const dialogs=[...document.querySelectorAll<HTMLElement>('.overlay:not(.hidden)')].filter(el=>el.getBoundingClientRect().width>0).sort((a,b)=>Number(getComputedStyle(b).zIndex)-Number(getComputedStyle(a).zIndex));

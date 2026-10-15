@@ -11,16 +11,19 @@ import { EquipmentPage } from './ui/EquipmentPage.ts';
 import { EncyclopediaPage } from './ui/EncyclopediaPage.ts';
 import {HistoryPage} from './ui/HistoryPage.ts';
 import {AccountPage} from './ui/AccountPage.ts';
+import {AtlasPage} from './ui/AtlasPage.ts';
 import {LadderPage} from './ui/LadderPage.ts';
 import {cloud} from './cloud.ts';
 import { setupDialogNavigation } from './ui/dialogNavigation.ts';
 import { account } from './account.ts';
-import { settings, saveSettings, VOLUMES, type VolumeKey } from './settings.ts';
+import { settings, saveSettings, subscribeSettings, VOLUMES, type VolumeKey } from './settings.ts';
 import { ambiance, music, MENU_TRACK } from './music.ts';
 import { applyCrosshair, crosshairUrl, CROSSHAIR_COLORS, CROSSHAIR_SHAPES } from './crosshair.ts';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 setupDialogNavigation();
+const applyTheme=()=>document.body.classList.toggle('underworld',settings.uiTheme==='underworld');
+applyTheme();subscribeSettings(applyTheme);
 
 const menu = $('menu');
 const pseudoInput = $<HTMLInputElement>('pseudo');
@@ -97,7 +100,8 @@ const equipmentPage = new EquipmentPage(() => {
   renderProfile();
 }, () => !currentRoom || currentRoom.state.phase !== PHASE_PLAYING);
 const encyclopedia = new EncyclopediaPage();
-const history=new HistoryPage();
+const history=new HistoryPage(),atlas=new AtlasPage();
+$('btn-atlas').onclick=()=>atlas.open();
 const accountPage=new AccountPage(),ladder=new LadderPage();
 $('btn-account').onclick=()=>accountPage.open();
 $('btn-ladder').onclick=()=>ladder.open();
@@ -111,7 +115,7 @@ $('btn-go-equipment').addEventListener('click', () => equipmentPage.open(classId
 function renderProfile(): void {
   const tier = EQUIPMENT_TIERS[account.bestTier];
   const count = Object.keys(account.equipment).length;
-  $('home-profile').innerHTML = `<img src="assets/dofus/portraits/${account.profile.avatar||classId}.png" alt=""><div><b>${escapeHtml(account.profile.name||pseudoInput.value.trim() || 'Aventurier')}</b><span>${CLASSES[classId].name} · ${count} équipements</span></div><span class="profile-bank">${account.bank.toLocaleString('fr')}<small>KAMAS</small></span>`;
+  $('home-profile').innerHTML = `<img src="assets/dofus/portraits/${account.profile.avatar||classId}.png" alt=""><div><b>${escapeHtml(account.profile.name||pseudoInput.value.trim() || 'Aventurier')}</b><span>${CLASSES[classId].name} · ${count} équipements</span></div><span class="profile-bank">${account.bank.toLocaleString('fr')}<small>KAMAS</small><small class="profile-forge">${account.fragments.toLocaleString('fr')} ◈ forge</small></span>`;
   $('home-progress').textContent = `PALIER ${tier.level} · ${account.inventory.length} ÉQUIPEMENTS`;
   $('equipment-summary').textContent = `${count} emplacements équipés · ${account.inventory.length} objets`;
   $('collection-summary').textContent = `${account.discovered.length} / ${account.catalogSize} découverts`;
@@ -158,8 +162,8 @@ function previewVolume(key: VolumeKey): void {
   });
 }
 function renderSettings(): void {
-  $('home-settings').innerHTML = `<label class="home-setting"><div><b>Attaque automatique</b><span>L’attaque de base vise l’ennemi le plus proche à portée. Le clic gauche garde la visée manuelle.</span></div><input type="checkbox" name="autoAttack" ${settings.autoAttack ? 'checked' : ''}><i aria-hidden="true"></i></label>
-    <label class="home-setting"><div><b>Smart cast</b><span>Espace et R lancent aussitôt le sort vers la souris. Désactivé, un clic confirme votre cible.</span></div><input type="checkbox" name="smartCast" ${settings.smartCast ? 'checked' : ''}><i aria-hidden="true"></i></label>
+  $('home-settings').innerHTML = `<label class="home-setting"><div><b>Direction artistique</b><span>Comparez le sanctuaire Hades × Dofus avec le style parchemin.</span></div><select name="uiTheme" aria-label="Direction artistique"><option value="underworld" ${settings.uiTheme==='underworld'?'selected':''}>Sanctuaire</option><option value="retro" ${settings.uiTheme==='retro'?'selected':''}>Parchemin</option></select></label><label class="home-setting"><div><b>Attaque automatique</b><span>L’attaque de base vise l’ennemi le plus proche à portée. Le clic gauche garde la visée manuelle.</span></div><input type="checkbox" name="autoAttack" ${settings.autoAttack ? 'checked' : ''}><i aria-hidden="true"></i></label>
+    <label class="home-setting"><div><b>Rendu du jeu</b><span>Le changement s’applique à la prochaine partie.</span></div><select name="renderMode" aria-label="Rendu du jeu"><option value="standard" ${settings.renderMode==='standard'?'selected':''}>Standard</option><option value="compatible" ${settings.renderMode==='compatible'?'selected':''}>Compatibilité</option></select></label><label class="home-setting"><div><b>Performances en jeu</b><span>FPS, aller-retour réseau et nombre de créatures pour identifier les ralentissements.</span></div><input type="checkbox" name="showPerformance" ${settings.showPerformance?'checked':''}><i aria-hidden="true"></i></label><label class="home-setting"><div><b>Smart cast</b><span>Espace et R lancent aussitôt le sort vers la souris. Désactivé, un clic confirme votre cible.</span></div><input type="checkbox" name="smartCast" ${settings.smartCast ? 'checked' : ''}><i aria-hidden="true"></i></label>
     ${VOLUME_ROWS.map(([key, name, help]) => `<div class="home-setting setting-wide"><div><b>${name}</b><span>${help}</span></div><input class="setting-range" type="range" name="${key}" min="0" max="100" step="5" value="${Math.round(settings[key] * 100)}" aria-label="Volume : ${name}"><output id="${key}-value">${Math.round(settings[key] * 100)} %</output></div>`).join('')}
     <div class="home-setting setting-wide crosshair-setting"><div><b>Viseur</b><span>Forme et couleur du curseur en jeu.</span>
       <div class="crosshair-options" role="radiogroup" aria-label="Forme du viseur">${Object.entries(CROSSHAIR_SHAPES).map(([id, name]) => `<label class="crosshair-choice" title="${name}"><input type="radio" name="crosshairShape" value="${id}" ${settings.crosshairShape === id ? 'checked' : ''}><img src="${crosshairUrl(id, settings.crosshairColor)}" alt="${name}"></label>`).join('')}</div>
@@ -168,7 +172,9 @@ function renderSettings(): void {
 }
 $('home-settings').addEventListener('change', e => {
   const input = e.target as HTMLInputElement;
-  if (input.name === 'autoAttack' || input.name === 'smartCast') { settings[input.name] = input.checked; saveSettings(); }
+  if(input.name==='renderMode'&&(input.value==='standard'||input.value==='compatible')){settings.renderMode=input.value;saveSettings();}
+  if(input.name==='uiTheme'&&(input.value==='retro'||input.value==='underworld')){settings.uiTheme=input.value;saveSettings();}
+  if (input.name === 'autoAttack' || input.name === 'smartCast' || input.name === 'showPerformance') { settings[input.name] = input.checked; saveSettings(); }
   if (input.name === 'crosshairShape' || input.name === 'crosshairColor') {
     settings[input.name] = input.value;
     saveSettings();
@@ -277,7 +283,7 @@ async function startGame(room: Room): Promise<void> {
       room.onStateChange(receive);
     });
   }
-  if(room.state.protocolVersion!==GAME_PROTOCOL_VERSION)throw new Error('Le serveur de jeu utilise encore une ancienne version. Déployez le dernier commit sur Render puis réessayez.');
+  if(room.state.protocolVersion!==GAME_PROTOCOL_VERSION)throw new Error('Le serveur de jeu utilise encore une ancienne version. Attendez la mise à jour du serveur Railway puis réessayez.');
   currentRoom = room;
   const sessionKey=`rod.partie.${cloud.session!.user.id}`;
   const remember=()=>sessionStorage.setItem(sessionKey,JSON.stringify({token:room.reconnectionToken,roomId:room.roomId,at:Date.now()}));
@@ -351,11 +357,9 @@ async function startGame(room: Room): Promise<void> {
     parent: 'game',
     backgroundColor: '#1a2611',
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
-    // maxTextures: 1 contourne un bug de rendu WebGL de Phaser 3.90 : au-delà de 16 textures par image,
-    // créer une texture en cours de partie (chiffre de dégâts, effet...) faisait disparaître les sprites
-    // des personnages. Le sol est pré-dessiné dans une seule texture pour limiter le coût (MapView).
-    render: { antialias: true, roundPixels: false, maxTextures: 1 },
-    fps: { target: 60, limit: 60 },
+    // Plusieurs atlas par lot ; textureState restaure le cache avant le rendu.
+    render: { antialias: true, roundPixels: false, maxTextures: settings.renderMode==='compatible'?1:8 },
+    fps: { target: 60, limit: 60, smoothStep: false },
     audio: { context: audioContext },
     // La scène reçoit la salle, les assets et le HUD par son constructeur.
     scene: new GameScene({ room, store, hud }),

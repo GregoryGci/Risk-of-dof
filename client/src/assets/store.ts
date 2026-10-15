@@ -2,7 +2,7 @@
 // Le reste du jeu ne demande jamais un fichier : il demande « le sprite du bouftou »
 // ou « une tile d'herbe » et reçoit soit l'asset fourni, soit le placeholder.
 import Phaser from 'phaser';
-import { GROUND_NAMES, OBSTACLES, getMonster } from '@rod/shared';
+import { MONSTERS, GROUND_NAMES, OBSTACLES, getMonster } from '@rod/shared';
 import { ASSET_ROOT, DEFAULT_MIRROR, type AnimDef, type ImageDef, type Manifest, type SpriteDef } from './manifest.ts';
 import {
   ENTITY_PLACEHOLDER_ORIGIN,
@@ -42,6 +42,7 @@ function asArray<T>(v: T | T[]): T[] {
 export class AssetStore {
   private pendingMonsters=new Set<string>();
   private failedMonsters=new Set<string>();
+  private monsterScales=new Map<string,number>();
   private assetVersion='';
   private tiles: Record<string, string[]> = {};
   private objects: Record<string, ImageVisual[]> = {};
@@ -173,10 +174,21 @@ export class AssetStore {
     const canonical=this.manifest.monsters?.[type]?.aliasOf??type;
     const key = `mon_${canonical}`;
     const def = this.manifest.monsters?.[canonical];
-    if (def && scene.textures.exists(key)) return { key, origin: def.origin ?? [0.5, 0.9], scale: def.scale ?? 1, sprite: def };
+    if (def && scene.textures.exists(key)) {
+      const boss=!!MONSTERS[type]?.boss,cacheKey=key+':'+boss;
+      let scale=this.monsterScales.get(cacheKey);
+      if(scale===undefined){
+        const idle=Object.values(def.anims?.idle??{})[0];
+        const first=idle?this.animFrames(scene,key,idle)[0]?.frame:undefined;
+        const texture=scene.textures.get(key),frame=texture.get(first??texture.getFrameNames()[0]);
+        scale=Math.min(def.scale??1,(boss?210:110)/Math.max(1,frame.cutWidth),(boss?180:100)/Math.max(1,frame.cutHeight));
+        this.monsterScales.set(cacheKey,scale);
+      }
+      return {key,origin:def.origin??[.5,.9],scale,sprite:def};
+    }
     let ph = monsterPlaceholderKey(type);
-    if (!scene.textures.exists(ph)) ph = ensureGenericMonster(scene, type, getMonster(type).color);
-    return { key: ph, origin: ENTITY_PLACEHOLDER_ORIGIN, scale: getMonster(type).scale ?? 1, sprite: null };
+    if (!scene.textures.exists(ph)) ph = ensureGenericMonster(scene, type, MONSTERS[type]?.color ?? 0x9a8858);
+    return { key: ph, origin: ENTITY_PLACEHOLDER_ORIGIN, scale: MONSTERS[type]?.scale ?? 1, sprite: null };
   }
   /** Charge uniquement les familles nécessaires, sans bloquer la simulation. */
   loadMonsters(scene:Phaser.Scene,ids:Iterable<string>):void {

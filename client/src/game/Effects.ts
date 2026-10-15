@@ -36,6 +36,7 @@ export class Effects {
   private budgetAt=-1;
   private cosmeticBudget=0;
   private textBudget=0;
+  private priorityTextBudget=0;
   private trailBudget=0;
   private textPool:Phaser.GameObjects.Text[]=[];
   private activeTexts=new Set<Phaser.GameObjects.Text>();
@@ -44,7 +45,7 @@ export class Effects {
     const bucket=Math.floor(this.scene.time.now/100);
     if(bucket===this.budgetAt)return;
     this.budgetAt=bucket;
-    this.cosmeticBudget=6;this.textBudget=4;this.trailBudget=8;
+    this.cosmeticBudget=6;this.textBudget=4;this.priorityTextBudget=2;this.trailBudget=8;
   }
   private visible(x:number,y:number):boolean {
     const p=worldToScreen(x,y),view=this.scene.cameras.main.worldView;
@@ -407,9 +408,10 @@ export class Effects {
   }
 
   /** Texte flottant (dégâts, kamas). */
-  floatText(x: number, y: number, text: string, color: string, size = 14, rise = 34): void {
+  floatText(x: number, y: number, text: string, color: string, size = 14, rise = 34, priority=false): void {
     this.refillBudget();
-    if(document.hidden||!this.visible(x,y)||this.textBudget--<=0)return;
+    if(document.hidden||!this.visible(x,y))return;
+    if(priority?this.priorityTextBudget--<=0:this.textBudget--<=0)return;
     const p = worldToScreen(x, y);
     const t = this.textPool.pop() ?? this.scene.add
       .text(0, 0, '', {
@@ -423,7 +425,9 @@ export class Effects {
       })
       .setOrigin(0.5)
       .setDepth(DEPTH_TEXT);
-    t.setPosition(p.x + (Math.random()-.5)*16,p.y-40).setText(text).setColor(color).setFontSize(size).setAlpha(1).setVisible(true);
+    if(t.style.color!==color)t.setColor(color);
+    if(t.style.fontSize!==`${size}px`)t.setFontSize(size);
+    t.setPosition(p.x+(Math.random()-.5)*16,p.y-40).setText(text).setAlpha(1).setVisible(true);
     this.activeTexts.add(t);
     this.scene.tweens.add({targets:t,y:t.y-rise,alpha:0,duration:750,ease:'Cubic.easeOut',onComplete:()=>{
       this.activeTexts.delete(t);t.setVisible(false);this.textPool.push(t);

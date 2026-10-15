@@ -1,5 +1,6 @@
 // Bonus de run : les coffres et le marchand donnent directement des statistiques.
 // Les compteurs internes permettent de recalculer leur total, sans inventaire d'objets.
+import {affinityStats} from './affinities.ts';
 import type { RunBonusDef, BonusRarity, StatKey } from '../types.ts';
 
 export interface ItemBase {
@@ -141,6 +142,7 @@ export function sumRunStats(inv: Map<string, number>): Record<StatKey, number> {
     const stats = RUN_BONUSES[id]?.stats ?? {};
     for (const key of Object.keys(stats) as StatKey[]) total[key] += (stats[key] ?? 0) * n;
   }
+  for(const [key,value]of Object.entries(affinityStats(inv)))total[key as StatKey]+=value;
   return total;
 }
 

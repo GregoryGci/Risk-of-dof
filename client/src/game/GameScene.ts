@@ -55,6 +55,7 @@ import { Controls } from './Controls.ts';
 import {MechanicHud} from '../ui/MechanicHud.ts';
 import {MovementPrediction} from './Prediction.ts';
 import { Effects } from './Effects.ts';
+import {installTextureStateRefresh} from './textureState.ts';
 import { EntityView } from './EntityView.ts';
 import { MapView } from './MapView.ts';
 
@@ -137,6 +138,11 @@ export class GameScene extends Phaser.Scene {
   private nextMusicCheck=0;
   private nextAssetCheck=0;
   private nextHudUpdate=0;
+  private fpsFrames=0;
+  private fpsAt=0;
+  private fps=0;
+  private ping=-1;
+  private nextPing=0;
 
   constructor(private ctx: GameContext) {
     super('game');
@@ -176,9 +182,10 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(0x1a2611);
     this.controls = new Controls(this.game.canvas);
     this.effects = new Effects(this, this.store);
+    installTextureStateRefresh(this);
     this.preview = new SpellPreview(this);
     // Accès console en développement (débogage).
-    if (import.meta.env.DEV) (window as unknown as { __scene: GameScene }).__scene = this;
+    if (import.meta.env.DEV||settings.showPerformance) (window as unknown as { __scene: GameScene }).__scene = this;
     this.details = new Details(
       this.store,
       (slot) => (this.previewSlot = slot),
@@ -189,12 +196,13 @@ export class GameScene extends Phaser.Scene {
       },
     );
     this.hud.setSpellHover((slot) => (this.previewSlot = slot));
-    this.shop = new ShopPanel(this.store, (index) => this.room.send('buy', { index }),()=>this.room.send('shopReroll'),()=>{this.controls.releaseAll();this.room.send('shopReady');});
+    this.shop = new ShopPanel(this.store, (index) => this.room.send('buy', { index }),()=>this.room.send('shopReroll'),()=>{this.controls.releaseAll();this.room.send('shopReady');},route=>this.room.send('routeChoice',{route}));
 
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyZoom, this);
     this.applyZoom();
 
     // Événements ponctuels envoyés par le serveur.
+    this.room.onMessage('pong',(e:{sentAt:number})=>{this.ping=Math.max(0,Math.round(performance.now()-e.sentAt));});
     this.room.onMessage('cast', (e: CastEvent) => this.onCast(e));
     this.room.onMessage('projEnd', (e: ProjEndEvent) => this.effects.endProjectile(e.id, e.x, e.y));
     this.room.onMessage('explode', (e: ExplodeEvent) => this.onExplode(e));
@@ -265,7 +273,7 @@ export class GameScene extends Phaser.Scene {
     // Mort : un clic change de joueur observé.
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.cycleSpectate());
 
-    const clean=()=>{ this.controls.destroy(); this.details.destroy(); this.shop.destroy(); };
+    const clean=()=>{this.effects.clear();this.controls.destroy();this.details.destroy();this.shop.destroy();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, clean);
     this.events.once(Phaser.Scenes.Events.DESTROY, clean);
   }
@@ -284,6 +292,11 @@ export class GameScene extends Phaser.Scene {
     if (!state || !state.players) return;
     const dt = state.paused ? 0 : Math.min(deltaMs / 1000, 0.1);
     this.tweens.timeScale=state.paused?0:1;
+    const wallNow=performance.now();this.fpsFrames++;
+    if(!this.fpsAt)this.fpsAt=wallNow;
+    if(wallNow-this.fpsAt>=1000){this.fps=Math.round(this.fpsFrames*1000/(wallNow-this.fpsAt));this.fpsFrames=0;this.fpsAt=wallNow;}
+    if(settings.showPerformance&&wallNow>=this.nextPing){this.nextPing=wallNow+2000;this.room.send('ping',{sentAt:wallNow});}
+    this.hud.performance(this.fps,this.ping,state.monsters.size,settings.showPerformance);
 
     // La carte est régénérée à partir de la graine (et à chaque nouvelle partie).
     if (!this.mapView || this.map.seed !== state.seed || this.map.zoneId !== zoneForStage(state.stage).id) this.rebuildMap(state.seed);
@@ -539,6 +552,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private syncMonsters(state: GameStateView, dt: number): void {
+    const hero=worldToScreen(this.me.x,this.me.y),alive=state.players.get(this.room.sessionId)?.alive;
     state.monsters.forEach((m: MonsterView, id: string) => {
       let view = this.monsters.get(id);
       if(view&&view.assetKey!==this.store.monster(this,m.type).key){view.destroy();this.monsters.delete(id);view=undefined;}
@@ -563,6 +577,7 @@ export class GameScene extends Phaser.Scene {
       view.setRogue(m.rogue);
       view.setWarning(m.state === MSTATE_WINDUP);
       view.update(dt);
+      view.revealPlayer(hero.x,hero.y,!!alive&&!m.ally);
     });
     for (const [id, view] of this.monsters) {
       if (state.monsters.get(id)) continue;
@@ -836,16 +851,15 @@ export class GameScene extends Phaser.Scene {
   private onDamage(e: DamageEvent): void {
     if (document.hidden) return;
     if (e.player) {
-      if (e.absorbed) this.effects.floatText(e.x, e.y, `-${e.absorbed} bouclier`, '#69cfff', 13, 50);
+      if (e.absorbed) this.effects.floatText(e.x, e.y, `-${e.absorbed} bouclier`, '#69cfff', 13, 50,e.target===this.room.sessionId);
       if (e.amount <= 0) return;
       this.players.get(e.target)?.flash();
-      this.effects.floatText(e.x, e.y, `-${e.amount}`, '#ff5040', 15);
+      this.effects.floatText(e.x, e.y, `-${e.amount}`, '#ff5040', 15,34,e.target===this.room.sessionId);
       if (e.target === this.room.sessionId) {
         this.hud.hitFlash();
         this.cameras.main.shake(90, 0.002);
         this.store.playSound(this, 'player_hit');
-        // Un coup peut nous projeter : on suit le serveur un court instant.
-        this.followServerUntil = Math.max(this.followServerUntil, this.time.now + 200);
+        // Un coup ordinaire garde la prediction. Les reculs sont signales par forcedMotion/motionEpoch.
       }
     } else {
       this.monsters.get(e.target)?.flash();

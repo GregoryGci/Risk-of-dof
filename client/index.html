@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="stylesheet" href="/src/theme.css" />
     <link rel="stylesheet" href="/src/archive.css" />
+    <link rel="stylesheet" href="/src/underworld.css" />
   </head>
-  <body>
+  <body class="underworld">
     <!-- Canvas Phaser -->
     <div id="game"></div>
 
@@ -16,7 +17,7 @@
     <div id="menu" class="home-screen">
       <div class="home-background" aria-hidden="true"></div>
       <div class="home-grain" aria-hidden="true"></div>
-      <header class="home-topline"><span><i class="home-sigil"></i> LES CHAMPS D’ASTRUB</span><span>ACTION · SURVIE · COOPÉRATION</span></header>
+      <header class="home-topline"><span><i class="home-sigil"></i> LE SANCTUAIRE DES DOUZE</span><span>ACTION · SURVIE · COOPÉRATION</span></header>
       <main class="home-layout">
         <section class="home-navigation" aria-label="Menu principal">
           <div class="home-brand"><p>CHAQUE DÉFAITE ÉCRIT LA SUITE</p><h1><span>RISK</span><span><em>OF</em> DOF</span></h1><div class="brand-rule"><i></i></div></div>
@@ -31,7 +32,7 @@
           <div class="home-profile" id="home-profile"></div>
           <div class="home-extra"><button id="btn-account">Se connecter ↗</button></div>
         </section>
-        <section class="home-welcome" id="home-welcome"><div class="welcome-caption"><span class="eyebrow">UN NOUVEAU DÉPART</span><h2>Le Zaap vous attend.</h2><p>Survivez. Explorez. Revenez plus fort.</p></div></section>
+        <section class="home-welcome" id="home-welcome"><div class="sanctum-art" aria-hidden="true"><div class="sanctum-portal"><img src="assets/dofus/items/dofus_emeraude.png" alt=""></div><span class="sanctum-caption">UN MONDE À CONQUÉRIR</span></div><div class="welcome-caption"><span class="eyebrow">UN NOUVEAU DÉPART</span><h2>Franchissez le seuil.</h2><p>Les équipements restent. Les bonus de combat se reconstruisent.<br>Une défaite, un nouveau départ.</p><button id="btn-atlas" class="welcome-link">Explorer les 33 donjons ↗</button></div></section>
         <section id="home-view" class="home-view panel hidden" aria-label="Préparation de l’aventure">
           <div class="home-view-head"><div><span class="eyebrow" id="view-eyebrow"></span><h2 id="view-title"></h2></div><button id="view-close" class="sheet-close" aria-label="Retour à l’accueil">✕</button></div>
           <div id="identity-row" class="identity-row"><label for="pseudo">Votre nom</label><input id="pseudo" type="text" maxlength="16" placeholder="Aventurier" autocomplete="off" /></div>
@@ -47,7 +48,7 @@
           </div>
           <div id="view-character" class="home-view-content hidden"><div class="character-intro"><div><h3 id="character-name"></h3><p id="class-desc"></p></div><img id="character-portrait" alt=""></div><div id="class-picker" class="home-class-picker"></div>
             <div class="character-actions"><button id="btn-equipment" class="character-action"><span>◈</span><div><b>Équipement</b><small id="equipment-summary"></small></div><span>→</span></button><button id="btn-talents" class="character-action"><span>✦</span><div><b>Arbre de talents</b><small id="talents-summary"></small></div><span>→</span></button></div>
-            <button id="btn-encyclopedia" class="collection-link">Ouvrir l’encyclopédie <span id="collection-summary"></span><span>→</span></button>
+            <button id="btn-encyclopedia" class="collection-link">Encyclopédie des équipements <span id="collection-summary"></span><span>→</span></button>
           </div>
           <div id="view-settings" class="home-view-content hidden"><p class="view-intro">Vos préférences vous suivent dans chaque aventure.</p><div id="home-settings"></div><h3 class="setup-label">À portée de main</h3><div class="home-controls"><div><kbd>ZQSD</kbd><span>Se déplacer · WASD / flèches</span></div><div><kbd>Souris</kbd><span>Viser · clics gauche et droit : sorts</span></div><div><kbd>Espace / R</kbd><span>Sorts équipés · R : ultime</span></div><div><kbd>Maj</kbd><span>Dash</span></div><div><kbd>E</kbd><span>Coffres · Zaap · marchand</span></div><div><kbd>Tab</kbd><span>Détails · pause en solo · options</span></div></div></div>
           <p id="menu-error" class="error" role="status" aria-live="polite"></p>
@@ -80,6 +81,7 @@
 
     <div id="encyclopedia" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="encyclopedia-title"><div class="sheet encyclopedia-sheet"><div class="sheet-head"><span id="encyclopedia-title">Encyclopédie <small>Chaque trouvaille est une nouvelle page</small></span><button id="encyclopedia-close" class="sheet-close" aria-label="Fermer l’encyclopédie">✕</button></div><div id="encyclopedia-body"></div></div></div>
 
+    <div id="atlas" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="atlas-title"><div class="sheet archive-sheet atlas-sheet"><div class="sheet-head"><span id="atlas-title">Atlas des donjons <small>Votre route dans le Monde des Douze</small></span><button id="atlas-close" class="sheet-close" aria-label="Fermer l’atlas">✕</button></div><div id="atlas-body" class="archive-body"></div></div></div>
     <!-- HUD en jeu -->
     <div id="history" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="history-title"><div class="sheet archive-sheet"><div class="sheet-head"><span id="history-title">Chroniques <small>Vos aventures et votre meilleure run</small></span><button id="history-close" class="sheet-close" aria-label="Fermer l’historique">✕</button></div><div id="history-body" class="archive-body"></div></div></div>
     <div id="account-panel" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="account-title"><div class="sheet auth-sheet"><div class="sheet-head"><span id="account-title">Votre compte <small>Retrouvez votre progression partout</small></span><button id="account-close" class="sheet-close" aria-label="Fermer le compte">✕</button></div><div id="account-body" class="archive-body"></div></div></div>

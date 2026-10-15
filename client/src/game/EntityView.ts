@@ -310,6 +310,11 @@ export class EntityView {
   }
 
   /** Position écran des pieds. */
+  revealPlayer(x:number,y:number,enabled:boolean):void {
+    const covered=enabled&&this.sy>y+5&&this.sy-y<Math.min(100,this.body.displayHeight)&&Math.abs(this.sx-x)<Math.min(90,this.body.displayWidth*.5+12);
+    const alpha=covered?.45:1;if(this.body.alpha!==alpha)this.body.setAlpha(alpha);
+  }
+
   get screen(): { x: number; y: number } {
     return { x: this.sx, y: this.sy };
   }

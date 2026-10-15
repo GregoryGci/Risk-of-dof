@@ -1,7 +1,7 @@
 // Runs complètes sans rendu : le bot utilise exclusivement les actions publiques.
 import fs from 'node:fs';
 import {performance} from 'node:perf_hooks';
-import {CLASSES,EQUIPMENT_BASES,EQUIPMENT_SLOTS,EQUIPMENT_TIERS,PHASE_PLAYING,ZAAP_IDLE,ZAAP_READY,ZAAP_RANGE,INTERACT_RANGE,MAP_SIZE,PLAYER_RADIUS,getSpell,createEquipment,equipmentTier,slotKind,makeRng,isBlocked,generateMap,RUN_BONUSES,type EquippedGear,type GameMap} from '@rod/shared';
+import {ROUTES,getRoute,CLASSES,EQUIPMENT_BASES,EQUIPMENT_SLOTS,EQUIPMENT_TIERS,PHASE_PLAYING,ZAAP_IDLE,ZAAP_READY,ZAAP_RANGE,INTERACT_RANGE,MAP_SIZE,PLAYER_RADIUS,getSpell,createEquipment,equipmentTier,slotKind,makeRng,isBlocked,generateMap,RUN_BONUSES,type EquippedGear,type GameMap} from '@rod/shared';
 import {Simulation,type PlayerRt,type MonsterRt} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 
@@ -9,6 +9,9 @@ const arg=(name:string,fallback:string)=>process.argv.find(a=>a.startsWith(`--${
 const seeds=Number(arg('seeds','8')),cap=Number(arg('cap','12')),seconds=Number(arg('seconds','1800'));
 const classes=arg('classes',Object.keys(CLASSES).join(',')).split(','),starts=arg('starts','1').split(',').map(Number);
 const tiers=arg('tiers','-1,0,1,2,3,4').split(',').map(Number),modes=arg('modes','1').split(',').map(Number);
+const routes=arg('routes','normal').split(',');
+for(const id of classes)if(!CLASSES[id])throw new Error('Classe inconnue : '+id);
+for(const id of routes)if(!Object.hasOwn(ROUTES,id))throw new Error('Serment inconnu : '+id);
 const out=arg('out','artifacts/run-balance');
 export function botOutfit(tier:number):EquippedGear {
   if(tier<0)return{};const equipment:EquippedGear={},used=new Set<string>();
@@ -29,10 +32,10 @@ interface Danger{x:number;y:number;radius:number;until:number}
 class RunBot {
   private route:{x:number;y:number}[]=[];private routeKey='';private routeAt=0;
   private aim:{x:number;y:number}|undefined;
-  constructor(private sim:Simulation,private p:PlayerRt,private dangers:Danger[]){}
+  constructor(private sim:Simulation,private p:PlayerRt,private dangers:Danger[],private routeId:string){}
   drive():void {
     const {sim,p}=this,s=sim.state,ps=p.state;if(!ps.alive)return;
-    if(s.intermission){const offers=ps.shop.split(',').map((o,index)=>({index,price:Number(o.split(':')[1]),id:o.split(':')[0]})).sort((a,b)=>score(a.id)-score(b.id));for(const offer of offers)sim.buy(p.id,offer.index);sim.shopReady(p.id);this.routeKey='';return;}
+    if(s.intermission){sim.chooseRoute(p.id,this.routeId);const offers=ps.shop.split(',').map((o,index)=>({index,price:Number(o.split(':')[1]),id:o.split(':')[0]})).sort((a,b)=>score(a.id)-score(b.id));for(const offer of offers)sim.buy(p.id,offer.index);sim.shopReady(p.id);this.routeKey='';return;}
     const boons: string[]=JSON.parse(ps.boonChoices);if(boons.length)sim.chooseBoon(p.id,boons.map((id,i)=>({i,score:score(id)})).sort((a,b)=>a.score-b.score)[0].i);
     const enemies=[...sim.monsters.values()].filter(m=>!m.state.ally&&!m.state.carried),near=enemies.sort((a,b)=>distance(a.state,ps)-distance(b.state,ps));
     const enemy=near[0],boss=near.find(m=>m.def.boss),basic=getSpell(p.spells[0]);
@@ -71,20 +74,20 @@ class RunBot {
 const distance=(a:{x:number;y:number},b:{x:number;y:number})=>Math.hypot(a.x-b.x,a.y-b.y);
 function score(id:string):number {const stats=RUN_BONUSES[id]?.stats??{};return -(stats.damage??0)*100-(stats.maxHp??0)*.5-(stats.armor??0)*15-(stats.haste??0)*50-(stats.bounce??0)*35-(stats.secondaryCharge??0)*20;}
 
-interface Sample {classId:string;mode:number;seed:number;start:number;gear:string;tier:number;zone:number;waves:number;duration:number;kills:number;censored:boolean;maxEnemies:number}
+interface Sample {route:string;classId:string;mode:number;seed:number;start:number;gear:string;tier:number;zone:number;waves:number;duration:number;kills:number;censored:boolean;maxEnemies:number}
 const original=Math.random,samples:Sample[]=[],startClock=performance.now();
 try {
-  for(const mode of modes)for(const start of starts)for(const tier of tiers)for(const classId of classes)for(let seed=1;seed<=seeds;seed++) {
+  for(const route of routes)for(const mode of modes)for(const start of starts)for(const tier of tiers)for(const classId of classes)for(let seed=1;seed<=seeds;seed++) {
     Math.random=makeRng(seed*197+mode*11);const state=new GameState();state.mode=mode;
     const dangers:Danger[]=[];const sim=new Simulation(state,(type,message)=>{if(type==='bossWarning'){const d=message as Danger&{duration:number};dangers.push({...d,until:sim.now+d.duration});}while(dangers.length&&dangers[0].until<sim.now)dangers.shift();});sim.addPlayer('p','Bot',classId,undefined,botOutfit(tier));sim.start();
     if(start!==1){state.stage=start;state.seed=Math.floor(Math.random()*0xffffffff);sim.map=generateMap(state.seed,MAP_SIZE,start);(sim as unknown as {setupStage:()=>void}).setupStage();}
-    const p=sim.players.get('p')!,bot=new RunBot(sim,p,dangers);let maxEnemies=0,tick=0;
-    while(state.phase===PHASE_PLAYING&&state.stage<=cap&&state.time<seconds&&tick<seconds*30+3000){if(tick%3===0)bot.drive();sim.update(1/30);maxEnemies=Math.max(maxEnemies,sim.monsters.size);tick++;}
-    samples.push({classId,mode,seed,start,tier,gear:tier<0?'Aucun':`Palier ${EQUIPMENT_TIERS[tier].level} rare`,zone:state.stage,waves:(state as unknown as {waves?:number}).waves??0,duration:Math.round(state.time),kills:p.state.kills,censored:state.phase===PHASE_PLAYING,maxEnemies});
+    const p=sim.players.get('p')!,bot=new RunBot(sim,p,dangers,route);let maxEnemies=0,tick=0;
+    while(state.phase===PHASE_PLAYING&&state.stage<=cap&&state.time<seconds&&tick<seconds*30+3000){if(tick%3===0)bot.drive();sim.update(1/30);if(state.stage>1&&state.stageRoute!==route)throw new Error('Serment non applique dans la simulation: '+route);maxEnemies=Math.max(maxEnemies,sim.monsters.size);tick++;}
+    samples.push({route,classId,mode,seed,start,tier,gear:tier<0?'Aucun':`Palier ${EQUIPMENT_TIERS[tier].level} rare`,zone:state.stage,waves:(state as unknown as {waves?:number}).waves??0,duration:Math.round(state.time),kills:p.state.kills,censored:state.phase===PHASE_PLAYING,maxEnemies});
   }
 }finally{Math.random=original;}
-const groups=[];let md='| Départ | Mode | Stuff | Runs | Zone moyenne atteinte | Min–max | Runs encore vivantes | Ennemis simultanés max |\n|---|---|---|---:|---:|---|---:|---:|\n';
-for(const mode of modes)for(const start of starts)for(const tier of tiers){const group=samples.filter(s=>s.mode===mode&&s.start===start&&s.tier===tier),mean=group.reduce((n,s)=>n+s.zone,0)/group.length;
-  const row={start,mode,gear:group[0].gear,runs:group.length,mean:Number(mean.toFixed(2)),min:Math.min(...group.map(s=>s.zone)),max:Math.max(...group.map(s=>s.zone)),censored:group.filter(s=>s.censored).length,maxEnemies:Math.max(...group.map(s=>s.maxEnemies))};groups.push(row);md+=`| ${start} | ${mode} | ${row.gear} | ${row.runs} | ${row.mean} | ${row.min}–${row.max} | ${row.censored} | ${row.maxEnemies} |\n`;
+const groups=[];let md='| Serment | Départ | Mode | Stuff | Runs | Zone moyenne atteinte | Min–max | Runs encore vivantes | Ennemis simultanés max |\n|---|---|---|---|---:|---:|---|---:|---:|\n';
+for(const route of routes)for(const mode of modes)for(const start of starts)for(const tier of tiers){const group=samples.filter(s=>s.route===route&&s.mode===mode&&s.start===start&&s.tier===tier),mean=group.reduce((n,s)=>n+s.zone,0)/group.length;
+  const row={route,start,mode,gear:group[0].gear,runs:group.length,mean:Number(mean.toFixed(2)),min:Math.min(...group.map(s=>s.zone)),max:Math.max(...group.map(s=>s.zone)),censored:group.filter(s=>s.censored).length,maxEnemies:Math.max(...group.map(s=>s.maxEnemies))};groups.push(row);md+=`| ${getRoute(route).name} | ${start} | ${mode} | ${row.gear} | ${row.runs} | ${row.mean} | ${row.min}–${row.max} | ${row.censored} | ${row.maxEnemies} |\n`;
 }
 fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync(`${out}.json`,JSON.stringify({seeds,cap,seconds,elapsedSeconds:Math.round((performance.now()-startClock)/1000),groups,samples},null,2));fs.writeFileSync(`${out}.md`,md);console.log(md);console.log(`Résultats : ${out}.json ; ${samples.length} runs. Une run plafonnée est marquée encore vivante, pas considérée comme une mort.`);

@@ -1,8 +1,8 @@
 # Publie le client du jeu sur GitHub Pages à chaque push sur master.
 #
 # Pages ne sert que des fichiers statiques : le serveur de jeu (Colyseus) tourne ailleurs,
-# sur Render (voir render.yaml). Son adresse est inscrite dans le client au moment du build
-# via VITE_SERVER_URL : variable de dépôt SERVER_URL si elle existe, sinon l'adresse Render par défaut.
+# sur Railway actuellement (ou Render via render.yaml). Son adresse est inscrite dans le client au build
+# via VITE_SERVER_URL : variable SERVER_URL, puis Railway par défaut.
 name: Deploiement
 
 on:
@@ -34,10 +34,11 @@ jobs:
 
       # Une erreur de type arrête la publication au lieu de mettre en ligne un jeu cassé.
       - run: npm run typecheck
+      - run: npm test
 
       - run: npm run build
         env:
-          VITE_SERVER_URL: ${{ vars.SERVER_URL || 'wss://risk-of-dof.onrender.com' }}
+          VITE_SERVER_URL: ${{ vars.SERVER_URL || 'wss://risk-of-dof-production.up.railway.app' }}
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

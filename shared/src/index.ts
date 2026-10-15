@@ -19,3 +19,7 @@ export * from './data/mechanics.ts';
 export * from './data/poker.ts';
 export * from './data/run-history.ts';
 export * from './data/profile.ts';
+
+export * from './data/dungeons.ts';
+export * from './data/routes.ts';
+export * from './data/affinities.ts';

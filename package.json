@@ -10,11 +10,11 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n serveur,client -c yellow,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
-    "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w client",
+    "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w client && tsc --noEmit -p tsconfig.tools.json",
     "test": "node --import tsx --test tests/*.test.ts",
     "tables": "node --import tsx tools/equipment-tables.ts",
     "audit:gameplay": "node --import tsx tools/audit-gameplay.ts",
-    "simulate:runs":"node --import tsx tools/simulate-runs.ts",
+    "simulate:runs": "node --import tsx tools/simulate-runs.ts",
     "build": "npm run build -w client",
     "start": "npm run start -w server",
     "bot": "node server/tools/bot.mjs"

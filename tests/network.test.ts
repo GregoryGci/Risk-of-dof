@@ -48,8 +48,12 @@ test('WebSocket : solo fermé aux invités, salon à deux, récompenses fiables 
     await until(()=>host.state.intermission&&guest.state.intermission);
     assert.equal(host.state.monsters.size,0);assert.equal(host.state.chests.size,0);assert.equal(host.state.players.get(host.sessionId)!.shop.split(',').length,6);
     host.send('shopReroll');await until(()=>host.state.players.get(host.sessionId)!.shopRerolled);assert.equal(guest.state.players.get(guest.sessionId)!.shopRerolled,false);
+    host.send('routeChoice',{route:'ordeal'});guest.send('routeChoice',{route:'ordeal'});
+    await until(()=>host.state.players.get(host.sessionId)!.routeChoice==='ordeal'&&guest.state.players.get(guest.sessionId)!.routeChoice==='ordeal');
+    let pinged=false;host.onMessage('pong',()=>pinged=true);host.send('ping',{sentAt:performance.now()});await until(()=>pinged);
     host.send('shopReady');await until(()=>guest.state.players.get(host.sessionId)!.shopReady);assert.equal(host.state.intermission,true);
     guest.send('shopReady');await until(()=>!host.state.intermission&&host.state.stage===2&&!guest.state.intermission);
+    assert.equal(host.state.stageRoute,'ordeal');assert.equal(guest.state.stageRoute,'ordeal');
     for(const player of room.sim.players.values()) room.sim.damagePlayer(player,1e6);
     await until(()=>rewards.length===1 && guest.state.phase===PHASE_LOST);
     assert.ok(rewards[0].gear.length>=1);assert.equal(rewards[0].runId,host.state.runId);

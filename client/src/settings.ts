@@ -1,6 +1,9 @@
 // Réglages du joueur, mémorisés dans le navigateur.
 
 export interface Settings {
+  uiTheme:'underworld'|'retro';
+  showPerformance:boolean;
+  renderMode:'standard'|'compatible';
   /**
    * Smart cast activé : la touche d'un sort le lance immédiatement vers la souris.
    * Désactivé : la touche affiche la zone du sort, un clic gauche confirme (clic droit, Échap ou la même touche annule).
@@ -20,13 +23,15 @@ export interface Settings {
 const KEY = 'rod.reglages';
 export type VolumeKey = 'musicVolume' | 'ambianceVolume' | 'sfxVolume';
 export const VOLUMES: readonly VolumeKey[] = ['musicVolume', 'ambianceVolume', 'sfxVolume'];
-const DEFAULTS: Settings = { smartCast: true, autoAttack: false, musicVolume: 0.4, ambianceVolume: 0.5, sfxVolume: 0.7, crosshairShape: 'classique', crosshairColor: 'or' };
+const DEFAULTS: Settings = { uiTheme:'underworld', showPerformance:false, renderMode:'standard', smartCast: true, autoAttack: false, musicVolume: 0.4, ambianceVolume: 0.5, sfxVolume: 0.7, crosshairShape: 'classique', crosshairColor: 'or' };
 
 function load(): Settings {
   try {
     const saved = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') };
     // Réglage abîmé à la main ou par une ancienne version : on revient à la valeur par défaut.
     for (const key of VOLUMES) saved[key] = Number.isFinite(saved[key]) ? Math.min(1, Math.max(0, saved[key])) : DEFAULTS[key];
+    if(!['underworld','retro'].includes(saved.uiTheme))saved.uiTheme=DEFAULTS.uiTheme;
+    if(!['standard','compatible'].includes(saved.renderMode))saved.renderMode='standard';
     return saved;
   } catch {
     return { ...DEFAULTS };
@@ -40,7 +45,9 @@ export function replaceSettings(raw:unknown):void {
   Object.assign(settings,DEFAULTS);
   if(raw&&typeof raw==='object'){
     const r=raw as Record<string,unknown>;
-    for(const key of ['smartCast','autoAttack'] as const)if(typeof r[key]==='boolean')settings[key]=r[key];
+    if(r.uiTheme==='underworld'||r.uiTheme==='retro')settings.uiTheme=r.uiTheme;
+    if(r.renderMode==='standard'||r.renderMode==='compatible')settings.renderMode=r.renderMode;
+    for(const key of ['smartCast','autoAttack','showPerformance'] as const)if(typeof r[key]==='boolean')settings[key]=r[key];
     for(const key of VOLUMES)if(typeof r[key]==='number'&&Number.isFinite(r[key]))settings[key]=Math.min(1,Math.max(0,r[key]));
     for(const key of ['crosshairShape','crosshairColor'] as const)if(typeof r[key]==='string')settings[key]=r[key].slice(0,24);
   }

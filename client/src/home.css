@@ -125,3 +125,4 @@
 .home-setting > .crosshair-preview { flex: 0 0 96px; height: 96px; display: grid; place-items: center; border-radius: 6px; border: 1px solid #a0895760;
   background: radial-gradient(circle at 30% 30%, #7fb241, #4f7a32 60%, #3d5f27); }
 .crosshair-preview img { width: 64px; height: 64px; }
+.sanctum-art{display:none}.welcome-link{background:none;border:0;color:#d7c090;font-size:11px;margin-top:15px;padding:0;cursor:pointer}

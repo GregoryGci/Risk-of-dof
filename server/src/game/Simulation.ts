@@ -2,6 +2,7 @@
 // L'IA des monstres est dans monsters.ts, le spawn dans director.ts.
 import {
   CHALLENGE_COUNT,
+  ROUTES, getRoute, resolveRoute, type RouteId,
   CHEST_COUNT,
   MONSTERS,
   ZONES,
@@ -279,6 +280,7 @@ export class Simulation {
     this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
+    if(this.state.phase===PHASE_PLAYING)this.partySize=Math.max(this.partySize,this.players.size);
     this.state.players.set(id, state);
     if(this.state.intermission)this.rollShop(rt);
   }
@@ -352,6 +354,7 @@ export class Simulation {
     this.state.phase = PHASE_PLAYING;
     this.state.runId = randomUUID();
     this.startedAt=new Date().toISOString();this.partySize=this.players.size;
+    this.state.stageRoute='normal';
     this.state.time = 0;
     this.state.difficulty = 1;
     this.state.stage = 1;
@@ -454,7 +457,7 @@ export class Simulation {
     this.state.intermission=true;this.state.zaapX=0;this.state.zaapY=0;this.state.zaapState=ZAAP_IDLE;
     this.state.merchantX=MAP_SIZE/2;this.state.merchantY=MAP_SIZE/2;
     this.state.shop='personal';
-    for(const p of this.players.values()){p.bought.clear();p.state.bought='';p.state.shopRerolled=false;p.state.shopReady=false;this.rollShop(p);}
+    for(const p of this.players.values()){p.bought.clear();p.state.bought='';p.state.shopRerolled=false;p.state.shopReady=false;p.state.routeChoice='normal';this.rollShop(p);}
     this.broadcast('merchant',{stage:this.state.stage});
   }
 
@@ -468,12 +471,18 @@ export class Simulation {
     const p=this.players.get(id);if(!p?.state.alive||!this.state.intermission||this.state.paused||p.state.shopReady||p.state.shopRerolled)return;
     p.state.shopRerolled=true;this.rollShop(p,true);
   }
+  chooseRoute(id:string,choice:unknown):void {
+    const p=this.players.get(id);
+    if(!p?.state.alive||!this.state.intermission||this.state.paused||p.state.shopReady||typeof choice!=='string'||!Object.hasOwn(ROUTES,choice))return;
+    p.state.routeChoice=choice as RouteId;
+  }
   shopReady(id:string):void {
     const p=this.players.get(id);if(!p?.state.alive||!this.state.intermission||this.state.paused)return;
     p.state.shopReady=true;this.finishShoppingIfReady();
   }
   private finishShoppingIfReady():void {
     if(!this.state.intermission||!this.players.size||[...this.players.values()].some(p=>!p.state.shopReady))return;
+    this.state.stageRoute=resolveRoute([...this.players.values()].map(p=>p.state.routeChoice),this.players.get(this.state.hostId)?.state.routeChoice??'normal');
     this.state.stage++;this.state.seed=Math.floor(Math.random()*0xffffffff);this.map=generateMap(this.state.seed,undefined,this.state.stage);
     for(const p of this.players.values()){this.placeAtSpawn(p);p.dx=0;p.dy=0;p.readyAt=[this.now,this.now,this.now,this.now];p.secondaryRefillAt=0;p.state.secondaryCharges=p.state.secondaryMax;p.dashReadyAt=this.now;}
     this.setupStage();this.broadcast('stage',{stage:this.state.stage,name:zoneForStage(this.state.stage).name});
@@ -530,6 +539,7 @@ export class Simulation {
     this.state.paused = false;
     this.state.time = 0;
     this.state.waves=0;this.state.zoneWave=0;
+    this.state.stageRoute='normal';
     this.state.stage = 1;
     this.state.difficulty = 1;
     this.state.potions.clear();
@@ -1275,7 +1285,7 @@ export class Simulation {
     const [kMin, kMax] = m.def.kamas;
     const kamas = Math.round(kMin + Math.random() * (kMax - kMin));
     for (const p of this.players.values()) {
-      const gain = Math.round(kamas * (1 + p.stats.kamas));
+      const gain = Math.round(kamas * (1 + p.stats.kamas) * getRoute(this.state.stageRoute).kamas);
       p.state.kamas += gain;
       p.state.kamasEarned += gain;
     }
@@ -1290,10 +1300,12 @@ export class Simulation {
         for(const p of this.players.values())p.state.bossKills++;
         this.awardFragments(`boss:${m.id}`,bossFragments(this.state.stage));
         for(const p of this.players.values()) {
+          for(let blessing=0;blessing<getRoute(this.state.stageRoute).boons;blessing++){
           const bases=[...new Set(Object.values(RUN_BONUSES).map(b=>b.base))],offers:string[]=[];
           while(offers.length<3&&bases.length){const base=bases.splice(Math.floor(Math.random()*bases.length),1)[0],rarity=rollRarity(p.stats.luck+.15);offers.push((RUN_BONUSES[`${base}.${rarity}`]??RUN_BONUSES[`${base}.epique`]).id);}
           const queue=this.boonQueues.get(p.id)??[];queue.push(offers);this.boonQueues.set(p.id,queue);
           p.state.boonChoices=JSON.stringify(queue[0]);
+          }
         }
       }
       for (const p of this.players.values()) {
@@ -1558,8 +1570,9 @@ export class Simulation {
     const id = `m${this.nextMonsterId++}`;
     if (!def.ally && def.behavior.type !== 'dummy') {
       const mode = getMode(this.state.mode);
-      hpMult *= mode.hp;
-      damageMult *= mode.damage;
+      const route=getRoute(this.state.stageRoute);
+      hpMult *= mode.hp * (def.boss?route.bossHp:1);
+      damageMult *= mode.damage * (def.boss?route.bossDamage:1);
     }
     const state = new MonsterState();
     state.type = def.id;

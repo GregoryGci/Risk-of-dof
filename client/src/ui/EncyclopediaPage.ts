@@ -1,4 +1,4 @@
-import { EQUIPMENT_BASES, EQUIPMENT_TIERS, EQUIPMENT_QUALITY, EQUIPMENT_RARITIES, EQUIPMENT_RARITY_NAMES, DOFUS_DROP_CHANCE, GEAR_DROP_CHANCE, DROP_RARITY_CHANCES, dropPool, statText, type StatKey } from '@rod/shared';
+import { EQUIPMENT_BASES, EQUIPMENT_TIERS, EQUIPMENT_QUALITY, EQUIPMENT_RARITIES, EQUIPMENT_RARITY_NAMES, DUNGEONS, equipmentDropChance, statText, type StatKey } from '@rod/shared';
 import { account } from '../account.ts';
 import { escapeHtml } from './Hud.ts';
 
@@ -8,6 +8,8 @@ export class EncyclopediaPage {
   private filter = 'all';
   private selected = '';
   private search = '';
+  private zone=1;
+  private enutrof=false;
   constructor() {
     document.getElementById('encyclopedia-close')!.addEventListener('click', () => this.close());
     this.el.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); this.close(); } });
@@ -16,6 +18,7 @@ export class EncyclopediaPage {
       if (button?.dataset.catalog) { this.selected = button.dataset.catalog; this.renderDetail(); this.renderGrid(); }
       if (button?.dataset.collectionFilter) { this.filter = button.dataset.collectionFilter; this.render(); }
     });
+    this.body.addEventListener('change',e=>{const input=e.target as HTMLInputElement;if(input.id==='catalog-zone'){this.zone=Number(input.value);this.renderDetail();}if(input.id==='catalog-enutrof'){this.enutrof=input.checked;this.renderDetail();}});
     this.body.addEventListener('input', e => {
       const input = e.target as HTMLInputElement;
       if (input.id === 'catalog-search') { this.search = input.value; this.renderGrid(); }
@@ -39,9 +42,8 @@ export class EncyclopediaPage {
     if (!base) { el.innerHTML = `<span class="eyebrow">LE CARNET DES AVENTURIERS</span><h3>Une collection à écrire.</h3><p>Sélectionnez un équipement pour découvrir ses effets et le palier auquel il peut apparaître.</p><div class="catalog-book-symbol">◈</div><p>Les silhouettes se révèlent dès que vous obtenez l’objet en fin de partie.</p>`; return; }
     const found = account.discovered.includes(this.selected);
     const dofus=base.kind==='dofus';
-    const chance=dofus?DOFUS_DROP_CHANCE:GEAR_DROP_CHANCE;
-    const pool=dropPool(EQUIPMENT_TIERS[base.tier].stage,dofus).length;
-    el.innerHTML = `<div class="catalog-art${found ? '' : ' undiscovered'}"><img src="assets/dofus/items/${this.selected}.png" alt=""></div><span class="eyebrow">${found ? 'DÉJÀ DÉCOUVERT' : 'À DÉCOUVRIR'}</span><h3>${escapeHtml(base.name)}</h3><p>Palier ${EQUIPMENT_TIERS[base.tier].level} · ${base.kind}</p><div class="catalog-effects"><h4>Jet parfait · Légendaire tier 1</h4>${Object.entries(base.stats).map(([k,v]) => `<div>${escapeHtml(statText(k as StatKey,v))}</div>`).join('')}</div><p class="catalog-drop">À partir de la <b>zone ${EQUIPMENT_TIERS[base.tier].stage}</b>.<br>${dofus ? 'Boss uniquement : 3 % de chance de Dofus, partagé entre les Dofus accessibles.' : 'Tous les monstres : 3 % de chance d’équipement, partagé entre les objets accessibles.'}</p><table class="catalog-rates"><caption>Taux de cet objet à l’ouverture du palier</caption><tbody>${EQUIPMENT_RARITIES.map(r=>`<tr><td>${EQUIPMENT_RARITY_NAMES[r]}</td><td>${(chance / pool * DROP_RARITY_CHANCES[r] *100).toLocaleString('fr',{maximumFractionDigits:5})} %</td></tr>`).join('')}</tbody></table><p class="catalog-roll-note">Chaque rareté possède des stats fixes : ${EQUIPMENT_RARITIES.map(r=>`${EQUIPMENT_RARITY_NAMES[r]} ${EQUIPMENT_QUALITY[r]*100} %`).join(' · ')} du jet parfait. Les taux de cet objet diminuent quand le pool s’agrandit. Fusion : 10 identiques → rareté supérieure ; 10 légendaires → tier suivant (+25 % du jet de base).</p>`;
+
+    el.innerHTML = `<div class="catalog-art${found ? '' : ' undiscovered'}"><img src="assets/dofus/items/${this.selected}.png" alt=""></div><span class="eyebrow">${found ? 'DÉJÀ DÉCOUVERT' : 'À DÉCOUVRIR'}</span><h3>${escapeHtml(base.name)}</h3><p>Palier ${EQUIPMENT_TIERS[base.tier].level} · ${base.kind}</p><div class="catalog-effects"><h4>Jet parfait · Légendaire tier 1</h4>${Object.entries(base.stats).map(([k,v]) => `<div>${escapeHtml(statText(k as StatKey,v))}</div>`).join('')}</div><p class="catalog-drop">${dofus?'Boss uniquement, dans toutes les zones.':'Tous les monstres : uniquement le palier de la zone et des deux zones précédentes. Raretés précédentes ×3.'}</p><div class="catalog-simulator"><label for="catalog-zone">Zone de la run<select id="catalog-zone">${DUNGEONS.map((d,i)=>`<option value="${i+1}" ${this.zone===i+1?'selected':''}>${i+1} · ${escapeHtml(d[1])}</option>`).join('')}</select></label><label><input id="catalog-enutrof" type="checkbox" ${this.enutrof?'checked':''}>Passif Enutrof : taux individuels ×2</label></div><table class="catalog-rates"><caption>Chance de ce seul objet, par ${dofus?'boss':'ennemi'} en zone ${this.zone}</caption><tbody>${EQUIPMENT_RARITIES.map(r=>`<tr><td>${EQUIPMENT_RARITY_NAMES[r]}</td><td>${(equipmentDropChance(this.zone,this.selected,r,this.enutrof?2:1)*100).toLocaleString('fr',{maximumFractionDigits:5})} %</td></tr>`).join('')}</tbody></table><p class="catalog-roll-note">Chaque rareté possède des stats fixes : ${EQUIPMENT_RARITIES.map(r=>`${EQUIPMENT_RARITY_NAMES[r]} ${EQUIPMENT_QUALITY[r]*100} %`).join(' · ')} du jet parfait. Un taux de 0 % signifie que cet objet est hors des paliers accessibles. Un gardien surprise multiplie ces taux par 3. Fusion : 10 identiques → rareté supérieure ; 10 légendaires → tier suivant (+25 % du jet de base).</p>`;
   }
   private render(): void {
     const count = account.discovered.length;

@@ -6,6 +6,7 @@ import { PHASE_LOBBY,GAME_PROTOCOL_VERSION } from '@rod/shared';
 
 export const PlayerState = schema(
   {
+    routeChoice:t.string().default('normal'),
     rankStatus:t.string().default('disabled'),
     connected:t.boolean().default(true),
     equipment: t.string().default('{}'),
@@ -114,6 +115,7 @@ export const GameState = schema(
   {
     protocolVersion:t.uint16().default(GAME_PROTOCOL_VERSION),
     singlePlayer: t.boolean().default(false),
+    stageRoute:t.string().default('normal'),
     intermission: t.boolean().default(false),
     runId: t.string().default(''),
     phase: t.uint8().default(PHASE_LOBBY),

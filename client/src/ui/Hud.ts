@@ -1,5 +1,5 @@
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, kamas, équipe, bandeaux.
-import { CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, zoneForStage, type GameStateView, type PlayerView } from '@rod/shared';
+import { affinityProgress, getRoute, CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, zoneForStage, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import { spellIconSvg } from './icons.ts';
@@ -97,6 +97,7 @@ export class Hud {
   ) {
     this.dofusBanner.id='dofus-announcement';this.dofusBanner.className='hidden';this.dofusBanner.setAttribute('role','status');
     $('hud').append(this.dofusBanner);
+    const perf=document.createElement('div');perf.id='hud-performance';perf.className='hidden';$('hud-team').append(perf);
     const ranking=document.createElement('div');ranking.id='ranking-status';ranking.className='hidden';ranking.setAttribute('role','status');$('hud').append(ranking);
     this.resizeObserver=new ResizeObserver(entries=>{this.bottomHeight=entries[0].contentRect.height;});
     this.resizeObserver.observe($('hud-bottom'));
@@ -149,7 +150,7 @@ export class Hud {
   }
 
   hide(): void {
-    clearTimeout(this.dofusTimer);this.dofusQueue=[];this.dofusBanner.remove();document.getElementById('ranking-status')?.remove();
+    clearTimeout(this.dofusTimer);this.dofusQueue=[];this.dofusBanner.remove();document.getElementById('ranking-status')?.remove();document.getElementById('hud-performance')?.remove();
     this.resizeObserver.disconnect();
     $('hud').classList.add('hidden');
     $('gameover').classList.add('hidden');
@@ -306,8 +307,23 @@ export class Hud {
     el.classList.add('show');
   }
 
+  performance(fps:number,ping:number,creatures:number,visible:boolean):void{
+    if(!visible&&this.cache.performanceVisible==='false')return;
+    const el=$('hud-performance');
+    if(this.cache.performanceVisible!==String(visible)){this.cache.performanceVisible=String(visible);el.classList.toggle('hidden',!visible);}
+    if(!visible)return;
+    const text=`${fps} FPS · ${ping<0?'—':ping} ms · ${creatures} créatures`;
+    if(this.cache.performanceText===text)return;this.cache.performanceText=text;el.textContent=text;
+    el.classList.toggle('slow',fps<35||ping>150);
+  }
+
   update(state: GameStateView, myId: string, spectating: string | null, prompt = ''): void {
     const me = state.players.get(myId);
+    const route=getRoute(state.stageRoute);
+    const routeKey=state.intermission?'normal':route.id;
+    let routeEl=document.getElementById('hud-route');
+    if(!routeEl){routeEl=document.createElement('div');routeEl.id='hud-route';$('hud-timer').append(routeEl);}
+    if(this.cache.route!==routeKey){this.cache.route=routeKey;routeEl.classList.toggle('hidden',routeKey==='normal');routeEl.textContent=`${route.icon} ${route.name}`;routeEl.title=`${route.risk} · ${route.reward}`;}
     const ranking=$('ranking-status');
     if(this.cache.rankStatus!==me?.rankStatus){
       this.cache.rankStatus=me?.rankStatus??'';
@@ -345,7 +361,9 @@ export class Hud {
       this.stats = playerItemStats(parseRunBonuses(me.bonuses), me.equipment);
       const run=sumRunStats(parseRunBonuses(me.bonuses));
       const lines=Object.entries(run).filter(([,v])=>v>0);
-      $('run-gains').innerHTML=lines.length ? `<span class="run-gains-label">BONUS DE RUN</span>${lines.slice(0,3).map(([k,v])=>`<span>${escapeHtml(statText(k as StatKey,v))}</span>`).join('')}<small>Tab · récapitulatif complet</small>` : '';
+      $('run-gains').innerHTML=lines.length ? `<span class="run-gains-label">BONUS DE RUN</span>${lines.slice(0,3).map(([k,v])=>`<span>${escapeHtml(k==='multishot'?`+${Math.ceil(v)} tirs · ${Math.round(v/Math.ceil(v)*100)} %`:statText(k as StatKey,v))}</span>`).join('')}<small>Tab · récapitulatif complet</small>` : '';
+      const affinities=affinityProgress(parseRunBonuses(me.bonuses)).filter(p=>p.count>0);
+      if(affinities.length)$('run-gains').innerHTML+=`<span class="affinity-badges">${affinities.map(({affinity,count})=>`<span class="affinity-badge ${count>=3?'active':''}" style="--affinity:${affinity.color}" title="${affinity.name} : ${count} bonus différents. Seuils 3 et 5 ; détails sur Tab.">${affinity.icon} ${affinity.name} ${Math.min(count,5)}/${count<3?3:5}</span>`).join('')}</span>`;
     }
 
     // PV

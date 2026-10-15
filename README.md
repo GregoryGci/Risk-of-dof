@@ -26,6 +26,12 @@ L'accueil comporte **Single player → Multiplayer → Character → Classement 
 
 La progression comporte **33 donjons**, des monstres/décors/musiques par zone, des panoplies et des équipements différenciés par niveau. Les drops proviennent de la zone courante et des deux précédentes, avec raretés antérieures ×3 ; les Dofus restent accessibles sur les boss de toutes les zones. Une surprise plus puissante peut remplacer le gardien toutes les trois zones, avec butin ×3.
 
+La DA **Sanctuaire**, inspirée de Hades × Dofus, est active par défaut sur toutes les pages. **Settings → Direction artistique** permet de revenir au parchemin. Les sprites, équipements et sorts Retro restent ceux du jeu. L’atlas de l’accueil présente les 33 donjons et les pools de butin.
+
+À la halte marchande, choisissez un **serment** pour la prochaine zone : voie habituelle, renforts +30 % contre kamas +30 %, ou gardien renforcé contre deux bénédictions. En multi, la majorité décide et l’hôte départage les égalités. Les **affinités** Braise, Sève et Wakfu renforcent les builds à 3 puis 5 bonus différents, avec seuils visibles dans Tab. Les doublons comptent une seule fois.
+
+Les améliorations et leur validation sont décrites dans [docs/SANCTUAIRE_HADES_DOFUS.md](docs/SANCTUAIRE_HADES_DOFUS.md). **Settings → Performances en jeu** affiche les FPS et le ping réels. Le rendu Standard regroupe plusieurs atlas ; le mode Compatibilité reste disponible.
+
 ## Tester à 2 en local
 
 1. Ouvrez <http://localhost:5173> dans un premier onglet, entrez un pseudo, **Créer une partie**.

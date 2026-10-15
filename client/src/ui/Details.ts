@@ -1,10 +1,11 @@
 // Panneau « détails de la partie » ouvert avec Tab : stats, objets et sorts détaillés.
 // Il libère la souris ; en solo, la partie est mise en pause.
-import { CLASSES, CLASS_MECHANICS, difficultyTier, getClass, getSpell, parseRunBonuses, playerItemStats, sumRunStats, statText, type StatKey, type GameStateView } from '@rod/shared';
+import { affinityProgress, getRunBonus, CLASSES, CLASS_MECHANICS, difficultyTier, getClass, getSpell, parseRunBonuses, playerItemStats, sumRunStats, statText, type StatKey, type GameStateView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { spellIconSvg } from './icons.ts';
 import { spellDetailsHtml } from './spellInfo.ts';
 import { escapeHtml } from './Hud.ts';
+import {account} from '../account.ts';
 import { saveSettings, settings } from '../settings.ts';
 
 const SLOT_KEYS = ['Clic gauche', 'Clic droit', 'Espace', 'R'];
@@ -37,7 +38,7 @@ export class Details {
     document.getElementById('details-close')!.addEventListener('click', () => this.toggle(false),{signal});
     this.body.addEventListener('change', (e) => {
       const input = e.target as HTMLInputElement;
-      if (input.name === 'smartCast' || input.name === 'autoAttack') {
+      if (input.name === 'smartCast' || input.name === 'autoAttack' || input.name === 'showPerformance') {
         settings[input.name] = input.checked;
         saveSettings();
       }
@@ -69,12 +70,13 @@ export class Details {
     const solo = state.players.size === 1;
     let html = `<div class="details-status">${state.paused ? 'Partie en pause' : solo ? 'Partie en cours' : 'Multijoueur : la partie continue pendant que vous consultez ce panneau'}</div>`;
 
-    html += `<div class="details-grid">`;
+    html += `<label class="option"><input type="checkbox" name="showPerformance" ${settings.showPerformance?'checked':''}> Afficher FPS et ping en jeu</label><div class="details-grid">`;
     html += `<section><h3>Partie</h3>
       <div>Zone <b>${state.stage}</b> — temps <b>${formatTime(state.time)}</b></div>
       <div>Difficulté <b style="color:${tier.color}">${tier.name}</b> (×${state.difficulty.toFixed(2)})</div>
       <div>Monstres vaincus <b>${state.kills}</b> (dont ${me.kills} par vous)</div>
       <div>Kamas <b>${me.kamas}</b> — prix d'un coffre <b>${state.chestCost}</b></div>
+      <div>Forge permanente <b>${account.fragments.toLocaleString('fr')} ◈</b> · pour améliorer vos équipements à l’accueil</div>
     </section>`;
     html += `<section><h3>${escapeHtml(me.name)} — ${escapeHtml(CLASSES[me.classId]?.name ?? '')}</h3>
       <div>PV <b>${Math.ceil(me.hp)} / ${me.maxHp}</b> — régénération <b>${(cls.regen + stats.regen).toFixed(1)}/s</b></div>
@@ -109,6 +111,7 @@ export class Details {
       </div>`;
     html += `</div>`;
 
+    html+=`<h3>Affinités de la run</h3><p class="run-gains-help">Collectionnez 3 puis 5 bonus différents d’une famille. Les doublons et leurs qualités comptent une seule fois ; les avantages sont inclus dans vos stats.</p><div class="affinity-grid">${affinityProgress(inventory).map(({affinity,count})=>`<section class="affinity-card" style="--affinity:${affinity.color}"><h3>${affinity.icon} ${affinity.name} <small>${count}/${affinity.bases.length}</small></h3>${affinity.thresholds.map(t=>`<p class="${count>=t.count?'active':''}">${count>=t.count?'✓':'◇'} ${t.count} différents · ${Object.entries(t.stats).map(([key,value])=>escapeHtml(statText(key as StatKey,value))).join(' · ')}</p>`).join('')}<small>${affinity.bases.map(base=>getRunBonus(base+'.commun')?.name??getRunBonus(base+'.epique')?.name??base).map(escapeHtml).join(' · ')}</small></section>`).join('')}</div>`;
     const run=sumRunStats(inventory);
     const gains=Object.entries(run).filter(([,v])=>v>0);
     html += `<h3>Bonus gagnés pendant cette run</h3><p class="run-gains-help">Coffres, marchand et élites : ces bonus s’additionnent à votre tenue et disparaissent à la prochaine run.</p><div class="run-stats-recap">${gains.length ? gains.map(([k,v])=>`<div><span>✦</span>${escapeHtml(statText(k as StatKey,v))}</div>`).join('') : '<p>Aucun bonus pour le moment. Ouvrez des coffres avec vos kamas.</p>'}</div>`;

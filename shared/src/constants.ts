@@ -8,7 +8,7 @@ export const PATCH_MS = 50;
 export const SERVER_PORT = 2567;
 export const ROOM_NAME = 'partie';
 /** Cartes et schéma doivent correspondre entre le site et le serveur publié. */
-export const GAME_PROTOCOL_VERSION=2;
+export const GAME_PROTOCOL_VERSION=3;
 export const MAX_PLAYERS = 4;
 export const ROOM_CODE_LENGTH = 4;
 export const NAME_MAX_LENGTH = 16;
