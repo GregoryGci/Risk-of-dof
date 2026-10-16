@@ -299,8 +299,11 @@ export class GameScene extends Phaser.Scene {
       if(document.hidden)return;
       if(this.dangerWarnings.size>=8){const ordinary=[...this.dangerWarnings].find(m=>!this.warningPriority.has(m));if(!ordinary&&!e.priority)return;const oldest=ordinary??this.dangerWarnings.values().next().value!;oldest.destroy();this.dangerWarnings.delete(oldest);}
       const d=Math.hypot(e.tx-e.x,e.ty-e.y)||1,nx=-(e.ty-e.y)/d*(e.width+.2),ny=(e.tx-e.x)/d*(e.width+.2);
-      const points=[[e.x+nx,e.y+ny],[e.tx+nx,e.ty+ny],[e.tx-nx,e.ty-ny],[e.x-nx,e.y-ny]].map(([x,y])=>worldToScreen(x,y));
-      const marker=this.add.graphics().setDepth(-900000);marker.fillStyle(e.color,.2).lineStyle(2,e.color,.75).fillPoints(points,true).strokePoints(points,true);
+      const band=(k:number)=>[[e.x+nx,e.y+ny],[e.x+(e.tx-e.x)*k+nx,e.y+(e.ty-e.y)*k+ny],[e.x+(e.tx-e.x)*k-nx,e.y+(e.ty-e.y)*k-ny],[e.x-nx,e.y-ny]].map(([x,y])=>worldToScreen(x,y));
+      const points=band(1),marker=this.add.graphics().setDepth(-900000);
+      // La bande se remplit depuis le monstre jusqu'au déclenchement de l'attaque.
+      const draw=(k:number)=>{if(!marker.active)return;marker.clear().fillStyle(e.color,.15).lineStyle(2,e.color,.75).fillPoints(points,true).strokePoints(points,true);if(k>0)marker.fillStyle(e.color,.35).fillPoints(band(k),true);};
+      draw(0);this.tweens.addCounter({from:0,to:1,duration:e.duration*1000,onUpdate:(t)=>draw(t.getValue()??0)});
       this.dangerWarnings.add(marker);this.time.delayedCall(e.duration*1000,()=>{this.dangerWarnings.delete(marker);marker.destroy();});
       if(e.priority)this.warningPriority.add(marker);
     });

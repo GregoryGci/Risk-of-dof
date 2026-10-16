@@ -1,6 +1,6 @@
 // Directeur de spawn façon Risk of Rain : il accumule des crédits avec le temps
 // (de plus en plus vite) et les dépense en vagues de monstres autour des joueurs.
-import { assaultPlan, getRoute, nightmareSpawnRamp, ZAAP_CHARGING, getMode, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
+import { assaultPlan, easyLateRelief, getRoute, nightmareSpawnRamp, ZAAP_CHARGING, getMode, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
 import type { Simulation } from './Simulation.ts';
 import {easyRamp,enemyPopulationLimit,introductoryZone} from './spawn-pressure.ts';
 
@@ -57,7 +57,7 @@ export class Director {
       this.killRate+=(Math.max(0,sim.state.kills-this.lastKills)/this.sampleIn-this.killRate)*blend;
       this.damageRate+=(Math.max(0,damage-this.lastDamage)/this.sampleIn-this.damageRate)*blend;
       this.lastKills=sim.state.kills;this.lastDamage=damage;this.sampleIn=0;
-      const defs=sim.zoneMonsters(),typicalHp=defs.reduce((n,d)=>n+d.hp,0)/defs.length*monsterHpMultiplier(diff)*getMode(sim.state.mode).hp;
+      const defs=sim.zoneMonsters(),typicalHp=defs.reduce((n,d)=>n+d.hp,0)/defs.length*monsterHpMultiplier(diff)*getMode(sim.state.mode).hp*easyLateRelief(sim.state.mode,sim.state.stage,sim.state.cursed);
       const team=Math.max(1,[...sim.players.values()].filter(p=>p.state.alive).length);
       const desired=1+Math.min(2,Math.max(0,this.killRate/team-.8)*.35+Math.max(0,this.damageRate/Math.max(1,typicalHp)/team-3)*.035);
       this.pressure+=(desired-this.pressure)*.2;

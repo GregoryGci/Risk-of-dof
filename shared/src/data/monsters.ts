@@ -12,7 +12,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
     speed: 2.5,
     radius: 0.45,
     melee: { damage: 8, range: 0.95, cooldown: 1.2 },
-    behavior: { type: 'charger', chargeRange: 6, windup: 0.6, chargeSpeed: 9.5, chargeDuration: 0.75, chargeCooldown: 4.5, chargeDamage: 14 },
+    behavior: { type: 'charger', chargeRange: 4, windup: 0.6, chargeSpeed: 14.25, chargeDuration: 0.27, chargeCooldown: 4.5, chargeDamage: 14 },
     cost: 3,
     minDifficulty: 1,
     weight: 3,

@@ -44,6 +44,7 @@ import {
   getSpell,
   isBlocked,
   monsterDamageMultiplier,
+  easyLateRelief,
   monsterHpMultiplier,
   monsterSpeedMultiplier,
   bossSpeedMultiplier,
@@ -1886,8 +1887,9 @@ export class Simulation {
     if (!def.ally && def.behavior.type !== 'dummy') {
       const mode = getMode(this.state.mode);
       const route=getRoute(this.state.stageRoute);
-      hpMult *= mode.hp * (def.boss?route.bossHp:1);
-      damageMult *= mode.damage * (def.boss?route.bossDamage:1);
+      const relief=easyLateRelief(this.state.mode,this.state.stage,this.state.cursed);
+      hpMult *= mode.hp * relief * (def.boss?route.bossHp:1);
+      damageMult *= mode.damage * relief * (def.boss?route.bossDamage:1);
     }
     const state = new MonsterState();
     state.type = def.id;

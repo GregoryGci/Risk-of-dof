@@ -253,12 +253,12 @@ export class Effects {
   /** Cercle au sol (disque plein + anneau), sans conteneur. */
   groundCircle(x: number, y: number, radius: number, color: number, fillAlpha: number, ringAlpha: number): { destroy(): void } {
     const disc = this.groundEllipse(x, y, radius, color, fillAlpha);
+    // Contour tracé à épaisseur fixe (l'anneau texturé s'épaississait avec le rayon de la zone).
     const ring = this.scene.add
-      .image(x, y, 'ph_ring')
-      .setTint(color)
-      .setAlpha(ringAlpha)
-      .setDepth(DEPTH_GROUND_FX)
-      .setScale((radius * TILE_W * Math.SQRT2) / 120, (radius * TILE_H * Math.SQRT2) / 120);
+      .graphics()
+      .lineStyle(2, color, ringAlpha)
+      .strokeEllipse(x, y, radius * TILE_W * Math.SQRT2, radius * TILE_H * Math.SQRT2)
+      .setDepth(DEPTH_GROUND_FX);
     return {
       destroy: () => {
         disc.destroy();

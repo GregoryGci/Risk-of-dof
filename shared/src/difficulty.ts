@@ -108,6 +108,14 @@ export function getMode(id: number): GameMode {
   return GAME_MODES[id] ?? GAME_MODES[0];
 }
 
+/**
+ * Facile, zones 8 à 33 : PV et dégâts des monstres (gardiens compris) allégés, ×0,85 en zone 8,
+ * puis −5 % par zone jusqu'à ×0,70 à partir de la zone 11. Rien ne change avant, ni en zone maudite.
+ */
+export function easyLateRelief(mode:number,stage:number,cursed=false):number{
+  return mode===0&&!cursed&&stage>=8?.85-.05*Math.min(3,stage-8):1;
+}
+
 export function guardianCount(mode:number,stage:number):number{return getMode(mode).nightmare?(stage%3===0?3:2):1;}
 
 /** Gardien du Zaap selon la zone : la liste tourne en boucle (de plus en plus forts avec la difficulté). */
