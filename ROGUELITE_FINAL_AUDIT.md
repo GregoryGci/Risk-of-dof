@@ -8,6 +8,41 @@ Audit de game design et d'équilibrage réalisé par Claude (Lead Game Designer)
 
 ---
 
+## Suivi des corrections (mise à jour du 17 octobre 2026, soir)
+
+À la demande de l'utilisateur (« tout fix »), Claude a appliqué les corrections. Commits `1bd4e53e` à `b2c8c177` sur `master`, non poussés. Valeurs en vigueur : §15 du document de design. Vérifications : 269 tests automatisés réussis, typecheck et build OK, mesures `artifacts/audit/` relancées.
+
+| Id | État | Résultat mesuré ou vérifié |
+|---|---|---|
+| P1-01 Piège de Masse | ✅ Corrigé | 50 → 843 DPS en vague (réseau qui se referme sur la horde, pose à l'angle d'or, fils à partir de 4 pièges). Tests dédiés. |
+| P1-02 Aiguilles | ✅ Corrigé | Xélor N1 : 1 → 92 DPS ; N8 : 6 → 486. Test dédié. |
+| P1-03 Verrouillage des évolutions | ✅ Corrigé | Sorts verrouillés avec des choix aléatoires : 67 % → 30 % ; carte Réaccord dans les coffres ; paires visibles dans la fenêtre de choix et l'infobulle des sorts. Tests dédiés. |
+| P1-04 Courbe d'XP | ✅ Corrigé | Niveaux médians solo aux zones 1 à 4 : 7 / 17 / 24 / 30 → 5 / 11 / 16 / 20 (cibles 6 / 10 / 14 / 18). |
+| P1-05 Débuts de partie | ✅ Corrigé | Signatures N1 de 1–359 → 45–249 DPS. Osamodas (45) reste en bas de fourchette. |
+| P2-01 Multitude | ✅ Corrigé | Gain moyen au rang 5 : +69 % → +26 %. Test dédié. |
+| P2-02 Glyphe / Sanctuaire | ✅ Corrigé | Glyphe N8 101 → 28 DPS monocible ; Sanctuaire ×2,6 du N8 en vague. Test dédié. |
+| P2-03 Épée du Jugement | ✅ Corrigé | Vague 4 511 → 2 260 DPS ; monocible ≈ 210. Deux causes trouvées : couronne qui touchait plusieurs fois, épées sur critique déclenchées par les ticks de l'épée plantée. |
+| P2-04 Jackpot | ✅ Corrigé | Vague 2 482 → 1 571 ; monocible 347 → ≈ 200. |
+| P2-05 Évolutions faibles | 🟡 Amélioré | Mot Interdit ×2,1 ; Ruée ×1,5 ; Tofu Royal et Forêt ×1,4 ; Karcham → Chamrak ×1,4 en vague (cible ×1,8). À reprendre après parties humaines. |
+| P2-06 Écart entre builds | 🟡 Amélioré | ×12 → ×6 en vague ; ×20 → ×12 contre les boss. Féca « Forteresse » reste à 211 DPS contre les boss (build défensif). |
+| P2-07 Dépendance à l'équipement | 🟡 Amélioré | Forêt ×4 → ×46. Chamrak (×106) et Mot Interdit (×90) restent au-dessus de la fourchette ×25–60. |
+| P2-08 Fuite mémoire | ✅ Corrigé | Purge périodique des tables indexées par monstre. Test dédié. |
+| P2-09 Volume réseau | ✅ Corrigé | 3 865 → 204 messages/s et 398 → 97 Ko/s par client (250 ennemis, 16 évolutions) : dégâts et effets groupés par tick. |
+| P2-10 XP à 4 joueurs | ⏳ À valider en partie humaine | Avec 4 bots, progression un peu plus lente qu'en solo (niveau 8 en zone 2 contre 11). Une réduction de la pénalité par joueur n'a rien changé de mesurable avec des bots : réglage laissé à 0,3. |
+| P2-11 Visuels incomplets | ✅ Corrigé | Tofu Royal doré couronné, infectés verts avec bulles, gelés du Cadran sépia, feuilles autour des portés, racines de la Forêt. Les ticks des évolutions persistantes ne rejouent plus leur grande animation. |
+| P2-12 Expansion / Persistance | 🟡 Amélioré | Expansion : gain sur 4 → 11 sorts. Persistance reste un passif de niche (3 sorts), assumé pour les builds poison et brûlure. |
+| P3-01 Sprite de la Roue | ✅ Corrigé | Image tirée de l'animation Retro du sort. |
+| P3-02 Effets alliés | ✅ Corrigé | Opacité 28 % au-delà de 2 alliés. |
+| P3-03 Portés intangibles | 🟡 Atténué | Portage du Chamrak réduit à 1,5 s. |
+| P3-04 Code obsolète | 🟡 En grande partie | `giveItem`, `boonQueues`, message `loadout`, `CLASS_MECHANICS` et 4 outils supprimés. Reste : l'extraction des sorts encore utilisés de `spells.ts` / `class-rework.ts`. |
+| P3-05 Double courbe d'XP | ✅ Corrigé | Une seule source (`RUN_PROGRESSION.xp`). |
+| P3-06 Test du Zaap | ⏳ Ouvert | Échec très rare non reproduit pendant les corrections. |
+| P3-07 Arène figée | ✅ Corrigé | L'arène choisit automatiquement la première carte. |
+
+**Demandes ajoutées par l'utilisateur pendant les corrections** : HUD et fenêtre de choix au style du menu (`client/src/run-hud.css`) ; paires sort ↔ passif visibles au survol ; bouton Bannir réduit à un « ✕ » discret ; caméra reculée de 20 %, avec distance d'apparition des monstres ajustée pour rester hors écran.
+
+---
+
 ## 1. État global
 
 La refonte est **techniquement solide et fonctionnelle** : 261 tests automatisés passent, les 18 sorts, 12 passifs, 18 évolutions et 12 innés existent et se déclenchent en simulation, l'autorité serveur et l'XP commune sont bien couvertes par les tests, et le serveur tient largement la charge.

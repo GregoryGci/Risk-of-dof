@@ -1,6 +1,6 @@
 # ROGUELITE_GAME_DESIGN.md — Refonte sorts, passifs et évolutions
 
-> **Statut : validé par l'utilisateur le 17 octobre 2026, y compris les propositions de l'Annexe C (C1 à C10). Des ajustements sont prévus ultérieurement. Aucun code de gameplay n'a encore été modifié.**
+> **Statut : validé par l'utilisateur le 17 octobre 2026, y compris les propositions de l'Annexe C (C1 à C10). Implémenté. Révisé après l'audit final le même jour : les valeurs du §15 remplacent celles des sections précédentes.**
 > Catalogue des sorts (§3–4), associations (§7) et évolutions (§8) validés tels quels.
 > Les valeurs marquées **[H]** sont des hypothèses à mesurer en jeu ou avec `tools/simulate-runs.ts`. Les autres découlent des données du dépôt.
 
@@ -21,6 +21,7 @@
 12. Analyse des builds et synergies
 13. Risques d'équilibrage et recommandations
 14. Critères d'acceptation testables pour Codex
+15. Révision post-audit (valeurs en vigueur)
 - Annexe A : identifiants techniques
 - Annexe B : conversion des statistiques, Dofus et bénédictions existants
 - Annexe C : décisions à valider avant implémentation
@@ -898,9 +899,9 @@ Valeurs **cumulées** au niveau indiqué.
 |---|---|---|---|---|---|
 | Puissance | +7 % dégâts | +14 % | +21 % | +28 % | +35 % |
 | Célérité | +6 % recharge | +12 % | +18 % | +24 % | +30 % |
-| Expansion | +8 % rayon | +16 % | +24 % | +32 % | +40 % |
-| Multitude | Q +1 | Q +1 · portée +1 | Q +2 · portée +1 | Q +2 · portée +2 | Q +3 · portée +2 |
-| Persistance | +10 % durée | +20 % | +30 % | +40 % | +50 % |
+| Expansion | +8 % rayon · +3 % zone | +16 % · +6 % | +24 % · +9 % | +32 % · +12 % | +40 % · +15 % |
+| Multitude | portée +1 | Q +1 · portée +1 | Q +1 · portée +2 | Q +2 · portée +2 | Q +2 · portée +3 (instances ajoutées à 60 %, §15) |
+| Persistance | +10 % durée · +7 % sur la durée | +20 % · +14 % | +30 % · +21 % | +40 % · +28 % | +50 % · +35 % |
 | Vitalité | +8 % PV · +0,3 PV/s | +16 % · +0,6 | +24 % · +0,9 | +32 % · +1,2 | +40 % · +1,5 |
 | Protection | +1 armure | +2 | +3 · bouclier 4 % | +4 · bouclier 6 % | +5 · bouclier 8 % |
 | Mobilité | +5 % vit. · dash −6 % | +10 % · −12 % | +15 % · −18 % | +20 % · −24 % | +25 % · −30 % |
@@ -1620,7 +1621,7 @@ Offre : 3 cartes parmi celles qui ne sont pas au plafond. `fb.eveil` a le poids 
 - **Une évolution au plus tôt** : 8 cartes (7 niveaux + 1 passif), donc dès le niveau 9 et le gardien de la zone 2–3 pour un joueur concentré.
 - **Une partie arrêtée en zone 5–8** obtient 1 à 2 évolutions ; une campagne complète en obtient 4 avant le premier tiers de la partie, et en profite pendant 20 zones.
 
-**Courbe d'XP candidate** : `12 + 4 × (niveau − 1)^1,5` au lieu de `12 + 5 × (niveau − 1)^1,28`. Cumul : niveau 10 = 445 XP (actuel 395), niveau 20 = 2 581 (1 925), niveau 30 = 7 283 (4 897), niveau 52 = 29 603 (17 380). Le début reste aussi rapide, la fin est ≈ ×1,7 plus lente.
+**Courbe d'XP retenue après audit (§15)** : `12 + 11 × (niveau − 1)^1,65`. Courbe candidate initiale : `12 + 4 × (niveau − 1)^1,5` au lieu de `12 + 5 × (niveau − 1)^1,28`. Cumul : niveau 10 = 445 XP (actuel 395), niveau 20 = 2 581 (1 925), niveau 30 = 7 283 (4 897), niveau 52 = 29 603 (17 380). Le début reste aussi rapide, la fin est ≈ ×1,7 plus lente.
 
 **Calibration** : avec `simulate-runs` (bots par classe, Normal, tenue du palier), le niveau médian en fin de zone 4, 9 et 15 doit tomber à ±2 niveaux des objectifs. Sinon, ajuster `linear` puis `power`. **Les bots foncent vers le Zaap : la mesure finale doit venir de parties humaines.**
 
@@ -1750,6 +1751,63 @@ Chaque build vise 4 évolutions. Les passifs en gras servent deux évolutions.
 ### Sauvegardes et interface
 - **A28** Remboursement des paliers et talents idempotent ; nouveaux paliers sauvegardés localement et sur Supabase.
 - **A29** Les cartes affichent les valeurs exactes calculées à partir des mêmes données que le serveur ; une icône signale les paires sort/passif qui mènent à une évolution.
+
+---
+
+## 15. Révision post-audit (17 octobre 2026)
+
+Cette section **remplace** les valeurs correspondantes des sections précédentes. Elle applique les corrections de `ROGUELITE_FINAL_AUDIT.md`, validées par l'utilisateur (« tout fix »), et mesurées dans la simulation serveur (scripts `artifacts/audit/`).
+
+### 15.1 Progression
+
+| Élément | Avant | Après | Raison |
+|---|---|---|---|
+| Courbe d'XP | `12 + 4 × (n − 1)^1,5` | **`12 + 11 × (n − 1)^1,65`** | Progression mesurée 1,7 fois trop rapide ; nouveaux niveaux médians solo 5 / 11 / 16 / 20 aux zones 1 à 4. |
+| Choix de passifs | Libres | **Les 2 derniers emplacements ne proposent que des passifs qui font évoluer un sort possédé**, s'il en reste. | 67 % des sorts finissaient verrouillés. |
+| Coffre d'évolution sans évolution | Amélioration gratuite | **Carte « Réaccord » en tête** (au plus 2) : remplace, au même rang, le passif de plus bas rang qui ne fait évoluer aucun sort possédé par le passif d'un sort N8 verrouillé. | Rattrapage des builds bloqués. |
+| Héritage des créations | 0 % des dégâts d'équipement (60 % avec Lien bestial) | **40 %** (70 % avec Lien bestial) ; critiques toujours réservés au Lien bestial (60 %). | Les créations décrochaient en fin de partie (Forêt ×4 avec équipement). |
+
+### 15.2 Passifs
+
+| Passif | N1 | N2 | N3 | N4 | N5 |
+|---|---|---|---|---|---|
+| Multitude | portée +1 | Q +1 · portée +1 | Q +1 · portée +2 | Q +2 · portée +2 | Q +2 · portée +3 |
+| Expansion | +8 % rayon · +3 % dégâts de zone | +16 % · +6 % | +24 % · +9 % | +32 % · +12 % | +40 % · +15 % |
+| Persistance | +10 % durée · +7 % dégâts sur la durée | +20 % · +14 % | +30 % · +21 % | +40 % · +28 % | +50 % · +35 % |
+
+Les instances ajoutées par Multitude infligent **60 %** des dégâts (facteur `(q + 0,6 e) / (q + e)` appliqué à toutes les touches du sort). Mesure : gain moyen +26 % au rang 5 (contre +69 %).
+
+### 15.3 Sorts
+
+| Sort | Changement |
+|---|---|
+| Flèche Magique | N1 : 2 flèches, 15–19 ; N2 17–21 ; N3 : 3 flèches. |
+| Pression | N1 15–20 ; N2 20–25. |
+| Invocation de Tofus | N1 : 3 Tofus, 9–12, 60 % des PV, réapparition 6 s ; N3 4 Tofus ; N5 80 % des PV ; N7 5 Tofus. |
+| Ronce | N1 8–10, poison 6/s ; N2 7 ; N6 8 ; N8 10. |
+| Aiguilles | Chaque aiguille est un **segment** de 0,6 case au rayon d'orbite (elle touchait rarement les ennemis au contact). |
+| Glyphe Agressif | Un ennemi ne subit les ticks que d'**une** Glyphe Agressive à la fois. |
+| Épée Céleste | N1 rayon 1,3 (N5 ne l'augmente plus) ; N8 onde 20 % (au lieu de 40 %). |
+
+### 15.4 Évolutions
+
+| Évolution | Changement |
+|---|---|
+| Jackpot | 3 cartes par roue, 8–10 ; ★ 6 % (♦ 34 %). |
+| Épée du Jugement | Rayon 1,2 ; couronne 20–24, rayon 0,8, **une touche par ennemi** ; épée plantée rayon 0,8 ; les 2 épées sur critique ne viennent que du coup principal. |
+| Ruée vers l'Or | Vortex 20–24 ; retour 35–42. |
+| Chamrak | Impact 100–120 ; moulinet 35–42 ; portage 1,5 s (au lieu de 2,5). |
+| Forêt Vivante | Tirs 16–20 ; éruption 70–85. |
+| Tofu Royal | Écrasement 140–170 ; nuée 34–40 ; réapparition 6 s ; 80 % des PV. |
+| Mot Interdit | Atténuation 0,10 ; première cible ×1,5 ; coefficient fixe 0,6. |
+| Piège de Masse | Pose en anneau à 3,5 cases selon l'angle d'or ; fils actifs à partir de 4 pièges armés ; **le réseau se referme** quand 3 ennemis sont à l'intérieur ; sous 4 pièges, chaîne du N8 (3 cases, +20 %) ; explosion de masse `max(120, 40 × n)`, plafond 320. |
+
+### 15.5 Résultats mesurés après révision (vague réaliste, statistiques neutres)
+
+- Toutes les signatures N1 entre 45 et 250 DPS (avant : 1 à 359).
+- Évolution / N8 entre ×1,4 et ×4,3 en vague ; Piège de Masse 843 DPS (avant : 50).
+- Écart entre builds de référence : ×6 en vague, ×12 contre les boss (avant : ×12 et ×20). Féca « Forteresse » reste le build le plus faible contre les boss (211 DPS), en contrepartie de sa survie.
+- Les valeurs restent **[H]** tant que des parties humaines ne les ont pas confirmées, notamment le rythme d'XP à plusieurs joueurs.
 
 ---
 
