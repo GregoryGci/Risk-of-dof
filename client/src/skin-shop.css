@@ -9,3 +9,5 @@
 .ogrine-announcement{position:absolute;bottom:30%;left:50%;transform:translateX(-50%);width:max-content;max-width:85vw;padding:16px 24px;background:#2e1427ed;border:1px solid #e8bf71;box-shadow:0 0 28px #e5b66c40;color:#ffe3a9;font-family:Georgia,serif;font-size:clamp(15px,2vw,23px);text-align:center;z-index:54;pointer-events:none!important}.ogrine-announcement.hidden{display:none}
 @media(max-width:680px){.skin-shop-panel{padding:16px}.skin-class-picker{grid-template-columns:repeat(6,1fr)}.skin-shop-wallet{align-items:flex-start;flex-direction:column;gap:8px}.skin-shop-grid{grid-template-columns:1fr}.skin-preview{height:160px}.skin-preview img{max-height:150px}.skin-shop-footer{align-items:flex-start;flex-direction:column}.skin-shop-panel h2{font-size:42px}}
 @media(max-width:680px){body .home-topline>.home-profile{flex-wrap:wrap;gap:6px 14px;max-width:100%}body .home-topline>.home-profile .profile-name{flex-basis:100%}}
+/* La boutique réutilise .details-panel sans sous-bloc défilant : le thème le passe en overflow:hidden, on rétablit le défilement du panneau. */
+body.underworld .skin-shop-panel{overflow-x:hidden;overflow-y:auto}
