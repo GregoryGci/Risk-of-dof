@@ -74,7 +74,7 @@ export class ClassArena extends Phaser.Scene {
       const spell=getSpell(e.spell);this.effects.spawnProjectile(e as CastEvent);
       if(!spell.projectile&&!spell.delay&&spell.ground?.kind!=='trap')this.effects.playSpellFx(spell.id,spell.buff||spell.melee?e.x:e.tx,spell.buff||spell.melee?e.y:e.ty,e.tx-e.x,e.ty-e.y);
       this.views.get(e.caster)?.attack(store.spellFx(this,spell.id)?.casterAnim??0);
-    }else if(type==='abilityFx')this.rogue.event(e);else if(type==='projEnd'){this.effects.endProjectile(e.id,e.x,e.y);this.rogue.end(e.id);}
+    }else if(type==='abilityFx'){if(!this.rogue.event(e)&&e.kind==='impact'&&e.asset)this.effects.playSpellFx(e.asset,e.x,e.y);}else if(type==='projEnd'){this.effects.endProjectile(e.id,e.x,e.y);this.rogue.end(e.id);}
     else if(type==='spellImpact')this.effects.playSpellFx(e.spell,e.x,e.y,e.dx,e.dy);
     else if(type==='explode')this.effects.explosion(e.x,e.y,e.radius,getSpell(e.spell).color);
     else if(type==='dmg'){this.effects.floatText(e.x,e.y,String(e.amount),e.target==='test'?'#ff8b72':'#ffe397');this.views.get(e.target)?.flash();if(e.target!=='test')this.damage+=e.amount;}
