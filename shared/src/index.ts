@@ -1,4 +1,5 @@
 export * from './constants.ts';
+export * from './damage-batch.ts';
 export * from './combat-balance.ts';
 export * from './types.ts';
 export * from './iso.ts';

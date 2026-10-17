@@ -1,7 +1,7 @@
 // Salle de jeu : une partie = une salle, identifiée par un code court.
 // La salle ne fait que relayer : toute la logique est dans game/Simulation.ts.
 import { Room, type Client } from '@colyseus/core';
-import { MAX_PLAYERS, NAME_MAX_LENGTH, PATCH_MS, ROOM_CODE_LENGTH, TICK_RATE, type InputMessage } from '@rod/shared';
+import { MAX_PLAYERS, NAME_MAX_LENGTH, PATCH_MS, ROOM_CODE_LENGTH, TICK_RATE, packDamage, type DamageEvent, type InputMessage } from '@rod/shared';
 import { Simulation } from '../game/Simulation.ts';
 import type {PermanentSpellRanks} from '@rod/shared/roguelite';
 import { GameState } from '../state.ts';
@@ -47,6 +47,13 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.refreshing.set(id,request);return request;
   }
   async onAuth(_client:Client,options:{accessToken?:unknown}) {return await authenticate(options?.accessToken)??true;}
+  private damageBuffer:DamageEvent[]=[];
+  private fxBuffer:unknown[]=[];
+  /** Un seul message de dégâts et un seul message d'effets par tick, au lieu d'un message par touche. */
+  private flushDamage():void {
+    if(this.damageBuffer.length){this.broadcast('dmgBatch',packDamage(this.damageBuffer));this.damageBuffer=[];}
+    if(this.fxBuffer.length){this.broadcast('fxBatch',this.fxBuffer);this.fxBuffer=[];}
+  }
 
   onCreate(options?: { singlePlayer?: boolean }): void {
     if (options?.singlePlayer === true) { this.maxClients = 1; this.state.singlePlayer=true; }
@@ -57,6 +64,9 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.maxMessagesPerSecond = 120;
 
     this.sim = new Simulation(this.state, (type, message) => {
+      // Les dégâts partent groupés une fois par tick (voir flushDamage).
+      if(type==='dmg'){this.damageBuffer.push(message as DamageEvent);return;}
+      if(type==='abilityFx'){this.fxBuffer.push(message);return;}
       this.broadcast(type,message);
       if(type==='runReward'){
         const result=message as {player:string;reward:RunReward},userId=this.accounts.get(result.player),run=result.reward.summary;
@@ -64,7 +74,7 @@ export class GameRoom extends Room<{ state: GameState }> {
       }
     });
     this.setPatchRate(PATCH_MS);
-    this.setSimulationInterval((deltaMs) => this.sim.update(deltaMs / 1000), 1000 / TICK_RATE);
+    this.setSimulationInterval((deltaMs) => {this.sim.update(deltaMs / 1000);this.flushDamage();}, 1000 / TICK_RATE);
 
     this.onMessage('ping',(client:Client,message:{sentAt?:unknown})=>{if(typeof message?.sentAt==='number'&&Number.isFinite(message.sentAt))client.send('pong',{sentAt:message.sentAt});});
     this.onMessage('routeChoice',(client:Client,message:{route?:unknown})=>this.sim.chooseRoute(client.sessionId,message?.route));

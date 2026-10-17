@@ -30,6 +30,8 @@ import {
   type CastEvent,
   type ChallengeView,
   type DamageEvent,
+  type PackedDamage,
+  unpackDamage,
   type BuffEvent,
   type DeathEvent,
   type GroundView,
@@ -237,7 +239,9 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('cast', (e: CastEvent) => this.onCast(e));
     this.room.onMessage('momentum',(e:{player:string;x:number;y:number})=>{if(!document.hidden)this.effects.blessingBurst(e.x,e.y,1,0xffd58a);});
     this.room.onMessage('projEnd', (e: ProjEndEvent) => {this.effects.endProjectile(e.id,e.x,e.y);this.rogueliteEffects.end(e.id);});
-    this.room.onMessage('abilityFx',(e:Parameters<RogueliteEffects['event']>[0])=>{if(document.hidden)return;const handled=this.rogueliteEffects.event(e);if(!handled&&e.kind==='impact'&&e.asset)this.effects.playSpellFx(e.asset,e.x,e.y);});
+    const abilityFx=(e:Parameters<RogueliteEffects['event']>[0])=>{if(document.hidden)return;const handled=this.rogueliteEffects.event(e);if(!handled&&e.kind==='impact'&&e.asset)this.effects.playSpellFx(e.asset,e.x,e.y);};
+    // Les effets de sorts arrivent groupés une fois par tick.
+    this.room.onMessage('fxBatch',(list:Parameters<RogueliteEffects['event']>[0][])=>{for(const e of list)abilityFx(e);});
     this.room.onMessage('explode', (e: ExplodeEvent) => this.onExplode(e));
     this.room.onMessage('spellImpact',(e:{spell:string;x:number;y:number;dx:number;dy:number})=>{if(!document.hidden)this.effects.playSpellFx(e.spell,e.x,e.y,e.dx,e.dy);});
     this.room.onMessage('bounce',(e:{spell:string;x:number;y:number;tx:number;ty:number})=>{if(!document.hidden)this.effects.dashTrail(e.x,e.y,e.tx,e.ty,getSpell(e.spell).color);});
@@ -255,7 +259,7 @@ export class GameScene extends Phaser.Scene {
       if(!document.hidden)this.effects.explosion(e.x,e.y,e.radius,e.color);
     });
     this.room.onMessage('rest',()=>this.hud.toast('<b>Halte de l’équipe</b> — choisissez la route de la prochaine zone'));
-    this.room.onMessage('dmg', (e: DamageEvent) => this.onDamage(e));
+    this.room.onMessage('dmgBatch', (rows: PackedDamage[]) => {for(const e of unpackDamage(rows))this.onDamage(e);});
     this.room.onMessage('death', (e: DeathEvent) => this.onDeath(e));
     this.room.onMessage('boss', (e: { name: string; challenge?:boolean;rogue?:boolean;cursed?:boolean }) => {
       if(e.cursed){this.hud.toast(`<b style="color:#ff84ad">GARDIEN MAUDIT · ${e.name}</b><small>PV ×2,5 · dégâts ×1,8 · chance de Dofus ×3</small>`);this.store.playSound(this,'boss');return;}
