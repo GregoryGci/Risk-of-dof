@@ -1,7 +1,7 @@
 // Salle de jeu : une partie = une salle, identifiée par un code court.
 // La salle ne fait que relayer : toute la logique est dans game/Simulation.ts.
 import { Room, type Client } from '@colyseus/core';
-import { MAX_PLAYERS, NAME_MAX_LENGTH, PATCH_MS, ROOM_CODE_LENGTH, TICK_RATE, type CastMessage, type InputMessage } from '@rod/shared';
+import { MAX_PLAYERS, NAME_MAX_LENGTH, PATCH_MS, ROOM_CODE_LENGTH, TICK_RATE, type InputMessage } from '@rod/shared';
 import { Simulation } from '../game/Simulation.ts';
 import type {PermanentSpellRanks} from '@rod/shared/roguelite';
 import { GameState } from '../state.ts';
@@ -69,7 +69,6 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage('ping',(client:Client,message:{sentAt?:unknown})=>{if(typeof message?.sentAt==='number'&&Number.isFinite(message.sentAt))client.send('pong',{sentAt:message.sentAt});});
     this.onMessage('routeChoice',(client:Client,message:{route?:unknown})=>this.sim.chooseRoute(client.sessionId,message?.route));
     this.onMessage('input', (client: Client, message: InputMessage) => this.sim.setInput(client.sessionId, message));
-    this.onMessage('cast', (client: Client, message: CastMessage) => this.sim.playerCast(client.sessionId, message));
     this.onMessage('class', (client: Client, message: { classId?: string; spells?: string[] }) => {this.sim.setClass(client.sessionId, message?.classId, message?.spells);this.sim.setSpellLevels(client.sessionId,this.progression.get(client.sessionId));});
     this.onMessage('refreshProgression',(client:Client)=>this.refreshProgression(client.sessionId));
     this.onMessage('loadout', (client: Client, message: { spells?: string[] }) => this.sim.setLoadout(client.sessionId, message?.spells));

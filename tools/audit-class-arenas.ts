@@ -24,10 +24,6 @@ try {
       // une classe dont un sort déplace le personnage pendant le banc d'essai.
       const approaching=distance>comfortable;
       sim.setInput(p.id,{dx:approaching?dx/(distance||1):0,dy:approaching?dy/(distance||1):0,dir:0,autoAttack:true});
-      for(let slot=1;slot<4;slot++) {
-        const spell=getSpell(p.spells[slot]);
-        if(!spell.heal && !spell.rewind && !spell.revive)sim.playerCast(p.id,{slot,tx:enemy.state.x,ty:enemy.state.y});
-      }
       sim.update(1/30);
       // Aucun spawn de directeur dans l'arène ; les invocations restent actives.
       for(const m of [...sim.monsters.values()])if(!m.def.boss && !m.state.ally)sim.removeMonster(m.id);

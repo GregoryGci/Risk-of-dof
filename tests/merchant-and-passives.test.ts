@@ -9,7 +9,7 @@ const advance=(sim:Simulation,t:number)=>{for(let i=0;i<Math.ceil(t*30);i++)sim.
 test('Halte : monde vide, temps figé, pas de boutique et départ collectif',()=>{
  const {sim,state,p}=create();sim.addPlayer('q','Q','iop');state.zaapState=ZAAP_READY;p.state.x=state.zaapX;p.state.y=state.zaapY;sim.interact(p.id);
  assert.equal(state.intermission,true);assert.equal(state.stage,1);assert.equal(state.monsters.size,0);assert.equal(state.challenges.size,0);const time=state.time,difficulty=state.difficulty;advance(sim,15);assert.equal(state.time,time);assert.equal(state.difficulty,difficulty);assert.equal('kamas' in p.state,false);assert.equal('buy' in sim,false);
- const casts=p.readyAt.join();sim.playerCast(p.id,{slot:0,tx:1,ty:1});sim.classAction(p.id,{tx:1,ty:1});assert.equal(p.readyAt.join(),casts);sim.restReady(p.id);assert.equal(state.intermission,true);sim.removePlayer('q');assert.equal(state.intermission,false);assert.equal(state.stage,2);assert.ok(state.challenges.size>0);
+ const casts=p.readyAt.join();sim.classAction(p.id,{tx:1,ty:1});assert.equal(p.readyAt.join(),casts);sim.restReady(p.id);assert.equal(state.intermission,true);sim.removePlayer('q');assert.equal(state.intermission,false);assert.equal(state.stage,2);assert.ok(state.challenges.size>0);
 });
 
 test('Effets Retro : Pression, sorts Iop et deux remplacements ont des atlas originaux',()=>{

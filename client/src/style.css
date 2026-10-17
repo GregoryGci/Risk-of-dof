@@ -970,7 +970,7 @@ input[type='text']:focus {
   color: var(--bois-fonce);
   font-size: 15px;
 }
-/* Variantes du clic gauche | lot commun (clic droit / Espace), deux fois plus large | variantes du R. */
+/* Grille des paliers permanents des sorts. */
 .talents-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);

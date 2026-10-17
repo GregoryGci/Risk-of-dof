@@ -33,13 +33,6 @@ function drive(sim:Simulation,p:PlayerRt):void {
     const comfortable=basic.melee?basic.range*.7:Math.min(7,basic.range*.7);
     const direction=distance>comfortable?1:basic.melee?0:-1;
     dx=Math.cos(a)*direction;dy=Math.sin(a)*direction;
-    for(let slot=1;slot<4;slot++) {
-      const spell=getSpell(p.spells[slot]);
-      const range=spell.melee?spell.range:spell.zone?.self?spell.zone.radius:spell.range+p.stats.range;
-      if(spell.heal) { if(p.state.hp<p.state.maxHp*.8) sim.playerCast(p.id,{slot,tx:p.state.x,ty:p.state.y}); }
-      else if(spell.rewind) { if(p.state.hp<p.state.maxHp*.65) sim.playerCast(p.id,{slot,tx:p.state.x,ty:p.state.y}); }
-      else if(spell.shield || spell.buff || spell.summon || distance<=range+1) sim.playerCast(p.id,{slot,tx:enemy.state.x,ty:enemy.state.y});
-    }
   }
   // Éviter les bords ; les collisions sont celles du jeu, sans téléportation.
   if(p.state.x<8) dx=Math.abs(dx); if(p.state.x>MAP_SIZE-8) dx=-Math.abs(dx);

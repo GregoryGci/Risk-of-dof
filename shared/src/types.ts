@@ -182,14 +182,14 @@ export type StatKey =
   | 'critDamage' // dégâts des coups critiques (+ au multiplicateur ×1,5)
   | 'armor' // chaque point réduit les dégâts subis de 8 %
   | 'killHeal' // PV rendus par monstre vaincu
-  | 'lifesteal' // auto-attaques uniquement
+  | 'lifesteal' // sort signature uniquement
   | 'vampirism' // compétences uniquement
   | 'luck' // chance d’obtenir de meilleures propositions de statistiques
-  | 'multishot' // projectiles (ou frappes) en plus sur l'attaque de base
-  | 'attackSpeed' // vitesse de l'attaque de base à distance (+%)
+  | 'multishot' // copies du sort signature (Annexe B.2)
+  | 'attackSpeed' // cadence du sort signature (+%)
   | 'range' // portée des sorts (cases)
-  | 'bounce' // rebond de l’attaque de base
-  | 'secondaryCharge' // charges supplémentaires du clic droit
+  | 'bounce' // rebond du sort signature
+  | 'secondaryCharge' // ancienne charge du clic droit, convertie en hâte (+6 % par point)
   | 'revive'; // résurrection automatique une fois par partie
 
 export type BonusRarity = 'commun' | 'rare' | 'epique' | 'legendaire';
@@ -222,13 +222,6 @@ export interface InputMessage {
   dy: number;
   /** Direction du regard (0-7), dérivée de la visée souris. */
   dir: number;
-}
-export interface CastMessage {
-  /** Emplacement de sort (0-3). */
-  slot: number;
-  /** Point visé en coordonnées monde. */
-  tx: number;
-  ty: number;
 }
 
 /** Serveur -> clients : un sort est lancé (le client affiche le projectile). */

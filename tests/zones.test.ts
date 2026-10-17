@@ -73,12 +73,17 @@ test('passage de Zaap : carte, vagues, élite et cooldowns changent ensemble',()
   for(let stage=1;stage<=7;stage++) {
     assert.equal(state.stage,stage);assert.equal(sim.map.zoneId,zoneForStage(stage).id);
     assert.ok([...state.challenges.values()].every(ch=>Math.hypot(ch.x-state.zaapX,ch.y-state.zaapY)>=ZAAP_RANGE+INTERACT_RANGE+.2));
-    for(let tick=0;tick<900;tick++){sim.update(1/30);while(p.state.boonChoices!=='[]')sim.chooseBoon(p.id,0);}
-    assert.equal(state.phase,PHASE_PLAYING);assert.ok(sim.monsters.size>0);
-    assert.ok([...sim.monsters.values()].every(m=>zoneForStage(stage).monsters.includes(m.def.id)));
+    // Le build auto-lancé peut vider l'écran à tout instant : contrôle une fois par seconde pendant la vague.
+    // Les invocations alliées (Tofus acquis en montant de niveau) ne sont pas des monstres de la zone.
+    let seen=0;
+    for(let tick=0;tick<900;tick++){sim.update(1/30);while(p.state.boonChoices!=='[]')sim.chooseBoon(p.id,0);
+      if(tick%30===0){const enemies=[...sim.monsters.values()].filter(m=>!m.state.ally);seen+=enemies.length;assert.ok(enemies.every(m=>zoneForStage(stage).monsters.includes(m.def.id)));}}
+    assert.equal(state.phase,PHASE_PLAYING);assert.ok(seen>0);
     const challenge=[...state.challenges.values()].find(c=>!c.opened)!;
-    p.state.x=challenge.x;p.state.y=challenge.y;sim.interact(p.id);for(let i=0;i<61;i++)sim.update(1/30);
-    const elite=[...sim.monsters.values()].find(m=>m.state.elite)!;
+    // Le build auto-lancé peut tuer l'élite très vite : on la mémorise dès son apparition.
+    p.state.x=challenge.x;p.state.y=challenge.y;sim.interact(p.id);let elite:{def:{id:string}}|undefined;
+    for(let i=0;i<61;i++){sim.update(1/30);while(p.state.boonChoices!=='[]')sim.chooseBoon(p.id,0);elite??=[...sim.monsters.values()].find(m=>m.state.elite);}
+    assert.ok(elite,'élite apparue');
     assert.ok(zoneForStage(stage).monsters.includes(elite.def.id));assert.equal(challenge.opened,true);
     if(stage===7)break;
     p.readyAt=[999,999,999,999];p.push={vx:20,vy:0,time:.2};

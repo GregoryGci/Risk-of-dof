@@ -59,6 +59,8 @@ export class RunBuildController {
       if(bonus.source==='elite')choices=[...bonus.blessings.slice(0,evolutions.length?2:3).map(id=>({id:`blessing:${id}`,kind:'blessing' as const,definitionId:id,nextLevel:1})),...evolutions.slice(0,1)];
       else choices=evolutions.length?evolutions:generateLevelRewards(this.catalog,this.build,makeRng((this.seed+this.offerRevision*31)>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:++this.offerNumber});
     } else choices=generateLevelRewards(this.catalog,this.build,makeRng((this.seed+Math.imul(this.offerRevision,0x9e3779b9))>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:++this.offerNumber});
+    // Plus rien à proposer (secours plafonnés, Potion bannie) : le niveau ou le bonus est consommé sans carte.
+    if(!choices.length){if(bonus)this.bonusQueue.shift();else{this.pendingLevels--;this.levelCursor++;}this.ensureOffer(nowMs);return;}
     this.offer = {runId: this.runId, revision: this.offerRevision, buildRevision: this.build.revision,source:bonus?.source??'level',
       expiresAtMs: nowMs + this.catalog.config.choiceTimeoutMs,
       choices};
@@ -87,7 +89,10 @@ export class RunBuildController {
     this.validateClock(nowMs);
     if(!this.offer||this.offer.source!=='level'||message.runId!==this.runId||message.revision!==this.offer.revision||this.build.rerolls<=0)return false;
     const old=this.offer.choices.map(c=>c.id);this.build.rerolls--;this.build.revision++;this.offer=undefined;this.ensureOffer(nowMs);
-    this.offer!.choices=generateLevelRewards(this.catalog,this.build,makeRng((this.seed+this.offerRevision*17)>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:this.offerNumber,exclude:old});return true;
+    const offer=this.offer as BuildChoiceOffer|undefined;if(!offer)return true;
+    const fresh=generateLevelRewards(this.catalog,this.build,makeRng((this.seed+this.offerRevision*17)>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:this.offerNumber,exclude:old});
+    // Pool épuisé : on garde le tirage normal plutôt qu'une offre vide.
+    if(fresh.length)offer.choices=fresh;return true;
   }
   banish(message:{runId?:unknown;revision?:unknown;choiceId?:unknown},nowMs:number):boolean {
     this.validateClock(nowMs);
@@ -95,7 +100,8 @@ export class RunBuildController {
     const selected=this.offer.choices.find(c=>c.id===message.choiceId);if(!selected)return false;
     this.build.banned.push(selected.definitionId);this.build.banishes--;this.build.revision++;
     const old=this.offer.choices.filter(c=>c.id!==selected.id);this.offer=undefined;this.ensureOffer(nowMs);
+    const offer=this.offer as BuildChoiceOffer|undefined;if(!offer)return true;
     const replacement=generateLevelRewards(this.catalog,this.build,makeRng((this.seed+this.offerRevision*19)>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:this.offerNumber,exclude:old.map(c=>c.id)});
-    this.offer!.choices=[...old,...replacement.slice(0,1)];return true;
+    const choices=[...old,...replacement.slice(0,1)];if(choices.length)offer.choices=choices;return true;
   }
 }

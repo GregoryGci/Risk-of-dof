@@ -70,7 +70,7 @@ test('Les valeurs de combat synchronisées incluent les buffs, les plafonds et l
 });
 test('Pause de choix solo : le serveur rejette sorts, esquive, action et interaction anticipés',()=>{
   const {sim,state,p,events}=setup();sim.experience.drop(40,40,12);sim.update(1/30);const casts=events.filter(e=>e.type==='cast').length,cds=[...p.readyAt],position={x:p.state.x,y:p.state.y};
-  sim.playerCast(p.id,{slot:0,tx:45,ty:40});sim.playerDash(p.id,{dx:1,dy:0});sim.classAction(p.id,{tx:45,ty:40});p.state.x=state.zaapX;p.state.y=state.zaapY;sim.interact(p.id);
+  sim.playerDash(p.id,{dx:1,dy:0});sim.classAction(p.id,{tx:45,ty:40});p.state.x=state.zaapX;p.state.y=state.zaapY;sim.interact(p.id);
   assert.equal(events.filter(e=>e.type==='cast').length,casts);assert.deepEqual(p.readyAt,cds);assert.equal(p.push,null);assert.equal(state.zaapState,0);assert.equal(p.state.pendingLevels,1);
 });
 test('Mort réentrante : un effet déclenché pendant la mort ne duplique ni XP, ni boss, ni aspiration',()=>{

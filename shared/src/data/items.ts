@@ -23,28 +23,28 @@ export const RUN_BONUS_BASES: Record<string, ItemBase> = {
   vitalite: { name: 'Vitalité', description: 'PV max', color: 0xa55b45, stats: { maxHp: 20 } },
   puissance: { name: 'Puissance', description: 'Dégâts', color: 0xc08d4c, stats: { damage: 0.08 } },
   celerite: { name: 'Célérité', description: 'Recharge des sorts', color: 0x5c9996, stats: { haste: 0.08 } },
-  attaque: { name: 'Vivacité', description: 'Attaque de base à distance', color: 0x9b8358, stats: { attackSpeed: 0.06 } },
+  attaque: { name: 'Vivacité', description: 'Cadence du sort signature', color: 0x9b8358, stats: { attackSpeed: 0.06 } },
   agilite: { name: 'Agilité', description: 'Déplacement', color: 0x7b9451, stats: { speed: 0.04 } },
   recuperation: { name: 'Récupération', description: 'Régénération', color: 0x7c9b6c, stats: { regen: 0.6 } },
   critique: { name: 'Précision', description: 'Critiques', color: 0xaca15f, stats: { crit: 0.035 } },
   impact: { name: 'Impact', description: 'Dégâts critiques', color: 0xb4855d, stats: { critDamage: 0.18 } },
   protection: { name: 'Robustesse', description: 'Armure', color: 0x879074, stats: { armor: 0.7 } },
   recuperation_victoire: { name: 'Second souffle', description: 'PV par victoire', color: 0x7d9d8a, stats: { killHeal: 1.5 } },
-  vol_de_vie: { name: 'Vol de vie', description: 'Auto-attaques', color:0xaa615e,stats:{lifesteal:.003} },
+  vol_de_vie: { name: 'Vol de vie', description: 'Sort signature', color:0xaa615e,stats:{lifesteal:.003} },
   vampirisme: { name: 'Vampirisme', description: 'Compétences', color: 0xaa615e, stats: { vampirism: 0.006 } },
   chance: { name: 'Chance', description: 'Meilleures qualités de bonus de run', color: 0x7b9854, stats: { luck: 0.035 } },
-  echos: { name: 'Échos', description: 'Attaque supplémentaire', color: 0x77a59c, stats: { multishot: 0.25 } },
+  echos: { name: 'Échos', description: 'Copies du sort signature', color: 0x77a59c, stats: { multishot: 0.25 } },
   portee: { name: 'Allonge', description: 'Portée', color: 0xafa572, stats: { range: 0.4 } },
-  rebond: { name:'Ricochet',description:'Rebond de l’attaque de base',color:0xc99bec,stats:{bounce:1},rarities:['epique'] },
-  reserve: { name:'Seconde réserve',description:'Charge de compétence secondaire',color:0x91bada,stats:{secondaryCharge:1},rarities:['epique'] },
+  rebond: { name:'Ricochet',description:'Rebond du sort signature',color:0xc99bec,stats:{bounce:1},rarities:['epique'] },
+  reserve: { name:'Seconde réserve',description:'Hâte (ancienne réserve de charges)',color:0x91bada,stats:{secondaryCharge:1},rarities:['epique'] },
 };
 
 /** Libellé lisible d'une stat pour une valeur donnée (« +12 % de dégâts »...). */
 export function statText(key: StatKey, value: number): string {
   const pct = (v: number) => `${Math.round(v * 1000) / 10} %`;
   switch (key) {
-    case 'bounce':return `L’attaque de base rebondit sur ${Math.round(value)} ennemi${value>1?'s':''} supplémentaire${value>1?'s':''} à 4 cases`;
-    case 'secondaryCharge':return `+${Math.round(value)} charge${value>1?'s':''} du clic droit (recharge une par une)`;
+    case 'bounce':return `Le sort signature rebondit sur ${Math.round(value)} ennemi${value>1?'s':''} supplémentaire${value>1?'s':''} (+5 % de dégâts par point si sa forme ne rebondit pas)`;
+    case 'secondaryCharge':return `+${Math.round(value*6)} % de hâte (ancienne réserve de charges)`;
     case 'maxHp':
       return `+${Math.round(value)} PV max`;
     case 'regen':
@@ -74,7 +74,7 @@ export function statText(key: StatKey, value: number): string {
     case 'critDamage':
       return `+${pct(value)} de dégâts critiques`;
     case 'lifesteal':
-      return `+${pct(value)} de vol de vie (auto-attaques)`;
+      return `+${pct(value)} de vol de vie (sort signature)`;
     case 'vampirism':return `+${pct(value)} de vampirisme (compétences)`;
     case 'luck':
       return `+${pct(value)} de chance pour la qualité des bonus de run`;

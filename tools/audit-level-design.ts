@@ -20,7 +20,7 @@ try{for(const level of[1,3,4]){
  const times:number[]=[],fullTimes:number[]=[];let peak=0;
  for(let tick=0;tick<1800;tick++){
   const fullBefore=performance.now();
-  for(const p of sim.players.values()){p.state.hp=p.state.maxHp;p.buffs=[{stats:{},until:1e9,invisible:false,invulnerable:true}];if(tick%3===0){sim.setInput(p.id,{dx:Math.cos(tick/90),dy:Math.sin(tick/90),dir:1,autoAttack:true});const target=[...sim.monsters.values()].find(m=>!m.state.ally);if(target){for(let slot=1;slot<4;slot++)sim.playerCast(p.id,{slot,tx:target.state.x,ty:target.state.y});}if(tick%90===0)sim.playerDash(p.id,{dx:1,dy:0});}}
+  for(const p of sim.players.values()){p.state.hp=p.state.maxHp;p.buffs=[{stats:{},until:1e9,invisible:false,invulnerable:true}];if(tick%3===0){sim.setInput(p.id,{dx:Math.cos(tick/90),dy:Math.sin(tick/90),dir:1,autoAttack:true});if(tick%90===0)sim.playerDash(p.id,{dx:1,dy:0});}}
   while([...sim.monsters.values()].filter(m=>!m.state.ally).length<MAX_MONSTERS){const a=Math.random()*Math.PI*2;sim.spawnMonster(getMonster('boufton'),MAP_SIZE/2+Math.cos(a)*8,MAP_SIZE/2+Math.sin(a)*8,8,1,5);}
   const before=performance.now();sim.update(1/30);times.push(performance.now()-before);fullTimes.push(performance.now()-fullBefore);peak=Math.max(peak,sim.monsters.size);if(state.phase!==PHASE_PLAYING)throw new Error('Scénario de charge interrompu');
  }

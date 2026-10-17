@@ -53,7 +53,6 @@ import {
   stepMovement,
   sumRunStats,
   type CastEvent,
-  type CastMessage,
   type ClassDef,
   type GameMap,
   type InputMessage,
@@ -756,9 +755,6 @@ export class Simulation {
     const dir = Number(msg.dir);
     if (Number.isInteger(dir) && dir >= 0 && dir < 8) p.state.dir = dir;
   }
-
-  /** Manual spell messages are obsolete; all owned abilities are cast by server cooldowns. */
-  playerCast(_id:string,_message:CastMessage):void {}
 
   /** Dash (Maj) : petit bond rapide dans la direction demandée, commun à toutes les classes. */
   playerDash(id: string, msg: { dx?: number; dy?: number }): void {

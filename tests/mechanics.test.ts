@@ -12,7 +12,6 @@ const setup=(classId:string)=>{
   return{sim,p,target,state,events};
 };
 const advance=(sim:Simulation,seconds:number)=>{for(let i=0;i<Math.ceil(seconds*30);i++)sim.update(1/30);};
-const cast=(sim:Simulation,p:PlayerRt,slot:number,x=p.state.x+1.5,y=p.state.y)=>{p.readyAt[slot]=0;sim.playerCast(p.id,{slot,tx:x,ty:y});};
 const action=(sim:Simulation,p:PlayerRt,choice=0)=>sim.classAction(p.id,{tx:p.state.x+3,ty:p.state.y,choice});
 
 test('forge : migration, amélioration d’une copie, recyclage protégé et crédits idempotents',async()=>{

@@ -97,3 +97,26 @@ Phase A, 17 octobre 2026. `ROGUELITE_GAME_DESIGN.md` n'est pas présent. Ce fich
 **Solutions :** réutiliser les collisions existantes, cibler seulement quand le cooldown permet un cast, pooling avec nettoyage des timers, grille de voisinage si les mesures l'exigent, vue de build versionnée publiée par le serveur.
 
 **Recommandation :** intégrer les seules familles retenues puis mesurer des scénarios serveur et navigateurs réels. Les limites de préparation sont configurables et provisoires ; le diagnostic des 800 choix n'est pas présenté comme une mesure Colyseus ou Phaser. Garder l'XP dans `GameState`, les builds dans l'état de chaque joueur et les données physiques uniquement serveur.
+
+---
+
+## Réponses du game design (Claude, 17 octobre 2026, après validation du design)
+
+Le document `docs/ROGUELITE_GAME_DESIGN.md` est désormais validé. Les points de la phase A y sont tranchés :
+
+| Point | Réponse | Référence |
+|---|---|---|
+| 1. Attaque de base, bonus de slot, actions F | Les stats « d'attaque de base » (Vivacité, Échos, Rebond, Vol de vie, Dokoko, Dorigami) s'appliquent au **seul sort signature** ; un seul inné par personnage ; action F conservée pour Osamodas et Pandawa uniquement. | §10.8, Annexe B.2–B.4, C8 |
+| 2. Anciens achats permanents | Remboursement intégral, archive versionnée, nouveaux paliers communs (5 × +4 % dégâts / −2 % recharge). | §10.9, C6 |
+| 3. Trois cartes quand tout est maximisé | Cinq récompenses de secours (Surcharge, Robustesse, Potion, Relance, Éveil). | §11.5 |
+| 4. Éligibilité tardive | Éligibilité évaluée **à l'ouverture** du coffre, après les cartes de niveau en attente ; un coffre par joueur présent ; sinon amélioration gratuite. | §11.2, §11.3 |
+| 5. Effets persistants à l'évolution | Même emplacement, recharge remise à zéro ; les instances déjà parties finissent avec leur snapshot ; les entités durables (invocations, glyphes, auras) sont remplacées par celles de l'évolution. | §11.4 |
+| 6. Formes et assets | Collisions en coordonnées monde, visuel séparé (fiches §9), aucun nouvel asset obligatoire. | §9, Annexe A |
+| 7. Critiques et procs | Règles de critique par instance, délai interne de 0,1 s des effets « au critique », pas de proc depuis un proc. | §10.7 |
+| 8. Charge | Plafonds de quantité, rayon et durée par sort ; limites d'effets actifs configurables. | §10.3–10.5 |
+
+### Question ouverte : Potion seule quand les autres secours sont plafonnés
+
+**Décision : une seule carte Potion**, jamais trois Potions identiques (la règle « pas de doublons identiques » prime sur « trois cartes »). Le générateur actuel se comporte déjà ainsi.
+
+Cas limite corrigé par Claude dans `RunBuildController` : si plus rien n'est proposable (Potion bannie, élite sans bénédiction ni évolution), le niveau ou le bonus est **consommé sans carte** au lieu d'ouvrir une offre vide (qui bloquait la pause solo et faisait planter la sélection automatique multijoueur sur `choices[0]`). Une relance ou un bannissement qui ne trouve rien conserve les cartes précédentes. Test : « Build saturé » dans `tests/roguelite-authority.test.ts`.

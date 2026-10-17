@@ -31,7 +31,6 @@ export function survive(classId:string,seed:number):number {
     (sim as unknown as {director:{update:(dt:number)=>void}});
     for(let tick=0;tick<seconds*30;tick++){
       sim.setInput(p.id,{dx:0,dy:0,dir:1,autoAttack:true});
-      if(tick%30===0)for(const slot of [1,2,3])sim.playerCast(p.id,{slot,tx:p.state.x+1,ty:p.state.y} as never);
       sim.update(1/30);
       if(!p.state.alive)return state.time;
     }

@@ -71,7 +71,7 @@ export function dofusHealing(p:PlayerRt,amount:number):number {return has(p,'dof
 export function dofusRegen(sim:Simulation,p:PlayerRt,regen:number):number {return has(p,'cawotte')&&sim.now-p.lastHitAt>5?regen*2:regen;}
 /** Chance de Dofus des gardiens : Tacheté ×1,5. */
 export function dofusDropMultiplier(p:PlayerRt):number {return has(p,'tachete')?1.5:1;}
-/** Rebond supplémentaire de l'attaque de base (Dorigami). */
+/** Rebond supplémentaire du sort signature (Dorigami). */
 export function dofusBounce(p:PlayerRt):number {return has(p,'dorigami')?1:0;}
 export function dofusConditional(p:PlayerRt,m:MonsterRt):number {return(has(p,'dolmanax')&&(m.def.boss||m.state.elite)?.15:0)+(has(p,'domakuro')?.3*Math.min(1,Math.max(0,(1-p.state.hp/p.state.maxHp)/.8)):0);}
 export function dofusCriticalDamage(p:PlayerRt,bonus:number):number {return has(p,'pourpre')?(1.5+bonus)*1.2-1.5:bonus;}

@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {makeRng,getMonster} from '@rod/shared';
-import {ROGUELITE_CATALOG as C,generateLevelRewards,applyLevelReward,type LevelReward} from '@rod/shared/roguelite';
+import {ROGUELITE_CATALOG as C,generateLevelRewards,applyLevelReward,availableLevelRewards,type LevelReward} from '@rod/shared/roguelite';
 import {RunBuildController} from '../server/src/game/roguelite/RunBuildController.ts';
 import {buildWith,setupRoguelite,installBuild,advance} from './fixtures/roguelite-simulation.ts';
 const choose=(p:RunBuildController,index=0)=>{const offer=p.getSnapshot().offer!;return p.choose({runId:p.runId,revision:offer.revision,choiceId:offer.choices[index].id},0);};
@@ -55,4 +55,16 @@ test('Deux gardiens dans la zone : une récompense d’évolution par joueur, XP
  const {sim,p,q,state}=setupRoguelite('cra',true);const start=p.build.currentBuild.rerolls;
  for(let i=0;i<2;i++){const boss=sim.spawnMonster({...getMonster('bouftou_royal'),speed:0},45,40,1,1,1);sim.damageMonster(boss,1e9,p.id);}
  assert.equal(p.build.currentBuild.rerolls,start+1);assert.equal(q!.build.currentBuild.rerolls,start+1);assert.equal(p.pendingBossRewards.length,1);advance(sim,1.6);assert.equal(state.totalXp,100);assert.equal(p.pendingBossRewards.length,0);
+});
+
+test('Build saturé : Potion seule proposée, puis aucune offre vide si elle est bannie',()=>{
+ let build=buildWith('cra',['sp.pression','sp.ronce','sp.invocation_de_tofu']);
+ for(let next=availableLevelRewards(C,build)[0];next;next=availableLevelRewards(C,build)[0])build=applyLevelReward(C,build,next);
+ build={...build,fallbackCounts:{'fb.surcharge':15,'fb.robustesse':15},rerolls:5};
+ const p=new RunBuildController(C,'run','p','cra',7,build);p.enqueueLevels(1,0);
+ const offer=p.getSnapshot().offer!;assert.deepEqual(offer.choices.map(c=>c.definitionId),['fb.potion']);
+ // La relance consomme un jeton : la carte Relance redevient disponible et remplace la Potion exclue.
+ assert.ok(p.reroll({runId:'run',revision:offer.revision},0));assert.deepEqual(p.getSnapshot().offer!.choices.map(c=>c.definitionId),['fb.relance']);
+ const banned=new RunBuildController(C,'run','q','cra',7,{...build,banned:['fb.potion']});banned.enqueueLevels(2,0);
+ assert.equal(banned.getSnapshot().offer,undefined);assert.equal(banned.getSnapshot().pendingLevels,0);assert.equal(banned.updateMultiplayer(1e9),undefined);
 });
