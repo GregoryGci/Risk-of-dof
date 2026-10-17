@@ -743,7 +743,7 @@ input[type='text']:focus {
 
 /* Bandeau du salon / spectateur : en haut, compact, sans jamais atteindre le personnage.
    Le personnage est au centre de l'écran et dépasse de 75 unités du monde au-dessus ; le zoom vaut
-   max(largeur / 1100, hauteur / 600) (GameScene.applyZoom), soit 75 × zoom = max(6.82vw, 12.5vh).
+   max(largeur / 1320, hauteur / 720) (GameScene.applyZoom), soit 75 × zoom = max(5.68vw, 10.42vh).
    Le bas du bandeau s'arrête donc 12 px au-dessus de sa tête, quelle que soit la résolution ;
    au-delà, le contenu défile. La barre de sorts, en bas, est hors d'atteinte. */
 #banner {
@@ -755,7 +755,7 @@ input[type='text']:focus {
   /* Entre l'équipe (gauche) et la colonne mini-carte / addon de dégâts (droite). */
   width: max-content;
   max-width: clamp(300px, calc(100vw - 680px), 920px);
-  max-height: max(56px, calc(50vh - max(6.82vw, 12.5vh) - 12px - var(--banner-top)));
+  max-height: max(56px, calc(50vh - max(5.68vw, 10.42vh) - 12px - var(--banner-top)));
   overflow-y: auto;
   text-align: center;
   line-height: 1.4;

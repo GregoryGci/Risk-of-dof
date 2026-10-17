@@ -3,7 +3,7 @@ import {classSpellShape,combatStatsView,innateLifesteal,clampCombatStats,isRange
 import { affinityProgress, getRoute, CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, FINAL_STAGE, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, zoneForStage, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
-import {ROGUELITE_CATALOG,abilitySummary,type EffectiveRogueliteAbility} from '@rod/shared/roguelite';
+import {ROGUELITE_CATALOG,abilitySummary,evolutionPairs,type EffectiveRogueliteAbility,type RunBuild} from '@rod/shared/roguelite';
 import { spellIconSvg } from './icons.ts';
 import { spellDetailsHtml } from './spellInfo.ts';
 import { account } from '../account.ts';
@@ -93,6 +93,8 @@ export class Hud {
   private stats: Record<StatKey, number> = sumRunStats(new Map());
   private spellIds: string[] = [];
   private runAbilities:(EffectiveRogueliteAbility|null)[]=[];
+  private build?:RunBuild;
+  setBuild(build:RunBuild):void {this.build=build;}
   setRunAbilities(raw:string):void {try{this.runAbilities=JSON.parse(raw);}catch{this.runAbilities=[];}}
   get playerStats(): Record<StatKey,number> { return this.stats; }
   collectDrop(drop:GearDrop): void {
@@ -267,6 +269,12 @@ export class Hud {
     if (!ready) (this.dashEl.querySelector('.spell-cd') as HTMLElement).style.setProperty('--p', String(Math.min(1, remaining / 2500)));
   }
 
+  /** Ligne de paire d'évolution : passif associé et état, pour savoir quoi chercher dans les cartes. */
+  private pairTip(spellId:string):string {
+    const pair=this.build?evolutionPairs(this.build).find(row=>row.spellId===spellId):undefined;if(!pair)return '';
+    const state=pair.state==='evolved'?'Évolution obtenue':pair.state==='ready'?'Prêt : le prochain coffre ou élite propose l’évolution':pair.state==='owned'?`Passif possédé (niv. ${pair.passiveLevel}) · montez le sort au niveau 8`:'Passif manquant : cherchez-le dans les cartes';
+    return `<div class="tip-pair ${pair.state}"><b>✦ ${escapeHtml(pair.evolutionName)}</b> avec <b>${escapeHtml(pair.passiveName)}</b><small>${state}</small></div>`;
+  }
   /** Infobulle détaillée d'un sort + aperçu de sa zone en jeu. */
   showTip(slot: number | null): void {
     const tip = $('spell-tip');
@@ -275,7 +283,7 @@ export class Hud {
       tip.classList.add('hidden');
       return;
     }
-    if(ROGUELITE_CATALOG.spell(this.spellIds[slot])){const a=this.runAbilities[slot],def=ROGUELITE_CATALOG.spell(this.spellIds[slot])!;tip.innerHTML=`<div class="tip-name">${escapeHtml(def.name)} · ${this.spellIds[slot].startsWith('ev.')?'ÉVOLUTION':(this.spellLevels[this.spellIds[slot]]??1)+'/8'}</div><div class="tip-desc">${escapeHtml(def.description)}</div><p>${a?escapeHtml(abilitySummary(a)):''}</p>`;tip.style.bottom=`${$('hud-bottom').offsetHeight+18}px`;tip.classList.remove('hidden');return;}
+    if(ROGUELITE_CATALOG.spell(this.spellIds[slot])){const a=this.runAbilities[slot],def=ROGUELITE_CATALOG.spell(this.spellIds[slot])!;tip.innerHTML=`<div class="tip-name">${escapeHtml(def.name)} · ${this.spellIds[slot].startsWith('ev.')?'ÉVOLUTION':(this.spellLevels[this.spellIds[slot]]??1)+'/8'}</div><div class="tip-desc">${escapeHtml(def.description)}</div><p>${a?escapeHtml(abilitySummary(a)):''}</p>${this.pairTip(this.spellIds[slot])}`;tip.style.bottom=`${$('hud-bottom').offsetHeight+18}px`;tip.classList.remove('hidden');return;}
     const spell=getSpell(this.spellIds[slot]);
     tip.innerHTML=`<div class="tip-name">${escapeHtml(spell.name)}</div>${spellDetailsHtml(spell,this.stats,slot)}`;
     // Toujours juste au-dessus de la barre du bas, quelle que soit sa hauteur (objets sur plusieurs lignes).

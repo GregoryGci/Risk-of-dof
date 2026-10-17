@@ -4,11 +4,11 @@ import { assaultPlan, easyLateRelief, getRoute, nightmareSpawnRamp, ZAAP_CHARGIN
 import type { Simulation } from './Simulation.ts';
 import {easyRamp,enemyPopulationLimit,introductoryZone} from './spawn-pressure.ts';
 
-/** Distance d'apparition par rapport au joueur (hors écran). */
-const SPAWN_MIN_DIST = 13.5;
-const SPAWN_MAX_DIST = 17;
+/** Distance d'apparition par rapport au joueur (hors écran, caméra reculée de 20 % : vue 1 320 × 720). */
+const SPAWN_MIN_DIST = 16.2;
+const SPAWN_MAX_DIST = 20.4;
 /** Un monstre trop loin de tout le monde est ramené près des joueurs. */
-const LEASH_DIST = 30;
+const LEASH_DIST = 36;
 
 export class Director {
   private credits = 0;

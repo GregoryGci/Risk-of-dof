@@ -75,8 +75,9 @@ export interface GameContext {
 }
 
 /** Surface de monde visible maximale (px) : au-delà on zoome, pour que les monstres apparaissent hors écran. */
-const VIEW_W = 1100;
-const VIEW_H = 600;
+// Champ de vision minimal (unités monde) : 20 % plus large qu'à l'origine pour voir davantage de carte.
+const VIEW_W = 1320;
+const VIEW_H = 720;
 /** Décalage vertical de la visée : on vise le corps des monstres, pas leurs pieds. */
 const AIM_OFFSET_Y = 10;
 
@@ -386,7 +387,7 @@ export class GameScene extends Phaser.Scene {
       this.mySpellsKey = myState.spells;
       this.mySpells = myState.spells ? myState.spells.split(',') : getClass(myState.classId).spells;
       this.myLevelsKey=myState.abilities+myState.build;this.myLevels=Object.fromEntries(readBuild(myState.build,myState.classId).spells.flatMap(s=>s?[[s.spellId,s.level]]:[]));
-      this.hud.setRunAbilities(myState.abilities);
+      this.hud.setRunAbilities(myState.abilities);this.hud.setBuild(readBuild(myState.build,myState.classId));
       this.hud.setSpells(this.mySpells,this.myLevels);
       this.cdEnd = [0, 0, 0, 0];
     }

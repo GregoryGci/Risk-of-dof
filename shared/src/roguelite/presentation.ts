@@ -29,3 +29,16 @@ export function describeRogueliteChoice(choice:{kind:string;definitionId:string;
   association:associated?`Évolution avec ${associated.name}`:passive?C.evolutions().filter(e=>e.passiveId===passive.id).map(e=>C.spell(e.targetSpellId)!.name).join(' / '):'',
   target:choice.targetId?C.spell(choice.targetId)?.name:undefined};
 }
+/** Paire d'évolution d'un sort du build : passif associé, possession et état (pour les infobulles et la fenêtre de choix). */
+export interface EvolutionPair {spellId:string;spellName:string;level:number;evolutionName:string;passiveId:string;passiveName:string;passiveLevel:number;state:'evolved'|'ready'|'missing'|'owned'}
+export function evolutionPairs(build:RunBuild):EvolutionPair[] {
+ return build.spells.flatMap(slot=>{
+  if(!slot)return[];
+  const evolved=C.evolution(slot.evolutionId??'')??C.evolutions().find(e=>e.targetSpellId===slot.spellId);
+  const evolution=evolved??(C.spell(slot.spellId)?.evolutionId?C.evolution(C.spell(slot.spellId)!.evolutionId!):undefined);
+  if(!evolution)return[];
+  const passive=build.passives.find(p=>p?.passiveId===evolution.passiveId),max=C.spell(evolution.sourceSpellId)!.maxLevel;
+  const state=evolved?'evolved':!passive?'missing':slot.level>=max?'ready':'owned';
+  return [{spellId:slot.spellId,spellName:C.spell(slot.spellId)!.name,level:slot.level,evolutionName:C.spell(evolution.targetSpellId)!.name,passiveId:evolution.passiveId,passiveName:C.passive(evolution.passiveId)!.name,passiveLevel:passive?.level??0,state}];
+ });
+}

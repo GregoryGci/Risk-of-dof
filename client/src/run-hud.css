@@ -1,0 +1,125 @@
+/* Interface en run alignée sur le menu (thème underworld) : panneaux bordeaux en dégradé, filet rouge,
+   titres en capitales italiques à ombre portée, accents pêche et coupes droites. Chargée après les autres feuilles. */
+body.underworld{
+  --run-panel:linear-gradient(125deg,#271c2bf2,#17111df2);
+  --run-panel-solid:linear-gradient(125deg,#271c2b,#17111d);
+  --run-head:linear-gradient(110deg,#782b3a99,#291927 75%);
+  --run-line:#b5705266;
+  --run-top:#d15b48;
+  --run-accent:#ed7952;
+  --run-peach:#efab70;
+  --run-title:#ffebc6;
+  --run-text:#f1d2b1;
+  --run-muted:#d5b8ae;
+  --run-card:#2a1e2c;
+  --run-card-hover:#9d373636;
+  --run-gold:#f3c967;
+}
+
+/* --- Panneaux du HUD -------------------------------------------------------------------------- */
+body.underworld #hud :is(#hud-team,#hud-timer,#hud-stats,#hud-meter,#hud-minimap,#hud-bar){
+  background:var(--run-panel);border:1px solid var(--run-line);border-top:2px solid var(--run-top);border-radius:0;box-shadow:0 6px 18px #0008;color:var(--run-text)}
+body.underworld #hud-bottom{background:none;border:0;box-shadow:none}
+body.underworld #hud #hud-bar{border-top:3px solid var(--run-top)}
+body.underworld #hud .room-code{font:10px 'Trebuchet MS',sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--run-muted)}
+body.underworld #hud .room-code b{font:italic 17px var(--display);letter-spacing:1px;color:var(--run-title);text-shadow:2px 2px #852d35}
+body.underworld #hud #timer{font:italic 30px var(--display);letter-spacing:1px;color:var(--run-title);text-shadow:2px 2px #852d35}
+body.underworld #hud #difficulty-name{font:9px 'Trebuchet MS',sans-serif;letter-spacing:3px;text-transform:uppercase;color:#e77660}
+body.underworld #hud #hud-timer .bar{background:#0e0a12;border-radius:0}
+body.underworld #hud #difficulty-bar{background:linear-gradient(90deg,#b83f3f,var(--run-accent));border-radius:0}
+body.underworld #hud #objective{color:var(--run-muted)}
+
+/* XP commune : même bloc que les panneaux, barre rouge-pêche. */
+body.underworld #hud #run-xp{background:none;border:0;border-radius:0;padding:4px 6px;color:var(--run-text);width:22vw}
+body.underworld #hud #run-level{font:italic 19px var(--display);letter-spacing:.5px;text-transform:uppercase;color:var(--run-title);text-shadow:2px 2px #852d35}
+body.underworld #hud #run-xp small{color:var(--run-muted)}
+body.underworld #hud .run-xp-track{height:7px;background:#0e0a12;border:1px solid #b5705244;border-radius:0}
+body.underworld #hud .run-xp-track i{background:linear-gradient(90deg,#b83f3f,var(--run-accent),var(--run-peach));border-radius:0}
+body.underworld #hud .skull-icon{color:#e77660}
+
+/* Addon de dégâts : onglets comme les boutons du menu. */
+body.underworld #hud-meter .meter-tabs button{background:#33202e;border:1px solid #9c705b55;border-radius:0;color:var(--run-text)}
+body.underworld #hud-meter .meter-tabs button.active{background:linear-gradient(110deg,#b83f3f,#7f293d);border-color:var(--run-peach);color:var(--run-title)}
+
+/* --- Barre de sorts et passifs ------------------------------------------------------------------ */
+body.underworld #hud .spell .spell-icon{background:var(--run-card);border:1px solid #9c705b88;border-radius:0;box-shadow:inset 0 -2px #0005}
+body.underworld #hud .spell:first-child .spell-icon{border-color:var(--run-peach);box-shadow:inset 0 -2px #e55f46}
+body.underworld #hud .spell:hover .spell-icon{border-color:var(--run-accent)}
+body.underworld #hud .spell-level{background:#7f293d;border:1px solid var(--run-peach);border-radius:0;color:var(--run-title)}
+body.underworld #hud .spell-key{color:var(--run-muted);letter-spacing:1px}
+body.underworld #hud .spell-empty .spell-icon{border:1px dashed #9c705b66;color:#9c705b;background:#1d1520}
+#passive-slots{display:grid;grid-template-columns:repeat(4,minmax(64px,1fr));gap:6px;margin:6px 0;pointer-events:auto}
+.passive-slot{min-width:0;padding:6px 8px;text-align:center;font-size:11px}
+.passive-slot b,.passive-slot small{display:block}
+body.underworld .passive-slot{background:var(--run-panel);border:1px solid var(--run-line);border-top:2px solid #9c705b;border-radius:0;color:var(--run-text);box-shadow:0 4px 12px #0007}
+body.underworld .passive-slot b{font:italic 13px var(--display);letter-spacing:.5px;text-transform:uppercase;color:var(--run-title)}
+body.underworld .passive-slot small{margin-top:3px;color:var(--run-muted)}
+body.underworld .passive-slot.empty{border-style:dashed;border-top-width:1px;color:#9c705b;font-size:18px;background:#1d1520cc}
+body.underworld .passive-slot.evolution-ready{border-color:var(--run-gold);border-top-color:var(--run-gold);box-shadow:0 0 10px #f3c96740}
+body.underworld .passive-slot.evolution-ready small{color:var(--run-gold)}
+.spell-empty{opacity:.55;pointer-events:auto}
+.spell-empty .spell-icon{display:grid;place-items:center;font-size:25px}
+body.underworld #hud #class-mechanic{margin:4px auto 0;padding:7px 12px;background:var(--run-panel);border:1px solid var(--run-line);border-left:3px solid var(--run-top);color:var(--run-muted);box-shadow:0 4px 12px #0007}
+body.underworld #hud .mechanic-caption b{font:italic 14px var(--display);letter-spacing:.5px;text-transform:uppercase;color:var(--run-title)}
+body.underworld #hud .mechanic-caption>span{font:9px 'Trebuchet MS',sans-serif;letter-spacing:2px;color:#e77660}
+
+/* Infobulle de sort : paire d'évolution mise en avant. */
+body.underworld #spell-tip{background:var(--run-panel-solid);border:1px solid var(--run-line);border-top:2px solid var(--run-top);border-radius:0;color:var(--run-text)}
+body.underworld #spell-tip .tip-name{font:italic 17px var(--display);text-transform:uppercase;letter-spacing:.5px;color:var(--run-title);text-shadow:2px 2px #852d35}
+.tip-pair{margin-top:8px;padding:7px 9px;border-left:3px solid #9c705b;background:#ffffff08;font-size:12px;line-height:1.5}
+.tip-pair small{display:block;color:var(--run-muted,#d5b8ae)}
+.tip-pair.missing{border-left-color:#e05b4c}.tip-pair.owned{border-left-color:var(--run-peach,#efab70)}.tip-pair.ready,.tip-pair.evolved{border-left-color:var(--run-gold,#f3c967)}
+.tip-pair.ready b,.tip-pair.evolved b{color:var(--run-gold,#f3c967)}
+
+/* --- Fenêtre de choix : même composition que les fenêtres du menu --------------------------------- */
+#boon-choices{width:min(1040px,95vw);max-height:86dvh;overflow:auto}
+body.underworld #boon-choices{padding:0;background:var(--run-panel-solid);border:0;border-top:3px solid var(--run-top);border-bottom:2px solid #ae7451;border-radius:0;box-shadow:0 30px 80px #000c}
+/* Les blocs de la fenêtre ne doivent pas hériter du `display:flex` générique des enfants de .boon-choices. */
+#boon-choices>:is(.choice-head,.choice-pairs){display:block;text-align:left}
+#boon-choices>.reward-actions .reroll-button{flex:none;width:auto}
+.choice-head{position:relative;padding:17px 22px;border-bottom:1px solid var(--run-line,#b5705266);background:var(--run-head,#2a1d2a)}
+.choice-head::after{content:'';position:absolute;left:22px;bottom:-2px;width:65px;height:3px;background:var(--run-accent,#ed7952);transform:skewX(-35deg)}
+.choice-head h2{margin:2px 0 4px;font:italic 34px var(--display,Impact),sans-serif;letter-spacing:1px;text-transform:uppercase;line-height:1.05;color:var(--run-title,#ffebc6);text-shadow:2px 2px #852d35}
+.choice-head small,.choice-pairs .eyebrow{display:block;font:11px 'Trebuchet MS',sans-serif;letter-spacing:.4px;color:var(--run-muted,#d5b8ae)}
+.choice-head .eyebrow{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#e77660}
+.choice-pairs{padding:12px 22px 0}
+.choice-pairs .eyebrow{margin-bottom:7px;letter-spacing:2px;text-transform:uppercase;font-size:9px;color:#e77660}
+.pair-list{display:flex;flex-wrap:wrap;gap:7px}
+.pair-chip{display:flex;align-items:center;gap:8px;min-width:0;padding:6px 10px 6px 6px;border:1px solid #9c705b55;border-left:3px solid #9c705b;background:#1d1520;cursor:help;transition:border-color .12s,background .12s}
+.pair-chip img{width:28px;height:28px;object-fit:contain}
+.pair-chip span{display:flex;flex-direction:column;line-height:1.3}
+.pair-chip b{font:italic 13px var(--display,Impact),sans-serif;text-transform:uppercase;letter-spacing:.5px;color:var(--run-title,#ffebc6)}
+.pair-chip small{font-size:10px;color:var(--run-muted,#d5b8ae)}
+.pair-chip i{font-style:normal;font-size:10px;color:#e05b4c}
+.pair-chip.owned{border-left-color:var(--run-peach,#efab70)}.pair-chip.owned i{color:var(--run-peach,#efab70)}
+.pair-chip.ready,.pair-chip.evolved{border-left-color:var(--run-gold,#f3c967)}.pair-chip.ready i,.pair-chip.evolved i{color:var(--run-gold,#f3c967)}
+.pair-chip.missing{border-left-color:#e05b4c}
+#boon-choices .level-choice-grid{display:grid;grid-template-columns:repeat(var(--choice-count,3),minmax(0,1fr));gap:12px;align-items:stretch;padding:14px 22px}
+#boon-choices .reward-card{position:relative;display:flex;min-width:0}
+body.underworld #boon-choices .reward-card .level-choice{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:7px;width:100%;max-width:none;min-height:230px;margin:0;padding:15px 15px 13px;text-align:left;
+  background:var(--run-card);border:1px solid #9c705b55;border-top:2px solid #db956a;border-radius:0;color:var(--run-text);box-shadow:inset 0 -2px #0004;cursor:pointer;transition:border-color .12s,background .12s,transform .12s}
+body.underworld #boon-choices .reward-card .level-choice:is(:hover,:focus-visible){background:var(--run-card-hover);border-color:#ec9461;box-shadow:inset 0 -2px #e55f46;transform:translateY(-2px)}
+body.underworld #boon-choices .reward-card .level-choice:disabled{opacity:.6;cursor:default;transform:none}
+#boon-choices .reward-icon{display:grid;place-items:center;width:38px;height:38px;color:var(--run-peach,#efab70);font-size:24px}
+#boon-choices .reward-icon img{width:38px;height:38px;object-fit:contain}
+body.underworld #boon-choices .reward-kicker{font:10px 'Trebuchet MS',sans-serif;letter-spacing:2px;text-transform:uppercase;color:#e77660}
+body.underworld #boon-choices .level-choice>b{font:italic 22px var(--display);letter-spacing:.5px;text-transform:uppercase;line-height:1.05;color:var(--run-title);text-shadow:2px 2px #852d35}
+body.underworld #boon-choices .reward-text{font-size:12px;line-height:1.55;color:var(--run-text)}
+body.underworld #boon-choices .reward-values{font-size:11px;line-height:1.5;color:var(--run-muted)}
+body.underworld #boon-choices .reward-synergy{margin-top:auto;padding-top:6px;font-size:11px;line-height:1.45;color:#e9cb80}
+body.underworld #boon-choices .evolution-card{border-color:var(--run-gold);border-top-color:var(--run-gold);background:linear-gradient(145deg,#4a3218,#22141f)}
+body.underworld #boon-choices .retune-card{border-top-color:#7fc7b4;background:linear-gradient(145deg,#1f3330,#22141f)}
+/* Carte liée à un sort possédé, et mise en avant au survol d'une paire. */
+body.underworld #boon-choices .reward-card.paired .level-choice{border-left:3px solid var(--run-peach)}
+body.underworld #boon-choices .pair-focus .level-choice,body.underworld #boon-choices .pair-chip.pair-focus{border-color:var(--run-gold);background:#f3c9671c;box-shadow:0 0 0 1px var(--run-gold),0 0 18px #f3c96733}
+/* Bannir : petit bouton discret dans le coin, révélé au survol de la carte. */
+body.underworld #boon-choices .banish-card{position:absolute;top:7px;right:7px;z-index:1;display:grid;place-items:center;width:24px;height:24px;min-width:0;min-height:0;padding:0;
+  background:#120c16cc;border:1px solid #9c705b66;border-radius:0;color:var(--run-muted);font-size:12px;line-height:1;opacity:.35;cursor:pointer;transition:opacity .12s,color .12s,border-color .12s}
+body.underworld #boon-choices .reward-card:is(:hover,:focus-within) .banish-card{opacity:1}
+body.underworld #boon-choices .banish-card:is(:hover,:focus-visible){color:#ff8b7a;border-color:#e05b4c;background:#3a1418}
+.reward-actions{display:flex;align-items:center;justify-content:flex-end;gap:16px;padding:0 22px 16px}
+body.underworld #boon-choices .reward-actions .reroll-button{min-width:0;min-height:0;padding:7px 14px;font-size:12px;background:#33202e;border:1px solid #9c705b77;border-radius:0;color:var(--run-text)}
+body.underworld #boon-choices .reward-actions .reroll-button:not(:disabled):hover{border-color:#ec9461;background:var(--run-card-hover)}
+body.underworld #boon-choices .reward-actions small{font-size:11px;color:var(--run-muted)}
+@media(max-width:760px){#boon-choices .level-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px}body.underworld #boon-choices .reward-card .level-choice{min-height:170px}.choice-head h2{font-size:26px}.passive-slot{font-size:10px;padding:4px}}
+@media(max-width:480px){#boon-choices .level-choice-grid{grid-template-columns:1fr}body.underworld #boon-choices .reward-card .level-choice{min-height:0}.choice-pairs,.choice-head{padding-left:14px;padding-right:14px}}

@@ -11,6 +11,7 @@ import { EquipmentPage } from './ui/EquipmentPage.ts';
 import { EncyclopediaPage } from './ui/EncyclopediaPage.ts';
 import './skin-shop.css';
 import './roguelite.css';
+import './run-hud.css';
 import {SkinShop} from './ui/SkinShop.ts';
 import {HistoryPage} from './ui/HistoryPage.ts';
 import {AccountPage} from './ui/AccountPage.ts';
