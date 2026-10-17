@@ -13,6 +13,7 @@ import './skin-shop.css';
 import './roguelite.css';
 import './run-hud.css';
 import {SkinShop} from './ui/SkinShop.ts';
+import {startHomeAmbience} from './ui/HomeAmbience.ts';
 import {HistoryPage} from './ui/HistoryPage.ts';
 import {AccountPage} from './ui/AccountPage.ts';
 import {AtlasPage} from './ui/AtlasPage.ts';
@@ -28,6 +29,7 @@ import { applyCrosshair } from './crosshair.ts';
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 setupDialogNavigation();
 const applyTheme=()=>document.body.classList.toggle('underworld',settings.uiTheme==='underworld');
+startHomeAmbience(document.getElementById('menu')!);
 applyTheme();subscribeSettings(applyTheme);
 
 const menu = $('menu');
