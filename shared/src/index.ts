@@ -19,7 +19,6 @@ export * from './data/equipment.ts';
 export * from './data/equipment-scaling.ts';
 export * from './data/equipment-sets.ts';
 export * from './data/forge.ts';
-export * from './data/mechanics.ts';
 export * from './data/poker.ts';
 export * from './data/run-history.ts';
 export * from './data/profile.ts';

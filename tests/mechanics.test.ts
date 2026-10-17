@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {CLASS_MECHANICS,createEquipment,forgeCost,recycleValue,equipmentReward,getMonster,getSpell,generateMap,isBlocked,evaluateHand,monsterEquipmentDrops,makeRng,RUN_BONUSES,ZAAP_READY} from '@rod/shared';
+import {createEquipment,forgeCost,recycleValue,equipmentReward,getMonster,getSpell,generateMap,isBlocked,evaluateHand,monsterEquipmentDrops,makeRng,RUN_BONUSES,ZAAP_READY} from '@rod/shared';
 import {GameState} from '../server/src/state.ts';
 import {Simulation,type PlayerRt} from '../server/src/game/Simulation.ts';
 import {MovementPrediction} from '../client/src/game/Prediction.ts';
@@ -62,5 +62,5 @@ test('dash : fenêtre de 120 ms, dégâts ensuite, aucune esquive pendant la pau
 test('actions : coordonnées et choix invalides ignorés, pause interdit les effets',()=>{
   const {sim,p,state}=setup('ecaflip'),m=sim.mechanics.get(p),hand=[...m.hand];
   sim.classAction(p.id,{tx:NaN,ty:0});sim.classAction(p.id,{tx:0,ty:0,choice:99});state.paused=true;action(sim,p);
-  assert.deepEqual(m.hand,hand);assert.equal(m.hand.length,0);assert.equal(Object.keys(CLASS_MECHANICS).length,12);
+  assert.deepEqual(m.hand,hand);assert.equal(m.hand.length,0);
 });

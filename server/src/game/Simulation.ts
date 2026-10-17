@@ -288,7 +288,6 @@ export class Simulation {
   private forgeMinute=0;
   private startedAt='';
   private partySize=1;
-  private boonQueues=new Map<string,string[][]>();
   experience=new RunExperience(this,()=>this.offerLevel());
   roguelite=new RogueliteCombat(this);
   mechanics=new InnateMechanics(this);
@@ -364,7 +363,7 @@ export class Simulation {
   }
 
   removePlayer(id: string): void {
-    this.mechanics.reset(id);this.blessings.reset(id);this.boonQueues.delete(id);
+    this.mechanics.reset(id);this.blessings.reset(id);
     // Ses invocations et ses pièges partent avec lui.
     for (const m of [...this.monsters.values()]) if (m.allyOwner === id) this.removeMonster(m.id);
     for (const g of [...this.grounds.values()]) if (g.owner === id) this.removeGround(g.id);
@@ -399,12 +398,6 @@ export class Simulation {
     if (this.state.phase === PHASE_LOBBY) this.resetPlayer(p);
   }
 
-  /** Changement des sorts équipés : possible uniquement dans le salon. */
-  setLoadout(id: string, loadout: unknown): void {
-    const p = this.players.get(id);
-    if (!p || this.state.phase !== PHASE_LOBBY) return;
-    this.setSpells(p, loadout);
-  }
 
   /** Changement de classe : possible uniquement dans le salon. */
   setClass(id: string, classId: unknown, loadout?: unknown): void {
@@ -703,7 +696,7 @@ export class Simulation {
     this.blessings.reset(p.id);
     this.mechanics.reset(p.id);p.dodgeUntil=0;
     p.state.ogrineGrants='[]';p.state.ogrinesEarned=0;p.drainRemainder=0;
-    p.state.forgeGrants='[]';p.state.boonChoices='[]';this.boonQueues.delete(p.id);
+    p.state.forgeGrants='[]';p.state.boonChoices='[]';
     this.placeAtSpawn(p);
     this.applyStats(p);
     p.state.hp = p.state.maxHp;
@@ -1560,7 +1553,7 @@ export class Simulation {
     this.state.outcome=outcome;this.state.paused=false;this.timers=[];this.projectiles=[];
     for (const p of this.players.values()) {
       p.dx=p.dy=0;p.autoAttack=false;p.push=null;p.state.moving=false;p.state.forcedMotion=false;p.state.momentum=false;p.momentumUntil=0;
-      p.state.boonChoices='[]';p.state.pendingLevels=0;this.boonQueues.delete(p.id);
+      p.state.boonChoices='[]';p.state.pendingLevels=0;
       if(outcome==='victory'){p.state.deathCause='';p.state.unlockedMode=Math.max(p.state.unlockedMode,nextMode(this.state.mode)??this.state.mode);}
       this.grantRunReward(p,outcome);
       this.setSpells(p,undefined);p.pendingBossRewards=[];
@@ -1612,13 +1605,6 @@ export class Simulation {
     p.state.speed=p.def.speed*(1+p.stats.speed);if(p.state.alive&&p.state.maxHp>old&&old>0)p.state.hp=grantHp?p.state.hp+p.state.maxHp-old:p.state.hp*p.state.maxHp/old;p.state.hp=Math.min(p.state.hp,p.state.maxHp);
     p.state.bonuses='';p.build.setLuck(p.stats.luck);
     p.state.abilities=JSON.stringify(build.spells.map((s,i)=>s?this.roguelite.visualAbility(p,i):null));this.syncBuild(p);
-  }
-
-  giveItem(p: PlayerRt, itemId: string): void {
-    if(!RUN_BONUSES[itemId]||!bonusUseful(RUN_BONUSES[itemId],p.stats,isRangedAttack(getSpell(p.spells[0])),p.def.id==='sacrieur'))return;
-    p.inventory.set(itemId, (p.inventory.get(itemId) ?? 0) + 1);
-    this.applyStats(p);
-    this.refreshBoonChoices(p);
   }
 
   private refreshBoonChoices(p:PlayerRt):void {this.syncBuild(p);}

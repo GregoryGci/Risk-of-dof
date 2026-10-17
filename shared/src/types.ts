@@ -276,6 +276,8 @@ export interface BuffEvent {
   label: string;
   duration: number;
 }
+/** État du passif inné synchronisé dans `PlayerState.mechanic` (JSON). */
+export interface MechanicView {name:string;value:number;max:number;readyIn:number;status:string;choices:string[]}
 export interface DamageEvent {
   /** Id de la cible (sessionId ou id de monstre). */
   target: string;

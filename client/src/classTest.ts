@@ -89,7 +89,8 @@ export class ClassArena extends Phaser.Scene {
     this.sim.setInput(this.p.id,{dx:move.x,dy:move.y,dir:dirFromVector(this.aim.x-this.p.state.x,this.aim.y-this.p.state.y)});
     if(this.controls.consumePress('ShiftLeft')||this.controls.consumePress('ShiftRight')){const dir=move.x||move.y?move:{x:this.aim.x-this.p.state.x,y:this.aim.y-this.p.state.y};this.sim.playerDash(this.p.id,{dx:dir.x,dy:dir.y});}
     if(this.controls.consumePress('KeyF'))this.sim.classAction(this.p.id,{tx:this.aim.x,ty:this.aim.y});
-    this.accumulator+=dt;while(this.accumulator>=1/30){this.sim.update(1/30);this.accumulator-=1/30;}
+    // L'arène n'a pas de fenêtre de choix : la première carte est prise pour ne pas figer la simulation.
+    this.accumulator+=dt;while(this.accumulator>=1/30){while(this.p.state.boonChoices!=='[]')this.sim.chooseBoon(this.p.id,0);this.sim.update(1/30);this.accumulator-=1/30;}
     const active=new Set<string>();
     const entities=[{id:this.p.id,state:this.p.state,visual:store.character(this,this.p.def.id,0),name:this.p.def.name},...[...this.sim.monsters.values()].map(m=>({id:m.id,state:m.state,visual:store.monster(this,m.def.id),name:m.def.name}))];
     for(const e of entities){active.add(e.id);let view=this.views.get(e.id);if(!view){view=new EntityView(this,store,e.visual,e.state.x,e.state.y,{label:e.name,barWidth:42,barColor:e.id==='test'?0x91cd58:0xc7674c,barAlways:e.id==='test'});this.views.set(e.id,view);}view.moving=Math.hypot(view.wx-e.state.x,view.wy-e.state.y)>.01;view.setPosition(e.state.x,e.state.y);view.dir=e.state.dir;view.setHp(e.state.hp,e.state.maxHp);view.setShield(e.id==='test'?this.p.state.shield:0,e.state.maxHp);view.update(dt);}

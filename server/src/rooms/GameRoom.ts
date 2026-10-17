@@ -81,7 +81,6 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage('input', (client: Client, message: InputMessage) => this.sim.setInput(client.sessionId, message));
     this.onMessage('class', (client: Client, message: { classId?: string; spells?: string[] }) => {this.sim.setClass(client.sessionId, message?.classId, message?.spells);this.sim.setSpellLevels(client.sessionId,this.progression.get(client.sessionId));});
     this.onMessage('refreshProgression',(client:Client)=>this.refreshProgression(client.sessionId));
-    this.onMessage('loadout', (client: Client, message: { spells?: string[] }) => this.sim.setLoadout(client.sessionId, message?.spells));
     this.onMessage('dash', (client: Client, message: { dx?: number; dy?: number }) => this.sim.playerDash(client.sessionId, message));
     this.onMessage('pause', (client: Client, message: { paused?: boolean }) => this.sim.setPaused(client.sessionId, message?.paused));
     this.onMessage('equipment', (client: Client, message: { equipment?: unknown }) => this.sim.setEquipment(client.sessionId, message?.equipment));
