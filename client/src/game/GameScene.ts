@@ -599,6 +599,7 @@ export class GameScene extends Phaser.Scene {
       if(m.carried)view.setPosition(m.x,m.y-.7);
       view.setHp(m.hp, m.maxHp);
       view.setRogue(m.rogue,m.cursed);
+      view.setLook(this.rogueliteEffects.monsterTint(id));
       view.setWarning(m.state === MSTATE_WINDUP);
       view.update(dt);
       view.revealPlayer(hero.x,hero.y,!!alive&&!m.ally);

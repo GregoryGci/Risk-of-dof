@@ -125,6 +125,9 @@ export class EntityView {
   }
 
   private cursed=false;
+  /** Teinte d'état posée par les effets d'évolution (Tofu Royal, infection, gel), sous l'éclair de dégât et le télégraphe. */
+  private lookTint?:number;
+  setLook(tint?:number):void {this.lookTint=tint;}
   setRogue(rogue:boolean,cursed=false):void {
     this.cursed=cursed;rogue=rogue||cursed;
     if(rogue&&!this.rogueAura){
@@ -365,9 +368,10 @@ export class EntityView {
     if (now < this.flashUntil) this.body.setTintFill(0xffffff);
     else if (this.warn) this.body.setTint(Math.sin(this.clock * 30) > 0 ? 0xff5040 : 0xffffff);
     else if(this.cursed)this.body.setTint(0xe98cba);
+    else if(this.lookTint!==undefined)this.body.setTint(this.lookTint);
     else this.body.clearTint();
     // Coiffe et cape suivent l'image et la teinte du corps.
-    this.updateGear(now < this.flashUntil ? 'flash' : this.warn || this.cursed ? 'tint' : 'none');
+    this.updateGear(now < this.flashUntil ? 'flash' : this.warn || this.cursed || this.lookTint!==undefined ? 'tint' : 'none');
     if (this.gear) this.place();
 
     // Animation procédurale des placeholders : sautillement et bond d'attaque.

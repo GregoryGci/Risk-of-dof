@@ -3,7 +3,7 @@ import {TILE_H,TILE_W,worldToScreen,isBlocked,type CastEvent,type GameStateView,
 import {BoundedEffectPool,type EffectiveRogueliteAbility as Ability} from '@rod/shared/roguelite';
 import type {AssetStore} from '../assets/store.ts';
 import {settings} from '../settings.ts';
-interface Fx {kind:string;owner:string;ability?:string;asset?:string;x:number;y:number;tx?:number;ty?:number;radius?:number;width?:number;angle?:number;arc?:number;duration?:number;color?:number;at:number;received?:number;result?:string;projectileId?:number;dx?:number;dy?:number;inward?:boolean}
+interface Fx {kind:string;owner:string;monsterId?:string;royal?:boolean;ability?:string;asset?:string;x:number;y:number;tx?:number;ty?:number;radius?:number;width?:number;angle?:number;arc?:number;duration?:number;color?:number;at:number;received?:number;result?:string;projectileId?:number;dx?:number;dy?:number;inward?:boolean}
 interface Shot {event:CastEvent;x:number;y:number;dx:number;dy:number;travel:number;phase:number;age:number;sprite:Phaser.GameObjects.Sprite;halo?:Phaser.GameObjects.Sprite}
 /**
  * Signature visuelle d'une évolution (§9 du design) : teinte « noble », échelle et temps fort.
@@ -33,12 +33,16 @@ const LOOKS:Record<string,Look>={
 };
 /** Symboles du Jackpot et animations Retro associées (★ = les trois + pluie de pièces). */
 const JACKPOT:Record<string,{color:string;anims:string[]}>={'♠':{color:'#1a1a2a',anims:['rekop']},'♥':{color:'#e0304a',anims:['mot_curatif']},'♦':{color:'#e05a20',anims:['trefle']},'★':{color:'#ffd700',anims:['rekop','mot_curatif','trefle']}};
+/** Formes à ticks répétés : leurs petits impacts n'ont pas d'animation propre. */
+const PERSISTENT=['aura','blood_aura','totem','glyph','clock','barrier','orbit','vortex'];
 /** Au-delà, le client saute les effets décoratifs (jamais les télégraphes). */
 const MAX_DECOR=120;
 /** Cosmetic prediction only: no collisions, damage, pickups or level decisions run here. */
 export class RogueliteEffects {
  private graphics:Phaser.GameObjects.Graphics;
  private warnings:Phaser.GameObjects.Graphics;
+ /** Calque au-dessus des personnages : couronne, bulles, feuilles. */
+ private overhead:Phaser.GameObjects.Graphics;
  private pool:BoundedEffectPool<Phaser.GameObjects.Sprite>;
  private shots=new Map<number,Shot>();
  private events:Fx[]=[];
@@ -46,8 +50,12 @@ export class RogueliteEffects {
  /** Objets décoratifs vivants (animations, halos, textes), bornés par MAX_DECOR. */
  private decor=new Set<Phaser.GameObjects.GameObject>();
  private shakeReadyAt=0;
+ /** Teintes d'état par monstre : jusqu'à `until` (ms, horloge de la scène). */
+ private looks=new Map<string,{tint:number;until:number}>();
+ private royal=new Set<string>();
+ monsterTint(id:string):number|undefined {const look=this.looks.get(id);if(!look)return;if(this.scene.time.now>=look.until){this.looks.delete(id);return;}return look.tint;}
  constructor(private scene:Phaser.Scene,private store:AssetStore,private map:()=>GameMap,private state:()=>GameStateView,private localPlayerId:string) {
-  this.graphics=scene.add.graphics().setDepth(-950);this.warnings=scene.add.graphics().setDepth(900_000);
+  this.graphics=scene.add.graphics().setDepth(-950);this.warnings=scene.add.graphics().setDepth(900_000);this.overhead=scene.add.graphics().setDepth(800_000);
   this.pool=new BoundedEffectPool(160,()=>scene.add.sprite(0,0,'ph_seed'),sprite=>{scene.tweens.killTweensOf(sprite);sprite.anims.stop();sprite.setVisible(false).setActive(false).setAlpha(1).setScale(1).setRotation(0).setBlendMode(Phaser.BlendModes.NORMAL).clearTint();},sprite=>sprite.destroy());
  }
  cast(e:CastEvent) {
@@ -58,6 +66,8 @@ export class RogueliteEffects {
   const asset=this.store.projectile(this.scene,e.visual.assetKey),fx=this.store.spellFx(this.scene,e.visual.assetKey);
   if(fx?.clips.has('move'))sprite.setTexture(fx.key).setOrigin(fx.origin[0],fx.origin[1]).setScale(fx.scale*size).play(`${fx.key}:move`);
   else if(asset)sprite.setTexture(asset.key).setOrigin(asset.origin[0],asset.origin[1]).setScale(asset.scale*size);
+  // Sans sprite de vol (Roue de la Fortune...) : une image fixe tirée du milieu de l'animation Retro du sort.
+  else if(fx?.main&&this.scene.anims.get(`${fx.key}:${fx.main}`)?.frames.length){const frames=this.scene.anims.get(`${fx.key}:${fx.main}`)!.frames;sprite.setTexture(fx.key,frames[Math.floor(frames.length/2)].textureFrame).setOrigin(.5).setScale(fx.scale*size*.45);}
   else sprite.setTexture(e.visual.assetKey.startsWith('fleche')?'ph_arrow':'ph_seed').setOrigin(.5).setScale(size);
   sprite.setActive(true).setVisible(true).setAlpha(1).setTint(look?.tint??e.visual.color);
   // Évolution : halo ADD sous le projectile, reconnaissable en une demi-seconde.
@@ -81,6 +91,8 @@ export class RogueliteEffects {
   const look=e.ability?LOOKS[e.ability]:undefined;
   if(e.kind==='evolution'){this.awakening(e);return false;}
   if(e.kind==='jackpot'&&e.result){this.jackpot(e.x,e.y,e.result);return false;}
+  if(e.kind==='summon'&&e.royal&&e.monsterId){this.royal.add(e.monsterId);this.looks.set(e.monsterId,{tint:0xffd75a,until:Infinity});return false;}
+  if(e.kind==='infect'&&e.monsterId){this.looks.set(e.monsterId,{tint:0xa8d070,until:this.scene.time.now+(e.duration??10)*1000});return false;}
   if(e.kind==='intercept'){this.glow(e.x,e.y,0x9fc8ff,.5,.25);this.ringBurst(e.x,e.y,.6,0x9fc8ff,250);return false;}
   if(!look)return false;
   if(e.kind==='warning'&&e.ability==='ev.epee_du_jugement')this.column(e.x,e.y,look.tint,e.duration??.6);
@@ -94,6 +106,8 @@ export class RogueliteEffects {
   if(e.kind!=='impact')return false;
   const radius=e.radius??1;
   if(look.big===undefined||radius<look.big){
+   // Ticks des évolutions persistantes (arbre, aura, glyphe...) : pas d'animation à chaque tick, seulement aux temps forts.
+   if(!look.minor&&PERSISTENT.includes(this.handlerOf(e.owner,e.ability)??''))return true;
    if(!look.minor)return false;
    this.anim(look.minor,e.x,e.y,{scale:look.minorScale??.6,tint:look.tint,seconds:.5});return true;
   }
@@ -103,6 +117,8 @@ export class RogueliteEffects {
   this.glow(e.x,e.y,look.tint,Math.min(3,.6+radius*.35),.35);
   this.ringBurst(e.x,e.y,radius,look.tint,420);
   if(look.crater)this.crater(e.x,e.y,radius);
+  // Sonnerie du Cadran : les ennemis touchés sont figés, teintés sépia pendant le gel.
+  if(e.ability==='ev.cadran_de_xelor')this.state().monsters.forEach((m,id)=>{if(!m.ally&&Math.hypot(m.x-e.x,m.y-e.y)<=radius)this.looks.set(id,{tint:0xc8b48a,until:this.scene.time.now+1200});});
   if(look.shake)this.shake(e.owner,look.shake,.005);
   return true;
  }
@@ -117,6 +133,7 @@ export class RogueliteEffects {
   this.recent.set(key,list);return !!same;
  }
  private recent=new Map<string,{x:number;y:number;at:number}[]>();
+ private handlerOf(owner:string,ability?:string):string|undefined {return this.parsed.get(owner)?.abilities.find(a=>a?.id===ability)?.handler;}
  private visible(x:number,y:number):boolean {const p=worldToScreen(x,y),view=this.scene.cameras.main.worldView;return !document.hidden&&p.x>=view.left-200&&p.x<=view.right+200&&p.y>=view.top-250&&p.y<=view.bottom+200;}
  private track<T extends Phaser.GameObjects.GameObject>(object:T):T {this.decor.add(object);object.once(Phaser.GameObjects.Events.DESTROY,()=>this.decor.delete(object));return object;}
  private room(n=1):boolean {return this.decor.size+n<=MAX_DECOR;}
@@ -230,7 +247,8 @@ export class RogueliteEffects {
   state.players.forEach((player,id)=>{
    if(!player.alive)return;let cache=this.parsed.get(id);if(!cache||cache.raw!==player.abilities){try{cache={raw:player.abilities,abilities:JSON.parse(player.abilities)};this.parsed.set(id,cache);}catch{return;}}
    for(const a of cache.abilities){if(!a)continue;const p=a.parameters,look=LOOKS[a.id],color=look?.tint??a.color??0xffe08a,age=Math.max(0,player.positionTime-(a.startedAt??0)),radius=a.stats.radius;
-    const alpha=id===this.localPlayerId?.65:settings.allyEffects?.4:.12;
+    // Effets alliés plus discrets au-delà de deux alliés, pour garder le terrain lisible à 4 joueurs.
+    const alpha=id===this.localPlayerId?.65:settings.allyEffects?(state.players.size>3?.28:.4):.12;
     if(['aura','blood_aura','clock','barrier'].includes(a.handler))this.ring(this.graphics,player.x,player.y,p.dome??radius,color,alpha*(a.handler==='blood_aura'?.5:1),3);
     if(look)this.persistent(a,player,color,alpha,age);
     if(a.handler==='clock'){for(let i=0;i<12;i++){const d=i*Math.PI/6;this.line(this.graphics,player.x+Math.cos(d)*3.2,player.y+Math.sin(d)*3.2,player.x+Math.cos(d)*3.5,player.y+Math.sin(d)*3.5,color,.5,2);}}
@@ -262,6 +280,7 @@ export class RogueliteEffects {
   // Fils actifs seulement à partir de 4 pièges du même joueur, comme sur le serveur.
   const wires=new Set<string>();for(const trap of traps){if(traps.filter(o=>o.owner===trap.owner).length<4)continue;const neighbors=traps.filter(g=>g!==trap&&g.owner===trap.owner&&Math.hypot(g.x-trap.x,g.y-trap.y)<=5).sort((a,b)=>Math.hypot(a.x-trap.x,a.y-trap.y)-Math.hypot(b.x-trap.x,b.y-trap.y)).slice(0,2);
    for(const n of neighbors){const key=[trap.id,n.id].sort().join(':');if(wires.has(key))continue;wires.add(key);this.line(this.graphics,trap.x,trap.y,n.x,n.y,0xb04ad0,wire,2);}}
+  this.monsterDecor(state,now);
   state.grounds.forEach(g=>{if(!g.length)return;const dx=Math.cos(g.angle??0)*g.length/2,dy=Math.sin(g.angle??0)*g.length/2;this.line(this.graphics,g.x-dx,g.y-dy,g.x+dx,g.y+dy,0xff7722,.45,(g.width??1)*20);});
  }
  /** Effets permanents des évolutions, recalculés à chaque image depuis l'état synchronisé (aucun message par tick). */
@@ -290,7 +309,20 @@ export class RogueliteEffects {
   for(let k=0;k<3;k++)this.arc(this.graphics,e.x,e.y,r*.7,spin+k*2*Math.PI/3,1.4,color,.6*fade,3);
   for(let i=0;i<8;i++){const t=(age*seconds*1.5+i/8)%1,d=-spin*1.5+i*Math.PI/4;this.dot(this.graphics,e.x+Math.cos(d)*r*(1-t),e.y+Math.sin(d)*r*(1-t),0xf0c840,fade*(.4+.6*t),2.5);}
  }
+ /** Couronne du Tofu Royal, tourbillon des portés du Chamrak, racines de la Forêt Vivante, bulles des infectés. */
+ private monsterDecor(state:GameStateView,now:number) {
+  const g=this.graphics,o=this.overhead;o.clear();let forest=false;state.players.forEach(p=>{if(p.abilities.includes('ev.foret_vivante'))forest=true;});
+  state.monsters.forEach((m,id)=>{
+   if(this.royal.has(id)){const c=worldToScreen(m.x,m.y);for(let i=0;i<3;i++){o.fillStyle(0xffd75a,1).fillCircle(c.x-9+i*9,c.y-62-(i===1?5:0),3.5);o.lineStyle(1,0x7a4a10,1).strokeCircle(c.x-9+i*9,c.y-62-(i===1?5:0),3.5);}g.fillStyle(0xffd75a,.18).fillEllipse(c.x,c.y,70,34);}
+   if(m.carried)for(let i=0;i<5;i++){const d=now/160+i*Math.PI*2/5;this.dot(o,m.x+Math.cos(d)*.7,m.y+Math.sin(d)*.7,i%2?0x7ccf6a:0xb9a57a,.8,2.5);}
+   const look=this.looks.get(id);if(look?.tint===0xa8d070&&now<look.until){const c=worldToScreen(m.x,m.y);for(let i=0;i<2;i++){const t=((now/900)+i*.5)%1;o.fillStyle(0xa8d070,.8*(1-t)).fillCircle(c.x-6+i*12,c.y-30-t*24,2.5);}}
+   if(forest&&m.ally&&m.type==='arbre_sadida')for(let k=0;k<4;k++){const d=k*Math.PI/2;let px=m.x,py=m.y;const points=[worldToScreen(px,py)];
+    for(let s=1;s<=6;s++){const w=Math.sin(s*1.7+k)*.25;px=m.x+Math.cos(d)*s*.5-Math.sin(d)*w;py=m.y+Math.sin(d)*s*.5+Math.cos(d)*w;const q=worldToScreen(px,py);points.push(new Phaser.Math.Vector2(q.x,q.y));}
+    g.lineStyle(3,0x6b4a24,.75).strokePoints(points as Phaser.Math.Vector2[],false);g.fillStyle(0x94c969,.9).fillCircle(points[points.length-1].x,points[points.length-1].y-6,5);}
+  });
+  for(const id of this.royal)if(!state.monsters.get(id))this.royal.delete(id);
+ }
  private *values(state:GameStateView){const list:PlayerView[]=[];state.players.forEach(p=>list.push(p));yield* list;}
- clear(){for(const id of [...this.shots.keys()])this.end(id);this.events=[];this.parsed.clear();this.recent.clear();this.graphics.clear();this.warnings.clear();for(const object of [...this.decor]){this.scene.tweens.killTweensOf(object);object.destroy();}this.decor.clear();}
- destroy(){this.clear();this.pool.clear();this.graphics.destroy();this.warnings.destroy();}
+ clear(){for(const id of [...this.shots.keys()])this.end(id);this.events=[];this.parsed.clear();this.recent.clear();this.looks.clear();this.royal.clear();this.graphics.clear();this.overhead.clear();this.warnings.clear();for(const object of [...this.decor]){this.scene.tweens.killTweensOf(object);object.destroy();}this.decor.clear();}
+ destroy(){this.clear();this.pool.clear();this.graphics.destroy();this.warnings.destroy();this.overhead.destroy();}
 }

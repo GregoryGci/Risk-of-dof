@@ -522,6 +522,8 @@ export class RogueliteCombat {
   addDot(p:PlayerRt,a:Ability,slot:number,m:MonsterRt,kind:string,dps:number,seconds:number,maximum=1,doses=1):void {
     const key=`${p.id}:${m.id}:${kind}`,old=this.dots.get(key),same=old&&old.until>this.sim.now;
     if(!old&&[...this.dots.values()].filter(d=>d.owner===p.id&&d.kind===kind).length>=60)return;
+    // Épidémie : chaque nouvelle infection est signalée au client (teinte verte et bulles sur l'ennemi).
+    if(a.parameters.epidemic&&kind==='poison'&&!same)this.fx(p,a,'infect',m.state.x,m.state.y,{monsterId:m.id,duration:seconds});
     this.dots.set(key,{owner:p.id,target:m.id,kind,stacks:Math.min(maximum,(same?old.stacks:0)+doses),max:maximum,dps,until:this.sim.now+seconds,next:same?old.next:this.sim.now+.5,ability:a,slot,contagionAt:same?old.contagionAt:this.sim.now+1});
   }
   private damageDots():void {
