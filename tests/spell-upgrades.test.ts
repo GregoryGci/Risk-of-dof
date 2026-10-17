@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {CLASSES,classSpellIds,getClass,getSpell,getMonster,leveledSpell,spellCopies,spellEvolutionText,sanitizeSpellLevels,parseSpellLevels,spellUpgradeCost,PHASE_LOST,ZAAP_READY,generateMap,isBlocked,MAP_SIZE,PLAYER_RADIUS,assaultPlan} from '@rod/shared';
+import {CLASSES,classSpellIds,getClass,getSpell,getMonster,leveledSpell,spellCopies,spellEvolutionText,sanitizeSpellLevels,parseSpellLevels,spellUpgradeCost,PHASE_LOST,ZAAP_READY,generateMap,isBlocked,MAP_SIZE,PLAYER_RADIUS,assaultPlan,SUMMON_HP_MULT} from '@rod/shared';
 import {Simulation,type Projectile} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 import {migrateAccount} from '../client/src/progression.ts';
@@ -32,9 +32,11 @@ test('Élan : consommé une fois, perforation et bref arrêt hors boss, expirati
  p.readyAt[0]=0;sim.playerCast(p.id,{slot:0,tx:p.state.x+5,ty:p.state.y});assert.equal(((sim as any).projectiles as Projectile[])[1].spell.dashStrike,undefined);
  p.dashReadyAt=0;sim.playerDash(p.id,{dx:1,dy:0});advance(sim,.7);assert.equal(p.state.momentum,false);p.readyAt[0]=0;sim.playerCast(p.id,{slot:0,tx:p.state.x+5,ty:p.state.y});assert.equal(events.filter(e=>e.type==='momentum').length,1);
 });
-test('Invocations : nombre augmenté, plafond de 4 de l’Osamodas et Coffre unique avec PV du maître',()=>{
- const{sim,p}=setup('osamodas',3);sim.playerCast(p.id,{slot:1,tx:p.state.x+3,ty:p.state.y});const first=[...sim.monsters.values()].filter(m=>m.state.ally).length;assert.ok(first>2,'le niveau 3 invoque davantage');p.readyAt[1]=0;sim.playerCast(p.id,{slot:1,tx:p.state.x+3,ty:p.state.y});assert.equal([...sim.monsters.values()].filter(m=>m.state.ally).length,4);
- const chest=setup('enutrof',3);const slot=chest.p.spells.indexOf('coffre_anime');chest.sim.playerCast(chest.p.id,{slot,tx:chest.p.state.x+2,ty:chest.p.state.y});const allies=[...chest.sim.monsters.values()].filter(m=>m.state.ally);assert.equal(allies.length,1);assert.equal(allies[0].state.maxHp,chest.p.state.maxHp);
+test('Invocations : nombre augmenté, fusion des Tofus de l’Osamodas et Coffre unique au triple des PV du maître',()=>{
+ const{sim,p}=setup('osamodas',3);sim.playerCast(p.id,{slot:1,tx:p.state.x+3,ty:p.state.y});const first=[...sim.monsters.values()].filter(m=>m.state.ally).length;assert.ok(first>2,'le niveau 3 invoque davantage');p.readyAt[1]=0;sim.playerCast(p.id,{slot:1,tx:p.state.x+3,ty:p.state.y});
+ // 6 Tofus : les 5 premiers fusionnent en Gros Tofu, le dernier reste.
+ assert.deepEqual([...sim.monsters.values()].filter(m=>m.state.ally).map(m=>m.def.id).sort(),['osa_gros_tofu','osa_tofu_meute']);
+ const chest=setup('enutrof',3);const slot=chest.p.spells.indexOf('coffre_anime');chest.sim.playerCast(chest.p.id,{slot,tx:chest.p.state.x+2,ty:chest.p.state.y});const allies=[...chest.sim.monsters.values()].filter(m=>m.state.ally);assert.equal(allies.length,1);assert.equal(allies[0].state.maxHp,chest.p.state.maxHp*SUMMON_HP_MULT);
 });
 test('Utilitaires : demi-bouclier aux alliés proches, aura et statistiques de base non mutées',()=>{
  const base=getClass('iop').spells,{sim,p}=setup('iop',3,[base[0],'vitalite',base[2],base[3]]);sim.addPlayer('q','Q','cra');sim.addPlayer('r','R','cra');sim.addPlayer('s','S','cra');const q=sim.players.get('q')!,r=sim.players.get('r')!,s=sim.players.get('s')!;q.state.x=p.state.x+1;r.state.x=p.state.x+2;s.state.x=p.state.x+7;sim.playerCast(p.id,{slot:1,tx:p.state.x,ty:p.state.y});assert.equal(p.state.shield,Math.round(p.state.maxHp*.5));assert.equal(q.state.shield,Math.round(q.state.maxHp*.25));assert.equal(r.state.shield,Math.round(r.state.maxHp*.25));assert.equal(s.state.shield,0);

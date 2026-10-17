@@ -11,6 +11,7 @@ import { EQUIPMENT_BASES, EQUIPMENT_RARITY_NAMES, type GearDrop } from '@rod/sha
 import {leveledSpell,spellEvolutionText,assaultPlan,blessingSpell,parseBlessings} from '@rod/shared';
 import { saveSettings, settings } from '../settings.ts';
 import { DPS_WINDOW, dpsOf } from './dps.ts';
+import { parseSummonDamage, summonMeterRows, type SummonMeterRow } from './summonMeter.ts';
 import { gameSettings } from './GameSettings.ts';
 
 
@@ -69,6 +70,8 @@ export class Hud {
   }
   private spellLevels:Record<string,number>={};
   private blessingRanks:Record<string,number>={};
+  /** PV de base de la classe : les PV des invocations suivent les PV bonus du joueur. */
+  private classMaxHp=0;
   private spellEls: HTMLElement[] = [];
   private cdEls: HTMLElement[] = [];
   private wasReady: boolean[] = [];
@@ -77,6 +80,8 @@ export class Hud {
   private meter: 'dmg' | 'heal' | 'taken' = 'dmg';
   /** Dégâts cumulés de chaque joueur, échantillonnés chaque seconde de jeu (DPS récent). */
   private dpsSamples = new Map<string, { t: number; v: number }[]>();
+  /** Échantillons de DPS par invocation : clé "joueur|type". */
+  private summonSamples = new Map<string, { t: number; v: number }[]>();
   /** Horloge du DPS hors partie (salon, épouvantail) : le temps de run n'y avance pas. */
   private dpsClock = 0;
   private dpsClockAt = 0;
@@ -125,6 +130,7 @@ export class Hud {
     $('hud-meter').addEventListener(
       'click',
       (e) => {
+        if ((e.target as HTMLElement).closest('[data-summon-meter]')) { settings.summonMeter = settings.summonMeter === 'family' ? 'each' : 'family'; saveSettings(); this.cache.meterKey = ''; return; }
         const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-meter]');
         if (!btn) return;
         if (btn.id === 'meter-dps') { settings.dpsMode = settings.dpsMode === 'total' ? 'recent' : 'total'; saveSettings(); this.cache.meterKey = ''; return; }
@@ -283,7 +289,7 @@ export class Hud {
       return;
     }
     const spell = blessingSpell(leveledSpell(this.spellIds[slot],this.spellLevels[this.spellIds[slot]]),this.blessingRanks),level=spell.upgradeLevel??1;
-    tip.innerHTML = `<div class="tip-name">${escapeHtml(spell.name)} <small>${SLOT_KEYS[slot] ?? ''} · NIV. ${level}</small></div><div class="tip-desc">${escapeHtml(spell.description)}</div><p class="spell-evolution">${escapeHtml(spellEvolutionText(spell.id,level))}</p>${spellDetailsHtml(spell, this.stats, slot)}`;
+    tip.innerHTML = `<div class="tip-name">${escapeHtml(spell.name)} <small>${SLOT_KEYS[slot] ?? ''} · NIV. ${level}</small></div><div class="tip-desc">${escapeHtml(spell.description)}</div><p class="spell-evolution">${escapeHtml(spellEvolutionText(spell.id,level))}</p>${spellDetailsHtml(spell, this.stats, slot, {classMaxHp:this.classMaxHp,legion:this.blessingRanks.legion})}`;
     // Toujours juste au-dessus de la barre du bas, quelle que soit sa hauteur (objets sur plusieurs lignes).
     tip.style.bottom = `${$('hud-bottom').offsetHeight + 18}px`;
     tip.classList.remove('hidden');
@@ -393,8 +399,9 @@ export class Hud {
       if(this.cache.promptBottom!==bottom) { this.cache.promptBottom=bottom;$('prompt').style.bottom=bottom; }
     }
 
+    if (me) this.classMaxHp = CLASSES[me.classId]?.maxHp ?? 0;
     // Résumé compact des bonus de run, distinct de la tenue permanente.
-    if (me && this.cache.items !== `${me.bonuses}|${me.equipment}|${me.blessings}|${state.stage}|${state.zoneWave}`) {
+    if (me &&this.cache.items !== `${me.bonuses}|${me.equipment}|${me.blessings}|${state.stage}|${state.zoneWave}`) {
       this.cache.items = `${me.bonuses}|${me.equipment}|${me.blessings}|${state.stage}|${state.zoneWave}`;
       this.stats = playerItemStats(parseRunBonuses(me.bonuses), me.equipment,{stage:state.stage,zoneWave:state.zoneWave,mode:state.mode});
       this.blessingRanks=parseBlessings(me.blessings);this.stats.bounce+=this.blessingRanks.ricochet??0;this.stats.lifesteal+=innateLifesteal(getSpell(me.spells.split(',')[0]||CLASSES[me.classId].spells[0]));clampCombatStats(this.stats,isRangedAttack(getSpell(me.spells.split(',')[0]||CLASSES[me.classId].spells[0])));
@@ -480,35 +487,47 @@ export class Hud {
     // Addon de dégâts : totaux depuis le début de la run (dégâts infligés, soins, dégâts subis),
     // avec le DPS du joueur (moyenne de la run ou des 5 dernières secondes, au choix).
     const now = performance.now();
-    const rows: { name: string; slot: number; value: number; dps: number }[] = [];
+    const rows: { name: string; slot: number; value: number; dps: number; summons: SummonMeterRow[] }[] = [];
     // En partie : temps de jeu (pauses et haltes exclues). Hors partie : horloge réelle, hors pause.
     if (this.dpsClockAt && !state.paused && state.phase !== PHASE_PLAYING) this.dpsClock += Math.min(1, (now - this.dpsClockAt) / 1000);
     this.dpsClockAt = now;
     const clock = state.phase === PHASE_PLAYING ? state.time : this.dpsClock;
-    state.players.forEach((p: PlayerView, id: string) => {
-      // Échantillon par seconde ; une nouvelle run (temps ou dégâts qui reculent) repart de zéro.
-      let samples = this.dpsSamples.get(id);
+    // Échantillon par seconde ; une nouvelle run (temps ou dégâts qui reculent) repart de zéro.
+    const sampled = (map: Map<string, { t: number; v: number }[]>, key: string, value: number) => {
+      let samples = map.get(key);
       const last = samples?.at(-1);
-      if (!samples || (last && (clock < last.t || p.dmgDealt < last.v))) { samples = []; this.dpsSamples.set(id, samples); }
-      if (!samples.length || clock - samples.at(-1)!.t >= 1) { samples.push({ t: clock, v: p.dmgDealt }); while (samples.length > DPS_WINDOW + 3) samples.shift(); }
-      const value = this.meter === 'dmg' ? p.dmgDealt : this.meter === 'heal' ? p.healDone : p.dmgTaken;
+      if (!samples || (last && (clock < last.t || value < last.v))) { samples = []; map.set(key, samples); }
+      if (!samples.length || clock - samples.at(-1)!.t >= 1) { samples.push({ t: clock, v: value }); while (samples.length > DPS_WINDOW + 3) samples.shift(); }
       // DPS total : depuis le début de la run en partie, depuis le premier coup mesuré hors partie.
       const elapsed = state.phase === PHASE_PLAYING ? clock : clock - samples[0].t;
-      rows.push({ name: p.name, slot: p.slot, value, dps: settings.dpsMode === 'total' ? (elapsed > 0 ? p.dmgDealt / Math.max(1, elapsed) : 0) : dpsOf(samples, 'recent', clock, p.dmgDealt) });
+      return settings.dpsMode === 'total' ? (elapsed > 0 ? value / Math.max(1, elapsed) : 0) : dpsOf(samples, 'recent', clock, value);
+    };
+    state.players.forEach((p: PlayerView, id: string) => {
+      const dps = sampled(this.dpsSamples, id, p.dmgDealt);
+      const value = this.meter === 'dmg' ? p.dmgDealt : this.meter === 'heal' ? p.healDone : p.dmgTaken;
+      // Dégâts des invocations : mesurés par type (DPS récent juste après un changement de vue), puis regroupés.
+      const byType = new Map<string, { value: number; dps: number }>();
+      for (const [type, dealt] of parseSummonDamage(p.summonDmg ?? '')) byType.set(type, { value: dealt, dps: sampled(this.summonSamples, `${id}|${type}`, dealt) });
+      rows.push({ name: p.name, slot: p.slot, value, dps, summons: this.meter === 'dmg' ? summonMeterRows(byType, settings.summonMeter) : [] });
     });
     for (const id of [...this.dpsSamples.keys()]) if (!state.players.get(id)) this.dpsSamples.delete(id);
+    for (const key of [...this.summonSamples.keys()]) if (!state.players.get(key.split('|')[0])) this.summonSamples.delete(key);
     // Affichage rafraîchi une fois par seconde (sauf changement d'onglet) : les chiffres restent lisibles.
-    const meterKey = this.meter + rows.length + settings.dpsMode;
+    const meterKey = this.meter + rows.length + settings.dpsMode + settings.summonMeter;
     if (now - this.meterShownAt >= METER_REFRESH_MS || this.cache.meterKey !== meterKey) {
       this.meterShownAt = now;
       this.cache.meterKey = meterKey;
       rows.sort((a, b) => b.value - a.value);
       const best = Math.max(1, rows[0]?.value ?? 1);
       let meter = '';
+      const line = (cls: string, name: string, color: number, value: number, dps: number) =>
+        `<div class="meter-row${cls}"><div class="fill" style="width:${(value / best) * 100}%;background:${cssColor(color)}"></div><span>${escapeHtml(name)}</span><span>${this.meter === 'dmg' ? `${fmt(value)} <small>${fmt(dps)}/s</small>` : fmt(value)}</span></div>`;
       for (const r of rows) {
-        const shown = this.meter === 'dmg' ? `${fmt(r.value)} <small>${fmt(r.dps)}/s</small>` : fmt(r.value);
-        meter += `<div class="meter-row"><div class="fill" style="width:${(r.value / best) * 100}%;background:${cssColor(PLAYER_COLORS[r.slot % PLAYER_COLORS.length])}"></div><span>${escapeHtml(r.name)}</span><span>${shown}</span></div>`;
+        meter += line('', r.name, PLAYER_COLORS[r.slot % PLAYER_COLORS.length], r.value, r.dps);
+        // Invocations du joueur, sous sa ligne, à la même échelle : leur part de ses dégâts se lit directement.
+        for (const s of r.summons) meter += line(' summon', s.name, s.color, s.value, s.dps);
       }
+      if (rows.some(r => r.summons.length)) meter += `<button type="button" class="meter-summon-toggle" data-summon-meter title="Cliquer : invocations regroupées par famille, ou détaillées une par une">Invocations : ${settings.summonMeter === 'family' ? 'par famille' : 'en détail'}</button>`;
       this.setHtml('meter-body', meter);
       const dpsButton = $('meter-dps');
       dpsButton.textContent = settings.dpsMode === 'total' ? 'DPS total' : 'DPS 10 s';

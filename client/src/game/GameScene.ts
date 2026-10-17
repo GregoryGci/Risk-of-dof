@@ -1,4 +1,4 @@
-import {runBonusText} from '@rod/shared';
+import {runBonusText,VIEW_W,VIEW_H} from '@rod/shared';
 // Scène principale : affiche l'état reçu du serveur, envoie les entrées du joueur.
 // Aucune règle de jeu ici : le client ne décide ni des dégâts ni des temps de recharge.
 import Phaser from 'phaser';
@@ -58,6 +58,7 @@ import { ShopPanel } from '../ui/Shop.ts';
 import { settings } from '../settings.ts';
 import { Controls } from './Controls.ts';
 import {MechanicHud} from '../ui/MechanicHud.ts';
+import {SummonHud} from '../ui/SummonHud.ts';
 import {MovementPrediction} from './Prediction.ts';
 import { Effects } from './Effects.ts';
 import {installTextureStateRefresh} from './textureState.ts';
@@ -71,9 +72,6 @@ export interface GameContext {
   hud: Hud;
 }
 
-/** Surface de monde visible maximale (px) : au-delà on zoome, pour que les monstres apparaissent hors écran. */
-const VIEW_W = 1100;
-const VIEW_H = 600;
 /** Décalage vertical de la visée : on vise le corps des monstres, pas leurs pieds. */
 const AIM_OFFSET_Y = 10;
 
@@ -150,6 +148,7 @@ export class GameScene extends Phaser.Scene {
   private spectating: string | null = null;
   private cam = { x: 0, y: 0, ready: false };
   private mechanicHud!:MechanicHud;
+  private summonHud!:SummonHud;
   private prediction=new MovementPrediction();
   private inputSeq=0;
   private dangerWarnings=new Set<Phaser.GameObjects.Graphics>();
@@ -200,6 +199,8 @@ export class GameScene extends Phaser.Scene {
       const aim=this.aimPoint();this.room.send('classAction',{tx:aim.x,ty:aim.y,choice});
     },choice=>this.room.send('boon',{choice}));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.mechanicHud.destroy());
+    this.summonHud=new SummonHud();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.summonHud.destroy());
     this.store.finalize(this);
     this.cameras.main.setBackgroundColor(0x1a2611);
     this.controls = new Controls(this.game.canvas);
@@ -403,6 +404,7 @@ export class GameScene extends Phaser.Scene {
       this.nextHudUpdate=time+100;
       this.hud.update(state, this.room.sessionId, myState && !myState.alive ? this.spectating : null, prompt);
       this.mechanicHud.update(state,this.room.sessionId);
+      this.summonHud.update(state,this.room.sessionId,time);
     }
     this.updateMusic(state, time);
   }
@@ -868,7 +870,9 @@ export class GameScene extends Phaser.Scene {
       const sign = dash.direction === 'back' ? -1 : 1;
       this.effects.dashTrail(e.x, e.y, e.x + ((e.tx - e.x) / len) * dash.distance * sign, e.y + ((e.ty - e.y) / len) * dash.distance * sign, spell.color);
     }
-    (this.players.get(e.caster) ?? this.monsters.get(e.caster))?.attack(this.store.spellFx(this,spell.id)?.casterAnim??0);
+    // Attaque du familier ("pet:<joueur>") : c'est lui qui bondit, pas son maître.
+    if (e.caster.startsWith('pet:')) this.players.get(e.caster.slice(4))?.petStrike(e.tx, e.ty, spell.projectile ? 70 : 260);
+    else (this.players.get(e.caster) ?? this.monsters.get(e.caster))?.attack(this.store.spellFx(this,spell.id)?.casterAnim??0);
     // Téléportation : traînée entre le départ et l'arrivée ; invocation : petit nuage.
     if (spell.teleport && !document.hidden) this.effects.dashTrail(e.x, e.y, e.tx, e.ty, spell.color);
     if (spell.summon && !document.hidden) this.effects.poof(e.tx, e.ty, spell.color);
@@ -913,9 +917,12 @@ export class GameScene extends Phaser.Scene {
     const key = `pet_${base}`;
     if (this.textures.exists(key)) return key;
     const url = this.store.itemIconUrl(base);
-    if (url && !this.load.textureManager.exists(key) && !this.load.isLoading()) { this.load.image(key, url); this.load.start(); }
+    // Adresse absolue : le chargeur préfixe sinon le chemin des assets (setPath), qui figure déjà dans l'URL.
+    // Une seule demande par familier, même si le fichier manque.
+    if (url && !this.petRequested.has(key) && !this.load.isLoading()) { this.petRequested.add(key); this.load.image(key, new URL(url, document.baseURI).href); this.load.start(); }
     return;
   }
+  private petRequested = new Set<string>();
   private shakeUntil = 0;
   /**
    * Secousse de caméra selon le réglage. Une seule à la fois, et un temps mort après chacune :

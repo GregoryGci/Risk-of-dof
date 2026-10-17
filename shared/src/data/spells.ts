@@ -4,6 +4,7 @@
 // existantes suffisent (projectile, mêlée, zone, piège, glyphe, invocation, bonus, téléportation...).
 import type { SpellDef } from '../types.ts';
 import { PET_ATTACK_SPELLS } from './pet-attacks.ts';
+import { OSAMODAS_SUMMON_CAP } from './monsters.ts';
 
 type SpellBase = Omit<SpellDef, 'id' | 'icon'> & { icon?: string };
 
@@ -481,10 +482,11 @@ export const SPELLS: Record<string, SpellDef> = define({
   },
   la_folle: {
     name: 'La Folle',
-    description: 'Invoque une poupée rapide et agressive (3 max, 25 s).',
+    description: 'Invoque une poupée rapide et agressive (3 max, 25 s). Chaque ennemi qu’elle tue lui rend 0,1 s.',
     color: 0xff7070,
     element: 'neutre',
-    cooldown: 6000,
+    // Invocation faite pour tuer : relance allongée de 30 % (SUMMON_SPELL_ROLES).
+    cooldown: 13260,
     range: 4,
     damage: [0, 0],
     summon: { monster: 'poupee_folle', max: 3, duration: 25 },
@@ -494,7 +496,7 @@ export const SPELLS: Record<string, SpellDef> = define({
     description: 'Invoque une poupée robuste qui attire les monstres sur elle (1 max, 25 s).',
     color: 0xa08060,
     element: 'neutre',
-    cooldown: 12000,
+    cooldown: 20400,
     range: 4,
     damage: [0, 0],
     summon: { monster: 'poupee_bloqueuse', max: 1, duration: 25 },
@@ -560,7 +562,7 @@ export const SPELLS: Record<string, SpellDef> = define({
     description: 'Invoque une poupée qui soigne les alliés proches (1 max, 25 s).',
     color: 0x80e0ff,
     element: 'eau',
-    cooldown: 12000,
+    cooldown: 20400,
     range: 4,
     damage: [0, 0],
     summon: { monster: 'poupee_gonflable', max: 1, duration: 25 },
@@ -790,33 +792,36 @@ export const SPELLS: Record<string, SpellDef> = define({
   },
   invocation_de_tofu: {
     name: 'Invocation de Tofu',
-    description: 'Invoque deux Tofus rapides qui harcèlent vos ennemis (4 au maximum, 20 s).',
+    description: 'Invoque deux Tofus rapides qui harcèlent vos ennemis (20 s). 5 Tofus fusionnent en un Gros Tofu, 3 Gros Tofus en un Mini Tofu Royal. Chaque ennemi tué rend 0,1 s à son auteur.',
     color: 0xf0d050,
     element: 'air',
-    cooldown: 5000,
+    // Invocation faite pour tuer : relance allongée de 30 % (SUMMON_SPELL_ROLES).
+    cooldown: 11050,
     range: 5,
     damage: [0, 0],
-    summon: { monster: 'osa_tofu_meute', max: 4, duration: 20, count: 2 },
+    summon: { monster: 'osa_tofu_meute', max: OSAMODAS_SUMMON_CAP, duration: 20, count: 2 },
   },
   invocation_de_dragonnet_rouge: {
     name: 'Invocation de Dragonnet Rouge',
-    description: 'Ultime : un Dragonnet Rouge à la puissance doublée crache du feu en cône pendant 15 s.',
+    description: 'Ultime : un Dragonnet Rouge à la puissance doublée crache du feu en zone pendant 22,5 s. 4 Dragonnets fusionnent en un Mini Crocabulia. Chaque ennemi tué rend 0,1 s à son auteur.',
     color: 0xff7340,
     element: 'feu',
-    cooldown: 22000,
+    // Ultime : 30 s de relance, pour pouvoir réunir 4 Dragonnets (Mini Crocabulia) avant qu'ils expirent.
+    cooldown: 30000,
     range: 5,
     damage: [0, 0],
-    summon: { monster: 'osa_dragonnet', max: 1, duration: 15 },
+    summon: { monster: 'osa_dragonnet', max: OSAMODAS_SUMMON_CAP, duration: 22.5 },
   },
   invocation_de_bouftou: {
     name: 'Invocation de Bouftou',
-    description: 'Invoque un Bouftou robuste qui provoque les monstres proches (2 au maximum, 25 s).',
+    description: 'Invoque un Bouftou robuste qui provoque les monstres proches (25 s). 5 Bouftous fusionnent en un Chef de guerre Bouftou, 3 Chefs de guerre en un Mini Bouftou Royal. Frappe 30 % moins fort ; chaque ennemi tué rend 0,2 s à son auteur.',
     color: 0xe0d0b0,
     element: 'terre',
-    cooldown: 9000,
+    // Invocation tank : relance allongée de 30 % (SUMMON_SPELL_ROLES).
+    cooldown: 19890,
     range: 5,
     damage: [0, 0],
-    summon: { monster: 'osa_bouftou_tank', max: 2, duration: 25 },
+    summon: { monster: 'osa_bouftou_tank', max: OSAMODAS_SUMMON_CAP, duration: 25 },
   },
   laisse_spirituelle: {
     name: 'Laisse Spirituelle',
@@ -856,10 +861,10 @@ export const SPELLS: Record<string, SpellDef> = define({
   },
   coffre_anime: {
     name: 'Coffre Animé',
-    description: 'Invoque un coffre pendant 25 s. Ses PV sont égaux à vos PV max au lancement ; il reçoit les dégâts à votre place jusqu’à sa destruction. Les dégâts excédentaires vous atteignent.',
+    description: 'Invoque un coffre pendant 25 s. Ses PV valent 1,2 fois vos PV max au lancement ; il reçoit les dégâts à votre place jusqu’à sa destruction. Les dégâts excédentaires vous atteignent.',
     color: 0xb08040,
     element: 'terre',
-    cooldown: 15000,
+    cooldown: 25500,
     range: 4,
     damage: [0, 0],
     summon: { monster: 'coffre_anime', max: 1, duration: 25 },
@@ -983,7 +988,7 @@ export const SPELLS: Record<string, SpellDef> = define({
     name:'Impulsion',description:'Effet de mécanique de classe.',color:0xeacb8d,element:'neutre',cooldown:1000,range:12,damage:[1,1],zone:{radius:2},
   },
   souffle_dragonnet: {
-    name:'Souffle du Dragonnet',description:'Flamme de l’invocation alliée.',icon:'graine',color:0xff7340,element:'feu',cooldown:1100,range:6,damage:[13,16],projectile:{speed:12,radius:.2},
+    name:'Souffle du Dragonnet',description:'Flamme de l’invocation alliée : petite zone de 2,5 cases au point visé.',icon:'graine',color:0xff7340,element:'feu',cooldown:1100,range:6,damage:[13,16],zone:{radius:2.5},
   },
   jet_scara: {
     name:'Jet du Scarafeuille',description:'Projectile du Scarafeuille Bleu.',icon:'graine',color:0x6cc6ed,element:'eau',cooldown:2600,range:9,damage:[8,11],projectile:{speed:8,radius:.26},
@@ -1037,7 +1042,14 @@ export const SPELLS: Record<string, SpellDef> = define({
 /** Compétences d'invocation : noms et formes synchronisés, animations Retro réutilisées. */
 const summonSkills:Record<string,{source:string;patch:Partial<SpellDef>}>= {
   brasier_dragonnet:{source:'souffle_dragonnet',patch:{name:'Brasier du Dragonnet',damage:[24,30],projectile:undefined,zone:{radius:2},effects:[{type:'burn',dps:5,duration:3}]}},
-  heurt_gardien:{source:'invocation_de_bouftou',patch:{name:'Heurt du Dragonnet Gardien',damage:[28,36],zone:{radius:2.3},range:5,effects:[{type:'slow',factor:.6,duration:2}]}},
+  // Sans `summon` : le heurt reprendrait sinon l'invocation de son sort source et ferait apparaître un Bouftou.
+  heurt_gardien:{source:'invocation_de_bouftou',patch:{name:'Heurt du Dragonnet Gardien',damage:[28,36],zone:{radius:2.3},range:5,summon:undefined,effects:[{type:'slow',factor:.6,duration:2}]}},
+  souffle_crocabulia:{source:'souffle_dragonnet',patch:{name:'Souffle du Mini Crocabulia',zone:{radius:3}}},
+  // Fusions de l'Osamodas : la morsure devient une frappe de zone au point visé (dégâts de contact de l'invocation d'origine).
+  frappe_gros_tofu:{source:'malchance',patch:{name:'Frappe du Gros Tofu',color:0xf0d050,element:'air',cooldown:630,range:2,damage:[7,7],zone:{radius:2},effects:undefined}},
+  frappe_mini_tofu_royal:{source:'malchance',patch:{name:'Frappe du Mini Tofu Royal',color:0xf0d050,element:'air',cooldown:630,range:2,damage:[7,7],zone:{radius:3},effects:undefined}},
+  frappe_chef_bouftou:{source:'malchance',patch:{name:'Frappe du Chef de guerre Bouftou',color:0xe0d0b0,element:'terre',cooldown:1100,range:2,damage:[10,10],zone:{radius:4},effects:undefined}},
+  frappe_mini_bouftou_royal:{source:'malchance',patch:{name:'Frappe du Mini Bouftou Royal',color:0xe0d0b0,element:'terre',cooldown:1100,range:2,damage:[10,10],zone:{radius:5},effects:undefined}},
   miasme_folle:{source:'vent_empoisonne',patch:{name:'Miasme de la Folle',damage:[14,18],zone:{radius:1.8},effects:[{type:'burn',dps:4,duration:3}]}},
   etreinte_bloqueuse:{source:'ronce_apaisante',patch:{name:'Étreinte de la Bloqueuse',damage:[12,16],projectile:undefined,zone:{radius:2.2},range:0,effects:[{type:'stun',duration:.65},{type:'slow',factor:.5,duration:2}]}},
   heurt_coffre:{source:'pelle_du_jugement',patch:{name:'Heurt du Coffre',damage:[18,24],projectile:undefined,zone:{radius:2},range:0,effects:[{type:'slow',factor:.65,duration:2}]}},
@@ -1050,7 +1062,20 @@ export const SUMMON_DESCRIPTIONS:Record<string,string>={
   poupee_folle:'Attaque au contact et miasme de zone empoisonné toutes les 5 s. Hérite de vos bonus.',
   poupee_bloqueuse:'Attaque au contact et étreinte de zone toutes les 6 s : bref étourdissement puis ralentissement. Provoque à courte portée. Hérite de vos bonus.',
   poupee_gonflable:'Soin de proximité et bouclier de 4 % de vos PV max lorsqu’un allié est sous 75 % de vie, toutes les 8 s. Hérite de votre puissance et de votre cadence.',
-  coffre_anime:'Attaque au contact et heurt ralentissant toutes les 6 s. Reçoit les dégâts à votre place ; ses PV max sont égaux aux vôtres. Hérite de vos bonus offensifs.',
+  coffre_anime:'Attaque au contact et heurt ralentissant toutes les 6 s. Reçoit les dégâts à votre place ; ses PV max valent 1,2 fois les vôtres. Hérite de vos bonus offensifs.',
+};
+/** Compétence de zone de chaque invocation (voir server/src/game/summons.ts) : sort et intervalle de base en s. */
+export const SUMMON_SKILLS:Record<string,{spell:string;interval:number;self?:boolean}>={
+  osa_tofu:{spell:'brasier_dragonnet',interval:5.5},
+  osa_bouftou:{spell:'heurt_gardien',interval:5},
+  osa_bouftou_tank:{spell:'heurt_gardien',interval:5},
+  osa_chef_bouftou:{spell:'heurt_gardien',interval:5},
+  osa_mini_bouftou_royal:{spell:'heurt_gardien',interval:5},
+  osa_dragonnet:{spell:'brasier_dragonnet',interval:3.5},
+  osa_mini_crocabulia:{spell:'brasier_dragonnet',interval:3.5},
+  poupee_folle:{spell:'miasme_folle',interval:5},
+  poupee_bloqueuse:{spell:'etreinte_bloqueuse',interval:6,self:true},
+  coffre_anime:{spell:'heurt_coffre',interval:6,self:true},
 };
 export function getSpell(id: string): SpellDef {
   const s = Object.hasOwn(SPELLS,id)?SPELLS[id]:undefined;

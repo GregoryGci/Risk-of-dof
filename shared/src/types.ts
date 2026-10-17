@@ -373,6 +373,8 @@ export interface PlayerView {
   dmgDealt: number;
   healDone: number;
   dmgTaken: number;
+  /** Dégâts infligés par type d'invocation : "type:dégâts,type:dégâts". */
+  summonDmg: string;
   kills: number;
   /** Sorts équipés (arbre de talents) : "id,id,id,id". */
   spells: string;
@@ -392,6 +394,10 @@ export interface MonsterView {
   level: number;
   state: number;
   ally: boolean;
+  /** Invocation alliée : joueur maître, temps restant et durée de vie maximale (s). */
+  owner: string;
+  lifeLeft: number;
+  lifeMax: number;
   /** Monstre d'élite invoqué par une balise de défi. */
   elite: boolean;
   carried:boolean;

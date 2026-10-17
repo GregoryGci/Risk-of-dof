@@ -8,7 +8,7 @@ export const PATCH_MS = 50;
 export const SERVER_PORT = 2567;
 export const ROOM_NAME = 'partie';
 /** Cartes et schéma doivent correspondre entre le site et le serveur publié. */
-export const GAME_PROTOCOL_VERSION=7;
+export const GAME_PROTOCOL_VERSION=8;
 export const MAX_PLAYERS = 4;
 export const ROOM_CODE_LENGTH = 4;
 export const NAME_MAX_LENGTH = 16;
@@ -19,6 +19,12 @@ export const MAP_SIZE = Math.round(MAP_BASE_SIZE * Math.sqrt(3));
 /** Dimensions d'une case isométrique à l'écran (px). */
 export const TILE_W = 64;
 export const TILE_H = 32;
+/**
+ * Surface de monde visible maximale (px), centrée sur le joueur : au-delà le client zoome, pour que les monstres
+ * apparaissent hors écran. Le serveur s'en sert pour savoir si une invocation est encore à l'écran.
+ */
+export const VIEW_W = 1100;
+export const VIEW_H = 600;
 
 export const PLAYER_RADIUS = 0.35;
 /** Nombre maximum de monstres vivants en même temps. */

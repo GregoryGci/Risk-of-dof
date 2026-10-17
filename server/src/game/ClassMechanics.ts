@@ -1,4 +1,4 @@
-import {sourceDamageMultiplier} from '@rod/shared';
+import {OSAMODAS_SUMMON_CAP,sourceDamageMultiplier} from '@rod/shared';
 import {CLASS_MECHANICS,cardLabel,evaluateHand,getSpell,stepMovement,type SpellDef,type MechanicView} from '@rod/shared';
 import type {Simulation,PlayerRt,MonsterRt,Projectile,GroundRt} from './Simulation.ts';
 interface Runtime {
@@ -129,7 +129,7 @@ export class ClassMechanics {
     if(p.def.id==='sacrieur')value=Math.round(m.charge/p.state.maxHp*100);
     if(p.def.id==='ecaflip'){value=m.hand.length;status=m.result||'25 % par attaque touchée · 5 cartes';}
     if(p.def.id==='sadida'){const poisoned=[...this.sim.monsters.values()].filter(e=>!e.state.ally&&e.burnOwner===p.id&&now<e.burnUntil&&(e.poisonStacks??0)>0);value=Math.min(5,poisoned.length);status=`${poisoned.length} ennemi${poisoned.length>1?'s':''} empoisonné${poisoned.length>1?'s':''}`;}
-    if(p.def.id==='osamodas'){value=[...this.sim.monsters.values()].filter(a=>a.allyOwner===p.id).length;status=now<(p.summonRoarUntil??0)?'Cri sauvage !':m.target&&now<m.targetUntil?'Cible marquée':'4 invocations au plus';}
+    if(p.def.id==='osamodas'){value=[...this.sim.monsters.values()].filter(a=>a.allyOwner===p.id).length;status=now<(p.summonRoarUntil??0)?'Cri sauvage !':m.target&&now<m.targetUntil?'Cible marquée':`${value} / ${OSAMODAS_SUMMON_CAP} invocations`;}
     if(p.def.id==='xelor')status=m.charge===3?'Horloge prête · F':`${m.charge} / 3 compétences`;
     if(p.def.id==='pandawa'){value=now<m.drunkUntil?1:0;status=`${value?'Ivre':'Sobre'}${m.carried?' · Ennemi porté':''}`;}
     const view:MechanicView={name:def.name,value,max:def.cap,readyIn:Math.round(Math.max(0,m.readyAt-now)*10)/10,status,choices:p.def.id==='ecaflip'?m.hand.map(cardLabel):[]};const json=JSON.stringify(view);if(p.state.mechanic!==json)p.state.mechanic=json;
