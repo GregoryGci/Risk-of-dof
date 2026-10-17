@@ -20,23 +20,25 @@ Un compte Supabase est désormais obligatoire. Après l'inscription (et la confi
 
 Recharger la page reprend la même partie dans cet onglet, en solo comme en multi, si le retour intervient sous deux minutes. Quand tous les joueurs sont déconnectés, la simulation se met en pause. « Retour au menu » quitte volontairement la partie.
 
-Les simulations et l'audit sont détaillés dans [docs/AUDIT_REFONTE_PROGRESSION.md](docs/AUDIT_REFONTE_PROGRESSION.md).
+La progression par XP, ses paramètres, la migration et les vérifications sont détaillés dans [docs/REFONTE_XP.md](docs/REFONTE_XP.md).
+
+La préparation technique du futur système de sorts/passifs est documentée dans [ROGUELITE_TECHNICAL_AUDIT.md](ROGUELITE_TECHNICAL_AUDIT.md), avec les décisions de design à préciser dans [ROGUELITE_TECHNICAL_FEEDBACK.md](ROGUELITE_TECHNICAL_FEEDBACK.md). Ces composants de phase A sont testés séparément ; leur activation attend `ROGUELITE_GAME_DESIGN.md` validé.
 
 L'accueil comporte **Single player → Multiplayer → Character → Classement → Historique → Settings**. Les chroniques affichent les runs en lignes avec les détails au clic ; la meilleure run est épinglée en tête de liste.
 
 La progression comporte **33 donjons**, des monstres/décors/musiques par zone, des panoplies et des équipements différenciés par niveau. Les drops proviennent de la zone courante et des deux précédentes, avec raretés antérieures ×3 ; les Dofus restent accessibles sur les boss de toutes les zones. Une surprise plus puissante peut remplacer le gardien toutes les trois zones, avec butin ×3.
 
-Vaincre le **Kralamoure de la zone 33** termine immédiatement la run par une **victoire**, avec récompenses et historique pour toute l'équipe. En Cauchemar, les trois gardiens finaux doivent être vaincus. Le Krala final ne peut pas être remplacé par un gardien surprise. Il n'y a pas de zone 34 : chaque victoire débloque le mode suivant, **Facile → Normal → Difficile → Cauchemar**. Le choix du mode dépend des déblocages de l'hôte ; ses invités peuvent l'accompagner et obtenir leur propre déblocage. Les anciennes sauvegardes ayant déjà dépassé la zone 33 conservent ce déblocage lors de la migration.
+Vaincre le **Kralamoure de la zone 33** termine la run par une **victoire** après l'aspiration d'XP, avec récompenses et historique pour toute l'équipe. En Cauchemar, les trois gardiens finaux doivent être vaincus. Le Krala final ne peut pas être remplacé par un gardien surprise. Il n'y a pas de zone 34 : chaque victoire débloque le mode suivant, **Facile → Normal → Difficile → Cauchemar**. Le choix du mode dépend des déblocages de l'hôte ; ses invités peuvent l'accompagner et obtenir leur propre déblocage. Les anciennes sauvegardes ayant déjà dépassé la zone 33 conservent ce déblocage lors de la migration.
 
 **131 objets et neuf paliers jusqu'à 200**, dont Minotot, Ougah, les panoplies Bworker et Ventouse. Le mode **Cauchemar** propose deux gardiens par zone et trois toutes les trois zones, avec PV séparés et victoire après le dernier. [Règles, nouveaux équipements et simulations](docs/FIN_DE_JEU_CAUCHEMAR.md). Le classement Cauchemar nécessite [cette migration Supabase](supabase/migrations/202610150002_nightmare.sql) sur une base déjà créée.
 
 La DA **Pacte des Douze**, inspirée de Hades × Dofus, est active par défaut : illustration Iop/Zaap, rouge/ivoire/obsidienne, formes coupées et HUD de combat. **Settings → Direction artistique** permet de revenir au parchemin. Les sprites, équipements et sorts Retro restent ceux du jeu. L’atlas de l’accueil présente les 33 donjons et les pools de butin.
 
-Les **élites** donnent un choix personnel parmi **trois bénédictions issues d'un catalogue de 30** : dash explosif, marques retardées, réactions sur les victimes, contrôles et synergies. Elles restent actives pendant la run et peuvent être renforcées au rang 3. Les gardiens gardent leurs récompenses de stats. Le choix de bénédiction au départ a été supprimé.
+Les **élites** donnent un choix personnel parmi **trois bénédictions issues d'un catalogue de 30** : dash explosif, marques retardées, réactions sur les victimes, contrôles et synergies. Elles restent actives pendant la run et peuvent être renforcées au rang 3. Tous les ennemis donnent de l'XP au sol ; les gardiens déclenchent une aspiration globale.
 
-Dans **Character → Talents**, les kamas permanents achètent les **niveaux 2 et 3 des sorts**. Exemple : Flèche Magique tire deux puis trois flèches ; Tempête et Épée Céleste frappent deux puis trois fois. Après un dash, une attaque de base dans les 0,65 s reçoit l'**élan** : +15 % de dégâts, projectiles perforants ou cône de mêlée élargi. [Règles, catalogue et audit du level design](docs/SORTS_ELITES_LEVEL_DESIGN.md).
+Dans **Character → Talents**, les kamas de fin de partie achètent **cinq paliers permanents par sort**, limités aux dégâts (+30 % maximum) et à la recharge (−15 % maximum). Les niveaux d'XP donnent trois choix personnels de statistiques ou de sorts : recharge, zone compatible ou double projectile à 65 % de dégâts chacun. Après un dash, une attaque de base dans les 0,65 s reçoit l'**élan** : +15 % dégâts, projectile perforant ou cône élargi. [Règles et vérifications](docs/REFONTE_XP.md).
 
-À la halte marchande, choisissez un **serment** pour la prochaine zone : voie habituelle, renforts +30 % contre kamas +30 %, ou gardien renforcé contre deux bénédictions. En multi, la majorité décide et l’hôte départage les égalités. Les **affinités** Braise, Sève et Wakfu renforcent les builds à 3 puis 5 bonus différents, avec seuils visibles dans Tab. Les doublons comptent une seule fois.
+À la halte entre zones, choisissez un **serment** : voie habituelle, renforts +30 % contre XP +20 %, ou gardien renforcé contre XP de boss +50 %. En multi, la majorité décide et l’hôte départage les égalités. Les **affinités** Braise, Sève et Wakfu renforcent les builds à 3 puis 5 bonus différents, avec seuils visibles dans Tab. Les doublons comptent une seule fois.
 
 Les améliorations et leur validation sont décrites dans [docs/SANCTUAIRE_HADES_DOFUS.md](docs/SANCTUAIRE_HADES_DOFUS.md). **Settings → Performances en jeu** affiche les FPS et le ping réels. Le rendu Standard regroupe plusieurs atlas ; le mode Compatibilité reste disponible.
 
@@ -87,13 +89,12 @@ place de Tempête : un bouclier absorbe jusqu'à **50 % des PV max** pendant **5
   fait à l'accueil, et peut être changé dans le salon avant le lancement.
 - **Difficulté** : elle monte avec le temps (timer en haut). Les vagues arrivent plus vite et les
   monstres ont plus de PV et de dégâts.
-- **Kamas et coffres** : chaque monstre vaincu rapporte des kamas à tous les joueurs. Un coffre
-  (points dorés de la mini-carte) coûte de plus en plus cher et donne directement un **bonus de stats**
-  cumulable (PV, dégâts, vitesse de recharge, critiques...). Le marchand et les gardiens donnent
-  aussi des bonus. **Tab** affiche leur total ; ils disparaissent à la run suivante.
+- **XP commune** : les lueurs bleues s'aimantent à proximité. L'équipe partage barre et niveau ;
+  chaque joueur choisit une amélioration parmi trois. Le combat est suspendu en solo et continue
+  en multi, avec choix automatique après 25 s. **Tab** affiche les bonus, effacés en fin de partie.
 - **Zaap** : chaque zone contient un Zaap (losange bleu de la mini-carte). L'activer fait
-  apparaître le gardien après son annonce au sol. Vaincre les gardiens ouvre immédiatement
-  le passage et réanime toute l’équipe. Le dernier Kralamoure termine la campagne par une victoire.
+  apparaître le gardien après son annonce au sol. Vaincre les gardiens aspire l'XP en 1,35 s,
+  puis ouvre le passage et réanime toute l’équipe. Le dernier Kralamoure termine la campagne par une victoire.
 - **Régions** : chaque Zaap change le terrain et la population : pâturages des Bouftous,
   champs du Tournesol, plaine des Scarafeuilles, montagnes des Craqueleurs, camp des Bworks.
   La campagne traverse les 33 donjons dans l’ordre de l’Atlas. Les cartes font 97 × 97 cases : surface ×3.
@@ -116,7 +117,7 @@ place de Tempête : un bouclier absorbe jusqu'à **50 % des PV max** pendant **5
 
 - La puissance renforce davantage les compétences après +50 % ; les autos gardent un scaling positif. Les bonus de vitesse d’attaque sont divisés par deux.
 - Vol de vie des autos : 0,3/0,5/0,8/1 % par bonus, plafond 10 % à distance ou 20 % en mêlée, effet natif compris. Vampirisme des compétences : 0,6/1/1,6/2 %, plafond 50 %. Les soins utilisent les dégâts effectifs.
-- Trois rebonds maximum. Aucun bonus de run déjà plafonné dans les coffres, les récompenses ou le marchand. Les projectiles supplémentaires restent sans limite.
+- Trois rebonds et deux attaques Échos supplémentaires maximum. Les choix au plafond sont exclus ; chaque sort reçoit au plus un double projectile temporaire.
 - Les PV flat de run suivent la difficulté des zones et des assauts. Les renforts augmentent avec la vitesse de kill et les dégâts du groupe, avec 220 ennemis ordinaires maximum hors gardiens et invocations.
 - Cauchemar : menace initiale renforcée, dégâts ×5, doubles/triples gardiens. Un Zaap rouge facultatif apparaît dans 10 % des zones : variante maudite de la même zone, gardiens PV ×2,5, dégâts ×1,8, Dofus ×3.
 - Chaque boss a 5 % de chance de laisser 1 Ogrine personnelle. Monnaie et apparats sont permanents, sauvegardés avec le compte. La boutique propose 36 apparats à 5 Ogrines. L’icône originale de la monnaie manque : son nom est affiché en texte.
@@ -135,7 +136,7 @@ l'encyclopédie. Les réglages d'attaque automatique et de smart cast sont mémo
   Les niveaux réels des pièces de panoplie sont conservés. Les anciens objets hors panoplie gardent leur palier adapté au fan game. Deux icônes originales indisponibles sont listées dans
   [ASSETS_PANOPLIES_MANQUANTS.md](docs/ASSETS_PANOPLIES_MANQUANTS.md), sans visuel inventé.
 - Tout monstre ennemi possède **3 %** de chance de donner un équipement permanent.
-  Tout boss possède en plus **3 %** de chance de donner un Dofus : aucun Dofus dans les coffres.
+  Tout boss possède en plus **3 %** de chance de donner un Dofus.
   Les drops sont conservés dès réception, y compris si vous quittez ensuite la run.
 - Une fin de run donne aussi **un équipement garanti du palier atteint**, sans Dofus.
   Les kamas vont toujours à la bourse de talents.
@@ -173,7 +174,9 @@ shared/   Types, constantes et DONNÉES de jeu, utilisés par le client et le se
   src/data/spells.ts     sorts (dégâts, portée, cooldown, projectile, zone, effets)
   src/data/classes.ts    classes (stats + 4 sorts)
   src/data/monsters.ts   monstres et boss (stats, comportement, coût de spawn)
-  src/data/items.ts      bonus de stats de run et prix des coffres
+  src/data/items.ts      bonus de statistiques de run et raretés
+  src/data/run-progression.ts XP, choix de niveau et améliorations temporaires
+  src/data/spell-upgrades.ts cinq paliers permanents et migration
   src/data/equipment.ts  catalogue permanent, drops, piles et fusion
   src/difficulty.ts      courbe de difficulté
   src/map.ts             génération de la carte (par graine) et collisions
@@ -181,7 +184,8 @@ shared/   Types, constantes et DONNÉES de jeu, utilisés par le client et le se
 server/   Serveur autoritaire Node + Colyseus
   src/rooms/GameRoom.ts  salle = une partie, code court, messages réseau
   src/state.ts           état synchronisé vers les clients
-  src/game/Simulation.ts joueurs, sorts, projectiles, dégâts, coffres, Zaap et zones
+  src/game/Simulation.ts joueurs, sorts, projectiles, dégâts, défis, Zaap et zones
+  src/game/RunExperience.ts particules, XP commune et aspiration des boss
   src/game/monsters.ts   IA des monstres
   src/game/director.ts   spawn des vagues
 client/   Vite + TypeScript + Phaser 3
@@ -216,7 +220,7 @@ Tout se passe dans `shared/src/data/`, sans toucher à la logique :
 - **Monstre** (`monsters.ts`) : stats, comportement (`melee`, `erratic`, `charger`, `ranged`),
   coût et difficulté minimale d'apparition ; `boss: true` pour un gardien de Zaap.
 - **Région** (`zones.ts`) : gardien, population, sols, décors et couleurs de mini-carte.
-- **Bonus de run** (`items.ts`) : une liste de gains de stats pour un coffre ou le marchand.
+- **Bonus de run** (`items.ts`) : gains de statistiques proposés lors des niveaux d'XP.
 - **Équipement permanent** (`equipment.ts`) : type, palier et stats parfaites ; ajouter son
   vrai visuel avec `node tools/extract-item-icons.mjs` (installation Retro + Java/JPEXS).
 
@@ -248,11 +252,10 @@ Dans Équipement, améliorez une copie ou recyclez un doublon. Les fusions de di
 copies restent disponibles ; les Dofus inédits se découvrent sur boss à 3 %
 (6 % pour l'Enutrof grâce à sa prospection).
 
-Après chaque gardien, choisissez l'une des trois bénédictions de stats de run.
+Après chaque gardien, récupérez l'XP de l'arène puis choisissez les améliorations des niveaux obtenus.
 Les charges ont des annonces au sol ; le dash offre 120 ms d'esquive.
-Entre deux zones, une halte marchande arrête le temps et la difficulté : aucun
-monstre ni coffre, six offres personnelles, un reroll gratuit, puis départ lorsque
-tous les joueurs ont confirmé « Prêt ».
+Entre deux zones, une halte arrête le temps et la difficulté : choisissez la route puis
+confirmez « Prêt ». Les achats de bonus en partie et les coffres payants sont supprimés.
 
 [Commandes, coûts et vérifications des prototypes](docs/PROTOTYPES_GAMEPLAY.md).
 

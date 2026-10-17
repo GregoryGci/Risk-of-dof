@@ -56,7 +56,7 @@ test('Cauchemar : double/triple gardiens réels, annonce, positions distinctes e
     for(const b of bosses)assert.equal(b.lootMultiplier,1); // 3 % de Dofus par boss, aucun multiplicateur caché.
     sim.addPlayer('q','Q','iop');const q=sim.players.get('q')!;sim.damagePlayer(q,1e6);assert.equal(q.state.alive,false);state.zaapCharge=1;
     for(const boss of bosses.slice(0,-1)){sim.damageMonster(boss,1e9,p.id);sim.update(1/30);assert.equal(state.zaapState,ZAAP_CHARGING);assert.equal(q.state.alive,false);}
-    sim.damageMonster(bosses.at(-1)!,1e9,p.id);sim.update(1/30);assert.equal(state.zaapState,ZAAP_READY);assert.equal(q.state.alive,true);assert.equal(p.state.bossKills,bosses.length);
+    sim.damageMonster(bosses.at(-1)!,1e9,p.id);for(let tick=0;tick<45;tick++)sim.update(1/30);sim.update(1/30);assert.equal(state.zaapState,ZAAP_READY);assert.equal(q.state.alive,true);assert.equal(p.state.bossKills,bosses.length);
   }
   for(const mode of [0,1,2])assert.equal(encounter(3,mode).bosses.length,1);
 });

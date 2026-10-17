@@ -16,7 +16,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 3,
     minDifficulty: 1,
     weight: 3,
-    kamas: [6, 10],
   },
   tofu: {
     id: 'tofu',
@@ -30,7 +29,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 1,
     minDifficulty: 1,
     weight: 3,
-    kamas: [2, 4],
   },
   arakne: {
     id: 'arakne',
@@ -44,7 +42,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 1.5,
     minDifficulty: 1.2,
     weight: 2,
-    kamas: [3, 5],
   },
   tournesol: {
     id: 'tournesol',
@@ -58,51 +55,50 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 4,
     minDifficulty: 1.5,
     weight: 1.5,
-    kamas: [8, 12],
   },
   boufton: {
     id:'boufton',name:'Boufton Blanc',color:0xe3ded0,hp:20,speed:4.2,radius:.3,
-    melee:{damage:4,range:.8,cooldown:1},behavior:{type:'melee'},cost:1,minDifficulty:1,weight:2,kamas:[2,4],
+    melee:{damage:4,range:.8,cooldown:1},behavior:{type:'melee'},cost:1,minDifficulty:1,weight:2,
   },
   pissenlit: {
     id:'pissenlit',name:'Pissenlit Diabolique',color:0xe4c955,hp:20,speed:3.6,radius:.3,
-    melee:{damage:4,range:.8,cooldown:1.1},behavior:{type:'erratic'},cost:1,minDifficulty:1,weight:3,kamas:[2,4],
+    melee:{damage:4,range:.8,cooldown:1.1},behavior:{type:'erratic'},cost:1,minDifficulty:1,weight:3,
   },
   rose_demoniaque: {
     id:'rose_demoniaque',name:'Rose Démoniaque',color:0xde5573,hp:32,speed:3.1,radius:.35,
-    melee:{damage:7,range:.9,cooldown:1.3},behavior:{type:'melee'},cost:2,minDifficulty:1,weight:2,kamas:[4,7],
+    melee:{damage:7,range:.9,cooldown:1.3},behavior:{type:'melee'},cost:2,minDifficulty:1,weight:2,
   },
   scarafeuille_vert: {
     id:'scarafeuille_vert',name:'Scarafeuille Vert',color:0x7cac43,hp:27,speed:4,radius:.35,
-    melee:{damage:4,range:.8,cooldown:1.1},behavior:{type:'erratic'},cost:1.2,minDifficulty:1,weight:3,kamas:[3,5],
+    melee:{damage:4,range:.8,cooldown:1.1},behavior:{type:'erratic'},cost:1.2,minDifficulty:1,weight:3,
   },
   scarafeuille_rouge: {
     id:'scarafeuille_rouge',name:'Scarafeuille Rouge',color:0xd86c43,hp:45,speed:2.8,radius:.42,
-    melee:{damage:8,range:1,cooldown:1.3},behavior:{type:'charger',chargeRange:5,windup:.75,chargeSpeed:8,chargeDuration:.65,chargeCooldown:5,chargeDamage:12},cost:3,minDifficulty:1,weight:2,kamas:[6,10],
+    melee:{damage:8,range:1,cooldown:1.3},behavior:{type:'charger',chargeRange:5,windup:.75,chargeSpeed:8,chargeDuration:.65,chargeCooldown:5,chargeDamage:12},cost:3,minDifficulty:1,weight:2,
   },
   scarafeuille_bleu: {
     id:'scarafeuille_bleu',name:'Scarafeuille Bleu',color:0x5aa9d2,hp:34,speed:2.3,radius:.4,
-    melee:{damage:5,range:.9,cooldown:1.4},behavior:{type:'ranged',spell:'jet_scara',preferredRange:6},cost:4,minDifficulty:1.5,weight:1.5,kamas:[8,12],
+    melee:{damage:5,range:.9,cooldown:1.4},behavior:{type:'ranged',spell:'jet_scara',preferredRange:6},cost:4,minDifficulty:1.5,weight:1.5,
   },
   craqueboule: {
     id:'craqueboule',name:'Craqueboule',color:0x9ba3ad,hp:30,speed:3.5,radius:.38,
-    melee:{damage:5,range:.9,cooldown:1.2},behavior:{type:'melee'},cost:1.5,minDifficulty:1,weight:3,kamas:[3,5],
+    melee:{damage:5,range:.9,cooldown:1.2},behavior:{type:'melee'},cost:1.5,minDifficulty:1,weight:3,
   },
   craqueleur: {
     id:'craqueleur',name:'Craqueleur',color:0x879099,hp:65,speed:2.1,radius:.6,
-    melee:{damage:12,range:1.3,cooldown:1.6},behavior:{type:'charger',chargeRange:6,windup:1,chargeSpeed:7,chargeDuration:.75,chargeCooldown:6,chargeDamage:18},cost:4,minDifficulty:1,weight:2,kamas:[8,12],
+    melee:{damage:12,range:1.3,cooldown:1.6},behavior:{type:'charger',chargeRange:6,windup:1,chargeSpeed:7,chargeDuration:.75,chargeCooldown:6,chargeDamage:18},cost:4,minDifficulty:1,weight:2,
   },
   bwork: {
     id:'bwork',name:'Bwork Guerrier',color:0x81915a,hp:29,speed:3.4,radius:.4,
-    melee:{damage:5,range:1,cooldown:1.2},behavior:{type:'melee'},cost:1.5,minDifficulty:1,weight:3,kamas:[3,5],
+    melee:{damage:5,range:1,cooldown:1.2},behavior:{type:'melee'},cost:1.5,minDifficulty:1,weight:3,
   },
   bwork_archer: {
     id:'bwork_archer',name:'Bwork Archer',color:0xa79856,hp:27,speed:2.6,radius:.38,
-    melee:{damage:4,range:.9,cooldown:1.4},behavior:{type:'ranged',spell:'fleche_bwork',preferredRange:7},cost:3,minDifficulty:1,weight:2,kamas:[6,9],
+    melee:{damage:4,range:.9,cooldown:1.4},behavior:{type:'ranged',spell:'fleche_bwork',preferredRange:7},cost:3,minDifficulty:1,weight:2,
   },
   bwork_mage: {
     id:'bwork_mage',name:'Bwork Mage',color:0x796da6,hp:37,speed:2.2,radius:.38,
-    melee:{damage:5,range:.9,cooldown:1.5},behavior:{type:'ranged',spell:'etincelle_bwork',preferredRange:6},cost:4,minDifficulty:1.5,weight:1,kamas:[8,12],
+    melee:{damage:5,range:.9,cooldown:1.5},behavior:{type:'ranged',spell:'etincelle_bwork',preferredRange:6},cost:4,minDifficulty:1.5,weight:1,
   },
   // --- Boss ----------------------------------------------------------------
   bouftou_royal: {
@@ -120,7 +116,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 999,
     minDifficulty: 999,
     weight: 0,
-    kamas: [120, 160],
   },
   tournesol_affame: {
     id: 'tournesol_affame',
@@ -137,7 +132,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 999,
     minDifficulty: 999,
     weight: 0,
-    kamas: [160, 210],
   },
   scarabosse_dore: {
     id: 'scarabosse_dore',
@@ -154,7 +148,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 999,
     minDifficulty: 999,
     weight: 0,
-    kamas: [200, 260],
   },
   craqueleur_legendaire: {
     id: 'craqueleur_legendaire',
@@ -170,7 +163,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 999,
     minDifficulty: 999,
     weight: 0,
-    kamas: [260, 340],
   },
   bworkette: {
     id: 'bworkette',
@@ -187,7 +179,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 999,
     minDifficulty: 999,
     weight: 0,
-    kamas: [320, 420],
   },
 
   // --- Invocations alliées du Sadida ----------------------------------------
@@ -204,7 +195,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 0,
     minDifficulty: 999,
     weight: 0,
-    kamas: [0, 0],
   },
   poupee_bloqueuse: {
     id: 'poupee_bloqueuse',
@@ -220,7 +210,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 0,
     minDifficulty: 999,
     weight: 0,
-    kamas: [0, 0],
   },
   poupee_gonflable: {
     id: 'poupee_gonflable',
@@ -235,7 +224,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 0,
     minDifficulty: 999,
     weight: 0,
-    kamas: [0, 0],
   },
   // Invocations de l'Osamodas et de l'Enutrof.
   osa_tofu: {
@@ -252,7 +240,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 0,
     minDifficulty: 999,
     weight: 0,
-    kamas: [0, 0],
   },
   osa_bouftou: {
     id: 'osa_bouftou',
@@ -268,7 +255,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 0,
     minDifficulty: 999,
     weight: 0,
-    kamas: [0, 0],
   },
   osa_tofu_meute: {
     id: 'osa_tofu_meute',
@@ -284,7 +270,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 0,
     minDifficulty: 999,
     weight: 0,
-    kamas: [0, 0],
   },
   osa_bouftou_tank: {
     id: 'osa_bouftou_tank',
@@ -300,7 +285,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 0,
     minDifficulty: 999,
     weight: 0,
-    kamas: [0, 0],
   },
   osa_dragonnet: {
     id: 'osa_dragonnet',
@@ -316,7 +300,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 0,
     minDifficulty: 999,
     weight: 0,
-    kamas: [0, 0],
   },
   coffre_anime: {
     id: 'coffre_anime',
@@ -332,7 +315,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 0,
     minDifficulty: 999,
     weight: 0,
-    kamas: [0, 0],
   },
   // --- Entraînement ----------------------------------------------------------
   epouvantail: {
@@ -347,7 +329,6 @@ export const MONSTERS: Record<string, MonsterDef> = {
     cost: 0,
     minDifficulty: 999,
     weight: 0,
-    kamas: [0, 0],
   },
 };
 
@@ -357,8 +338,10 @@ for(const [id,spec] of Object.entries(DUNGEON_MONSTERS)) {
     hp:spec.boss?1000:base.hp,melee:{...base.melee,damage:spec.damage??base.melee.damage},
     summon:spec.boss&&spec.summon?{monster:spec.summon,count:2,interval:id==='milimilou'?14:12}:undefined,
     behavior:spec.stationary?{type:'ranged',spell:'boule_bworkette',preferredRange:7}:base.behavior,
-    cost:spec.boss?999:base.cost,minDifficulty:spec.boss?999:1,weight:spec.boss?0:1,kamas:spec.boss?[120,200]:base.kamas};
+    cost:spec.boss?999:base.cost,minDifficulty:spec.boss?999:1,weight:spec.boss?0:1,};
 }
+MONSTERS.arbre_sadida={...MONSTERS.poupee_bloqueuse,id:'arbre_sadida',name:'Arbre du Sadida',speed:0,hp:240,melee:{damage:0,range:0,cooldown:99},behavior:{type:'melee'},taunt:true};
+
 export function getMonster(id: string): MonsterDef {
   const m = MONSTERS[id];
   if (!m) throw new Error(`Monstre inconnu : ${id}`);

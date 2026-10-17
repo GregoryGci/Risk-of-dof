@@ -14,3 +14,15 @@ export const CLASS_MECHANICS:Record<string,ClassMechanicDef>={
   pandawa:{name:'Porter / jeter',hint:'Karcham porte un ennemi ordinaire ; relancez-le pour le jeter. Élites et boss ne peuvent pas être portés. F alterne sobre et ivre.',action:'Changer d’état',cap:1,color:0xc5c38e},
 };
 export interface MechanicView {name:string;value:number;max:number;readyIn:number;status:string;choices:string[]}
+
+Object.assign(CLASS_MECHANICS, {
+  iop:{name:'Enchaînement',hint:'Deux attaques touchées préparent un troisième coup plus large et puissant avec un bref bouclier. Bond protège l’engagement.',action:'',cap:2,color:0xf1a64a},
+  eniripsa:{name:'Résonance',hint:'Trois attaques touchées renforcent la prochaine compétence. Les impulsions blessent les ennemis et soignent les alliés ensemble.',action:'Libérer les mots',cap:3,color:0xf6a2d2},
+  sacrieur:{name:'Réserve de sang',hint:'Attaquer au contact et subir des dégâts alimentent le sang. Assaut ou F en dépensent pour soigner ; Punition dépense tout pour frapper.',action:'Transfusion',cap:100,color:0xe66d70},
+  sadida:{name:'Réseau infecté',hint:'Les infections se cumulent par Sadida, se propagent à la mort et éclatent avec Ronces Multiples. L’Arbre attire et contamine.',action:'',cap:12,color:0x94c969},
+  ecaflip:{name:'Main préparée',hint:'Chaque auto touchée tire une carte, trois maximum. Griffe joue la première, Rekop joue tout. Odorat ou F remplacent la première carte.',action:'Défausser',cap:3,color:0xe5be68},
+  osamodas:{name:'Ordres bestiaux',hint:'Deux Fouets touchés déclenchent un assaut de la troupe. Relancez une invocation déjà présente pour lui donner un ordre sans la remplacer.',action:'Rallier la meute',cap:4,color:0x83d2c9},
+  enutrof:{name:'Filons de combat',hint:'Deux autos touchées révèlent une pépite, même sur un boss. Ramassez-la, laissez le coffre la prendre ou utilisez F. Les pépites renforcent tirs et ultime.',action:'Ramasser',cap:6,color:0xe6ca7b},
+  xelor:{name:'Écho temporel',hint:'Trois attaques touchées préparent un écho de la prochaine compétence offensive. Fuite laisse une empreinte : relancez pour revenir sous trois secondes.',action:'',cap:3,color:0xb5adef},
+  pandawa:{name:'Percussion',hint:'Le troisième coup rassemble. Portez puis jetez avec Karcham ; les boss et élites reçoivent une percussion à la place. Pandatak exploite l’ouverture.',action:'',cap:2,color:0xc5c38e},
+});

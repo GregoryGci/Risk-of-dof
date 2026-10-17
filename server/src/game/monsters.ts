@@ -242,6 +242,7 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
     sim.removeMonster(m.id);
     return;
   }
+  if(m.rogueliteSummon){sim.roguelite.updateSummon(m,owner,dt);return;}
   if(m.allyBaseHp){const max=Math.round(m.def.id==='coffre_anime'?owner.state.maxHp:m.allyBaseHp*(1+owner.stats.maxHp/owner.def.maxHp));if(max!==s.maxHp){s.hp=s.hp/Math.max(1,s.maxHp)*max;s.maxHp=max;}}
   if(owner.stats.regen>0)s.hp=Math.min(s.maxHp,s.hp+owner.stats.regen*dt*s.maxHp/Math.max(1,owner.state.maxHp));
   if (m.push) {

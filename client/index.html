@@ -54,7 +54,7 @@
             <div class="character-actions"><button id="btn-equipment" class="character-action"><span>◈</span><div><b>Équipement</b><small id="equipment-summary"></small></div><span>→</span></button><button id="btn-talents" class="character-action"><span>✦</span><div><b>Sorts et deck</b><small id="talents-summary"></small></div><span>→</span></button></div>
             <button id="btn-encyclopedia" class="collection-link">Encyclopédie des équipements <span id="collection-summary"></span><span>→</span></button>
           </div>
-          <div id="view-settings" class="home-view-content hidden"><p class="view-intro">Vos préférences vous suivent dans chaque aventure.</p><div id="home-settings"></div><h3 class="setup-label">À portée de main</h3><div class="home-controls"><div><kbd>ZQSD</kbd><span>Se déplacer · WASD / flèches</span></div><div><kbd>Souris</kbd><span>Viser · clics gauche et droit : sorts</span></div><div><kbd>Espace / R</kbd><span>Sorts équipés · R : ultime</span></div><div><kbd>Maj</kbd><span>Dash</span></div><div><kbd>E</kbd><span>Coffres · Zaap · marchand</span></div><div><kbd>Tab</kbd><span>Détails · pause en solo · options</span></div></div></div>
+          <div id="view-settings" class="home-view-content hidden"><p class="view-intro">Vos préférences vous suivent dans chaque aventure.</p><div id="home-settings"></div><h3 class="setup-label">À portée de main</h3><div class="home-controls"><div><kbd>ZQSD</kbd><span>Se déplacer · WASD / flèches</span></div><div><kbd>Souris</kbd><span>Visée facultative · sorts automatiques</span></div><div><kbd>F</kbd><span>Cri de l’Osamodas · Ivresse du Pandawa</span></div><div><kbd>Maj</kbd><span>Dash</span></div><div><kbd>E</kbd><span>Défis · Zaap · halte</span></div><div><kbd>Tab</kbd><span>Détails · pause en solo · options</span></div></div></div>
           <p id="menu-error" class="error" role="status" aria-live="polite"></p>
         </section>
       </main>
@@ -114,11 +114,11 @@
         <div id="boss-roster"></div>
       </div>
 
-      <!-- Haut droite : kamas + victimes -->
-      <!-- Haut droite : kamas, victimes, mini-carte -->
+      <!-- Haut droite : XP + victimes -->
+      <!-- Haut droite : XP, victimes, mini-carte -->
       <div id="hud-right">
       <div id="hud-stats" class="panel small">
-        <div class="stat"><span class="kama-icon"></span><span id="kamas">0</span></div>
+        <div id="run-xp" role="progressbar" aria-label="Expérience de l’équipe" aria-valuemin="0" aria-valuemax="100"><span id="run-level">Niveau 1</span><div class="run-xp-track"><i id="run-xp-fill"></i></div><small id="run-xp-text">0 / 12 XP</small></div>
         <div class="stat"><span class="skull-icon">☠</span><span id="kills">0</span></div>
       </div>
 
@@ -159,7 +159,7 @@
 
       <!-- Infobulle des sorts -->
       <div id="spell-tip" class="panel hidden"></div>
-      <div id="boon-choices" class="panel boon-choices hidden" role="region" aria-label="Bénédiction du gardien"></div>
+      <div id="boon-choices" class="panel boon-choices hidden" role="region" aria-label="Choix d’amélioration"></div>
 
       <!-- Détails de la partie (Tab) -->
       <div id="details" class="overlay hidden">
@@ -176,14 +176,14 @@
         </div>
       </div>
 
-      <!-- Marchand -->
-      <div id="shop" class="overlay hidden">
-        <div class="panel details-panel shop-panel">
+      <!-- Halte entre zones -->
+      <div id="rest" class="overlay hidden">
+        <div class="panel details-panel rest-panel">
           <div class="details-head">
-            <h2>Marchand</h2>
-            <button id="shop-close" class="btn">Fermer</button>
+            <h2>Halte de l’équipe</h2>
+            <button id="rest-close" class="btn">Fermer</button>
           </div>
-          <div id="shop-body"></div>
+          <div id="rest-body"></div>
         </div>
       </div>
 

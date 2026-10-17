@@ -1,7 +1,6 @@
-// Bonus de run : les coffres et le marchand donnent directement des statistiques.
+// Bonus de run : les niveaux donnent directement des statistiques.
 // Les compteurs internes permettent de recalculer leur total, sans inventaire d'objets.
 import {affinityStats} from './affinities.ts';
-import {getMode,NIGHTMARE_DIFFICULTY_BONUS} from '../difficulty.ts';
 import {runVitalityScale,statCaps,type RunStatContext} from '../combat-balance.ts';
 import type { RunBonusDef, BonusRarity, StatKey } from '../types.ts';
 
@@ -31,7 +30,6 @@ export const RUN_BONUS_BASES: Record<string, ItemBase> = {
   impact: { name: 'Impact', description: 'Dégâts critiques', color: 0xb4855d, stats: { critDamage: 0.18 } },
   protection: { name: 'Robustesse', description: 'Armure', color: 0x879074, stats: { armor: 0.7 } },
   recuperation_victoire: { name: 'Second souffle', description: 'PV par victoire', color: 0x7d9d8a, stats: { killHeal: 1.5 } },
-  fortune: { name: 'Fortune', description: 'Kamas', color: 0xd1ad64, stats: { kamas: 0.1 } },
   vol_de_vie: { name: 'Vol de vie', description: 'Auto-attaques', color:0xaa615e,stats:{lifesteal:.003} },
   vampirisme: { name: 'Vampirisme', description: 'Compétences', color: 0xaa615e, stats: { vampirism: 0.006 } },
   chance: { name: 'Chance', description: 'Meilleures qualités de bonus de run', color: 0x7b9854, stats: { luck: 0.035 } },
@@ -55,8 +53,10 @@ export function statText(key: StatKey, value: number): string {
       return `-${Math.round((1 - Math.pow(0.92, value)) * 100)} % de dégâts subis`;
     case 'killHeal':
       return `+${Math.round(value*10)/10} PV par monstre vaincu`;
-    case 'multishot':
-      return `+${Math.ceil(value)} projectile${value > 1 ? 's' : ''} à ${Math.round(value / Math.ceil(value) * 100)} % des dégâts chacun (cumul sans limite)`;
+    case 'multishot': {
+      const count=Math.min(2,Math.ceil(value));
+      return `+${count} attaque${count > 1 ? 's' : ''} à ${Math.round(Math.min(1,value/count)*100)} % des dégâts chacune (maximum 2 attaques supplémentaires)`;
+    }
     case 'range':
       return `+${Math.round(value * 10) / 10} de portée`;
     case 'damage':
@@ -73,8 +73,6 @@ export function statText(key: StatKey, value: number): string {
       return `+${pct(value)} de critiques`;
     case 'critDamage':
       return `+${pct(value)} de dégâts critiques`;
-    case 'kamas':
-      return `+${pct(value)} de kamas`;
     case 'lifesteal':
       return `+${pct(value)} de vol de vie (auto-attaques)`;
     case 'vampirism':return `+${pct(value)} de vampirisme (compétences)`;
@@ -116,7 +114,7 @@ export function runBonusStats(item:RunBonusDef,context:RunStatContext={}):Partia
 }
 export function runBonusText(item:RunBonusDef,context:RunStatContext={}):string{return Object.entries(runBonusStats(item,context)).map(([k,v])=>statText(k as StatKey,v)).join(' · ');}
 
-/** Tire la rareté d'un objet de coffre ; la chance (`luck`) augmente les rares et les épiques. */
+/** Tire la rareté d’une proposition de statistiques ; la chance (`luck`) augmente les rares et les épiques. */
 export function rollRarity(luck: number, random = Math.random): BonusRarity {
   const r = random();
   const legendary=Math.min(.10,.005+Math.max(0,luck)*.03),epic=Math.min(.30,.03+Math.max(0,luck)*.4),rare=Math.min(.50,.15+Math.max(0,luck)*.8);
@@ -152,7 +150,7 @@ export function formatRunBonuses(inv: Map<string, number>): string {
 }
 
 export function emptyStats(): Record<StatKey, number> {
-  return { maxHp: 0, damage: 0, haste: 0, attackSpeed: 0, speed: 0, regen: 0, crit: 0, critDamage: 0, armor: 0, killHeal: 0, kamas: 0, lifesteal: 0,vampirism:0, luck: 0, multishot: 0, range: 0, revive: 0,bounce:0,secondaryCharge:0,flatDamage:0 };
+  return { maxHp: 0, damage: 0, haste: 0, attackSpeed: 0, speed: 0, regen: 0, crit: 0, critDamage: 0, armor: 0, killHeal: 0, lifesteal: 0,vampirism:0, luck: 0, multishot: 0, range: 0, revive: 0,bounce:0,secondaryCharge:0,flatDamage:0 };
 }
 
 /** Somme des bonus de tous les objets possédés. */
@@ -165,18 +163,4 @@ export function sumRunStats(inv: Map<string, number>,context:RunStatContext={}):
   for(const [key,value]of Object.entries(affinityStats(inv)))total[key as StatKey]+=value;
   total.maxHp=Math.round(total.maxHp*runVitalityScale(context));
   return total;
-}
-
-/**
- * Prix d'un coffre : augmente avec la difficulté, comme dans Risk of Rain. Le bonus de départ du
- * Cauchemar n'y compte pas, et chaque mode a son coefficient de prix (voir GAME_MODES).
- */
-export function chestCost(difficulty: number, mode = 0): number {
-  const m = getMode(mode);
-  return Math.round(90 * Math.pow(Math.max(1, difficulty - (m.nightmare ? NIGHTMARE_DIFFICULTY_BONUS : 0)), 1.35) * m.chestPrice);
-}
-
-/** Prix d'un objet chez le marchand. */
-export function merchantPrice(item: RunBonusDef, difficulty: number, mode = 0): number {
-  return Math.round(chestCost(difficulty, mode) * { commun: 2, rare: 4, epique: 8,legendaire:12 }[item.rarity]);
 }

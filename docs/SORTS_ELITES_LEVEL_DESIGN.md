@@ -1,6 +1,6 @@
 # Sorts, bénédictions et level design
 
-Version du 15 octobre 2026. Le choix de départ est remplacé par des récompenses sur les élites.
+Version historique du 15 octobre 2026. Les anciennes évolutions permanentes et les récompenses en kamas sont remplacées par [la progression XP et les cinq paliers](REFONTE_XP.md).
 
 ## Changements jouables
 

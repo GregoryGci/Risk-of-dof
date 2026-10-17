@@ -59,8 +59,3 @@ test('historique : données serveur, cause, compteurs et migration sans doublons
   const account=migrateAccount({version:3,history:[summary,null,{bad:true}]});assert.equal(account.history.length,1);assert.deepEqual(migrateAccount(account),account);
   assert.ok(compareRuns({...summary,zone:4},summary)<0);assert.equal(sanitizeRunSummary({...summary,startedAt:'bad'}),undefined);
 });
-test('Eniripsa : un vrai sort de soin charge Mots liés et compte les soins effectifs',()=>{
-  const state=new GameState(),sim=new Simulation(state,()=>{});sim.addPlayer('p','Test','eniripsa');sim.start();const p=sim.players.get('p')!;
-  p.state.hp=10;sim.playerCast('p',{slot:1,tx:p.state.x,ty:p.state.y});
-  assert.ok(sim.mechanics.get(p).charge>0);assert.ok(p.state.healDone>=28&&p.state.healDone<=36);assert.ok(p.state.hp>10);
-});

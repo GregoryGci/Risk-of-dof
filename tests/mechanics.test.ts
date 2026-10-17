@@ -34,16 +34,14 @@ test('forge : migration, amélioration d’une copie, recyclage protégé et cr�
   const before=account.fragments;assert.equal(account.creditRun(reward),true);assert.equal(account.fragments,before+5);
   assert.equal(account.creditRun(reward),false);assert.equal(account.claimFragments(reward.forgeGrants),0);
 });
-test('fragments persistants par minute et boss, puis une seule bénédiction par choix',()=>{
-  const {sim,p,state}=setup('iop');p.def={...p.def,maxHp:100000};p.state.maxHp=p.state.hp=100000;
+test('Fragments persistants et choix de niveau personnels après aspiration du boss',()=>{
+  const {sim,p,state}=setup('iop');(sim as any).director.update=()=>{};p.def={...p.def,maxHp:100000};p.state.maxHp=p.state.hp=100000;
   advance(sim,60.2);assert.equal(JSON.parse(p.state.forgeGrants).length,1);
-  const boss=sim.spawnMonster(getMonster('bouftou_royal'),p.state.x+2,p.state.y,1,1,1);sim.damageMonster(boss,1e6,p.id);
-  assert.equal(JSON.parse(p.state.forgeGrants).length,2);assert.equal(JSON.parse(p.state.boonChoices).length,3);
-  assert.equal(new Set(JSON.parse(p.state.boonChoices).map((id:string)=>id.split('.')[0])).size,3);
-  const before=[...p.inventory.values()].reduce((a,b)=>a+b,0);sim.chooseBoon(p.id,5);assert.equal(JSON.parse(p.state.boonChoices).length,3);
-  sim.chooseBoon(p.id,0);sim.chooseBoon(p.id,0);assert.equal([...p.inventory.values()].reduce((a,b)=>a+b,0),before+1);
+  const boss=sim.spawnMonster(getMonster('bouftou_royal'),p.state.x+2,p.state.y,1,1,1);sim.damageMonster(boss,1e6,p.id);assert.equal(JSON.parse(p.state.forgeGrants).length,2);assert.equal(p.state.boonChoices,'[]');advance(sim,1.5);
+  assert.equal(JSON.parse(p.state.boonChoices).length,3);const pending=p.state.pendingLevels,revision=p.state.choiceRevision;sim.chooseBoon(p.id,5,revision);assert.equal(p.state.pendingLevels,pending);sim.chooseBoon(p.id,0,revision);sim.chooseBoon(p.id,0,revision);assert.equal(p.state.pendingLevels,pending-1);
   sim.damagePlayer(p,1e9);assert.equal(JSON.parse(p.state.rewards).forgeGrants.length,2);
 });
+
 test('entrées réseau : ack après simulation, ancienne séquence ignorée, epoch au déplacement forcé',()=>{
   const {sim,p}=setup('cra');sim.setInput(p.id,{seq:2,dx:1,dy:0,dir:0});assert.equal(p.state.inputSeq,0);
   sim.update(1/30);assert.equal(p.state.inputSeq,2);assert.ok(p.state.positionTime>0);
@@ -62,102 +60,8 @@ test('dash : fenêtre de 120 ms, dégâts ensuite, aucune esquive pendant la pau
   advance(sim,.14);sim.damagePlayer(p,20);assert.ok(p.state.hp<hp);
   state.paused=true;p.dashReadyAt=0;const previous=p.dodgeUntil;sim.playerDash(p.id,{dx:1,dy:0});assert.equal(p.dodgeUntil,previous);
 });
-test('Crâ : flèche chargée traverse deux cibles et consomme la charge',()=>{
-  const {sim,p,target}=setup('cra');const second=sim.spawnMonster(getMonster('epouvantail'),p.state.x+3,p.state.y,1,1,1);
-  advance(sim,1.6);assert.equal(sim.mechanics.get(p).charge,100);cast(sim,p,0,second.state.x,second.state.y);assert.equal(sim.mechanics.get(p).charge,0);
-  advance(sim,.3);assert.ok(target.state.hp<target.state.maxHp);assert.ok(second.state.hp<second.state.maxHp);
-});
-test('Iop : trois sorts préparent 3 % de bouclier par cible du quatrième, sans proc supplémentaire',()=>{
-  const {sim,p,target}=setup('iop');const second=sim.spawnMonster(getMonster('epouvantail'),target.state.x,target.state.y+1,1,1,1);
-  // L'attaque de base ne charge pas Bravoure : seuls les sorts comptent.
-  for(let i=0;i<4;i++)cast(sim,p,0);assert.equal(sim.mechanics.get(p).charge,0);assert.equal(p.state.shield,0);
-  for(let i=0;i<3;i++)cast(sim,p,1);assert.equal(sim.mechanics.get(p).charge,3);p.state.shield=0;
-  cast(sim,p,1);assert.equal(sim.mechanics.get(p).charge,0);assert.ok(second.state.hp<second.state.maxHp);assert.ok(Math.abs(p.state.shield-p.state.maxHp*.06)<.001);
-  const shield=p.state.shield;action(sim,p);assert.equal(p.state.shield,shield);
-  advance(sim,5.1);assert.equal(p.state.shield,0);
-});
-test('Eniripsa : soin charge un rebond offensif, procs de soin sans recharge en boucle',()=>{
-  const {sim,p}=setup('eniripsa');const second=sim.spawnMonster(getMonster('epouvantail'),p.state.x+2,p.state.y+1,1,1,1);
-  p.state.hp-=50;sim.healPlayer(p,40,p);assert.equal(sim.mechanics.get(p).charge,28);advance(sim,.3);
-  cast(sim,p,0);advance(sim,.25);assert.ok(second.state.hp<second.state.maxHp);assert.ok(sim.mechanics.get(p).charge<25);
-  const resource=sim.mechanics.get(p).charge;sim.healPlayer(p,100,p,false);assert.equal(sim.mechanics.get(p).charge,resource);
-});
-test('Sacrieur : coût volontaire, puissance, remboursement et plancher de PV',()=>{
-  const {sim,p}=setup('sacrieur'),hp=p.state.hp;action(sim,p);assert.ok(p.state.hp<hp);assert.ok(sim.mechanics.get(p).charge>0);
-  const boosted=sim.mechanics.beforeCast(p,getSpell('assaut'),2,p.state.x,p.state.y);assert.ok(boosted.mult>1);
-  const debt=sim.mechanics.get(p).charge;cast(sim,p,0);assert.ok(sim.mechanics.get(p).charge<debt);
-  p.state.hp=p.state.maxHp*.3;sim.mechanics.get(p).readyAt=0;action(sim,p);assert.equal(p.state.hp,p.state.maxHp*.3);
-});
-test('Sram : attaque à distance et piège sur la mort, pas sur les invocations/épouvantails',()=>{
-  const {sim,p,target}=setup('sram');target.state.x=p.state.x+6;cast(sim,p,0);advance(sim,.3);assert.ok(target.state.hp<target.state.maxHp);
-  const original=Math.random;try{Math.random=()=>0;
-    const enemy=sim.spawnMonster(getMonster('boufton'),p.state.x+3,p.state.y,1,1,1);sim.damageMonster(enemy,10000,p.id);
-    const trap=[...sim.grounds.values()][0];assert.equal(trap.state.spell,'piege_sournois');assert.equal(trap.state.x,enemy.state.x);assert.equal(trap.state.y,enemy.state.y);
-    const before=sim.grounds.size;sim.damageMonster(target,10000,p.id);const ally=sim.spawnMonster(getMonster('osa_tofu'),p.state.x,p.state.y,1,1,1);sim.damageMonster(ally,10000,p.id);assert.equal(sim.grounds.size,before);
-    for(let i=0;i<10;i++){const e=sim.spawnMonster(getMonster('boufton'),p.state.x+4,p.state.y+i*.1,1,1,1);sim.damageMonster(e,10000,p.id);}assert.equal(sim.grounds.size,3);
-  }finally{Math.random=original;}
-});
-test('Sadida : poison cumulable, +10 % sur les empoisonnés, propagation à la mort et éclosion',()=>{
-  const {sim,p}=setup('sadida');const target=sim.spawnMonster(getMonster('boufton'),p.state.x,p.state.y+3,1e3,0,1);target.def={...target.def,speed:0};
-  for(let i=0;i<4;i++){cast(sim,p,0,target.state.x,target.state.y);advance(sim,.5);}
-  assert.equal(target.poisonStacks,3,'trois doses au plus');
-  const hp=target.state.hp;sim.damageMonster(target,100,p.id);assert.equal(hp-target.state.hp,110);
-  const next=sim.spawnMonster(getMonster('boufton'),target.state.x+1,target.state.y,1e3,0,1);
-  sim.damageMonster(target,1e9,p.id);assert.equal(next.poisonStacks,3,'le poison passe au voisin');
-  const before=next.state.hp;action(sim,p);assert.ok(next.state.hp<before);assert.equal(next.poisonStacks,0);
-});
-test('Ecaflip : 25 % par auto touchée, cinq cartes distinctes et bonus selon le poker',()=>{
-  const {sim,p}=setup('ecaflip'),m=sim.mechanics.get(p),original=Math.random;
-  try{Math.random=()=>.3;cast(sim,p,0);advance(sim,.1);assert.equal(m.hand.length,0);
-    Math.random=()=>0;for(let i=0;i<4;i++){cast(sim,p,0);advance(sim,.1);}assert.equal(m.hand.length,4);assert.equal(new Set(m.hand).size,4);
-    cast(sim,p,0);advance(sim,.1);assert.equal(m.hand.length,0);assert.ok(p.buffs.some(b=>b.label==='Main : Quinte flush'));assert.equal(p.stats.damage,.9);
-  }finally{Math.random=original;}
-  assert.equal(getSpell(p.spells[1]).name,'Griffe Joueuse');assert.ok(getSpell('odorat').buff?.randomOne);action(sim,p);assert.equal(m.readyAt,0);
-});
-test('Féca : chaque glyphe traversé se réactive une fois par dash et reste en place',()=>{
-  const {sim,p,events}=setup('feca');cast(sim,p,1,p.state.x+1,p.state.y);cast(sim,p,1,p.state.x+2,p.state.y);
-  sim.playerDash(p.id,{dx:1,dy:0});advance(sim,.18);
-  assert.equal(events.filter(e=>e.type==='explode'&&e.message.spell==='glyphe_agressif').length,2);assert.equal(sim.grounds.size,2);assert.equal(p.state.shield,0);
-  p.dashReadyAt=0;sim.playerDash(p.id,{dx:-1,dy:0});advance(sim,.18);assert.equal(events.filter(e=>e.type==='explode'&&e.message.spell==='glyphe_agressif').length,4);
-  action(sim,p);assert.equal(sim.grounds.size,2);
-});
-test('Osamodas : Fouet marque, quatre invocations au plus et Cri sauvage',()=>{
-  const {sim,p,target}=setup('osamodas');cast(sim,p,1);cast(sim,p,2,p.state.x-1,p.state.y);cast(sim,p,0);
-  advance(sim,.1);assert.equal(sim.mechanics.get(p).target,target.id);const ally=[...sim.monsters.values()].find(m=>m.state.ally)!;assert.equal(sim.mechanics.allyTarget(ally)?.id,target.id);
-  assert.equal([...sim.monsters.values()].filter(m=>m.state.ally).length,3,'deux Tofus et un Bouftou');
-  cast(sim,p,1);cast(sim,p,3);assert.equal([...sim.monsters.values()].filter(m=>m.allyOwner===p.id).length,4);
-  action(sim,p);assert.ok((p.summonRoarUntil??0)>sim.now);
-});
-test('Enutrof : coffre aux PV max, intercepte les dégâts puis laisse passer le surplus',()=>{
-  const {sim,p}=setup('enutrof');cast(sim,p,2);const chest=[...sim.monsters.values()].find(m=>m.state.ally)!;assert.equal(chest.state.maxHp,p.state.maxHp);assert.equal(chest.def.taunt,false);
-  const hp=p.state.hp;sim.damagePlayer(p,30);assert.equal(p.state.hp,hp);assert.equal(chest.state.hp,p.state.maxHp-30);
-  sim.damagePlayer(p,chest.state.hp+20);assert.equal(sim.monsters.has(chest.id),false);assert.equal(p.state.hp,hp-20);
-  const random=makeRng(123);let gear=0,dofus=0;for(let i=0;i<50000;i++)for(const drop of monsterEquipmentDrops(9,true,random,2)){if(drop.base.startsWith('dofus_'))dofus++;else gear++;}
-  assert.ok(gear>2700&&gear<3300);assert.ok(dofus>2700&&dofus<3300);
-});
-test('Xélor : trois compétences réduisent les recharges restantes, pas de duplication du sort',()=>{
-  const {sim,p,events}=setup('xelor');cast(sim,p,0);assert.equal(sim.mechanics.get(p).charge,0);cast(sim,p,1);cast(sim,p,2);cast(sim,p,3);assert.equal(sim.mechanics.get(p).charge,3);
-  const before=[...p.readyAt];p.dashReadyAt=sim.now+2;action(sim,p);assert.equal(sim.mechanics.get(p).charge,0);
-  for(let i=1;i<4;i++)assert.ok(Math.abs(p.readyAt[i]-before[i]*.6)<1e-9);assert.equal(p.dashReadyAt,1.2);
-  const count=events.filter(e=>e.type==='cast').length;advance(sim,.4);assert.equal(events.filter(e=>e.type==='cast').length,count);
-});
-test('Pandawa : porter/jeter, boss non portable, sobriété retire le buff et mort libère la cible',()=>{
-  const {sim,p,target}=setup('pandawa');cast(sim,p,1);assert.equal(target.state.carried,true);
-  const heldHp=target.state.hp;sim.setInput(p.id,{dx:0,dy:0,dir:0,autoAttack:true});advance(sim,.3);assert.equal(target.state.hp,heldHp);p.autoAttack=false;
-  cast(sim,p,1,p.state.x+5,p.state.y);assert.equal(target.state.carried,false);assert.ok(target.state.x>p.state.x+4);
-  const boss=sim.spawnMonster(getMonster('bouftou_royal'),p.state.x+1,p.state.y,1,1,1);cast(sim,p,1,boss.state.x,boss.state.y);assert.equal(boss.state.carried,false);
-  const elite=sim.spawnMonster(getMonster('boufton'),p.state.x+1,p.state.y+1,1,1,1);elite.state.elite=true;cast(sim,p,1,elite.state.x,elite.state.y);assert.equal(elite.state.carried,false);
-  action(sim,p);assert.ok(p.buffs.some(b=>b.label==='Ivresse légère'));sim.mechanics.get(p).readyAt=0;action(sim,p);assert.ok(!p.buffs.some(b=>b.label==='Ivresse légère'));
-  boss.state.x+=20;target.state.x=p.state.x+1;cast(sim,p,1);assert.equal(target.state.carried,true);advance(sim,.14);sim.damagePlayer(p,1e9);assert.equal(target.state.carried,false);
-});
 test('actions : coordonnées et choix invalides ignorés, pause interdit les effets',()=>{
   const {sim,p,state}=setup('ecaflip'),m=sim.mechanics.get(p),hand=[...m.hand];
   sim.classAction(p.id,{tx:NaN,ty:0});sim.classAction(p.id,{tx:0,ty:0,choice:99});state.paused=true;action(sim,p);
   assert.deepEqual(m.hand,hand);assert.equal(m.hand.length,0);assert.equal(Object.keys(CLASS_MECHANICS).length,12);
-});
-test('invocations au bord : point validé et libre, sans sortie de carte',()=>{
-  const {sim,p}=setup('osamodas');p.state.x=sim.map.size-1.4;p.state.y=1.4;
-  cast(sim,p,1,sim.map.size+5,-5);
-  const ally=[...sim.monsters.values()].find(m=>m.state.ally)!;
-  assert.ok(ally);assert.equal(isBlocked(sim.map,ally.state.x,ally.state.y,ally.def.radius),false);
 });

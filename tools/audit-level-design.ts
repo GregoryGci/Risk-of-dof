@@ -1,7 +1,8 @@
+import {ROGUELITE_SPELL_IDS} from '@rod/shared/roguelite';
 // Mesure reproductible de circulation et de charge, sans rendu ni accès cloud.
 import fs from 'node:fs';
 import {performance} from 'node:perf_hooks';
-import {BLESSINGS,generateMap,isBlocked,MAP_SIZE,PLAYER_RADIUS,MAX_MONSTERS,makeRng,classSpellIds,getMonster,PHASE_PLAYING} from '@rod/shared';
+import {BLESSINGS,generateMap,isBlocked,MAP_SIZE,PLAYER_RADIUS,MAX_MONSTERS,makeRng,getMonster,PHASE_PLAYING} from '@rod/shared';
 import {Simulation} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 const maps:{stage:number;seed:number;reachable:number;arenaRadius:number}[]=[];
@@ -14,7 +15,7 @@ for(let stage=1;stage<=33;stage++)for(let seed=1;seed<=4;seed++){
 const original=Math.random,loads=[];
 try{for(const level of[1,3,4]){
  Math.random=makeRng(891);const state=new GameState(),sim=new Simulation(state,()=>{});let casts=0;sim.broadcast=(type)=>{if(type==='cast')casts++;};
- for(const[i,cls]of['cra','iop','feca','osamodas'].entries())sim.addPlayer(String(i),'Audit',cls,undefined,undefined,undefined,{[cls]:Object.fromEntries(classSpellIds(cls).map(id=>[id,Math.min(level,3)]))});sim.start();sim.map.obstacles.fill(0);(sim as unknown as{director:{update:()=>void}}).director.update=()=>{};
+ for(const[i,cls]of['cra','iop','feca','osamodas'].entries())sim.addPlayer(String(i),'Audit',cls,undefined,undefined,undefined,Object.fromEntries(ROGUELITE_SPELL_IDS.map(id=>[id,Math.min(level,5)])));sim.start();sim.map.obstacles.fill(0);(sim as unknown as{director:{update:()=>void}}).director.update=()=>{};
  if(level===4)for(const p of sim.players.values()){p.blessingRanks=Object.fromEntries(Object.keys(BLESSINGS).map(id=>[id,1]));sim.applyStats(p);}
  const times:number[]=[],fullTimes:number[]=[];let peak=0;
  for(let tick=0;tick<1800;tick++){

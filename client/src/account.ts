@@ -2,12 +2,12 @@ import {getPetAttack,rollPetAttack,petRerollCost,type PetAttackDef} from '@rod/s
 import {skinById,skinFits,type CurrencyGrant} from '@rod/shared';
 // Progression entre les parties, mémorisée dans le navigateur :
 // bourse de kamas (gagnée en fin de partie), sorts débloqués et sorts équipés par classe.
-import { EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, TALENTS, fusionResult, equippedStats, getClass, isFlexSlot, sanitizeEquipment, sanitizeLoadout, slotKind, type EquipmentRarity, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
+import { EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, fusionResult, equippedStats, sanitizeEquipment, slotKind, type EquipmentRarity, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
 import { equippedFromAccount, migrateAccount, type AccountData } from './progression.ts';
 import {forgeCost,recycleValue,type ForgeGrant} from '@rod/shared';
 import {sanitizeRunSummary,compareRuns,unlockedModeFromProgression} from '@rod/shared';
 import {sanitizeProfile} from '@rod/shared';
-import {spellUpgradeCost,MAX_SPELL_LEVEL} from '@rod/shared';
+import {ROGUELITE_CATALOG,ROGUELITE_SIGNATURES,permanentSpellCost} from '@rod/shared/roguelite';
 
 let KEY = 'rod.compte';
 const listeners=new Set<()=>void>();
@@ -45,13 +45,14 @@ export const account = {
   equipSkin(classId:string,id:string):boolean {if(!id){delete data.equippedSkins[classId];save();return true;}const skin=skinById(id);if(!skinFits(skin,classId)||!data.skins.includes(id))return false;data.equippedSkins[classId]=id;save();return true;},
   claimOgrines(grants:CurrencyGrant[]):number {let gained=0;for(const grant of grants){if(!grant||typeof grant.claimId!=='string'||grant.claimId.length>200||grant.amount!==1||data.claimedOgrines.includes(grant.claimId)||data.credited.includes(grant.claimId.split(':')[0]))continue;data.claimedOgrines.push(grant.claimId);data.ogrines++;gained++;}if(gained)save();return gained;},
   get unlockedMode(){return data.unlockedMode;},
-  get spellLevels(){return structuredClone(data.spellLevels);},
-  spellLevel(classId:string,spell:string):number{return data.spellLevels[classId]?.[spell]??1;},
+  get spellLevels(){return structuredClone(data.permanentSpellRanks);},
+  get investmentRefund(){return data.rogueliteMigration.refund;},
+  spellLevel(_classId:string,spell:string):number{return data.permanentSpellRanks[spell]??0;},
   upgradeSpell(classId:string,spell:string):boolean{
-    if(!this.isUnlocked(classId,spell))return false;
-    const next=this.spellLevel(classId,spell)+1,cost=spellUpgradeCost(classId,spell,next);
-    if(next>MAX_SPELL_LEVEL||data.bank<cost||!Number.isFinite(cost))return false;
-    data.bank-=cost;(data.spellLevels[classId]??={})[spell]=next;save();return true;
+    if(!ROGUELITE_CATALOG.spell(spell)?.acquire)return false;
+    const next=this.spellLevel(classId,spell)+1,cost=permanentSpellCost(spell,next);
+    if(next>5||data.bank<cost||!Number.isFinite(cost))return false;
+    data.bank-=cost;data.permanentSpellRanks[spell]=next;save();return true;
   },
   get profile(){return structuredClone(data.profile);},
   setProfile(name:string,avatar:string):boolean {
@@ -258,39 +259,8 @@ export const account = {
     return gained;
   },
 
-  isUnlocked(classId: string, spell: string): boolean {
-    return getClass(classId).spells.includes(spell) || (TALENTS[classId] ?? []).some((t) => t.spell === spell && t.cost === 0) || data.unlocked.includes(spell);
-  },
-
-  /** Sorts équipés d'une classe (sorts de base par défaut). */
-  loadout(classId: string): string[] {
-    const wanted = data.loadouts[classId] ?? [];
-    const valid = sanitizeLoadout(classId, wanted);
-    // Un sort non débloqué (données modifiées à la main...) retombe sur le sort de base ; on revalide
-    // ensuite pour qu'un emplacement libre ne se retrouve pas avec le même sort que l'autre.
-    return sanitizeLoadout(classId, valid.map((s, slot) => (this.isUnlocked(classId, s) ? s : getClass(classId).spells[slot])));
-  },
-
-  /** Équipe un sort ; déposé sur un emplacement libre déjà occupé par l'autre, les deux sorts s'échangent. */
-  equip(classId: string, slot: number, spell: string): void {
-    if (!this.isUnlocked(classId, spell)) return;
-    const current = this.loadout(classId);
-    const other = current.findIndex((s, i) => i !== slot && s === spell);
-    if (other >= 0 && isFlexSlot(other) && isFlexSlot(slot)) current[other] = current[slot];
-    current[slot] = spell;
-    data.loadouts[classId] = sanitizeLoadout(classId, current);
-    save();
-  },
-
-  /** Achète un talent si la bourse le permet ; retourne vrai en cas de succès. */
-  buy(classId: string, spell: string): boolean {
-    const talent = (TALENTS[classId] ?? []).find((t) => t.spell === spell);
-    if (!talent || this.isUnlocked(classId, spell) || data.bank < talent.cost) return false;
-    data.bank -= talent.cost;
-    data.unlocked.push(spell);
-    save();
-    return true;
-  },
+  /** Signature fixed by the class; abilities are acquired through run choices. */
+  loadout(classId:string):string[]{return[ROGUELITE_SIGNATURES[classId]??ROGUELITE_SIGNATURES.cra];},
 
   /** Récompense calculée côté serveur, mémorisée une seule fois par run. */
   creditRun(reward: RunReward): boolean {

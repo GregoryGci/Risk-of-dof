@@ -1,7 +1,7 @@
 export const ROUTES = {
-  normal: {id:'normal',name:'Voie du voyageur',icon:'◇',risk:'Difficulté habituelle',reward:'Un choix de bénédiction à la victoire',spawn:1,kamas:1,bossHp:1,bossDamage:1,boons:1},
-  hunt: {id:'hunt',name:'Chasse sauvage',icon:'⚔',risk:'30 % de renforts supplémentaires',reward:'+30 % de kamas sur les ennemis',spawn:1.3,kamas:1.3,bossHp:1,bossDamage:1,boons:1},
-  ordeal: {id:'ordeal',name:'Serment du gardien',icon:'✦',risk:'Gardien : +35 % PV, +15 % dégâts',reward:'Deux choix de bénédiction à la victoire',spawn:1,kamas:1,bossHp:1.35,bossDamage:1.15,boons:2},
+  normal: {id:'normal',name:'Voie du voyageur',icon:'◇',risk:'Difficulté habituelle',reward:'XP du gardien habituelle',spawn:1,xp:1,bossHp:1,bossDamage:1,bossXp:1},
+  hunt: {id:'hunt',name:'Chasse sauvage',icon:'⚔',risk:'30 % de renforts supplémentaires',reward:'+20 % d’XP récupérée',spawn:1.3,xp:1.2,bossHp:1,bossDamage:1,bossXp:1},
+  ordeal: {id:'ordeal',name:'Serment du gardien',icon:'✦',risk:'Gardien : +35 % PV, +15 % dégâts',reward:'+50 % d’XP sur les gardiens',spawn:1,xp:1,bossHp:1.35,bossDamage:1.15,bossXp:1.5},
 } as const;
 export type RouteId=keyof typeof ROUTES;
 export function getRoute(id:string){return Object.hasOwn(ROUTES,id)?ROUTES[id as RouteId]:ROUTES.normal;}

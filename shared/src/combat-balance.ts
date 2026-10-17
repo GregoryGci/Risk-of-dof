@@ -1,7 +1,17 @@
 import type {SpellDef,StatKey} from './types.ts';
 
 export const BASE_CRIT_CHANCE=.05;
+export const SPELL_COOLDOWN_MIN_MS=200,SPELL_COOLDOWN_MIN_FRACTION=.4;
+/** Companion/NPC tooltip helper; run abilities use effectiveRogueliteAbility. */
+export function effectiveSpellCooldown(spell:SpellDef,stats:Partial<Record<StatKey,number>>={},slot?:number):number {
+ return Math.max(SPELL_COOLDOWN_MIN_MS,spell.cooldown*SPELL_COOLDOWN_MIN_FRACTION,spell.cooldown/(1+Math.min(1,Math.max(0,stats.haste??0)))/(slot===0?1+Math.max(0,stats.attackSpeed??0):1));
+}
 export function isRangedAttack(spell:SpellDef):boolean{return !spell.melee&&!spell.zone?.self;}
+/** Forme innée du Féca, indépendante des paliers permanents. */
+export function classSpellShape(spell:SpellDef,classId?:string):SpellDef{
+  if(classId!=='feca'||spell.ground?.kind!=='glyph')return spell;
+  return {...spell,ground:{...spell.ground,radius:spell.ground.radius*1.4,max:Math.max(2,spell.ground.max??1)}};
+}
 /**
  * Plafond du vol de vie des auto-attaques : 10 % à distance, 12 % au contact. Le Sacrieur (`tank`), dont
  * l'identité est de tenir au contact, garde 20 %.
@@ -12,14 +22,20 @@ export const LIFESTEAL_HEAL_PER_SECOND=.03;
 /** Efficacité du vol de vie selon le nombre de monstres au contact : −15 % par monstre au-delà de deux, −60 % au plus. */
 export function lifestealCrowdFactor(contacts:number):number{return Math.max(.4,1-.15*Math.max(0,contacts-2));}
 export function innateLifesteal(spell:SpellDef):number{return (spell.effects??[]).reduce((n,e)=>n+(e.type==='lifesteal'?e.fraction:0),0);}
-/** Les seules statistiques plafonnées. Les projectiles et les charges restent cumulables. */
+/** Plafonds partagés par le serveur, les choix et les interfaces. */
 /** Chaque point d'armure multiplie les dégâts subis par 0,92 : ce plafond limite la réduction à 50 %. */
 export const ARMOR_FACTOR=.92,MAX_DAMAGE_REDUCTION=.5,ARMOR_CAP=Math.log(1-MAX_DAMAGE_REDUCTION)/Math.log(ARMOR_FACTOR);
 export function statCaps(ranged:boolean,tank=false):Partial<Record<StatKey,number>> {
-  return {lifesteal:lifestealCap(ranged,tank),vampirism:.5,armor:ARMOR_CAP,bounce:3,crit:1-BASE_CRIT_CHANCE,luck:(.10-.005)/.03,revive:1};
+  return {lifesteal:lifestealCap(ranged,tank),vampirism:.5,armor:ARMOR_CAP,bounce:3,crit:1-BASE_CRIT_CHANCE,luck:(.10-.005)/.03,revive:1,haste:1,attackSpeed:.75,speed:.5,critDamage:1.5,multishot:2,secondaryCharge:2,range:4};
 }
 export function clampCombatStats(stats:Record<StatKey,number>,ranged:boolean,tank=false):void {
   for(const [key,cap]of Object.entries(statCaps(ranged,tank)))stats[key as StatKey]=Math.max(0,Math.min(cap,stats[key as StatKey]));
+}
+/** Les vues utilisent les mêmes valeurs plafonnées que le combat, buffs compris. */
+export function combatStatsView(raw:string,fallback:Record<StatKey,number>):Record<StatKey,number>{
+  try{const row=JSON.parse(raw);if(!row||typeof row!=='object'||Array.isArray(row))return fallback;
+    const out={...fallback};for(const key of Object.keys(out) as StatKey[])if(typeof row[key]==='number'&&Number.isFinite(row[key]))out[key]=row[key];return out;
+  }catch{return fallback;}
 }
 /** Même début de partie ; après +50 %, les compétences profitent davantage de la puissance. */
 export function sourceDamageMultiplier(bonus:number,attack:boolean):number {

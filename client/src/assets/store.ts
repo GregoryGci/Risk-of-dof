@@ -108,7 +108,7 @@ export class AssetStore {
     }
 
     // Décors.
-    for (const o of [...OBSTACLES, { id: 'coffre' }, { id: 'coffre_ouvert' }, { id: 'zaap' }, { id: 'balise_defi' }, {id:'potion_vie'}]) {
+    for (const o of [...OBSTACLES, { id: 'zaap' }, { id: 'balise_defi' }, {id:'potion_vie'}]) {
       const defs = asArray<ImageDef>(m.objects?.[o.id] ?? []);
       const provided: ImageVisual[] = [];
       defs.forEach((d, i) => {
@@ -228,13 +228,6 @@ export class AssetStore {
       for(const [name,dirs] of Object.entries(def.anims??{}))for(const dir of Object.keys(dirs))scene.anims.remove(`mon_${id}:${name}:${dir}`);
       scene.textures.remove(`mon_${id}`);
     }
-  }
-
-  /** Sprite animé du coffre (Coffre au Trésor malveillant) s'il a été extrait, sinon null. */
-  chestSprite(scene: Phaser.Scene): EntityVisual | null {
-    const def = this.manifest.monsters?.coffre;
-    if (!def || !scene.textures.exists('mon_coffre')) return null;
-    return { key: 'mon_coffre', origin: def.origin ?? [0.5, 0.9], scale: (def.scale ?? 1) * 0.8, sprite: def };
   }
 
   /**

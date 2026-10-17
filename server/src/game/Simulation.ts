@@ -7,14 +7,9 @@ import {
   FINAL_STAGE,GAME_MODES,nextMode,
   blessingPool,blessingPower,
   guardianCount,
-  leveledSpell,spellCopies,spellCopyPower,sanitizeSpellLevels,type SpellLevelBook,
   ROUTES, getRoute, resolveRoute, type RouteId,
-  CHEST_COUNT,
   MONSTERS,
   ZONES,
-  SHOP_SIZE,
-  merchantPrice,
-  rollRunBonus,
   INTERACT_RANGE,
   RUN_BONUSES,
   MAP_SIZE,
@@ -32,7 +27,6 @@ import {
   ZAAP_IDLE,
   ZAAP_RANGE,
   ZAAP_READY,
-  chestCost,
   clamp,
   difficultyAt,
   dirFromVector,
@@ -56,7 +50,6 @@ import {
   bossFragments,
   type GearDrop,
   resolveCollisions,
-  sanitizeLoadout,
   stepMovement,
   sumRunStats,
   type CastEvent,
@@ -68,12 +61,18 @@ import {
   type SpellDef,
   type StatKey,
 } from '@rod/shared';
-import { ChestState, GameState, GroundState, MonsterState, PlayerState, PotionState,OgrineState } from '../state.ts';
+import { ChallengeState, GameState, GroundState, MonsterState, PlayerState, PotionState,OgrineState } from '../state.ts';
 import { Director } from './director.ts';
+import {RunExperience} from './RunExperience.ts';
+import {RUN_PROGRESSION,enemyExperience,runKamasReward} from '@rod/shared';
 import {updatePets} from './pets.ts';
-import {dofusAfterHit,dofusBounce,dofusDashCooldown,dofusDodgesProjectile,dofusDropMultiplier,dofusExtraChestItem,dofusHealing,dofusIncoming,dofusOnCast,dofusOnDash,dofusOnHit,dofusOnKill,dofusRegen,updateDofus} from './dofus.ts';
+import {dofusAfterHit,dofusBounce,dofusDashCooldown,dofusDodgesProjectile,dofusDropMultiplier,dofusHealing,dofusIncoming,dofusOnCast,dofusOnDash,dofusOnHit,dofusOnKill,dofusRegen,updateDofus} from './dofus.ts';
 import { updateMonsters } from './monsters.ts';
-import {ClassMechanics} from './ClassMechanics.ts';
+import {InnateMechanics} from './roguelite/InnateMechanics.ts';
+import {RogueliteCombat,type MovingAbility,type SummonedAbility} from './roguelite/RogueliteCombat.ts';
+import {RunBuildController} from './roguelite/RunBuildController.ts';
+import {ROGUELITE_CATALOG,passiveParameters,passiveStatLayers,sanitizePermanentSpellRanks,type PermanentSpellRanks} from '@rod/shared/roguelite';
+import {makeRng,emptyStats,runVitalityScale} from '@rod/shared';
 import {Blessings} from './Blessings.ts';
 import { randomUUID } from 'node:crypto';
 
@@ -86,6 +85,10 @@ export interface Push {
 
 /** Données serveur d'un joueur qui ne sont pas synchronisées. */
 export interface PlayerRt {
+  build:RunBuildController;
+  permanentRanks:PermanentSpellRanks;
+  facingAngle:number;
+  pendingBossRewards:string[];
   skinBook?:Record<string,string>;
   vitalityWave?:string;
   drainRemainder?:number;
@@ -99,7 +102,7 @@ export interface PlayerRt {
   leechSecond?:number;
   leechHealed?:number;
   blessingRanks:Record<string,number>;
-  spellLevels:Record<string,number>;
+  choiceDeadline:number;
   momentumUntil:number;
   id: string;
   state: PlayerState;
@@ -108,7 +111,6 @@ export interface PlayerRt {
   dy: number;
   /** Instant (horloge de simulation, s) où chaque sort redevient disponible. */
   readyAt: number[];
-  secondaryRefillAt:number;
   dashGlyphActive:boolean;
   push: Push | null;
   lastHitAt: number;
@@ -125,8 +127,6 @@ export interface PlayerRt {
   /** Résurrection déjà utilisée / en attente pendant cette partie. */
   reviveUsed: boolean;
   revivePending: boolean;
-  /** Offres du marchand déjà achetées dans cette zone. */
-  bought: Set<number>;
   /** Prochain dash (Maj) disponible. */
   dashReadyAt: number;
   dodgeUntil:number;
@@ -141,6 +141,7 @@ export interface PlayerRt {
 
 /** Données serveur d'un monstre qui ne sont pas synchronisées. */
 export interface MonsterRt {
+  rogueliteSummon?:SummonedAbility;
   allySkillAt?:number;
   allyBaseHp?:number;
   id: string;
@@ -211,6 +212,7 @@ export interface GroundRt {
 
 /** Un sort en cours : projectile en vol, ou coup instantané (mêlée, zone) le temps de son application. */
 export interface Projectile {
+  rogueliteMotion?:MovingAbility;
   id: number;
   spell: SpellDef;
   owner: string;
@@ -262,13 +264,13 @@ export class Simulation {
   now = 0;
   players = new Map<string, PlayerRt>();
   monsters = new Map<string, MonsterRt>();
-  private projectiles: Projectile[] = [];
+  projectiles: Projectile[] = [];
   private nextProjectileId = 1;
   private nextMonsterId = 1;
-  private nextChestId = 1;
+  private nextChallengeId = 1;
   private nextPotionId = 1;
   private potionExpires = new Map<string, number>();
-  /** Actions différées (réapparition des coffres...). */
+  /** Actions différées (annonces et effets différés...). */
   private timers: { at: number; run: () => void }[] = [];
   /** Tous les gardiens de la rencontre doivent tomber avant la victoire. */
   private guardianIds=new Set<string>();
@@ -288,8 +290,17 @@ export class Simulation {
   private startedAt='';
   private partySize=1;
   private boonQueues=new Map<string,string[][]>();
-  mechanics=new ClassMechanics(this);
+  experience=new RunExperience(this,()=>this.offerLevel());
+  roguelite=new RogueliteCombat(this);
+  mechanics=new InnateMechanics(this);
+  random=makeRng(1);
+  private bossRewardStages=new Set<number>();
   blessings=new Blessings(this);
+
+  /** Pause implicite de niveau : appliquée aussi aux intentions reçues du réseau. */
+  private get choicePaused():boolean{
+    return this.state.phase===PHASE_PLAYING&&this.players.size===1&&!this.experience.sweeping&&[...this.players.values()].some(p=>p.state.boonChoices!=='[]');
+  }
 
   constructor(
     public state: GameState,
@@ -321,7 +332,7 @@ export class Simulation {
   // Cycle de vie
   // -------------------------------------------------------------------------
 
-  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, equipment?: unknown, blessing?:unknown, levels?:SpellLevelBook,unlockedMode=GAME_MODES.length-1): void {
+  addPlayer(id: string, name: string, classId?: string, loadout?: unknown, equipment?: unknown, blessing?:unknown, levels?:unknown,unlockedMode=GAME_MODES.length-1): void {
     // Un nouveau joueur arrive : plus de pause possible.
     this.state.paused = false;
     const def = getClass(classId ?? '');
@@ -330,7 +341,7 @@ export class Simulation {
     state.unlockedMode=Number.isInteger(unlockedMode)?Math.max(0,Math.min(GAME_MODES.length-1,unlockedMode)):0;
     state.classId = def.id;
     state.blessing=getBlessing(blessing)?.id??'';
-    const spellLevels=sanitizeSpellLevels(levels)[def.id]??{};state.spellLevels=JSON.stringify(spellLevels);
+    const spellLevels=sanitizePermanentSpellRanks(levels);state.spellLevels=JSON.stringify(spellLevels);
     state.equipment = JSON.stringify(sanitizeEquipped(equipment));
     const petAttack = petAttackFrom(equipment);
     // Premier numéro de joueur libre (sert à la couleur).
@@ -338,13 +349,19 @@ export class Simulation {
     let slot = 0;
     while (used.has(slot)) slot++;
     state.slot = slot;
-    const rt: PlayerRt = { blessingRanks:{}, id, state, def, spellLevels,momentumUntil:0, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], secondaryRefillAt:0,dashGlyphActive:false,push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, dodgeUntil:0, pendingInputSeq:0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, bought: new Set(), history: [], petAttack };
+    const rt: PlayerRt = { build:new RunBuildController(ROGUELITE_CATALOG,this.state.runId||'lobby',id,def.id,this.state.seed+slot*1039),permanentRanks:sanitizePermanentSpellRanks(levels),facingAngle:0,pendingBossRewards:[],blessingRanks:{}, id, state, def,choiceDeadline:0,momentumUntil:0, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], dashGlyphActive:false,push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, dodgeUntil:0, pendingInputSeq:0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, history: [], petAttack };
     this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
     if(this.state.phase===PHASE_PLAYING)this.partySize=Math.max(this.partySize,this.players.size);
     this.state.players.set(id, state);
-    if(this.state.intermission)this.rollShop(rt);
+    // Arrivée en cours de run : même niveau ET autant de choix que l'équipe.
+    if(this.state.phase===PHASE_PLAYING&&this.state.runLevel>1){
+      state.pendingLevels=this.state.runLevel-1;
+      rt.build.enqueueLevels(state.pendingLevels,this.now*1000);
+      this.refreshBoonChoices(rt);
+    }
+
   }
 
   removePlayer(id: string): void {
@@ -355,14 +372,22 @@ export class Simulation {
     this.players.delete(id);
     this.state.players.delete(id);
     this.checkDefeat();
-    this.finishShoppingIfReady();
+    this.finishRestIfReady();
   }
 
   /** Sorts équipés, validés contre l'arbre de talents de la classe. */
-  private setSpells(p: PlayerRt, loadout: unknown): void {
-    p.spells = sanitizeLoadout(p.def.id, loadout);
-    p.state.spells = p.spells.join(',');
+  private setSpells(p:PlayerRt,_loadout:unknown):void {
+    p.build=new RunBuildController(ROGUELITE_CATALOG,this.state.runId||'lobby',p.id,p.def.id,this.state.seed+p.state.slot*1039);
+    this.syncBuild(p);
   }
+  private syncBuild(p:PlayerRt):void {
+    const snapshot=p.build.getSnapshot();p.state.build=JSON.stringify(snapshot.build);p.state.choiceOffer=JSON.stringify(snapshot.offer??null);
+    p.spells=snapshot.build.spells.flatMap(s=>s?[s.spellId]:[]);p.state.spells=p.spells.join(',');p.state.pendingLevels=snapshot.pendingLevels;
+    p.state.boonChoices=JSON.stringify(snapshot.offer?.choices.map(c=>c.id)??[]);p.state.choiceRevision=snapshot.offer?.revision??p.state.choiceRevision;
+    p.choiceDeadline=(snapshot.offer?.expiresAtMs??0)/1000;
+  }
+  rerollBoon(id:string,message:{runId?:unknown;revision?:unknown}):void {const p=this.players.get(id);if(p&&this.state.phase===PHASE_PLAYING&&!this.state.paused&&p.build.reroll(message,this.now*1000))this.syncBuild(p);}
+  banishBoon(id:string,message:{runId?:unknown;revision?:unknown;choiceId?:unknown}):void {const p=this.players.get(id);if(p&&this.state.phase===PHASE_PLAYING&&!this.state.paused&&p.build.banish(message,this.now*1000))this.syncBuild(p);}
 
   /** Tenue modifiable dans le salon ou après une défaite, jamais pendant la run. */
   setEquipment(id: string, equipment: unknown): void {
@@ -406,7 +431,7 @@ export class Simulation {
 
   setSpellLevels(id:string,raw:unknown):void{
     const p=this.players.get(id);if(!p||this.state.phase!==PHASE_LOBBY)return;
-    p.spellLevels=sanitizeSpellLevels(raw)[p.def.id]??{};p.state.spellLevels=JSON.stringify(p.spellLevels);
+    p.permanentRanks=sanitizePermanentSpellRanks(raw);p.state.spellLevels=JSON.stringify(p.permanentRanks);
   }
   setUnlockedMode(id:string,mode:number):void{
     const p=this.players.get(id);if(!p||this.state.phase!==PHASE_LOBBY||!Number.isInteger(mode))return;
@@ -432,7 +457,7 @@ export class Simulation {
     this.removeDummies();
     for (const id of [...this.grounds.keys()]) this.removeGround(id);
     this.state.phase = PHASE_PLAYING;
-    this.state.runId = randomUUID();
+    this.state.runId = randomUUID();this.bossRewardStages.clear();this.random=makeRng(this.state.seed);
     this.startedAt=new Date().toISOString();this.partySize=this.players.size;
     this.state.stageRoute='normal';
     this.state.time = 0;
@@ -442,7 +467,8 @@ export class Simulation {
     this.state.intermission=false;
     this.forgeMinute=0;
     this.state.kills=0;
-    for (const p of this.players.values()) { this.resetPlayer(p); this.resetMeters(p); p.state.kills=0;p.state.kamas=0;p.state.kamasEarned=0;p.state.rewards = ''; p.state.runLoot='[]'; p.loot=[]; }
+    this.experience.reset();
+    for (const p of this.players.values()) { this.resetPlayer(p); this.resetMeters(p); p.inventory.clear();this.applyStats(p);p.state.kills=0;p.state.rewards = ''; p.state.runLoot='[]'; p.loot=[]; }
     this.setupStage();
   }
 
@@ -458,7 +484,7 @@ export class Simulation {
     return this.players.get(ownerId) ?? this.players.get(this.monsters.get(ownerId)?.allyOwner ?? '');
   }
 
-  /** Prépare une zone : coffres neufs, Zaap éteint placé loin du point d'apparition. */
+  /** Prépare une zone : défis disponibles, Zaap éteint placé loin du point d'apparition. */
   private setupStage(cursed=false): void {
     this.state.cursed=cursed;this.state.hasCursedZaap=!cursed&&Math.random()<.10;
     this.state.stageTime=0;
@@ -470,13 +496,12 @@ export class Simulation {
     this.guardianIds.clear();this.pendingGuardians=0;this.bossTelegraphUntil=0;
     if(this.map.bossArena){this.state.zaapX=this.map.bossArena.x;this.state.zaapY=this.map.bossArena.y;}
     this.state.cursedZaapX=this.state.zaapX-6;this.state.cursedZaapY=this.state.zaapY;
-    for (const id of [...this.state.chests.keys()]) this.state.chests.delete(id);
-    for (let i = 0; i < CHEST_COUNT; i++) this.spawnChest();
-    for (let i = 0; i < CHALLENGE_COUNT; i++) this.spawnChest('challenge');
+    for (const id of [...this.state.challenges.keys()]) this.state.challenges.delete(id);
+    for (let i = 0; i < CHALLENGE_COUNT; i++) this.spawnChallenge();
 
     this.state.intermission=false;
-    this.state.merchantX=0;this.state.merchantY=0;this.state.shop='';
-    for(const p of this.players.values()){p.bought.clear();p.state.bought='';p.state.shop='';p.state.shopReady=false;p.state.shopRerolled=false;}
+    this.state.restX=0;this.state.restY=0;
+    for(const p of this.players.values())p.state.restReady=false;
 
     const c = MAP_SIZE / 2;
     this.state.zaapState = ZAAP_IDLE;
@@ -488,7 +513,7 @@ export class Simulation {
       if (Math.hypot(x - c, y - c) < 16 || isBlocked(this.map, x, y, 1.3)) continue;
       // Les portées d'interaction ne doivent pas se chevaucher : E au défi
       // ne doit jamais déclencher le Zaap prioritaire à sa place.
-      if([...this.state.chests.values()].some(ch=>Math.hypot(ch.x-x,ch.y-y)<ZAAP_RANGE+INTERACT_RANGE+.2)) continue;
+      if([...this.state.challenges.values()].some(ch=>Math.hypot(ch.x-x,ch.y-y)<ZAAP_RANGE+INTERACT_RANGE+.2)) continue;
       this.state.zaapX = x;
       this.state.zaapY = y;
       break;
@@ -510,7 +535,7 @@ export class Simulation {
       p.state.motionEpoch++;p.state.forcedMotion=false;p.push=null;p.dx=0;p.dy=0;
       p.revivePending=false;p.dodgeUntil=this.now+3;
       p.readyAt=[this.now,this.now,this.now,this.now];p.dashReadyAt=this.now;
-      p.secondaryRefillAt=0;p.state.secondaryCharges=p.state.secondaryMax;
+      
       revived.push(p.id);
     }
     if(this.state.stage===FINAL_STAGE){this.finishRun('victory');this.broadcast('runVictory',{stage:this.state.stage});}
@@ -518,6 +543,8 @@ export class Simulation {
   }
 
   private nextStage(): void {
+    if(this.experience.sweeping)return;
+    this.experience.collectAll();
     this.collectRemainingOgrines();
     if(this.state.intermission)return;
     for (const id of [...this.monsters.keys()]) this.removeMonster(id);
@@ -529,7 +556,7 @@ export class Simulation {
       p.push=null;
       this.mechanics.reset(p.id);p.dodgeUntil=0;
       p.readyAt=[this.now,this.now,this.now,this.now];
-      p.secondaryRefillAt=0;p.state.secondaryCharges=p.state.secondaryMax;
+      
       p.dashReadyAt=this.now;
       this.placeAtSpawn(p);
       if (!p.state.alive) {
@@ -538,38 +565,28 @@ export class Simulation {
       }
     }
     // L'étape marchande n'augmente ni le palier de loot ni la difficulté.
-    this.timers=[];this.guardianIds.clear();this.pendingGuardians=0;this.bossTelegraphUntil=0;this.state.chests.clear();this.state.potions.clear();this.potionExpires.clear();
+    this.timers=[];this.guardianIds.clear();this.pendingGuardians=0;this.bossTelegraphUntil=0;this.state.challenges.clear();this.state.potions.clear();this.potionExpires.clear();
     this.state.intermission=true;this.state.zaapX=0;this.state.zaapY=0;this.state.zaapState=ZAAP_IDLE;
-    this.state.merchantX=MAP_SIZE/2;this.state.merchantY=MAP_SIZE/2;
-    this.state.shop='personal';
-    for(const p of this.players.values()){p.bought.clear();p.state.bought='';p.state.shopRerolled=false;p.state.shopReady=false;p.state.routeChoice='normal';this.rollShop(p);}
-    this.broadcast('merchant',{stage:this.state.stage});
+    this.state.restX=MAP_SIZE/2;this.state.restY=MAP_SIZE/2;
+    for(const p of this.players.values()){p.state.restReady=false;p.state.routeChoice='normal';}
+    this.broadcast('rest',{stage:this.state.stage});
   }
 
-  private rollShop(p:PlayerRt,reroll=false):void {
-    const old=p.state.shop.split(','),excluded=reroll?new Set(old.map(o=>RUN_BONUSES[o.split(':')[0]]?.base)):new Set();
-    const bases=[...new Set(this.usefulBonuses(p).map(b=>b.base))].filter(b=>!excluded.has(b)),offers:string[]=[];
-    for(let i=0;i<SHOP_SIZE;i++){if(reroll&&p.bought.has(i)){offers.push(old[i]);continue;}const base=bases.splice(Math.floor(Math.random()*bases.length),1)[0];if(!base)break;const variants=this.usefulBonuses(p).filter(b=>b.base===base),rarity=rollRarity(p.stats.luck+.15);const item=variants.find(b=>b.rarity===rarity)??variants[0];offers.push(`${item.id}:${merchantPrice(item,this.state.difficulty,this.state.mode)}`);}
-    p.state.shop=offers.join(',');
-  }
-  rerollShop(id:string):void {
-    const p=this.players.get(id);if(!p?.state.alive||!this.state.intermission||this.state.paused||p.state.shopReady||p.state.shopRerolled)return;
-    p.state.shopRerolled=true;this.rollShop(p,true);
-  }
   chooseRoute(id:string,choice:unknown):void {
     const p=this.players.get(id);
-    if(!p?.state.alive||!this.state.intermission||this.state.paused||p.state.shopReady||typeof choice!=='string'||!Object.hasOwn(ROUTES,choice))return;
+    if(!p?.state.alive||!this.state.intermission||this.state.paused||p.state.restReady||typeof choice!=='string'||!Object.hasOwn(ROUTES,choice))return;
     p.state.routeChoice=choice as RouteId;
   }
-  shopReady(id:string):void {
+  restReady(id:string):void {
     const p=this.players.get(id);if(!p?.state.alive||!this.state.intermission||this.state.paused)return;
-    p.state.shopReady=true;this.finishShoppingIfReady();
+    p.state.restReady=true;this.finishRestIfReady();
   }
-  private finishShoppingIfReady():void {
-    if(!this.state.intermission||!this.players.size||[...this.players.values()].some(p=>!p.state.shopReady))return;
+  connectionChanged():void{this.finishRestIfReady();}
+  private finishRestIfReady():void {
+    if(!this.state.intermission||![...this.players.values()].some(p=>p.state.connected)||[...this.players.values()].some(p=>p.state.connected&&!p.state.restReady))return;
     this.state.stageRoute=resolveRoute([...this.players.values()].map(p=>p.state.routeChoice),this.players.get(this.state.hostId)?.state.routeChoice??'normal');
     this.state.stage++;this.state.seed=Math.floor(Math.random()*0xffffffff);this.map=generateMap(this.state.seed,undefined,this.state.stage);
-    for(const p of this.players.values()){this.placeAtSpawn(p);p.dx=0;p.dy=0;p.readyAt=[this.now,this.now,this.now,this.now];p.secondaryRefillAt=0;p.state.secondaryCharges=p.state.secondaryMax;p.dashReadyAt=this.now;}
+    for(const p of this.players.values()){this.placeAtSpawn(p);p.dx=0;p.dy=0;p.readyAt=[this.now,this.now,this.now,this.now];p.dashReadyAt=this.now;}
     this.setupStage();this.broadcast('stage',{stage:this.state.stage,name:zoneForStage(this.state.stage).name});
   }
 
@@ -577,6 +594,7 @@ export class Simulation {
 
   private enterCursedZone():void {
     if(!this.state.hasCursedZaap||this.state.cursed||this.state.zaapState!==ZAAP_IDLE)return;
+    this.experience.collectAll();
     const seed=Math.floor(Math.random()*0xffffffff);
     this.state.seed=seed===this.state.seed?(seed+1)>>>0:seed;this.map=generateMap(this.state.seed,undefined,this.state.stage);
     for(const id of [...this.monsters.keys()])this.removeMonster(id);
@@ -653,11 +671,10 @@ export class Simulation {
     this.state.seed = Math.floor(Math.random() * 0xffffffff);
     this.map = generateMap(this.state.seed);
     this.state.kills = 0;
+    this.experience.reset();
     for (const p of this.players.values()) {
       p.inventory.clear();
       this.resetPlayer(p);
-      p.state.kamas = 0;
-      p.state.kamasEarned = 0;
       p.state.kills = 0;
       this.resetMeters(p);
     }
@@ -672,8 +689,7 @@ export class Simulation {
     this.state.difficulty = 1;
     this.state.potions.clear();
     this.potionExpires.clear();
-    this.state.chests.clear();
-    this.state.shop = '';
+    this.state.challenges.clear();
     this.state.zaapState = ZAAP_IDLE;
     this.timers = [];
     for (const p of this.players.values()) { p.state.rewards = ''; p.state.runLoot='[]'; p.loot=[]; }
@@ -681,6 +697,8 @@ export class Simulation {
   }
 
   private resetPlayer(p: PlayerRt): void {
+    this.roguelite.releaseCaptured(p.id);this.setSpells(p,undefined);p.pendingBossRewards=[];
+    p.state.pendingLevels=0;p.choiceDeadline=0;p.state.choiceRemaining=0;
     p.blessingRanks={};p.state.blessings='{}';
     p.momentumUntil=0;p.state.momentum=false;
     this.blessings.reset(p.id);
@@ -696,7 +714,7 @@ export class Simulation {
     p.dy = 0;
     p.push = null;
     p.readyAt = [0, 0, 0, 0];
-    p.secondaryRefillAt=0;p.state.secondaryCharges=p.state.secondaryMax;p.dashGlyphActive=false;
+    p.dashGlyphActive=false;
     p.lastHitAt = -999;
     p.state.shield = 0;
     p.shieldUntil = 0;
@@ -733,93 +751,19 @@ export class Simulation {
     p.dx = Number.isFinite(dx) ? clamp(dx, -1, 1) : 0;
     p.dy = Number.isFinite(dy) ? clamp(dy, -1, 1) : 0;
     p.autoAttack = msg.autoAttack === true;
-    p.lastInputAt = this.now;
+    p.lastInputAt = this.now;if(p.dx||p.dy)p.facingAngle=Math.atan2(p.dy,p.dx);
+    if(typeof msg.aimAngle==='number'&&Number.isFinite(msg.aimAngle))p.facingAngle=Math.atan2(Math.sin(msg.aimAngle),Math.cos(msg.aimAngle));
     const dir = Number(msg.dir);
     if (Number.isInteger(dir) && dir >= 0 && dir < 8) p.state.dir = dir;
   }
 
-  playerCast(id: string, msg: CastMessage): void {
-    const p = this.players.get(id);
-    if (!p || !msg || !p.state.alive || this.state.phase === PHASE_LOST || this.state.paused || this.state.intermission) return;
-    const slot = Number(msg.slot);
-    const tx = Number(msg.tx);
-    const ty = Number(msg.ty);
-    if (!Number.isInteger(slot) || slot < 0 || slot >= p.spells.length) return;
-    if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
-    // Le serveur est seul juge du temps de recharge.
-    if (this.now < p.readyAt[slot]) return;
-    if(slot===1&&p.state.secondaryMax>1&&p.state.secondaryCharges===0)return;
-
-    let spell = this.blessings.prepareSpell(p,leveledSpell(p.spells[slot],p.spellLevels[p.spells[slot]]??1));
-    if (spell.revive && !this.deadAllyNear(p, tx, ty, spell.range + p.stats.range)) return;
-    const special=this.mechanics.beforeCast(p,spell,slot,tx,ty);spell=special.spell;
-    if(special.handled) {
-      const cooldown=special.cooldown??spell.cooldown;p.readyAt[slot]=this.now+cooldown/1000;
-      if(slot===1&&cooldown>250)this.consumeSecondary(p,cooldown);
-      this.broadcast('cast',{id:this.nextProjectileId++,caster:id,spell:spell.id,x:p.state.x,y:p.state.y,tx,ty,slot,cooldown});return;
-    }
-    // Les objets de « hâte » raccourcissent la recharge, ceux de dégâts et de critique améliorent le tir.
-    // Vitesse d'attaque : seulement l'attaque de base, et pas au corps à corps.
-    spell={...spell,autoAttack:slot===0};
-    const ranged = isRangedAttack(spell);
-    const cooldown = spell.cooldown / (1 + p.stats.haste) / (slot === 0 && ranged ? 1 + p.stats.attackSpeed : 1);
-    p.readyAt[slot] = this.now + cooldown / 1000;
-    dofusOnCast(this,p,slot);
-    if(slot===1&&this.now<p.readyAt[slot])this.consumeSecondary(p,cooldown);
-    const copies=spellCopies(spell),power=copies>1?spellCopyPower(spell.upgradeLevel??1):1;
-    let damageMult = sourceDamageMultiplier(p.stats.damage,slot===0)*special.mult*power*this.blessings.castMultiplier(p,slot);
-    if(slot===0&&this.now<p.momentumUntil){
-      p.momentumUntil=0;p.state.momentum=false;spell={...spell,dashStrike:true,projectile:spell.projectile?{...spell.projectile,pierce:true}:undefined,melee:spell.melee?{arc:Math.min(360,spell.melee.arc+30)}:undefined};damageMult*=this.blessings.momentumDamage(p);
-      this.broadcast('momentum',{player:id,x:p.state.x,y:p.state.y});
-    }
-    if (spell.missingHpBonus) damageMult *= 1 + spell.missingHpBonus * (1 - p.state.hp / p.state.maxHp);
-    const critChance = BASE_CRIT_CHANCE + p.stats.crit;
-    const critMult = CRIT_MULT + p.stats.critDamage;
-    const dir = this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult, critChance, slot, cooldown, critMult, p.stats.range);
-    this.mechanics.afterCast(p,spell,slot,tx,ty);
-    this.blessings.onCast(p,slot);
-    const stage=this.state.stage,run=this.state.runId,origin={x:p.state.x,y:p.state.y};
-    for(let k=1;k<copies;k++){
-      const launch=()=>{
-        if(!p.state.alive||this.players.get(id)!==p||this.state.phase===PHASE_LOST||this.state.intermission||this.state.stage!==stage||this.state.runId!==run)return;
-        let cx=spell.ground?origin.x:p.state.x,cy=spell.ground?origin.y:p.state.y,targetX=tx,targetY=ty;
-        if(spell.projectile&&!spell.projectile.toTarget){const a=Math.atan2(ty-cy,tx-cx)+(k%2?1:-1)*.085*Math.ceil(k/2),r=Math.max(1,Math.hypot(tx-cx,ty-cy));targetX=cx+Math.cos(a)*r;targetY=cy+Math.sin(a)*r;}
-        if(spell.ground){const a=k*Math.PI*2/copies;targetX+=Math.cos(a)*1.25;targetY+=Math.sin(a)*1.25;}
-        this.cast(spell,cx,cy,targetX,targetY,id,true,damageMult,critChance,undefined,undefined,critMult,p.stats.range);
-      };
-      if(spell.projectile&&!spell.projectile.toTarget)launch();else this.after(.22*k,launch);
-    }
-    // Bonus Échos : projectiles en éventail, ou frappes supplémentaires un instant après.
-    if (slot === 0 && p.stats.multishot > 0) {
-      const extra = Math.ceil(p.stats.multishot);
-      const share = Math.min(1, p.stats.multishot / extra);
-      for (let k = 1; k <= extra; k++) {
-        if (spell.projectile) {
-          const a = Math.atan2(ty - p.state.y, tx - p.state.x) + (k % 2 ? 1 : -1) * 0.18 * Math.ceil(k / 2);
-          const d = Math.max(1, Math.hypot(tx - p.state.x, ty - p.state.y));
-          this.cast(spell, p.state.x, p.state.y, p.state.x + Math.cos(a) * d, p.state.y + Math.sin(a) * d, id, true, damageMult * share / power, critChance, undefined, undefined, critMult, p.stats.range);
-        } else {
-          this.after(0.15 * k, () => {
-            if (p.state.alive&&this.players.get(id)===p&&this.state.phase!==PHASE_LOST&&!this.state.intermission&&this.state.stage===stage&&this.state.runId===run) this.cast(spell, p.state.x, p.state.y, tx, ty, id, true, damageMult * share / power, critChance, undefined, undefined, critMult, p.stats.range);
-          });
-        }
-      }
-    }
-    p.state.dir = dirFromVector(dir.x, dir.y);
-
-    // Effets sur le lanceur (bond en arrière / en avant).
-    for (const e of spell.effects ?? []) {
-      if (e.type !== 'dash') continue;
-      const sign = e.direction === 'back' ? -1 : 1;
-      const v = (e.distance / e.duration) * sign;
-      p.push = { vx: dir.x * v, vy: dir.y * v, time: e.duration };
-    }
-  }
+  /** Manual spell messages are obsolete; all owned abilities are cast by server cooldowns. */
+  playerCast(_id:string,_message:CastMessage):void {}
 
   /** Dash (Maj) : petit bond rapide dans la direction demandée, commun à toutes les classes. */
   playerDash(id: string, msg: { dx?: number; dy?: number }): void {
     const p = this.players.get(id);
-    if (!p || !p.state.alive || this.state.paused || this.state.intermission || this.state.phase === PHASE_LOST || this.now < p.dashReadyAt || p.push) return;
+    if (!p || !p.state.alive || this.state.paused || this.choicePaused || this.state.intermission || this.state.phase === PHASE_LOST || this.now < p.dashReadyAt || p.push) return;
     const dx = Number(msg?.dx);
     const dy = Number(msg?.dy);
     const len = Math.hypot(dx, dy);
@@ -853,7 +797,7 @@ export class Simulation {
     }
     const id = this.nextProjectileId++;
     const pr: Projectile = { id, spell, owner, fromPlayer, x, y, dx, dy, remaining: 0, damageMult, critChance, critMult, hit: new Set(),slot,proc:slot===undefined };
-    const event: CastEvent = { id, caster: visualCaster, spell: spell.id, x, y, tx: x + dx, ty: y + dy,level:spell.upgradeLevel,dashStrike:spell.dashStrike };
+    const event: CastEvent = { ...(spell.roguelite?{visual:{assetKey:spell.icon,color:spell.color,handler:spell.roguelite.ability.handler,projectile:spell.projectile,duration:spell.roguelite.ability.stats.durationMs/1000,owner}}:{}),id, caster: visualCaster, spell: spell.id, x, y, tx: x + dx, ty: y + dy,dashStrike:spell.dashStrike };
     if (slot !== undefined) {
       event.slot = slot;
       event.cooldown = cooldown ?? spell.cooldown;
@@ -868,8 +812,6 @@ export class Simulation {
       event.ty = y;
       this.broadcast('cast', event);
       this.broadcast('buff', { target: owner, label: `Bouclier +${caster.state.shield}`, duration: spell.shield.duration });
-      const allies=[...this.players.values()].filter(p=>p.id!==owner&&p.state.alive&&Math.hypot(p.state.x-x,p.state.y-y)<=(spell.shield!.allyRadius??4)).sort((a,b)=>Math.hypot(a.state.x-x,a.state.y-y)-Math.hypot(b.state.x-x,b.state.y-y)).slice(0,spell.shield.allies??0);
-      for(const ally of allies){if(this.now>=ally.shieldUntil)ally.state.shield=0;ally.state.shield=Math.max(ally.state.shield,Math.round(ally.state.maxHp*spell.shield.maxHpFraction*.5));ally.shieldUntil=Math.max(ally.shieldUntil,this.now+spell.shield.duration);}
       return { x: dx, y: dy };
     }
     // Point visé, limité par la portée.
@@ -895,8 +837,7 @@ export class Simulation {
       event.tx = target?.state.x ?? aimX;
       event.ty = target?.state.y ?? aimY;
       this.broadcast('cast', event);
-      const others=[...this.players.values()].filter(p=>!p.state.alive&&p.id!==target?.id&&Math.hypot(p.state.x-tx,p.state.y-ty)<=3&&Math.hypot(p.state.x-x,p.state.y-y)<=range);
-      for(const revived of(target?[target,...others].slice(0,spell.reviveCount??1):[])){revived.state.alive=true;revived.state.hp=revived.state.maxHp*.5;revived.revivePending=false;this.broadcast('buff',{target:revived.id,label:'Ressuscité !',duration:2});}
+      if(target){target.state.alive=true;target.state.hp=target.state.maxHp*.5;target.revivePending=false;this.broadcast('buff',{target:target.id,label:'Ressuscité !',duration:2});}
       return { x: dx, y: dy };
     }
     if (spell.rewind && caster) {
@@ -1024,7 +965,15 @@ export class Simulation {
     // Garde-fou si le serveur a eu un gros ralentissement.
     dt = Math.min(dt, 0.1);
     if (this.state.phase === PHASE_LOST || this.state.paused) return;
+    // En solo le choix fige le combat ; en équipe il expire automatiquement.
+    if(this.choicePaused&&!this.guardiansDefeated())return;
     this.now += dt;
+    if(this.state.phase===PHASE_PLAYING){this.experience.update(dt);this.updateChoices();}
+    // Rencontre gagnée : les attaques restantes ne peuvent pas tuer l'équipe
+    // pendant la convergence visuelle qui précède la victoire.
+    if(this.guardiansDefeated()&&this.experience.sweeping){this.updatePlayers(dt);return;}
+    if(this.guardiansDefeated())this.completeStage();
+    if(this.state.phase===PHASE_LOST||this.choicePaused)return;
 
     this.runTimers();
     if(this.state.phase===PHASE_LOST)return;
@@ -1034,7 +983,7 @@ export class Simulation {
     updatePets(this);
     updateDofus(this);
     this.blessings.update();
-    this.updateAutoAttacks();
+    this.roguelite.update(dt);this.roguelite.updateRewards();
     this.updatePotions();
     this.updateOgrines();
     this.updateGrounds();
@@ -1044,12 +993,11 @@ export class Simulation {
       const minute=Math.floor(this.state.time/60);
       if(minute>this.forgeMinute){this.forgeMinute=minute;this.awardFragments(`minute:${minute}`,minuteFragments(this.state.stage));}
       this.state.difficulty = modeDifficulty(difficultyAt(this.state.time, this.players.size,this.state.stage,this.state.stageTime),this.state.mode);
-      this.state.chestCost = chestCost(this.state.difficulty,this.state.mode);
       // Le Zaap se charge tout seul une fois activé, et s'ouvre dès que ses gardiens sont vaincus
       // (sans attendre la fin de la charge : on enchaîne les zones en speedrun).
       if (this.state.zaapState === ZAAP_CHARGING) {
         this.state.zaapCharge = Math.min(1, this.state.zaapCharge + dt / ZAAP_CHARGE_TIME);
-        if (this.guardiansDefeated()) this.completeStage();
+        if (this.guardiansDefeated()&&!this.experience.sweeping) this.completeStage();
       }
       if(this.state.zaapState !== ZAAP_READY) this.director.update(dt);
     }
@@ -1068,8 +1016,8 @@ export class Simulation {
       const s = p.state;
       if(p.vitalityWave!==`${this.state.stage}:${this.state.zoneWave}:${this.state.mode}`)this.applyStats(p,false);
       if(s.momentum&&this.now>=p.momentumUntil)s.momentum=false;
-      this.updateSecondary(p);
-      s.cooldowns=JSON.stringify([...p.readyAt,p.dashReadyAt].map((at,i)=>Math.round(Math.max(0,(i===1&&s.secondaryMax>1?p.secondaryRefillAt:at)-this.now)*10)/10));
+      
+      s.cooldowns=JSON.stringify([...p.readyAt,p.dashReadyAt].map((at,i)=>Math.round(Math.max(0,(at)-this.now)*10)/10));
       if (s.shield > 0 && this.now >= p.shieldUntil) s.shield = 0;
       // Bonus temporaires expirés.
       if (p.buffs.some((b) => b.until <= this.now)) {
@@ -1099,25 +1047,7 @@ export class Simulation {
     }
   }
 
-  /** La simulation choisit la cible et respecte la recharge habituelle du sort de base. */
-  private updateAutoAttacks(): void {
-    for (const p of this.players.values()) {
-      if (!p.autoAttack || !p.state.alive || this.now < p.readyAt[0] || this.now - p.lastInputAt > 2) continue;
-      const spell = getSpell(p.spells[0]);
-      if (spell.heal || spell.shield || !(spell.projectile || spell.melee || spell.zone)) continue;
-      const range = spell.zone?.self ? spell.zone.radius : spell.melee ? spell.range : spell.range + p.stats.range;
-      let nearest: MonsterRt | undefined;
-      let nearestDist = Infinity;
-      for (const m of this.monsters.values()) {
-        if (m.state.ally || m.state.carried || m.state.hp <= 0) continue;
-        const dist = Math.hypot(m.state.x - p.state.x, m.state.y - p.state.y);
-        if (dist > range + m.def.radius || dist >= nearestDist) continue;
-        nearest = m;
-        nearestDist = dist;
-      }
-      if (nearest) this.playerCast(p.id, { slot: 0, tx: nearest.state.x, ty: nearest.state.y });
-    }
-  }
+
 
   /** Une potion profite au joueur blessé le plus proche au contact, une seule fois. */
   private updatePotions(): void {
@@ -1149,9 +1079,12 @@ export class Simulation {
   private updateProjectiles(dt: number): void {
     const alive: Projectile[] = [];
     for (const pr of this.projectiles) {
+      if(this.roguelite.intercept(pr)){this.broadcast('projEnd',{id:pr.id,x:pr.x,y:pr.y});continue;}
+      const custom=this.roguelite.updateProjectile(pr,dt);if(custom!==undefined){if(custom)alive.push(pr);continue;}
       const shape = pr.spell.projectile;
       if (!shape) continue;
-      const step = Math.min(shape.speed * dt, pr.remaining);
+      let step = Math.min(shape.speed * dt, pr.remaining),wall=false;
+      if(pr.spell.roguelite)for(let along=.1;along<=step+.099;along+=.1){const sample=Math.min(step,along);if(isBlocked(this.map,pr.x+pr.dx*sample,pr.y+pr.dy*sample,shape.radius)){step=Math.max(0,sample-.1);wall=true;break;}}
       const x1 = pr.x + pr.dx * step;
       const y1 = pr.y + pr.dy * step;
       let stopped = false;
@@ -1176,7 +1109,7 @@ export class Simulation {
           pr.hit.add(t.id);
           if (pr.spell.area) this.explode(pr, t.x, t.y, pr.spell.area.radius);
           else this.applyHit(pr, t.id, pr.dx, pr.dy);
-          if (!shape.pierce) {
+          if (!shape.pierce || pr.spell.roguelite && pr.hit.size>(pr.spell.roguelite.ability.parameters.pierce??0)) {
             this.broadcast('projEnd', { id: pr.id, x: t.x, y: t.y });
             stopped = true;
             break;
@@ -1184,6 +1117,7 @@ export class Simulation {
         }
       }
       if (stopped) continue;
+      if(wall){this.broadcast('projEnd',{id:pr.id,x:x1,y:y1});continue;}
 
       pr.x = x1;
       pr.y = y1;
@@ -1200,6 +1134,7 @@ export class Simulation {
 
   private explode(pr: Projectile, x: number, y: number, radius: number, silent = false): void {
     if (!silent) this.broadcast('explode', { spell: pr.spell.id, x, y, radius });
+    if(pr.spell.hybridHeal)this.mechanics.healZone(pr,x,y,radius);
 
     // Sort de soin : touche les alliés (joueurs vivants) au lieu des ennemis.
     if (pr.spell.heal) {
@@ -1227,6 +1162,7 @@ export class Simulation {
   /** Applique dégâts et effets d'un sort à une cible. (dirX, dirY) = sens du recul. */
   private applyHit(pr: Projectile, targetId: string, dirX: number, dirY: number): void {
     if(this.state.phase===PHASE_LOST)return;
+    if(pr.spell.roguelite){const target=this.monsters.get(targetId);if(target)this.roguelite.hit(pr,target,dirX,dirY);return;}
     if(pr.areaHits?.has(targetId))return;
     pr.areaHits?.add(targetId);
     const [min, max] = pr.spell.damage;
@@ -1295,14 +1231,6 @@ export class Simulation {
         m.slowUntil = this.now + e.duration;
       } else if (e.type === 'stun') {
         m.stunUntil = Math.max(m.stunUntil, this.now + e.duration);
-      } else if (e.type === 'gold') {
-        const caster = this.players.get(pr.owner);
-        if (caster && Math.random() < e.chance) {
-          const gain = Math.round(e.amount[0] + Math.random() * (e.amount[1] - e.amount[0]));
-          caster.state.kamas += gain;
-          caster.state.kamasEarned += gain;
-          this.broadcast('kamas', { player: caster.id, amount: gain, x: m.state.x, y: m.state.y });
-        }
       }
     }
     const owner = this.players.get(pr.owner);
@@ -1357,10 +1285,11 @@ export class Simulation {
     owner.drainRemainder=drain-Math.floor(drain);
     if(drain>=1){if(attack&&!tank)owner.leechHealed=(owner.leechHealed??0)+Math.floor(drain);this.healPlayer(owner,Math.floor(drain));}
   }
-  healPlayer(p: PlayerRt, amount: number, source: PlayerRt | null | undefined = p, fuelMechanic=true): void {
+  healPlayer(p: PlayerRt, amount: number, source: PlayerRt | null | undefined = p, fuelMechanic=true,maxGain=Infinity): void {
     if(this.state.phase===PHASE_LOST)return;
     amount = dofusHealing(p, amount);
-    const gain = Math.min(p.state.maxHp - p.state.hp, Math.round(amount));
+    if([...this.players.values()].some(ally=>ally.state.alive&&ally.def.id==='eniripsa'&&Math.hypot(ally.state.x-p.state.x,ally.state.y-p.state.y)<=6))amount*=1.1;
+    const gain = Math.min(p.state.maxHp - p.state.hp,Math.floor(maxGain), Math.round(amount));
     if(fuelMechanic&&source)this.mechanics.onHeal(source,amount,Math.max(0,gain));
     if (gain <= 0) return;
     p.state.hp += gain;
@@ -1402,6 +1331,8 @@ export class Simulation {
     state.x = x;
     state.y = y;
     state.radius = def.kind === 'trap' ? (def.blast ?? def.radius) : def.radius;
+    const geometry=pr.spell.roguelite?.ability.parameters;
+    if(geometry?.line){state.angle=geometry.lineAngle;state.length=geometry.lineLength;state.width=geometry.lineWidth;}
     state.armed = !def.arm;
     this.grounds.set(id, { id, state, pr, owner: pr.owner, expiresAt: this.now + def.duration, armedAt: this.now + (def.arm ?? 0), nextTick: this.now });
     this.state.grounds.set(id, state);
@@ -1421,7 +1352,7 @@ export class Simulation {
   }
   classAction(id:string,message:{tx?:unknown;ty?:unknown;choice?:unknown}):void {
     const p=this.players.get(id),tx=Number(message?.tx),ty=Number(message?.ty),choice=Number(message?.choice??0);
-    if(!p?.state.alive||this.state.phase===PHASE_LOST||this.state.paused||this.state.intermission||!Number.isFinite(tx)||!Number.isFinite(ty)||!Number.isInteger(choice)||choice<0||choice>2)return;
+    if(!p?.state.alive||this.state.phase===PHASE_LOST||this.state.paused||this.choicePaused||this.state.intermission||!Number.isFinite(tx)||!Number.isFinite(ty)||!Number.isInteger(choice)||choice<0||choice>2)return;
     this.mechanics.action(p,tx,ty,choice);
   }
 
@@ -1431,6 +1362,7 @@ export class Simulation {
         this.removeGround(g.id);
         continue;
       }
+      if(g.pr.spell.roguelite){this.roguelite.updateGround(g);continue;}
       const def = g.pr.spell.ground!;
       if(g.state.spell==='filon_enutrof')continue;
       const { x, y } = g.state;
@@ -1497,11 +1429,11 @@ export class Simulation {
     if(m.state.ally||this.now>=m.burnUntil||!(m.poisonStacks??0))return;
     const owner=this.creditOf(m.burnOwner);return owner?.def.id==='sadida'?owner:undefined;
   }
-  damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false): void {
+  damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false,options:{resolvedVulnerability?:boolean;skipStore?:boolean}={}): void {
     if(this.state.phase===PHASE_LOST)return;
-    if(!this.monsters.has(m.id))return;
-    if(this.sadidaPoison(m))amount*=1.1;
-    if(this.now<(m.vulnerableUntil??0))amount*=1+(m.vulnerableBonus??0);
+    if(!this.monsters.has(m.id)||m.state.hp<=0||m.state.carried)return;
+    if(!options.resolvedVulnerability)amount*=1+this.roguelite.vulnerability(m);
+    if(!options.skipStore)this.roguelite.recordDamage(m,Math.min(amount,Math.max(0,m.state.hp)));
     amount = Math.max(1, Math.round(amount));
     const dealer = m.state.ally ? undefined : this.creditOf(ownerId);
     if(dealer&&dealer.id!==ownerId)this.blessings.mark(dealer,m);
@@ -1527,14 +1459,7 @@ export class Simulation {
       const next=[...this.monsters.values()].filter(o=>o!==m&&!o.state.ally&&o.state.hp>0&&Math.hypot(o.state.x-m.state.x,o.state.y-m.state.y)<=4).sort((a,b)=>Math.hypot(a.state.x-m.state.x,a.state.y-m.state.y)-Math.hypot(b.state.x-m.state.x,b.state.y-m.state.y))[0];
       if(next&&(next.poisonStacks??0)<m.poisonStacks!){next.poisonStacks=m.poisonStacks;next.burnDps=m.burnDps;next.burnUntil=m.burnUntil;next.burnNextTick=this.now+.5;next.burnOwner=m.burnOwner;next.burnAttack=m.burnAttack;}
     }
-    // Mort : les kamas sont partagés, chaque joueur reçoit la somme entière.
-    const [kMin, kMax] = m.def.kamas;
-    const kamas = Math.round(kMin + Math.random() * (kMax - kMin));
-    for (const p of this.players.values()) {
-      const gain = Math.round(kamas * (1 + p.stats.kamas) * getRoute(this.state.stageRoute).kamas * getMode(this.state.mode).runKamas);
-      p.state.kamas += gain;
-      p.state.kamasEarned += gain;
-    }
+    if(this.state.phase===PHASE_PLAYING){const route=getRoute(this.state.stageRoute);this.experience.drop(m.state.x,m.state.y,Math.round(enemyExperience(m.def,this.state.stage,this.players.size,m.state.elite)*route.xp*(m.def.boss?route.bossXp:1)));if(m.def.boss)this.experience.sweep();}
     const killer = dealer;
     if (killer) {
       killer.state.kills++;
@@ -1545,17 +1470,10 @@ export class Simulation {
       if(m.def.boss) {
         for(const p of this.players.values()){p.state.bossKills++;if(Math.random()<OGRINE_DROP_CHANCE){const drop=new OgrineState();drop.owner=p.id;drop.x=m.state.x;drop.y=m.state.y;const id=`o${this.nextOgrineId++}`;this.state.ogrines.set(id,drop);this.broadcast('ogrineDrop',{player:p.id,x:drop.x,y:drop.y});}}
         this.awardFragments(`boss:${m.id}`,bossFragments(this.state.stage));
-        for(const p of this.players.values()) {
-          for(let blessing=0;blessing<getRoute(this.state.stageRoute).boons;blessing++){
-          const bases=[...new Set(this.usefulBonuses(p).map(b=>b.base))],offers:string[]=[];
-          while(offers.length<3&&bases.length){const base=bases.splice(Math.floor(Math.random()*bases.length),1)[0],rarity=rollRarity(p.stats.luck+.15);offers.push((RUN_BONUSES[`${base}.${rarity}`]??RUN_BONUSES[`${base}.epique`]).id);}
-          const queue=this.boonQueues.get(p.id)??[];queue.push(offers);this.boonQueues.set(p.id,queue);
-          p.state.boonChoices=JSON.stringify(queue[0]);
-          }
-        }
+        if(!this.bossRewardStages.has(this.state.stage)){this.bossRewardStages.add(this.state.stage);for(const p of this.players.values()){p.build.addRerolls(1);p.pendingBossRewards.push(`boss:${this.state.runId}:${m.id}`);}}
       }
       for (const p of this.players.values()) {
-        const drops = monsterEquipmentDrops(this.state.stage,!!m.def.boss,Math.random,(p.def.id==='enutrof'?2:1)*m.lootMultiplier,(m.dofusMultiplier??1)*dofusDropMultiplier(p),this.state.mode);
+        const drops = monsterEquipmentDrops(this.state.stage,!!m.def.boss,this.random,m.lootMultiplier*(p.def.id==='enutrof'?2:1),(m.dofusMultiplier??1)*dofusDropMultiplier(p),this.state.mode);
         if (!drops.length) continue;
         drops.forEach((gear,index)=>{
           const drop={claimId:`${this.state.runId}:${m.id}:${p.id}:${index}`,gear};
@@ -1569,7 +1487,7 @@ export class Simulation {
       // Choix personnel pour chaque membre, y compris les soutiens et joueurs KO.
       if(this.state.phase===PHASE_PLAYING)for(const p of this.players.values())this.offerBlessings(p);
     }
-    this.broadcast('death', { id: m.id, player: false, x: m.state.x, y: m.state.y, kamas });
+    this.broadcast('death', { id: m.id, player: false, x: m.state.x, y: m.state.y });
     if (this.state.phase === PHASE_PLAYING && this.state.potions.size < MAX_GROUND_POTIONS && Math.random() < POTION_DROP_CHANCE) {
       const id = `p${this.nextPotionId++}`;
       const potion = new PotionState();
@@ -1579,10 +1497,11 @@ export class Simulation {
       this.potionExpires.set(id, this.now + POTION_LIFETIME);
     }
     this.removeMonster(m.id);
+    this.roguelite.onKill(m,killer);
     if(killer)this.blessings.onKill(killer,m);
     this.mechanics.onEnemyDeath(m);
     // Dernier gardien vaincu : la zone se termine aussitôt (victoire de la run en zone finale).
-    if(this.state.phase===PHASE_PLAYING&&this.guardianIds.has(m.id)&&this.guardiansDefeated())this.completeStage();
+    if(this.state.phase===PHASE_PLAYING&&this.guardianIds.has(m.id)&&this.guardiansDefeated()&&!this.experience.sweeping)this.completeStage();
   }
 
   damagePlayer(p: PlayerRt, amount: number, source='Dégâts de combat'): void {
@@ -1593,12 +1512,13 @@ export class Simulation {
     if (p.buffs.some((b) => b.invulnerable && b.until > this.now)) return;
     const chest=[...this.monsters.values()].find(m=>m.allyOwner===p.id&&m.def.id==='coffre_anime'&&m.state.hp>0&&m.expiresAt>this.now);
     if(chest){const intercepted=Math.min(Math.max(1,Math.round(amount)),chest.state.hp);this.damageMonster(chest,intercepted,'');amount-=intercepted;if(amount<=0)return;}
-    amount = dofusIncoming(this,p,amount);
-    amount = Math.max(1, Math.round(amount * Math.pow(ARMOR_FACTOR, p.stats.armor)));
+    const original=amount;amount = dofusIncoming(this,p,amount);
+    amount = Math.max(1,Math.round(this.roguelite.incoming(p,amount,original)));
     if (this.now >= p.shieldUntil) p.state.shield = 0;
     const absorbed = Math.min(p.state.shield, amount);
     p.state.shield -= absorbed;
     amount -= absorbed;
+    if(amount+absorbed>0)this.mechanics.onDamaged(p,Math.min(amount,p.state.hp)+absorbed);
     p.state.dmgTaken += Math.min(amount, Math.max(0, Math.round(p.state.hp)));
     p.state.hp = Math.max(0, p.state.hp - amount);
     p.lastHitAt = this.now;
@@ -1639,13 +1559,17 @@ export class Simulation {
   private finishRun(outcome:'victory'|'defeat'):void{
     this.collectRemainingOgrines();
     if(this.state.phase!==PHASE_PLAYING)return;
+    if(outcome==='victory')this.experience.collectAll();
     this.state.phase = PHASE_FINISHED;
     this.state.outcome=outcome;this.state.paused=false;this.timers=[];this.projectiles=[];
     for (const p of this.players.values()) {
       p.dx=p.dy=0;p.autoAttack=false;p.push=null;p.state.moving=false;p.state.forcedMotion=false;p.state.momentum=false;p.momentumUntil=0;
-      p.state.boonChoices='[]';this.boonQueues.delete(p.id);
+      p.state.boonChoices='[]';p.state.pendingLevels=0;this.boonQueues.delete(p.id);
       if(outcome==='victory'){p.state.deathCause='';p.state.unlockedMode=Math.max(p.state.unlockedMode,nextMode(this.state.mode)??this.state.mode);}
       this.grantRunReward(p,outcome);
+      this.setSpells(p,undefined);p.pendingBossRewards=[];
+      p.inventory.clear();p.buffs=[];
+      p.blessingRanks={};p.state.blessings='{}';this.blessings.reset(p.id);this.mechanics.reset(p.id);this.applyStats(p,false);
     }
   }
 
@@ -1664,7 +1588,7 @@ export class Simulation {
     {
       let seed = 2166136261;
       for (const c of `${this.state.runId}:${p.id}`) seed = Math.imul(seed ^ c.charCodeAt(0), 16777619);
-      const reward=equipmentReward(this.state.runId, seed >>> 0, this.state.stage, this.state.mode, p.state.kamasEarned,p.loot);
+      const reward=equipmentReward(this.state.runId, seed >>> 0, this.state.stage, this.state.mode, runKamasReward(this.state.time,this.state.waves,p.state.bossKills,outcome==='victory'),p.loot);
       reward.ogrineGrants=JSON.parse(p.state.ogrineGrants);
       reward.forgeGrants=JSON.parse(p.state.forgeGrants);
       reward.summary={ogrines:p.state.ogrinesEarned,outcome,runId:this.state.runId,classId:p.def.id,name:p.state.name,startedAt:this.startedAt,duration:Math.floor(this.state.time),partySize:this.partySize,mode:this.state.mode,zone:this.state.stage,zoneName:zoneForStage(this.state.stage).name,waves:this.state.waves,kills:p.state.kills,teamKills:this.state.kills,bossKills:p.state.bossKills,damageDealt:p.state.dmgDealt,healing:p.state.healDone,damageTaken:p.state.dmgTaken,deathCause:p.state.deathCause,bonuses:sumRunStats(p.inventory,{stage:this.state.stage,zoneWave:this.state.zoneWave,mode:this.state.mode}),blessing:getBlessing(p.state.blessing)?.id,blessings:{...p.blessingRanks},loot:[...p.loot.map(d=>d.gear),...reward.gear]};
@@ -1674,46 +1598,24 @@ export class Simulation {
   }
 
   // -------------------------------------------------------------------------
-  // Objets et coffres
+  // Bonus de progression et défis
   // -------------------------------------------------------------------------
 
   /** Recalcule les stats d'un joueur à partir de son inventaire. */
-  applyStats(p: PlayerRt,grantHp=true): void {
+  applyStats(p:PlayerRt,grantHp=true):void {
     p.vitalityWave=`${this.state.stage}:${this.state.zoneWave}:${this.state.mode}`;
-    p.stats = sumRunStats(p.inventory,{stage:this.state.stage,zoneWave:this.state.zoneWave,mode:this.state.mode});
-    for (const [k, v] of Object.entries(p.meta)) p.stats[k as StatKey] += v;
-    p.stats.armor += p.def.armor ?? 0;
-    p.stats.bounce+=p.blessingRanks.ricochet??0;
-    for (const b of p.buffs) for (const [k, v] of Object.entries(b.stats)) p.stats[k as StatKey] += v ?? 0;
-    p.stats.lifesteal+=innateLifesteal(getSpell(p.spells[0]??p.def.spells[0]));
-    p.stats.bounce+=dofusBounce(p);
-    clampCombatStats(p.stats,isRangedAttack(getSpell(p.spells[0]??p.def.spells[0])),p.def.id==='sacrieur');
-    p.state.invisible = p.buffs.some((b) => b.invisible);
-    const oldMax = p.state.maxHp;
-    p.state.maxHp = p.def.maxHp + p.stats.maxHp;
-    p.state.speed = p.def.speed * (1 + p.stats.speed);
-    // Les PV max gagnés sont aussi rendus tout de suite.
-    if (p.state.alive && p.state.maxHp > oldMax && oldMax > 0) p.state.hp = grantHp?p.state.hp+p.state.maxHp-oldMax:p.state.hp*p.state.maxHp/oldMax;
-    p.state.hp = Math.min(p.state.hp, p.state.maxHp);
-    p.state.bonuses = formatRunBonuses(p.inventory);
-    const max=1+Math.max(0,Math.floor(p.stats.secondaryCharge));
-    if(p.state.secondaryMax===1&&max>1&&p.readyAt[1]>this.now){p.secondaryRefillAt=p.readyAt[1];p.readyAt[1]=this.now;}
-    p.state.secondaryCharges=Math.min(max,p.state.secondaryCharges+Math.max(0,max-p.state.secondaryMax));
-    p.state.secondaryMax=max;
-    this.refreshBoonChoices(p);if(this.state.intermission&&p.state.shop)this.refreshShop(p);
-  }
-
-  private consumeSecondary(p:PlayerRt,cooldown:number):void {
-    if(p.state.secondaryMax<=1){p.state.secondaryCharges=0;return;}
-    p.state.secondaryCharges--;
-    if(p.secondaryRefillAt<=this.now)p.secondaryRefillAt=this.now+cooldown/1000;
-    p.readyAt[1]=p.state.secondaryCharges>0?this.now:p.secondaryRefillAt;
-  }
-  private updateSecondary(p:PlayerRt):void {
-    if(p.state.secondaryMax<=1){p.state.secondaryCharges=this.now>=p.readyAt[1]?1:0;return;}
-    const period=getSpell(p.spells[1]).cooldown/1000/(1+p.stats.haste);
-    while(p.secondaryRefillAt>0&&this.now>=p.secondaryRefillAt&&p.state.secondaryCharges<p.state.secondaryMax){p.state.secondaryCharges++;p.secondaryRefillAt=p.state.secondaryCharges<p.state.secondaryMax?p.secondaryRefillAt+period:0;}
-    if(p.state.secondaryCharges===0)p.readyAt[1]=p.secondaryRefillAt;
+    p.stats={...emptyStats(),...p.meta};const build=p.build.currentBuild,passives=passiveStatLayers(ROGUELITE_CATALOG,build).temporaryPassives,parameters=passiveParameters(build);
+    const innate=this.mechanics.passiveStats(p);p.stats.armor+=(p.def.armor??0)+innate.armor;p.stats.luck+=innate.luck;
+    p.stats.haste+=(p.stats.secondaryCharge??0)*.06;p.stats.secondaryCharge=0;
+    for(const[k,v]of Object.entries(passives))p.stats[k as StatKey]+=v;
+    for(const buff of p.buffs)for(const[k,v]of Object.entries(buff.stats))p.stats[k as StatKey]+=v??0;
+    p.stats.bounce+=(p.blessingRanks.ricochet??0)+dofusBounce(p);
+    p.stats.regen+=(parameters.regen??0)*runVitalityScale({stage:this.state.stage,zoneWave:this.state.zoneWave,mode:this.state.mode});
+    clampCombatStats(p.stats,true,p.def.id==='sacrieur');p.state.combatStats=JSON.stringify(p.stats);p.state.invisible=p.buffs.some(b=>b.invisible);
+    const old=p.state.maxHp;p.state.maxHp=Math.round((p.def.maxHp+p.stats.maxHp)*(1+(parameters.hpBonus??0)+Math.min(.45,.03*(build.fallbackCounts['fb.robustesse']??0))));
+    p.state.speed=p.def.speed*(1+p.stats.speed);if(p.state.alive&&p.state.maxHp>old&&old>0)p.state.hp=grantHp?p.state.hp+p.state.maxHp-old:p.state.hp*p.state.maxHp/old;p.state.hp=Math.min(p.state.hp,p.state.maxHp);
+    p.state.bonuses='';p.build.setLuck(p.stats.luck);
+    p.state.abilities=JSON.stringify(build.spells.map((s,i)=>s?this.roguelite.visualAbility(p,i):null));this.syncBuild(p);
   }
 
   giveItem(p: PlayerRt, itemId: string): void {
@@ -1721,52 +1623,46 @@ export class Simulation {
     p.inventory.set(itemId, (p.inventory.get(itemId) ?? 0) + 1);
     this.applyStats(p);
     this.refreshBoonChoices(p);
-    if(this.state.intermission)this.refreshShop(p);
   }
 
-  private usefulBonuses(p:PlayerRt){return Object.values(RUN_BONUSES).filter(b=>bonusUseful(b,p.stats,isRangedAttack(getSpell(p.spells[0])),p.def.id==='sacrieur'));}
-  private usefulChoice(p:PlayerRt,id:string):boolean {return !!getBlessing(id)?(p.blessingRanks[id]??0)<3&&(id!=='ricochet'||p.stats.bounce<3):!!RUN_BONUSES[id]&&bonusUseful(RUN_BONUSES[id],p.stats,isRangedAttack(getSpell(p.spells[0])));}
-  private refreshBoonChoices(p:PlayerRt):void {
-    const queue=this.boonQueues.get(p.id);if(!queue)return;
-    for(let i=0;i<queue.length;i++){const elite=queue[i].some(id=>getBlessing(id)),pool=elite?blessingPool(p.spells.map(getSpell),p.blessingRanks).filter(id=>this.usefulChoice(p,id)):this.usefulBonuses(p).map(b=>b.id);
-      const choices=queue[i].filter(id=>this.usefulChoice(p,id));
-      while(choices.length<3){const candidates=pool.filter(id=>!choices.includes(id)&&(elite||!choices.some(c=>RUN_BONUSES[c]?.base===RUN_BONUSES[id]?.base)));if(!candidates.length)break;choices.push(candidates[Math.floor(Math.random()*candidates.length)]);}queue[i]=choices;
+  private refreshBoonChoices(p:PlayerRt):void {this.syncBuild(p);}
+  private offerLevel():void {for(const p of this.players.values()){p.build.enqueueLevels(1,this.now*1000);this.syncBuild(p);}this.broadcast('runLevel',{level:this.state.runLevel});}
+  private updateChoices():void {
+    for(const p of this.players.values()){
+      if(!this.experience.sweeping)for(const eventId of p.pendingBossRewards.splice(0))p.build.enqueueBonus(eventId,'boss',[],this.now*1000);
+      const offer=p.build.getSnapshot().offer;p.state.choiceRemaining=this.players.size>1&&offer?Math.max(0,(offer.expiresAtMs-this.now*1000)/1000):0;
+      if(this.players.size>1&&offer&&this.now*1000>=offer.expiresAtMs)this.chooseBoon(p.id,0,offer.revision,this.state.runId);
+      this.syncBuild(p);
     }
-    while(queue.length&&!queue[0].length)queue.shift();p.state.boonChoices=JSON.stringify(queue[0]??[]);
-  }
-  private refreshShop(p:PlayerRt):void {
-    const offers=p.state.shop.split(',');for(let i=0;i<offers.length;i++){const item=RUN_BONUSES[offers[i].split(':')[0]];if(p.bought.has(i)||!item||this.usefulChoice(p,item.id))continue;
-      const bases=new Set(offers.filter((_,j)=>j!==i).map(o=>RUN_BONUSES[o.split(':')[0]]?.base)),pool=this.usefulBonuses(p).filter(b=>!bases.has(b.base));if(!pool.length){offers[i]='';continue;}const next=pool[Math.floor(Math.random()*pool.length)];offers[i]=`${next.id}:${merchantPrice(next,this.state.difficulty)}`;
-    }p.state.shop=offers.join(',');
   }
 
-  private spawnChest(kind = 'chest'): void {
+
+  private spawnChallenge(): void {
     for (let attempt = 0; attempt < 40; attempt++) {
       const x = 3 + Math.random() * (this.map.size - 6);
       const y = 3 + Math.random() * (this.map.size - 6);
       if (isBlocked(this.map, x, y, 0.6)) continue;
       if(this.state.zaapX>0 && Math.hypot(x-this.state.zaapX,y-this.state.zaapY)<ZAAP_RANGE+INTERACT_RANGE+.2) continue;
       if(this.state.hasCursedZaap&&Math.hypot(x-this.state.cursedZaapX,y-this.state.cursedZaapY)<ZAAP_RANGE+INTERACT_RANGE+.2)continue;
-      // Pas deux coffres collés, ni un coffre sur le point d'apparition.
+      // Pas deux défis collés, ni une balise sur le point d'apparition.
       if (Math.hypot(x - MAP_SIZE / 2, y - MAP_SIZE / 2) < 5) continue;
       let tooClose = false;
-      this.state.chests.forEach((c) => {
+      this.state.challenges.forEach((c) => {
         if (Math.hypot(c.x - x, c.y - y) < 6) tooClose = true;
       });
       if (tooClose) continue;
-      const chest = new ChestState();
-      chest.kind = kind;
+      const chest = new ChallengeState();
       chest.x = x;
       chest.y = y;
-      this.state.chests.set(`c${this.nextChestId++}`, chest);
+      this.state.challenges.set(`c${this.nextChallengeId++}`, chest);
       return;
     }
   }
 
-  /** Le joueur appuie sur « interagir » : ouvre le coffre le plus proche s'il a de quoi payer. */
+  /** Le joueur appuie sur « interagir » : active le Zaap ou un défi gratuit. */
   interact(id: string): void {
     const p = this.players.get(id);
-    if (!p || !p.state.alive || this.state.phase !== PHASE_PLAYING || this.state.paused || this.state.intermission) return;
+    if (!p || !p.state.alive || this.state.phase !== PHASE_PLAYING || this.state.paused || this.choicePaused || this.state.intermission) return;
 
     if(this.state.hasCursedZaap&&this.state.zaapState===ZAAP_IDLE&&Math.hypot(this.state.cursedZaapX-p.state.x,this.state.cursedZaapY-p.state.y)<=ZAAP_RANGE)return this.enterCursedZone();
     // Zaap à portée : on l'active, ou on part pour la zone suivante s'il est prêt.
@@ -1777,36 +1673,23 @@ export class Simulation {
 
     let bestId = '';
     let best = INTERACT_RANGE;
-    this.state.chests.forEach((c, cid) => {
+    this.state.challenges.forEach((c, cid) => {
       const d = Math.hypot(c.x - p.state.x, c.y - p.state.y);
       if (!c.opened && d <= best) {
         best = d;
         bestId = cid;
       }
     });
-    const chest = this.state.chests.get(bestId);
-    if (chest?.kind === 'challenge') return this.activateChallenge(bestId, chest.x, chest.y);
-    if (!chest || p.state.kamas < this.state.chestCost) return;
-
-    p.state.kamas -= this.state.chestCost;
-    chest.opened = true;
-    // La chance du joueur améliore la rareté (communs, rares, épiques).
-    const item = rollRunBonus(p.stats.luck,Math.random,p.stats,isRangedAttack(getSpell(p.spells[0])),p.def.id==='sacrieur');
-    this.giveItem(p, item.id);
-    this.broadcast('item', { player: id, item: item.id, x: chest.x, y: chest.y });
-    if(dofusExtraChestItem(p)){const extra=rollRunBonus(p.stats.luck,Math.random,p.stats,isRangedAttack(getSpell(p.spells[0])),p.def.id==='sacrieur');this.giveItem(p,extra.id);this.broadcast('item',{player:id,item:extra.id,x:chest.x,y:chest.y});}
-
-    // Le coffre vide disparaît, un nouveau apparaît ailleurs un peu plus tard.
-    this.after(4, () => this.state.chests.delete(bestId));
-    this.after(25, () => this.spawnChest());
+    const chest = this.state.challenges.get(bestId);
+    if(chest)return this.activateChallenge(bestId,chest.x,chest.y);
   }
 
   /** Défi facultatif et gratuit : un élite de la région apparaît près de la balise. */
   private activateChallenge(id: string, x: number, y: number): void {
-    const chest = this.state.chests.get(id);
+    const chest = this.state.challenges.get(id);
     if (!chest || chest.opened) return;
     chest.opened = true;
-    this.after(3, () => this.state.chests.delete(id));
+    this.after(3, () => this.state.challenges.delete(id));
     const diff = this.state.difficulty;
     const pool = this.zoneMonsters().filter((m) => m.minDifficulty <= diff);
     const def = pool[Math.floor(Math.random() * pool.length)];
@@ -1832,39 +1715,21 @@ export class Simulation {
       this.broadcast('forgeGrant',{player:p.id,grant});
     }
   }
-  chooseBoon(id:string,choice:unknown):void {
-    const p=this.players.get(id),queue=this.boonQueues.get(id),index=Number(choice);
-    if(!p?.state.alive||this.state.paused||this.state.phase!==PHASE_PLAYING||!queue?.length||!Number.isInteger(index)||index<0||index>2)return;
-    const selected=queue[0][index];if(!selected)return;if(!this.usefulChoice(p,selected)){this.refreshBoonChoices(p);return;}queue.shift();
-    if(getBlessing(selected)){p.blessingRanks[selected]=Math.min(3,(p.blessingRanks[selected]??0)+1);p.state.blessings=JSON.stringify(p.blessingRanks);this.applyStats(p);}else this.giveItem(p,selected);
-    if(queue[0]?.some(id=>getBlessing(id)&&(p.blessingRanks[id]??0)>=3)){
-      const pool=blessingPool(p.spells.map(getSpell),p.blessingRanks).filter(id=>id!=='ricochet'||p.stats.bounce<3);queue[0]=queue[0].filter(id=>(p.blessingRanks[id]??0)<3);while(queue[0].length<3&&pool.some(id=>!queue[0].includes(id))){const eligible=pool.filter(id=>!queue[0].includes(id));queue[0].push(eligible[Math.floor(Math.random()*eligible.length)]);}if(!queue[0].length)queue.shift();
-    }
-    this.refreshBoonChoices(p);
-    this.broadcast('buff',{target:id,label:getBlessing(selected)?.name??'Récompense du gardien',duration:2});
+  chooseBoon(id:string,choice:unknown,revision?:number,runId?:string):void {
+    const p=this.players.get(id),index=Number(choice);if(!p||this.state.paused||this.state.phase!==PHASE_PLAYING||!Number.isInteger(index))return;
+    const offer=p.build.getSnapshot().offer;if(!offer||index<0||index>=offer.choices.length)return;
+    const selected=p.build.choose({runId:runId??this.state.runId,revision:revision??offer.revision,choiceId:offer.choices[index].id},this.now*1000);if(!selected)return;
+    if(selected.kind==='blessing'){p.blessingRanks[selected.definitionId]=Math.min(3,(p.blessingRanks[selected.definitionId]??0)+1);p.state.blessings=JSON.stringify(p.blessingRanks);}
+    if(selected.kind==='evolution'){const slot=p.build.currentBuild.spells.findIndex(s=>s?.spellId===selected.definitionId);p.readyAt[slot]=this.now;this.roguelite.evolved(p,slot);}
+    if(selected.kind==='fallback'&&selected.definitionId==='fb.potion'){this.healPlayer(p,p.state.maxHp*.35);p.state.shield=Math.max(p.state.shield,p.state.maxHp*.1);p.shieldUntil=this.now+5;}
+    this.syncBuild(p);this.applyStats(p);this.broadcast('buff',{target:id,label:selected.kind==='evolution'?'Évolution ultime !':'Amélioration de run',duration:1.2});
   }
-  private offerBlessings(p:PlayerRt):void{
-    const pool=blessingPool(p.spells.map(getSpell),p.blessingRanks).filter(id=>id!=='ricochet'||p.stats.bounce<3),offers:string[]=[];
-    while(offers.length<3&&pool.length)offers.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
-    if(!offers.length)return;const queue=this.boonQueues.get(p.id)??[];queue.push(offers);this.boonQueues.set(p.id,queue);p.state.boonChoices=JSON.stringify(queue[0]);
+  private offerBlessings(p:PlayerRt):void {
+    const pool=blessingPool(p.spells.map(getSpell),p.blessingRanks),choices:string[]=[];
+    while(pool.length&&choices.length<3)choices.push(pool.splice(Math.floor(this.random()*pool.length),1)[0]);
+    p.build.enqueueBonus(`elite:${this.state.runId}:${this.state.kills}`,'elite',choices,this.now*1000);this.syncBuild(p);
   }
 
-  /** Achat chez le marchand (une fois par offre et par joueur, à côté du marchand). */
-  buy(id: string, index: unknown): void {
-    const p = this.players.get(id);
-    const i = Number(index);
-    if (!p || !p.state.alive || !this.state.intermission || this.state.paused || p.state.shopReady || !Number.isInteger(i) || i<0 || p.bought.has(i) || !p.state.shop) return;
-    const offer = p.state.shop.split(',')[i];
-    if (!offer) return;
-    const [itemId, price] = offer.split(':');
-    if (!RUN_BONUSES[itemId] || p.state.kamas < Number(price)) return;
-    if(!this.usefulChoice(p,itemId)){this.refreshShop(p);return;}
-    p.state.kamas -= Number(price);
-    p.bought.add(i);
-    p.state.bought = [...p.bought].join(',');
-    this.giveItem(p, itemId);
-    this.broadcast('item', { player: id, item: itemId, x: p.state.x, y: p.state.y });
-  }
 
   after(seconds: number, run: () => void): void {
     this.timers.push({ at: this.now + seconds, run });

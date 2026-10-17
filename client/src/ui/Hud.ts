@@ -1,20 +1,21 @@
-import {innateLifesteal,clampCombatStats,isRangedAttack} from '@rod/shared';
-// HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, kamas, équipe, bandeaux.
+import {classSpellShape,combatStatsView,innateLifesteal,clampCombatStats,isRangedAttack} from '@rod/shared';
+// HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, XP, équipe, bandeaux.
 import { affinityProgress, getRoute, CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, FINAL_STAGE, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, zoneForStage, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
+import {ROGUELITE_CATALOG,abilitySummary,type EffectiveRogueliteAbility} from '@rod/shared/roguelite';
 import { spellIconSvg } from './icons.ts';
 import { spellDetailsHtml } from './spellInfo.ts';
 import { account } from '../account.ts';
 import { equipmentCard } from './equipmentHtml.ts';
 import { EQUIPMENT_BASES, EQUIPMENT_RARITY_NAMES, type GearDrop } from '@rod/shared';
-import {leveledSpell,spellEvolutionText,assaultPlan,blessingSpell,parseBlessings} from '@rod/shared';
+import {assaultPlan,blessingSpell,parseBlessings} from '@rod/shared';
 import { saveSettings, settings } from '../settings.ts';
 import { DPS_WINDOW, dpsOf } from './dps.ts';
 import { gameSettings } from './GameSettings.ts';
 
 
-const SLOT_KEYS = ['Clic G', 'Clic D', 'Espace', 'R'];
+const SLOT_KEYS = ['SIGNATURE', 'AUTO', 'AUTO', 'AUTO'];
 
 function $(id: string): HTMLElement {
   return document.getElementById(id)!;
@@ -68,6 +69,8 @@ export class Hud {
     this.ogrineBanner.textContent=message;this.ogrineBanner.classList.remove('hidden');clearTimeout(this.ogrineTimer);this.ogrineTimer=setTimeout(()=>this.ogrineBanner.classList.add('hidden'),5500);
   }
   private spellLevels:Record<string,number>={};
+  
+  private currentClass='cra';
   private blessingRanks:Record<string,number>={};
   private spellEls: HTMLElement[] = [];
   private cdEls: HTMLElement[] = [];
@@ -89,6 +92,8 @@ export class Hud {
   /** Bonus d'objets du joueur local (pour les infobulles). */
   private stats: Record<StatKey, number> = sumRunStats(new Map());
   private spellIds: string[] = [];
+  private runAbilities:(EffectiveRogueliteAbility|null)[]=[];
+  setRunAbilities(raw:string):void {try{this.runAbilities=JSON.parse(raw);}catch{this.runAbilities=[];}}
   get playerStats(): Record<StatKey,number> { return this.stats; }
   collectDrop(drop:GearDrop): void {
     if (!account.claimDrops([drop])) return;
@@ -170,12 +175,6 @@ export class Hud {
     }, { signal });
     $('room-code').addEventListener('click', () => this.copyInvite(), { signal });
 
-    const kama = store.uiUrl('kama');
-    if (kama) {
-      const el = document.querySelector<HTMLElement>('.kama-icon')!;
-      el.classList.add('img');
-      el.style.backgroundImage = `url("${kama}")`;
-    }
   }
 
   show(roomCode: string): void {
@@ -190,7 +189,7 @@ export class Hud {
     this.resizeObserver.disconnect();
     $('hud').classList.add('hidden');
     $('gameover').classList.add('hidden');
-    for(const id of ['details','shop','spell-tip','toast','prompt','banner']) $(id).classList.add('hidden');
+    for(const id of ['details','rest','spell-tip','toast','prompt','banner']) $(id).classList.add('hidden');
     this.abort.abort();
   }
 
@@ -219,7 +218,7 @@ export class Hud {
     this.cdEls = [];
     this.wasReady = [];
     spellIds.forEach((id, slot) => {
-      const spell = leveledSpell(id,levels[id]);
+      const spell = getSpell(id);
       const url = this.store.spellIconUrl(spell.icon);
       const el = document.createElement('div');
       el.className = 'spell ready';
@@ -227,7 +226,7 @@ export class Hud {
       void stats;
       el.addEventListener('mouseenter', () => this.showTip(slot));
       el.addEventListener('mouseleave', () => this.showTip(null));
-      el.innerHTML = `<div class="spell-icon">${url ? `<img alt="">` : spellIconSvg(spell)}<div class="spell-cd"></div></div><span class="spell-level">${levels[id]??1}</span><div class="spell-key">${SLOT_KEYS[slot] ?? ''}</div>`;
+      el.innerHTML = `<div class="spell-icon">${url ? `<img alt="">` : spellIconSvg(spell)}<div class="spell-cd"></div></div><span class="spell-level">${id.startsWith('ev.')?'✦ ÉVOLUÉ':(levels[id]??1)+'/8'}</span><div class="spell-key">${SLOT_KEYS[slot] ?? ''}</div>`;
       if (url) {
         // Icône fournie ; si elle ne se charge pas, on retombe sur le placeholder.
         const img = el.querySelector('img')!;
@@ -239,6 +238,7 @@ export class Hud {
       this.cdEls.push(el.querySelector<HTMLElement>('.spell-cd')!);
       this.wasReady.push(true);
     });
+    for(let slot=spellIds.length;slot<4;slot++){const empty=document.createElement('div');empty.className='spell spell-empty';empty.title='Obtenez un sort en montant de niveau';empty.innerHTML='<div class="spell-icon">＋</div><div class="spell-key">LIBRE</div>';bar.appendChild(empty);}
   }
 
   /** La scène s'abonne au survol des sorts (remplace le rappel donné à la construction). */
@@ -247,13 +247,6 @@ export class Hud {
   }
 
   private dashEl?: HTMLElement;
-  updateCharges(current:number,max:number):void {
-    const el=this.spellEls[1];if(!el)return;
-    let badge=el.querySelector<HTMLElement>('.spell-charges');
-    if(max<=1){badge?.remove();return;}
-    if(!badge){badge=document.createElement('span');badge.className='spell-charges';el.appendChild(badge);}
-    badge.textContent=`${current}/${max}`;badge.title='Charges du clic droit · se rechargent une par une';
-  }
   private dashReady = true;
 
   /** Emplacement du dash (Maj) en bout de barre, avec son temps de recharge. */
@@ -282,8 +275,9 @@ export class Hud {
       tip.classList.add('hidden');
       return;
     }
-    const spell = blessingSpell(leveledSpell(this.spellIds[slot],this.spellLevels[this.spellIds[slot]]),this.blessingRanks),level=spell.upgradeLevel??1;
-    tip.innerHTML = `<div class="tip-name">${escapeHtml(spell.name)} <small>${SLOT_KEYS[slot] ?? ''} · NIV. ${level}</small></div><div class="tip-desc">${escapeHtml(spell.description)}</div><p class="spell-evolution">${escapeHtml(spellEvolutionText(spell.id,level))}</p>${spellDetailsHtml(spell, this.stats, slot)}`;
+    if(ROGUELITE_CATALOG.spell(this.spellIds[slot])){const a=this.runAbilities[slot],def=ROGUELITE_CATALOG.spell(this.spellIds[slot])!;tip.innerHTML=`<div class="tip-name">${escapeHtml(def.name)} · ${this.spellIds[slot].startsWith('ev.')?'ÉVOLUTION':(this.spellLevels[this.spellIds[slot]]??1)+'/8'}</div><div class="tip-desc">${escapeHtml(def.description)}</div><p>${a?escapeHtml(abilitySummary(a)):''}</p>`;tip.style.bottom=`${$('hud-bottom').offsetHeight+18}px`;tip.classList.remove('hidden');return;}
+    const spell=getSpell(this.spellIds[slot]);
+    tip.innerHTML=`<div class="tip-name">${escapeHtml(spell.name)}</div>${spellDetailsHtml(spell,this.stats,slot)}`;
     // Toujours juste au-dessus de la barre du bas, quelle que soit sa hauteur (objets sur plusieurs lignes).
     tip.style.bottom = `${$('hud-bottom').offsetHeight + 18}px`;
     tip.classList.remove('hidden');
@@ -385,7 +379,7 @@ export class Hud {
       } catch { /* Attend l'état complet. */ }
     }
 
-    // Aide d'interaction (coffre à portée)
+    // Aide d'interaction (défi ou Zaap à portée)
     this.setHtml('prompt', prompt);
     $('prompt').classList.toggle('hidden', prompt === '');
     if (prompt) {
@@ -394,15 +388,11 @@ export class Hud {
     }
 
     // Résumé compact des bonus de run, distinct de la tenue permanente.
-    if (me && this.cache.items !== `${me.bonuses}|${me.equipment}|${me.blessings}|${state.stage}|${state.zoneWave}`) {
-      this.cache.items = `${me.bonuses}|${me.equipment}|${me.blessings}|${state.stage}|${state.zoneWave}`;
+    if (me && this.cache.items !== `${me.bonuses}|${me.equipment}|${me.blessings}|${me.combatStats}|${state.stage}|${state.zoneWave}`) {
+      this.cache.items = `${me.bonuses}|${me.equipment}|${me.blessings}|${me.combatStats}|${state.stage}|${state.zoneWave}`;
       this.stats = playerItemStats(parseRunBonuses(me.bonuses), me.equipment,{stage:state.stage,zoneWave:state.zoneWave,mode:state.mode});
-      this.blessingRanks=parseBlessings(me.blessings);this.stats.bounce+=this.blessingRanks.ricochet??0;this.stats.lifesteal+=innateLifesteal(getSpell(me.spells.split(',')[0]||CLASSES[me.classId].spells[0]));clampCombatStats(this.stats,isRangedAttack(getSpell(me.spells.split(',')[0]||CLASSES[me.classId].spells[0])));
-      const run=sumRunStats(parseRunBonuses(me.bonuses),{stage:state.stage,zoneWave:state.zoneWave,mode:state.mode});
-      const lines=Object.entries(run).filter(([,v])=>v>0);
-      $('run-gains').innerHTML=lines.length ? `<span class="run-gains-label">BONUS DE RUN</span>${lines.slice(0,3).map(([k,v])=>`<span>${escapeHtml(k==='multishot'?`+${Math.ceil(v)} tirs · ${Math.round(v/Math.ceil(v)*100)} %`:statText(k as StatKey,v))}</span>`).join('')}<small>Tab · récapitulatif complet</small>` : '';
-      const affinities=affinityProgress(parseRunBonuses(me.bonuses)).filter(p=>p.count>0);
-      if(affinities.length)$('run-gains').innerHTML+=`<span class="affinity-badges">${affinities.map(({affinity,count})=>`<span class="affinity-badge ${count>=3?'active':''}" style="--affinity:${affinity.color}" title="${affinity.name} : ${count} bonus différents. Seuils 3 et 5 ; détails sur Tab.">${affinity.icon} ${affinity.name} ${Math.min(count,5)}/${count<3?3:5}</span>`).join('')}</span>`;
+      this.blessingRanks=parseBlessings(me.blessings);this.stats=combatStatsView(me.combatStats,this.stats);
+      $('run-gains').innerHTML='';
     }
 
     // PV
@@ -415,8 +405,12 @@ export class Hud {
         this.cache.hpFill = pct;
         $('hp-fill').style.height = pct;
       }
-      this.setText('kamas', String(me.kamas));
+      this.currentClass=me.classId;
     }
+    const xp=$('run-xp');xp.classList.toggle('hidden',state.phase!==PHASE_PLAYING);
+    this.setText('run-level',`Niveau ${state.runLevel}`);this.setText('run-xp-text',`${state.runXp} / ${state.xpToNext} XP`);
+    const xpPercent=Math.min(100,state.runXp/Math.max(1,state.xpToNext)*100);$('run-xp-fill').style.width=`${xpPercent}%`;xp.setAttribute('aria-valuenow',String(Math.round(xpPercent)));
+    if(this.cache.xpLevel!==String(state.runLevel)){if(this.cache.xpLevel&&state.runLevel>1)xp.animate([{filter:'brightness(2.5)'},{filter:'brightness(1)'}],{duration:650});this.cache.xpLevel=String(state.runLevel);}
     this.setText('kills', String(state.kills));
 
     // Timer et difficulté
@@ -435,7 +429,7 @@ export class Hud {
     // Objectif de la zone
     let objective = '';
     if (state.phase === PHASE_PLAYING) {
-      if(state.intermission)objective='<b>Halte marchande</b> — choisissez vos bonus puis confirmez « Prêt »';
+      if(state.intermission)objective='<b>Halte de l’équipe</b> — choisissez votre route puis confirmez « Prêt »';
       else {
       // Progression de la campagne : « Zone X/Y », en plus du nom de la zone.
       const zone=`Zone ${state.stage}/${FINAL_STAGE}`;
@@ -569,7 +563,7 @@ export class Hud {
         $('gameover-stats').textContent = `${won?'Kralamoure vaincu · 33 donjons terminés en':'Vous avez tenu'} ${formatTime(state.time)} — ${state.kills} monstres vaincus`;
         let rows = '';
         state.players.forEach((p: PlayerView) => {
-          rows += `<div class="go-row"><span>${escapeHtml(p.name)}</span><span>☠ ${p.kills} &nbsp; ${p.kamas} K</span></div>`;
+          rows += `<div class="go-row"><span>${escapeHtml(p.name)}</span><span>☠ ${p.kills} &nbsp; Niv. ${state.runLevel}</span></div>`;
         });
         $('gameover-players').innerHTML = rows;
       }

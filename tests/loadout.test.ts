@@ -1,38 +1,13 @@
-// Sorts équipés : clic gauche et R gardent leurs variantes, clic droit et Espace partagent un lot sans doublon.
-import { test } from 'node:test';
+import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import { allowedSpells, flexSpells, getClass, sanitizeLoadout } from '../shared/src/index.ts';
-
-test('clic droit et Espace acceptent tout le lot commun, clic gauche et R seulement leurs variantes', () => {
-  const base = getClass('iop').spells;
-  const pool = flexSpells('iop');
-  assert.ok(pool.includes(base[1]) && pool.includes(base[2]));
-  assert.ok(pool.includes('epee_celeste') && pool.includes('bond') && pool.includes('vitalite'));
-  assert.deepEqual(allowedSpells('iop', 1), pool);
-  assert.deepEqual(allowedSpells('iop', 2), pool);
-  // Une variante du clic gauche ou du R ne va pas ailleurs, et un sort libre ne va pas sur R.
-  assert.ok(!pool.includes('intimidation') && !pool.includes('epee_du_jugement'));
-  assert.ok(!allowedSpells('iop', 3).includes('bond'));
+import {CLASSES} from '@rod/shared';
+import {ROGUELITE_CATALOG as C,ROGUELITE_SIGNATURES,createRunBuild,applyLevelReward,availableLevelRewards,validateRunBuild} from '@rod/shared/roguelite';
+test('Chaque classe présente une signature unique, les trois places suivantes sont acquises en run',()=>{
+ for(const id of Object.keys(CLASSES)){assert.deepEqual(CLASSES[id].spells,[ROGUELITE_SIGNATURES[id]]);const build=createRunBuild(C,id);assert.equal(build.spells[0]!.spellId,ROGUELITE_SIGNATURES[id]);assert.ok(build.spells.slice(1).every(s=>s===null));}
 });
-
-test('un sort libre peut changer d emplacement, mais pas occuper les deux', () => {
-  const base = getClass('iop').spells;
-  // Échange des deux sorts de base, et alternative du clic droit posée sur Espace.
-  assert.deepEqual(sanitizeLoadout('iop', [base[0], base[2], base[1], base[3]]), [base[0], base[2], base[1], base[3]]);
-  assert.deepEqual(sanitizeLoadout('iop', [base[0], 'bond', 'epee_celeste', base[3]]), [base[0], 'bond', 'epee_celeste', base[3]]);
-  // Doublon : le second emplacement reprend un sort libre encore inutilisé.
-  const dup = sanitizeLoadout('iop', [base[0], 'bond', 'bond', base[3]]);
-  assert.equal(dup[1], 'bond');
-  assert.notEqual(dup[2], 'bond');
-  assert.ok(flexSpells('iop').includes(dup[2]));
-  // Sorts hors lot ou d'une autre classe : retour au sort de base.
-  assert.deepEqual(sanitizeLoadout('iop', ['bond', 'fleche_magique', 'intimidation', 'bond']), base);
-});
-
-test('classes sans alternatives : les deux sorts libres s échangent quand même', () => {
-  for (const id of ['osamodas', 'enutrof', 'xelor', 'pandawa']) {
-    const base = getClass(id).spells;
-    assert.deepEqual(flexSpells(id), [base[1], base[2]]);
-    assert.deepEqual(sanitizeLoadout(id, [base[0], base[2], base[1], base[3]]), [base[0], base[2], base[1], base[3]]);
-  }
+test('Acquisition commune : quatre sorts au plus, aucun doublon et signature fixe',()=>{
+ let build=createRunBuild(C,'iop');const initial=build.spells[0]!.spellId;
+ for(const id of ['sp.ronce','sp.fleche_magique','sp.karcham'])build=applyLevelReward(C,build,availableLevelRewards(C,build).find(c=>c.kind==='acquireSpell'&&c.definitionId===id)!);
+ assert.equal(build.spells[0]!.spellId,initial);assert.equal(availableLevelRewards(C,build).filter(c=>c.kind==='acquireSpell').length,0);
+ const copy=structuredClone(build);copy.spells[1]=copy.spells[0];assert.throws(()=>validateRunBuild(C,copy));
 });

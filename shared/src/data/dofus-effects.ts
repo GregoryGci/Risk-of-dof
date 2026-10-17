@@ -6,7 +6,7 @@ export const DOFUS_EFFECTS: Record<string, string> = {
   dofus_vulbis: 'Esquive rechargée 25 % plus vite.',
   dofus_ocre: 'Toutes les 10 s, votre prochain sort ne consomme pas sa recharge.',
   dofus_cawotte: 'Régénération doublée après 5 s sans être touché.',
-  dofus_kaliptus: 'Un objet de plus toutes les 10 ouvertures de coffre.',
+  dofus_kaliptus: 'Le rayon de récupération de l’XP augmente de 25 %.',
   dofus_ebene: 'Vos coups empoisonnent : 15 % des dégâts en 3 s (sans cumul).',
   dofus_ivoire: 'Le premier coup reçu toutes les 8 s est réduit de moitié.',
   dofus_glaces: 'Vos coups critiques ralentissent la cible de 25 % pendant 1 s.',

@@ -1,0 +1,17 @@
+#passive-slots{display:grid;grid-template-columns:repeat(4,minmax(60px,1fr));gap:6px;margin:6px 0;pointer-events:auto}
+.passive-slot{min-width:0;padding:6px 8px;background:#142027ee;border:1px solid #647a7c;color:#e2dfc8;text-align:center;border-radius:4px;font-size:11px}
+.passive-slot b,.passive-slot small{display:block}.passive-slot small{margin-top:4px;color:#93cce2}.passive-slot.empty{color:#8f9fa8;font-size:20px;border-style:dashed}
+.evolution-ready{border-color:#e8bf59;box-shadow:0 0 8px #e8bf5930}.spell-empty{opacity:.5;pointer-events:auto}.spell-empty .spell-icon{display:grid;place-items:center;color:#bfc8c5;font-size:25px;border:1px dashed #8e9694}
+#boon-choices{width:min(1040px,95vw);max-height:85dvh;overflow:auto}
+#boon-choices .level-choice-grid{grid-template-columns:repeat(var(--choice-count,3),minmax(0,1fr));align-items:stretch}
+#boon-choices .reward-card{display:flex;flex-direction:column;gap:6px;min-width:0}
+#boon-choices .reward-card .level-choice{flex:1;width:100%;min-height:250px;max-width:none}
+#boon-choices .reward-card .banish-card{min-width:0;max-width:none;width:100%;padding:5px 8px;text-align:center;font-size:11px}
+#boon-choices .evolution-card{border-color:#f3c967;border-top-color:#f3c967;background:linear-gradient(145deg,#49351b,#1a2428)}
+.reward-synergy{margin-top:auto;color:#e9cb80!important}.reward-actions{display:flex;align-items:center;gap:16px;margin-top:14px}.reward-actions .btn{min-width:0!important}
+.talents-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:18px}
+.talent-card{display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid #8d806052;background:#162229c9;border-radius:6px}
+.talent-card p{margin:0;font-size:12px;line-height:1.6}.talent-card small{font-size:11px;line-height:1.5;color:#b4c5c7}.talent-card .btn{margin-top:auto}.talent-head{display:flex;align-items:center;gap:10px}.talent-head img{width:38px;height:38px;object-fit:contain}.talent-head b{flex:1}.talent-head span{color:#91d5f1;white-space:nowrap}.talent-card progress{width:100%;height:8px;accent-color:#83c5e6}.talent-card.maxed{border-color:#ddba63}.spell-max{color:#e4c576;font-size:12px}.talents-bank small{display:block;margin-top:10px}.migration-note{padding:12px;border-left:2px solid #8ecbdc;background:#2d52652b;font-size:12px}
+#blessing-hud{display:flex;gap:4px;flex-wrap:wrap;max-width:340px}#blessing-hud img{width:22px;height:22px;object-fit:contain}
+@media(max-width:760px){#boon-choices .level-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#boon-choices .reward-card .level-choice{min-height:180px}.passive-slot{font-size:10px;padding:4px}}
+@media(max-width:480px){#boon-choices .level-choice-grid{grid-template-columns:1fr}#boon-choices .reward-card .level-choice{min-height:0}.talents-grid{grid-template-columns:1fr}}

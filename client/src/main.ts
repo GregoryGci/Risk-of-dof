@@ -10,6 +10,7 @@ import { TalentsPage } from './ui/Talents.ts';
 import { EquipmentPage } from './ui/EquipmentPage.ts';
 import { EncyclopediaPage } from './ui/EncyclopediaPage.ts';
 import './skin-shop.css';
+import './roguelite.css';
 import {SkinShop} from './ui/SkinShop.ts';
 import {HistoryPage} from './ui/HistoryPage.ts';
 import {AccountPage} from './ui/AccountPage.ts';
@@ -94,7 +95,7 @@ renderClassPicker();
 // Arbre de talents : depuis l'accueil, ou depuis le salon (les sorts équipés sont alors envoyés au serveur).
 let currentRoom: Room | null = null;
 const talents = new TalentsPage(null, classId, async (cls) => {
-  if (currentRoom && cls === classId){currentRoom.send('loadout', { spells: account.loadout(cls) });await cloud.flush();currentRoom?.send('refreshProgression');}
+  if (currentRoom && cls === classId){await cloud.flush();currentRoom?.send('refreshProgression');}
 });
 $('btn-talents').addEventListener('click', () => talents.open(classId));
 const equipmentPage = new EquipmentPage(() => {
@@ -125,7 +126,7 @@ function renderProfile(): void {
   $('home-progress').textContent = `PALIER ${tier.level} · ${account.inventory.length} ÉQUIPEMENTS`;
   $('equipment-summary').textContent = `${count} emplacements équipés · ${account.inventory.length} objets`;
   $('collection-summary').textContent = `${account.discovered.length} / ${account.catalogSize} découverts`;
-  $('talents-summary').textContent = `${account.bank.toLocaleString('fr')} kamas pour débloquer vos sorts`;
+  $('talents-summary').textContent = `${account.bank.toLocaleString('fr')} kamas · cinq paliers permanents par sort`;
   $('solo-character').innerHTML = `<img src="assets/dofus/portraits/${classId}.png" alt=""><div><b>${CLASSES[classId].name}</b><span>${CLASSES[classId].maxHp + account.bonuses.maxHp} PV de départ · ${count} équipements</span></div>`;
 }
 function showView(view: string): void {
@@ -209,7 +210,7 @@ async function connect(join: () => Promise<Room>): Promise<void> {
   }
 }
 
-const joinOptions = () => ({ name: pseudo(), classId, spells: account.loadout(classId), equipment: account.equipmentPayload,accessToken:cloud.session?.access_token });
+const joinOptions = () => ({ name: pseudo(), classId, equipment: account.equipmentPayload,accessToken:cloud.session?.access_token });
 btnCreate.addEventListener('click', () => connect(() => client.create(ROOM_NAME, joinOptions())));
 btnSolo.addEventListener('click', () => connect(async () => {
   const room = await client.create(ROOM_NAME, { ...joinOptions(), singlePlayer: true });
@@ -299,7 +300,7 @@ async function startGame(room: Room): Promise<void> {
       classId = id;
       localStorage.setItem('rod.classe', id);
       renderClassPicker();
-      room.send('class', { classId: id, spells: account.loadout(id) });
+      room.send('class', { classId: id });
     },
   });
 

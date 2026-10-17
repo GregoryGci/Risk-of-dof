@@ -1,27 +1,27 @@
 import {getPetAttack} from '@rod/shared';
+import {migrateRogueliteInvestment,type RogueliteInvestmentMigration} from '../../shared/src/roguelite/migration.ts';
+import type {PermanentSpellRanks} from '@rod/shared/roguelite';
 import {sanitizeRunSummary,type RunSummary} from '@rod/shared';
 import {sanitizeProfile,type PlayerProfile} from '@rod/shared';
-import {sanitizeSpellLevels,type SpellLevelBook} from '@rod/shared';
 import {skinById,sanitizeSkinBook} from '@rod/shared';
 import {unlockedModeFromProgression} from '@rod/shared';
 import { EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, createEquipment, sanitizeEquipment, sanitizeEquipped, slotKind, type EquipmentStack, type EquipmentSlot, type EquippedGear } from '@rod/shared';
 
 export interface AccountData {
+  permanentSpellRanks:PermanentSpellRanks;
+  rogueliteMigration:RogueliteInvestmentMigration;
   equipmentCatalogVersion:2;
   ogrines:number;
   claimedOgrines:string[];
   skins:string[];
   equippedSkins:Record<string,string>;
   unlockedMode:number;
-  spellLevels:SpellLevelBook;
   profile:PlayerProfile;
   history:RunSummary[];
   version: 3;
   bank: number;
   fragments: number;
   claimedFragments: string[];
-  unlocked: string[];
-  loadouts: Record<string, string[]>;
   credited: string[];
   inventory: EquipmentStack[];
   claimedDrops: string[];
@@ -59,12 +59,10 @@ export function equippedFromAccount(data: AccountData): EquippedGear {
 
 /** Migration déterministe : conserver sorts/bourse, convertir tout le capital de stats. */
 export function migrateAccount(raw: unknown): AccountData {
-  const old = object(raw);
-  const loadouts: Record<string, string[]> = {};
-  for (const [cls, spells] of Object.entries(object(old.loadouts))) loadouts[cls] = strings(spells).slice(0, 4);
+  const old = object(raw),roguelite=migrateRogueliteInvestment(old);
   const legacyLevels=[20,40,80,120,160,170,180,190,200],oldTier=integer(old.bestTier,8);
   const migratedTier=old.equipmentCatalogVersion===2?integer(old.bestTier,EQUIPMENT_TIERS.length-1):EQUIPMENT_TIERS.findIndex(t=>t.level>=legacyLevels[oldTier]);
-  const data: AccountData = { petAttacks: sanitizePetAttacks(old.petAttacks), version: 3,equipmentCatalogVersion:2,ogrines:integer(old.ogrines),claimedOgrines:strings(old.claimedOgrines),skins:strings(old.skins).filter(id=>!!skinById(id)),equippedSkins:sanitizeSkinBook(old.equippedSkins,old.skins), unlockedMode:unlockedModeFromProgression(old), spellLevels:sanitizeSpellLevels(old.spellLevels), profile:sanitizeProfile(old.profile), history: (Array.isArray(old.history)?old.history:[]).map(sanitizeRunSummary).filter((r):r is RunSummary=>!!r).slice(0,200), bank: integer(old.bank), fragments:integer(old.fragments), claimedFragments:strings(old.claimedFragments), unlocked: strings(old.unlocked), loadouts, credited: strings(old.credited), inventory: [], claimedDrops: strings(old.claimedDrops), discovered: strings(old.discovered).filter(id => !!EQUIPMENT_BASES[id]), equipped: {}, bestTier:Math.max(0,migratedTier), migrationNotice: old.migrationNotice === true };
+  const data: AccountData = { permanentSpellRanks:roguelite.permanentSpellRanks,rogueliteMigration:roguelite.rogueliteMigration,petAttacks: sanitizePetAttacks(old.petAttacks), version: 3,equipmentCatalogVersion:2,ogrines:integer(old.ogrines),claimedOgrines:strings(old.claimedOgrines),skins:strings(old.skins).filter(id=>!!skinById(id)),equippedSkins:sanitizeSkinBook(old.equippedSkins,old.skins), unlockedMode:unlockedModeFromProgression(old),  profile:sanitizeProfile(old.profile), history: (Array.isArray(old.history)?old.history:[]).map(sanitizeRunSummary).filter((r):r is RunSummary=>!!r).slice(0,200), bank: integer(old.bank)+roguelite.refund, fragments:integer(old.fragments), claimedFragments:strings(old.claimedFragments),  credited: strings(old.credited), inventory: [], claimedDrops: strings(old.claimedDrops), discovered: strings(old.discovered).filter(id => !!EQUIPMENT_BASES[id]), equipped: {}, bestTier:Math.max(0,migratedTier), migrationNotice: old.migrationNotice === true };
   if (old.version === 2 || old.version === 3) {
     const ids = new Map<string,string>();
     for (const rawItem of Array.isArray(old.inventory) ? old.inventory : []) {

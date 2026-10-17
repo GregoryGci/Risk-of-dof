@@ -18,8 +18,6 @@ export type SpellEffect =
   | { type: 'lifesteal'; fraction: number }
   /** Étourdit les cibles : elles ne bougent ni n'attaquent pendant une durée (s). */
   | { type: 'stun'; duration: number }
-  /** Chance de faire tomber des kamas pour le lanceur à chaque cible touchée. */
-  | { type: 'gold'; chance: number; amount: [number, number] }
   /** Poison cumulable : chaque application ajoute une dose (jusqu'à `max`), dégâts par seconde × doses. */
   | { type: 'poison'; dps: number; duration: number; max: number }
   /** Affaiblit les cibles : leurs dégâts sont réduits de `factor` (0..1) pendant une durée (s). */
@@ -31,9 +29,16 @@ export type SpellEffect =
 
 /** Sort défini uniquement en données : la logique serveur est générique. */
 export interface SpellDef {
+  /** Authoritative resolved run snapshot; never supplied by a client. */
+  roguelite?: {ability:import('./roguelite/effective.ts').EffectiveRogueliteAbility; stats:Partial<Record<StatKey,number>>; scale:number;proc:boolean;slot:number};
+  /** Marque interne d'une variante de mécanique de classe. */
+  classTag?: string;
+  /** Soin allié et dégâts ennemis dans la même zone (Eniripsa). */
+  hybridHeal?: [number, number];
   /** Canal de dégâts conservé par les copies, rebonds et glyphes d'un lancement. */
   autoAttack?:boolean;
   upgradeLevel?:number;
+  runDouble?:boolean;
   dashStrike?:boolean;
   id: string;
   name: string;
@@ -66,7 +71,7 @@ export interface SpellDef {
   /** Si présent, le sort SOIGNE les alliés touchés de [min, max] PV au lieu de blesser les ennemis. */
   heal?: [number, number];
   /** Bouclier sur le lanceur : fraction des PV max absorbée, durée en secondes. */
-  shield?: { maxHpFraction: number; duration: number;allies?:number;allyRadius?:number };
+  shield?: { maxHpFraction: number; duration: number };
   /** Dégâts multipliés par (1 + bonus × part de PV manquants du lanceur). */
   missingHpBonus?: number;
   /** La zone ne frappe qu'après ce délai (s), annoncée au sol en attendant. */
@@ -100,7 +105,6 @@ export interface SpellDef {
   teleport?: boolean;
   /** Ressuscite le joueur mort le plus proche du point visé (le sort n'est pas lancé s'il n'y en a pas). */
   revive?: boolean;
-  reviveCount?:number;
   /** Ramène le lanceur là où il était il y a ce nombre de secondes, avec ses PV d'alors s'ils étaient plus hauts. */
   rewind?: number;
   /** Pari : chance de multiplier les dégâts par `win`, sinon par `lose`. */
@@ -120,8 +124,8 @@ export interface ClassDef {
   regen: number;
   /** Armure de base (réduit les dégâts subis, comme l'armure des objets). */
   armor?: number;
-  /** Les 4 sorts : clic gauche, clic droit, Espace, R. */
-  spells: [string, string, string, string];
+  /** Signature de départ dérivée du registre ; les autres sorts sont acquis pendant la run. */
+  spells: string[];
 }
 
 export type MonsterBehavior =
@@ -164,7 +168,6 @@ export interface MonsterDef {
   minDifficulty: number;
   /** Poids relatif de sélection. */
   weight: number;
-  kamas: [number, number];
 }
 
 /** Statistiques modifiables par les objets. */
@@ -179,10 +182,9 @@ export type StatKey =
   | 'critDamage' // dégâts des coups critiques (+ au multiplicateur ×1,5)
   | 'armor' // chaque point réduit les dégâts subis de 8 %
   | 'killHeal' // PV rendus par monstre vaincu
-  | 'kamas' // kamas gagnés (+%)
   | 'lifesteal' // auto-attaques uniquement
   | 'vampirism' // compétences uniquement
-  | 'luck' // chance d'obtenir des objets rares ou épiques dans les coffres
+  | 'luck' // chance d’obtenir de meilleures propositions de statistiques
   | 'multishot' // projectiles (ou frappes) en plus sur l'attaque de base
   | 'attackSpeed' // vitesse de l'attaque de base à distance (+%)
   | 'range' // portée des sorts (cases)
@@ -212,7 +214,8 @@ export interface RunBonusDef {
 /** Client -> serveur. Le client n'envoie QUE ses intentions. */
 export interface InputMessage {
   seq?:number;
-  /** Active l'attaque de base automatique sur l'ennemi le plus proche à portée. */
+  /** Visée facultative, utilisée seulement par les stratégies sans cible. */
+  aimAngle?: number;
   autoAttack?: boolean;
   /** Direction de déplacement en coordonnées monde (0,0 = immobile). */
   dx: number;
@@ -230,6 +233,7 @@ export interface CastMessage {
 
 /** Serveur -> clients : un sort est lancé (le client affiche le projectile). */
 export interface CastEvent {
+  visual?: {assetKey:string;color:number;handler:string;projectile?:SpellDef['projectile'];duration?:number;owner:string};
   level?:number;
   dashStrike?:boolean;
   /** Identifiant du projectile. */
@@ -291,7 +295,7 @@ export interface DamageEvent {
   /** Part des dégâts absorbée par le bouclier (non retirée des PV). */
   absorbed?: number;
 }
-/** Un joueur a gagné un bonus de run (coffre, élite ou marchand). */
+/** Un joueur a gagné un bonus de run (niveau ou élite). */
 export interface StatGainEvent {
   player: string;
   item: string;
@@ -307,8 +311,6 @@ export interface DeathEvent {
   player: boolean;
   x: number;
   y: number;
-  /** Kamas gagnés par chaque joueur (mort d'un monstre). */
-  kamas?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -321,6 +323,9 @@ export interface SyncMap<T> {
   forEach(cb: (value: T, key: string) => void): void;
 }
 export interface PlayerView {
+  build:string;
+  abilities:string;
+  choiceOffer:string;
   skin:string;
   ogrinesEarned:number;
   ogrineGrants:string;
@@ -343,13 +348,13 @@ export interface PlayerView {
   runLoot: string;
   forgeGrants: string;
   boonChoices: string;
+  combatStats:string;
+  pendingLevels:number;
+  choiceRevision:number;
+  choiceRemaining:number;
   mechanic:string;
   cooldowns:string;
-  secondaryCharges:number;
-  secondaryMax:number;
-  shop:string;
-  shopRerolled:boolean;
-  shopReady:boolean;
+  restReady:boolean;
   inputSeq:number;
   positionTime:number;
   motionEpoch:number;
@@ -367,9 +372,6 @@ export interface PlayerView {
   shield: number;
   alive: boolean;
   moving: boolean;
-  kamas: number;
-  /** Kamas gagnés depuis le début de la partie (pour la bourse de fin de partie). */
-  kamasEarned: number;
   dmgDealt: number;
   healDone: number;
   dmgTaken: number;
@@ -377,8 +379,6 @@ export interface PlayerView {
   /** Sorts équipés (arbre de talents) : "id,id,id,id". */
   spells: string;
   invisible: boolean;
-  /** Offres du marchand déjà achetées par ce joueur : "0,2". */
-  bought: string;
   /** Inventaire : "id:nombre,id:nombre" (voir parseRunBonuses). */
   bonuses: string;
 }
@@ -406,14 +406,16 @@ export interface GroundView {
   y: number;
   radius: number;
   armed: boolean;
+  angle?:number;
+  length?:number;
+  width?:number;
 }
-export interface ChestView {
-  /** 'chest' = coffre payant, 'challenge' = balise de défi gratuite contre un élite. */
-  kind: string;
+export interface ChallengeView {
   x: number;
   y: number;
   opened: boolean;
 }
+export interface XpOrbView {x:number;y:number;value:number;target:string;sweep:boolean;}
 export interface PotionView {
   x: number;
   y: number;
@@ -442,7 +444,13 @@ export interface GameStateView {
   kills: number;
   players: SyncMap<PlayerView>;
   monsters: SyncMap<MonsterView>;
-  chests: SyncMap<ChestView>;
+  challenges: SyncMap<ChallengeView>;
+  xpOrbs:SyncMap<XpOrbView>;
+  runLevel:number;
+  runXp:number;
+  totalXp:number;
+  xpToNext:number;
+  xpSweepUntil:number;
   grounds: SyncMap<GroundView>;
   potions: SyncMap<PotionView>;
   /** Numéro de la zone en cours (1, 2, 3...). */
@@ -455,12 +463,9 @@ export interface GameStateView {
   zaapCharge: number;
   /** Vrai quand le joueur seul a mis la partie en pause (touche Tab). */
   paused: boolean;
-  /** Marchand de la zone (0, 0 = pas de marchand) et ses offres : "id:prix,id:prix". */
-  merchantX: number;
-  merchantY: number;
-  shop: string;
+  /** Position du guide pendant la halte entre zones. */
+  restX: number;
+  restY: number;
   /** Difficulté choisie par l'hôte : 0 = Piou, 1 = Prespic, 2 = Bworker. */
   mode: number;
-  /** Prix actuel d'un coffre (kamas). */
-  chestCost: number;
 }

@@ -12,7 +12,7 @@ export class Blessings {
  private power(p:PlayerRt,id:string){return blessingPower(this.rank(p,id));}
  private active(p:PlayerRt){return p.state.alive&&this.sim.state.phase===PHASE_PLAYING&&!this.sim.state.intermission;}
  private ready(p:PlayerRt,id:string,seconds:number):boolean{const data=this.data(p);if(this.sim.now<(data.cooldowns.get(id)??0))return false;data.cooldowns.set(id,this.sim.now+seconds);return true;}
- private damage(p:PlayerRt,mult:number){const[a,b]=getSpell(p.spells[0]).damage;return(a+b)/2*sourceDamageMultiplier(p.stats.damage,false)*mult;}
+ private damage(p:PlayerRt,mult:number){return this.sim.roguelite.referencePower(p)*mult;}
  private enemies(x:number,y:number,r:number){return[...this.sim.monsters.values()].filter(m=>!m.state.ally&&!m.state.carried&&m.state.hp>0&&Math.hypot(m.state.x-x,m.state.y-y)<=r+m.def.radius);}
  private burst(p:PlayerRt,id:string,x:number,y:number,r:number,mult:number){const def=getBlessing(id)!;this.sim.broadcast('blessingFx',{player:p.id,kind:'burst',x,y,r,color:def.color});for(const m of this.enemies(x,y,r))if(this.sim.monsters.has(m.id))this.sim.damageMonster(m,this.damage(p,mult*this.power(p,id)),p.id);}
  private later(p:PlayerRt,seconds:number,fn:()=>void){const stage=this.sim.state.stage,run=this.sim.state.runId;this.sim.after(seconds,()=>{if(this.active(p)&&this.sim.players.get(p.id)===p&&this.sim.state.stage===stage&&this.sim.state.runId===run)fn();});}
@@ -29,7 +29,7 @@ export class Blessings {
   if(this.rank(p,'afterimage'))this.later(p,.2,()=>this.burst(p,'afterimage',p.state.x,p.state.y,2,.4));
   if(this.rank(p,'aegis'))this.shield(p,p.state.maxHp*.04*this.power(p,'aegis'),false);
   if(this.rank(p,'spark')){const target=this.enemies(x,y,4).sort((a,b)=>Math.hypot(a.state.x-x,a.state.y-y)-Math.hypot(b.state.x-x,b.state.y-y))[0];if(target){this.sim.broadcast('blessingFx',{player:p.id,kind:'chain',x,y,tx:target.state.x,ty:target.state.y,r:.4,color:getBlessing('spark')!.color});this.sim.damageMonster(target,this.damage(p,.4*this.power(p,'spark')),p.id);}}
-  if(this.rank(p,'cascade')&&++this.data(p).dashes%3===0){const reduction=1.5*this.power(p,'cascade');p.readyAt[1]=Math.max(this.sim.now,p.readyAt[1]-reduction);p.secondaryRefillAt=Math.max(this.sim.now,p.secondaryRefillAt-reduction);}
+  if(this.rank(p,'cascade')&&++this.data(p).dashes%3===0){const reduction=1.5*this.power(p,'cascade'),slot=p.build.currentBuild.spells.reduce((best,_,i)=>(this.sim.roguelite.ability(p,i)?.parameters.baseCooldown??0)>(this.sim.roguelite.ability(p,best)?.parameters.baseCooldown??0)?i:best,0);p.readyAt[slot]=Math.max(this.sim.now,p.readyAt[slot]-reduction);}
   if(this.rank(p,'repulse'))for(const m of this.enemies(x,y,2.8)){if(m.def.boss||m.state.elite)continue;const dx=m.state.x-x,dy=m.state.y-y,d=Math.hypot(dx,dy)||1,travel=1.2*this.power(p,'repulse');m.push={vx:dx/d*travel/.18,vy:dy/d*travel/.18,time:.18};}
  }
  modifyHit(p:PlayerRt,pr:Projectile,m:MonsterRt,amount:number,crit:boolean):number{
@@ -41,7 +41,17 @@ export class Blessings {
   if(this.rank(p,'convergence')&&Number(m.burnUntil>this.sim.now)+Number(m.slowUntil>this.sim.now)+Number(m.stunUntil>this.sim.now)>=2)bonus+=.25*this.power(p,'convergence');
   if((this.data(p).marks.get(m.id)??0)>this.sim.now)bonus+=.2*this.power(p,'pack');
   if(crit&&this.rank(p,'siphon')&&this.ready(p,'siphon',1))this.sim.healPlayer(p,p.state.maxHp*.015*this.power(p,'siphon'),p,false);
-  return amount*(1+bonus);
+  return amount*(1+Math.min(.6,bonus));
+ }
+ conditionalBonus(p:PlayerRt,m:MonsterRt):number {
+  if(!this.active(p))return 0;let bonus=0;const distance=Math.hypot(p.state.x-m.state.x,p.state.y-m.state.y);
+  if(this.rank(p,'combustion')&&m.burnUntil>this.sim.now)bonus+=.2*this.power(p,'combustion');
+  if(this.rank(p,'execution')&&m.state.hp<m.state.maxHp*.25)bonus+=.25*this.power(p,'execution');
+  if(this.rank(p,'sniper')&&distance>6)bonus+=.2*this.power(p,'sniper');if(this.rank(p,'brawler')&&distance<2.5)bonus+=.2*this.power(p,'brawler');
+  if(this.rank(p,'bulwark')&&p.state.shield>0)bonus+=.2*this.power(p,'bulwark');
+  if(this.rank(p,'convergence')&&Number(m.burnUntil>this.sim.now)+Number(m.slowUntil>this.sim.now)+Number(m.stunUntil>this.sim.now)>=2)bonus+=.25*this.power(p,'convergence');
+  if((this.data(p).marks.get(m.id)??0)>this.sim.now)bonus+=.2*this.power(p,'pack');
+  return Math.min(.6,bonus);
  }
  onHit(p:PlayerRt,pr:Projectile,target:MonsterRt):void{
   if(!this.active(p)||pr.proc)return;const data=this.data(p);if(data.seen.has(pr))return;data.seen.add(pr);

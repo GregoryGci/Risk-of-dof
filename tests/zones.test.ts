@@ -72,11 +72,11 @@ test('passage de Zaap : carte, vagues, élite et cooldowns changent ensemble',()
   p.def={...p.def,maxHp:100000};p.state.maxHp=p.state.hp=100000;p.buffs.push({stats:{armor:1000},until:100000,invisible:false,invulnerable:true});
   for(let stage=1;stage<=7;stage++) {
     assert.equal(state.stage,stage);assert.equal(sim.map.zoneId,zoneForStage(stage).id);
-    assert.ok([...state.chests.values()].every(ch=>Math.hypot(ch.x-state.zaapX,ch.y-state.zaapY)>=ZAAP_RANGE+INTERACT_RANGE+.2));
-    for(let tick=0;tick<900;tick++)sim.update(1/30);
+    assert.ok([...state.challenges.values()].every(ch=>Math.hypot(ch.x-state.zaapX,ch.y-state.zaapY)>=ZAAP_RANGE+INTERACT_RANGE+.2));
+    for(let tick=0;tick<900;tick++){sim.update(1/30);while(p.state.boonChoices!=='[]')sim.chooseBoon(p.id,0);}
     assert.equal(state.phase,PHASE_PLAYING);assert.ok(sim.monsters.size>0);
     assert.ok([...sim.monsters.values()].every(m=>zoneForStage(stage).monsters.includes(m.def.id)));
-    const challenge=[...state.chests.values()].find(c=>c.kind==='challenge')!;
+    const challenge=[...state.challenges.values()].find(c=>!c.opened)!;
     p.state.x=challenge.x;p.state.y=challenge.y;sim.interact(p.id);for(let i=0;i<61;i++)sim.update(1/30);
     const elite=[...sim.monsters.values()].find(m=>m.state.elite)!;
     assert.ok(zoneForStage(stage).monsters.includes(elite.def.id));assert.equal(challenge.opened,true);
@@ -84,24 +84,7 @@ test('passage de Zaap : carte, vagues, élite et cooldowns changent ensemble',()
     p.readyAt=[999,999,999,999];p.push={vx:20,vy:0,time:.2};
     state.zaapState=ZAAP_READY;p.state.x=state.zaapX;p.state.y=state.zaapY;sim.interact(p.id);
     assert.equal(p.push,null);assert.ok(p.readyAt.every(t=>t<=sim.now));
-    assert.equal(state.intermission,true);assert.equal(sim.monsters.size,0);assert.equal(state.chests.size,0);sim.shopReady(p.id);assert.equal(state.intermission,false);
+    assert.equal(state.intermission,true);assert.equal(sim.monsters.size,0);assert.equal(state.challenges.size,0);sim.restReady(p.id);assert.equal(state.intermission,false);
   }
 });
 
-test('Dragonnet : attaque à distance créditée au maître, aucun tir sur les alliés',()=>{
-  const casts:{caster:string;spell:string}[]=[];
-  const state=new GameState(),sim=new Simulation(state,(type,event)=>{if(type==='cast')casts.push(event as {caster:string;spell:string});});sim.addPlayer('p','Test','osamodas');sim.start();const p=sim.players.get('p')!;
-  sim.playerCast('p',{slot:3,tx:p.state.x+1,ty:p.state.y});
-  const dragon=[...sim.monsters.values()].find(m=>m.def.id==='osa_dragonnet')!;
-  assert.equal(dragon.state.ally,true);assert.equal(dragon.def.behavior.type,'ranged');
-  const friendly=sim.spawnMonster(getMonster('osa_bouftou'),p.state.x+2.5,p.state.y,1,1,1);
-  friendly.allyOwner=p.id;friendly.expiresAt=sim.now+25;
-  friendly.def={...friendly.def,speed:0};const friendlyHp=friendly.state.hp;
-  const enemy=sim.spawnMonster(getMonster('boufton'),p.state.x+4,p.state.y,1,1,1);
-  enemy.def={...enemy.def,speed:0,melee:{...enemy.def.melee,damage:0}};const hp=enemy.state.hp;
-  for(let i=0;i<45;i++)sim.update(1/30);
-  assert.ok(!sim.monsters.has(enemy.id)||enemy.state.hp<hp);
-  assert.ok(p.state.dmgDealt>0);assert.ok(dragon.state.hp>0);
-  assert.equal(friendly.state.hp,friendlyHp);
-  assert.ok(casts.some(e=>e.spell==='souffle_dragonnet' && e.caster===dragon.id));
-});

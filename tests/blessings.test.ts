@@ -5,7 +5,7 @@ import {existsSync} from 'node:fs';
 import {Simulation,type Projectile} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 
-function setup(blessing:string){const state=new GameState(),events:{type:string;message:any}[]=[];const sim=new Simulation(state,(type,message)=>events.push({type,message}));sim.addPlayer('p','P','cra',undefined,undefined,blessing);sim.start();const p=sim.players.get('p')!;return{sim,state,p,events};}
+function setup(blessing:string){const state=new GameState(),events:{type:string;message:any}[]=[];const sim=new Simulation(state,(type,message)=>events.push({type,message}));sim.addPlayer('p','P','cra',undefined,undefined,blessing);sim.start();const p=sim.players.get('p')!;p.readyAt[0]=Infinity;return{sim,state,p,events};}
 function mob(sim:Simulation,x:number,y:number,ally=false){const m=sim.spawnMonster({...getMonster('boufton'),hp:1000,speed:0},x,y,1,1,1);m.state.ally=ally;return m;}
 
 test('Bénédictions : chaque icône originale affichée existe dans les assets livrés',()=>{

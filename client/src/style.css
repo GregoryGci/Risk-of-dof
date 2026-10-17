@@ -410,7 +410,7 @@ input[type='text']:focus {
   transition: width 0.1s linear;
 }
 
-/* --- Haut droite : kamas, victimes, mini-carte ------------------------------------ */
+/* --- Haut droite : XP, victimes, mini-carte ------------------------------------ */
 #hud-right {
   position: absolute;
   top: 10px;
@@ -431,20 +431,8 @@ input[type='text']:focus {
   align-items: center;
   gap: 6px;
 }
-.kama-icon {
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff3a0, #f0b90b 55%, #a86f00);
-  border: 1px solid #5a3a00;
-  display: inline-block;
-}
-.kama-icon.img {
-  background: none;
-  border: none;
-  background-size: contain;
-  background-repeat: no-repeat;
-}
+
+
 .skull-icon {
   color: var(--encre-douce);
 }
@@ -1264,41 +1252,19 @@ input[type='text']:focus {
 }
 
 /* --- Marchand ---------------------------------------------------------------------- */
-#shop {
+#rest {
   pointer-events: auto;
 }
-.shop-panel {
+.rest-panel {
   width: min(560px, 92vw);
   min-width: 0;
 }
-.shop-kamas {
-  margin: 8px 0;
-}
-.shop-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.shop-offer {
-  display: grid;
-  grid-template-columns: 42px 1fr auto;
-  gap: 10px;
-  align-items: center;
-  padding: 8px;
-  border: 2px solid var(--commun);
-  border-radius: 6px;
-  background: rgba(255, 252, 235, 0.6);
-}
-.shop-offer.rare {
-  border-color: var(--rare);
-}
-.shop-offer.epique {
-  border-color: var(--epique);
-}
-.shop-offer .item-icon {
-  width: 42px;
-  height: 42px;
-}
+
+
+
+
+
+
 .rarity {
   font-size: 11px;
   font-weight: bold;

@@ -27,13 +27,13 @@ test('Gardien : annonce au sol 2 s avant son apparition, zone non terminable pen
 test('Speedrun : le Zaap s’ouvre dès la mort du gardien, sans attendre la fin de la charge',()=>{
   const{state,sim,p}=zaap();(sim as any).activateZaap();advance(sim,SPAWN_WARNING);
   assert.ok(state.zaapCharge<.2);
-  for(const boss of [...sim.monsters.values()].filter(m=>m.def.boss))sim.damageMonster(boss,1e9,p.id);
+  for(const boss of [...sim.monsters.values()].filter(m=>m.def.boss))sim.damageMonster(boss,1e9,p.id);advance(sim,1.5);
   assert.equal(state.zaapState,ZAAP_READY);
 });
 
 test('Élite de défi : annonce au sol puis apparition après 2 s',()=>{
   const{state,sim,p}=zaap();
-  const challenge=[...state.chests.values()].find(c=>c.kind==='challenge')!;
+  const challenge=[...state.challenges.values()].find(c=>!c.opened)!;
   p.state.x=challenge.x;p.state.y=challenge.y;sim.interact(p.id);
   assert.equal([...sim.monsters.values()].some(m=>m.state.elite),false);
   advance(sim,SPAWN_WARNING);

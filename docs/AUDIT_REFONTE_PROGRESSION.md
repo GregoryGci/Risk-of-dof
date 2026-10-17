@@ -1,5 +1,7 @@
 ﻿# Audit final de progression et jouabilité — 14 octobre 2026
 
+> Audit historique : coffres et kamas en combat ont été remplacés. Voir [la progression XP du 17 octobre](REFONTE_XP.md).
+
 ## Résultat prioritaire
 
 En **normal**, la campagne finale de 12 classes × 2 graines donne **2,04 zones atteintes en moyenne sans équipement**, minimum 2, maximum 3, aucune run encore vivante à la limite. Les zones sont les cartes franchies par le Zaap ; les assauts sont comptés séparément. Le stuff devient nécessaire pour franchir les premiers paliers.

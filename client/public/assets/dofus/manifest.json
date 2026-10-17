@@ -1375,6 +1375,14 @@
     }
   },
   "monsters": {
+    "arbre_sadida": {
+      "image": "objects/o1_40.png",
+      "origin": [
+        0.5636,
+        0.8719
+      ],
+      "scale": 0.42
+    },
     "bouftou": {
       "image": "sprites/bouftou.png",
       "atlas": "sprites/bouftou.json",

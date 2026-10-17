@@ -11,7 +11,7 @@ export const BLESSINGS:Record<string,BlessingDef>=Object.fromEntries([
  b('combustion','Combustion','BRAISE','tempete_de_puissance','Vos sorts infligent 20 % de dégâts supplémentaires aux ennemis en feu. Combinez avec Marque de braise ou un sort de brûlure.'),
  b('storm','Orage en chaîne','WAKFU','epee_celeste','Toutes les 4 attaques de base touchées, un éclair saute sur 3 autres ennemis à 4 cases : 35 % de votre attaque de base par cible. Les copies ne comptent pas.'),
  b('spark','Pas foudroyant','WAKFU','sablier_de_xelor','Chaque dash foudroie l’ennemi le plus proche à 4 cases : 40 % de votre attaque de base.'),
- b('resonance','Résonance','WAKFU','mot_stimulant','Lancer une compétence prépare votre prochaine attaque de base : +35 % de dégâts. Les projectiles de son niveau profitent du même bonus.'),
+ b('resonance','Résonance','WAKFU','mot_stimulant','Lancer une compétence prépare votre prochaine attaque de base : +35 % de dégâts. Les projectiles du lancer profitent du même bonus.'),
  b('ricochet','Ricochet astral','WAKFU','fleche_magique','Votre attaque de base gagne un rebond supplémentaire. Se cumule avec les rebonds obtenus dans la run.'),
  b('rupture','Rupture de Wakfu','WAKFU','sablier_de_xelor','Tous les 3 sorts offensifs distincts qui touchent, frappe autour de la cible : rayon 2,6, dégâts 70 % de votre attaque de base.'),
  b('thorn','Écorce vengeresse','SEVE','vent_empoisonne','Après une perte de PV non fatale : bouclier de 6 % des PV max pendant 3 s et riposte à 2,6 cases, dégâts 45 % de votre attaque de base. Recharge 6 s.'),
@@ -47,5 +47,5 @@ export function blessingDescription(id:string,rank=1):string{
  if(id==='sanctum')return`Les nouveaux glyphes et pièges gagnent ${(rank*.4).toFixed(1)} case de rayon, explosion comprise.`;
  return`${def.description} Rang ${rank} : puissance de cet effet +${Math.round((power-1)*100)} % par rapport au rang 1 ; durées, portées et recharges identiques.`;
 }
-export function blessingPool(spells:SpellDef[],owned:Record<string,number>):string[]{return Object.values(BLESSINGS).filter(def=>(owned[def.id]??0)<3&&(!def.requires||spells.some(s=>def.requires==='summon'?!!s.summon&&s.summon.monster!=='coffre_anime':!!s.ground))).map(def=>def.id);}
+export function blessingPool(spells:SpellDef[],owned:Record<string,number>):string[]{return Object.values(BLESSINGS).filter(def=>(owned[def.id]??0)<3&&(!def.requires||spells.some(s=>def.requires==='summon'?!!s.summon&&s.summon.monster!=='coffre_anime'||['sp.invocation_de_tofu','sp.arbre_sadida','ev.tofu_royal','ev.foret_vivante'].includes(s.id):!!s.ground||['sp.glyphe_agressif','sp.piege_sournois','ev.sanctuaire_runique','ev.piege_de_masse'].includes(s.id)))).map(def=>def.id);}
 export function blessingSpell(spell:SpellDef,ranks:Record<string,number>):SpellDef{const rank=ranks.sanctum??0;if(!rank||!spell.ground)return spell;return{...spell,ground:{...spell.ground,radius:spell.ground.radius+.4*rank,...(spell.ground.blast?{blast:spell.ground.blast+.4*rank}:{})}};}

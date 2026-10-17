@@ -52,7 +52,7 @@ body.underworld .btn:hover:not(:disabled){border-color:#d6b575;filter:brightness
 body.underworld .btn-primary,body.underworld .btn.active{background:linear-gradient(160deg,#995f38,#71402e);border-color:#d19b63;color:#ffecd0;box-shadow:inset 0 1px 0 #e9c18844,0 4px 12px #0004;}
 body.underworld .btn:disabled{opacity:.4;filter:saturate(.2);cursor:not-allowed}
 body.underworld .start-adventure{font-size:15px;padding:17px 24px;position:relative}
-body.underworld :is(.setup-character,.multiplayer-option,.home-controls div,.character-action,.mode-option,.home-class,.spell-card,.talent,.profile-avatar,.shop-offer,.details-panel section,.talents-bank,.talents-equipment){background:#0913163b;border-color:#ab956447;color:#e4d9c1;}
+
 body.underworld :is(.setup-character b,.character-intro h3,.character-action b,.spell-card-name,.talent-name){color:#f1dcb0}
 body.underworld :is(.text-button,.collection-link,.catalog-effects div,.gear-fusion,.gear-footer b){color:#8ecab2}
 body.underworld :is(.character-action small,.collection-link #collection-summary,.home-class span){color:#a1aea0}
@@ -125,22 +125,22 @@ body.underworld #boss .bar{background:#361e22}
 body.underworld #banner .big-code{color:#9bd0b0}
 body.underworld #gameover h1{color:#f2d2a4}
 body.underworld #gameover-reward{color:#accca1;border-color:#ac995445}
-body.underworld .shop-panel{width:min(940px,95vw)}
-body.underworld .shop-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-body.underworld .shop-offer{display:flex;flex-direction:column;align-items:flex-start;gap:14px;min-height:185px;padding:18px;background:#101b1e;border-color:#9a8a5947}
-body.underworld .shop-offer .btn{margin-top:auto;width:100%;font-size:10px;padding:9px 7px}
-body.underworld .shop-info b{font:20px Georgia,serif;color:#e7cf9b}
-body.underworld .shop-info small{font-size:11px;line-height:1.7;color:#b9c8b0}
+body.underworld .rest-panel{width:min(940px,95vw)}
+
+
+
+
+
 body.underworld .stat-bonus-icon{background:#4264512d;border-color:#b89f5b60;color:#d6ba76}
-body.underworld .shop-kamas b{color:#e8c580}body.underworld :is(.shop-note,.shop-kamas span){color:#a2b2a2}
+
 body.underworld #boon-choices{padding:18px;border-top:2px solid #d0ad64}
 body.underworld #boon-choices button{padding:13px 17px;min-width:160px;max-width:260px;white-space:normal;text-align:left;}
 body.underworld #boon-choices small{color:#aec5a9;font-size:11px;line-height:1.5}
 body.underworld .error{color:#efa386}
 body.underworld ::-webkit-scrollbar{width:7px;height:7px}body.underworld ::-webkit-scrollbar-track{background:#131b1e}body.underworld ::-webkit-scrollbar-thumb{background:#626752;border-radius:2px}
 @media(max-width:1050px){body.underworld .home-layout{grid-template-columns:310px minmax(0,1fr);gap:30px}body.underworld .home-brand h1{font-size:66px}body.underworld .home-welcome{min-height:490px}body.underworld .sanctum-portal{width:230px;height:300px}body.underworld .gear-layout{grid-template-columns:300px minmax(0,1fr)}}
-@media(max-width:760px){body.underworld .home-layout{grid-template-columns:1fr;min-height:auto;width:90vw;gap:20px}body.underworld .home-brand h1{font-size:58px;display:flex;gap:15px;align-items:baseline}body.underworld .home-brand h1>span:first-child{font-size:1em}body.underworld .home-brand h1 em{font-size:.4em}body.underworld .home-nav-button{padding:10px 8px}body.underworld .home-welcome{min-height:190px}body.underworld .sanctum-art{display:none}body.underworld .welcome-caption h2{font-size:26px}body.underworld .home-view{max-height:none;margin-bottom:24px}body.underworld .home-topline>span:last-child{display:none}body.underworld .gear-layout{grid-template-columns:1fr}body.underworld .shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}body.underworld .home-footer{flex-direction:column;align-items:flex-start;gap:8px}body.underworld .home-screen.has-view .home-navigation{display:none}}
-@media(max-width:450px){body.underworld .shop-grid{grid-template-columns:1fr}body.underworld .home-brand h1{font-size:46px}body.underworld .home-nav-button>span:nth-child(2){font-size:21px}body.underworld .home-view{padding:19px}body.underworld .welcome-caption{padding:18px}.shop-panel{max-height:90dvh;overflow:auto}}
+@media(max-width:760px){body.underworld .home-layout{grid-template-columns:1fr;min-height:auto;width:90vw;gap:20px}body.underworld .home-brand h1{font-size:58px;display:flex;gap:15px;align-items:baseline}body.underworld .home-brand h1>span:first-child{font-size:1em}body.underworld .home-brand h1 em{font-size:.4em}body.underworld .home-nav-button{padding:10px 8px}body.underworld .home-welcome{min-height:190px}body.underworld .sanctum-art{display:none}body.underworld .welcome-caption h2{font-size:26px}body.underworld .home-view{max-height:none;margin-bottom:24px}body.underworld .home-topline>span:last-child{display:none}body.underworld .gear-layout{grid-template-columns:1fr}body.underworld .home-footer{flex-direction:column;align-items:flex-start;gap:8px}body.underworld .home-screen.has-view .home-navigation{display:none}}
+@media(max-width:450px){body.underworld .home-brand h1{font-size:46px}body.underworld .home-nav-button>span:nth-child(2){font-size:21px}body.underworld .home-view{padding:19px}body.underworld .welcome-caption{padding:18px}.rest-panel{max-height:90dvh;overflow:auto}}
 body.underworld .details-panel b,body.underworld .route-card b{color:#f0d9ab}
 body.underworld .gear-stat-pair{color:#d7dcc4;font-size:11px}
 body.underworld .gear-stat-pair b{color:#efd295}
@@ -153,8 +153,8 @@ body.underworld .home-view .btn-primary:hover{background:linear-gradient(160deg,
 body.underworld .affinity-card h3{color:var(--affinity)}
 body.underworld .gear-inspector{min-height:230px}
 body.underworld .route-card.selected{border-color:#d8b679;background:#8970491f}
-body.underworld .shop-actions{position:sticky;bottom:-24px;background:linear-gradient(180deg,#172123ee,#172123);padding:14px 0;border-top:1px solid #baa26755;margin-top:20px;z-index:2}
-body.underworld .shop-actions .btn-primary{margin-left:auto}
+body.underworld .rest-actions{position:sticky;bottom:-24px;background:linear-gradient(180deg,#172123ee,#172123);padding:14px 0;border-top:1px solid #baa26755;margin-top:20px;z-index:2}
+body.underworld .rest-actions .btn-primary{margin-left:auto}
 body.underworld .route-heading h3{color:#efd9aa}
 body.underworld .home-setting{text-transform:none;font-weight:normal;letter-spacing:0}
 body.underworld .home-setting div b{font-weight:normal;font-size:13px}
@@ -171,18 +171,18 @@ body.underworld #hud #class-mechanic{background:none;border:0;border-top:1px sol
 body.underworld #hud #run-gains{margin-top:2px;font-size:9px;gap:5px 10px;color:#d0d8c0}
 body.underworld .mechanic-caption{font-size:11px}
 body.underworld .profile-forge{color:#8bc3aa!important;font-size:8px!important;letter-spacing:0!important;margin-top:7px!important}
-body.underworld .shop-offer{position:relative;min-height:140px;padding:14px;gap:8px}
-body.underworld .shop-offer .stat-bonus-icon{position:absolute;top:12px;right:12px;width:24px;height:24px;font-size:14px}
-body.underworld .shop-info{padding-right:20px}
-body.underworld .shop-info b{font-size:17px}
-body.underworld .shop-info .rarity{font-size:9px}
-body.underworld .shop-affinity{margin-top:7px}
+
+
+
+
+
+
 body.underworld .route-card{padding:14px;gap:7px;min-height:116px}
 body.underworld .route-card .route-icon{position:absolute;top:11px;right:12px;font-size:17px}
 body.underworld .route-card b{font-size:16px;padding-right:16px}
 body.underworld .route-heading h3{font-size:22px;margin:6px 0}
 body.underworld .route-heading p{margin:7px 0}
 body.underworld .route-selection{margin:16px 0 10px;padding-top:14px}
-body.underworld .shop-kamas{margin:8px 0}
-body.underworld .shop-note{margin:10px 0;line-height:1.6}
-body.underworld .shop-actions{margin-top:12px;padding:12px 0}
+
+body.underworld .rest-note{margin:10px 0;line-height:1.6}
+body.underworld .rest-actions{margin-top:12px;padding:12px 0}

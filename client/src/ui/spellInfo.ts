@@ -1,6 +1,6 @@
 // Description lisible d'un sort, générée à partir de ses données (shared/src/data/spells.ts).
 // Les valeurs tiennent compte de la tenue et des bonus de run.
-import { innateLifesteal,lifestealCap,isRangedAttack,SUMMON_DESCRIPTIONS,sourceDamageMultiplier,statText,spellCopies,spellCopyPower, type SpellDef, type StatKey } from '@rod/shared';
+import { innateLifesteal,lifestealCap,isRangedAttack,SUMMON_DESCRIPTIONS,sourceDamageMultiplier,statText,effectiveSpellCooldown,RUN_PROGRESSION, type SpellDef, type StatKey } from '@rod/shared';
 
 const BASE_CRIT = 0.05;
 
@@ -15,6 +15,7 @@ function pct(v: number): string {
 
 /** Forme du sort en quelques mots. */
 export function spellShape(spell: SpellDef): string {
+  if(spell.id==='vol_du_temps')return 'Projection puis retour à l’empreinte pendant 3 s';
   if (spell.shield) return `Bouclier sur soi pendant ${spell.shield.duration} s`;
   if (spell.projectile) {
     if (spell.projectile.toTarget) return 'Tir en cloche au point visé';
@@ -36,7 +37,7 @@ export function spellShape(spell: SpellDef): string {
 
 /** Lignes de détail d'un sort, en HTML. */
 export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number>, slot?: number): string {
-  const copies=spellCopies(spell),damage = sourceDamageMultiplier(stats?.damage??0,slot===0)*(copies>1?spellCopyPower(spell.upgradeLevel??1):1);
+  const copies=1,damage = sourceDamageMultiplier(stats?.damage??0,slot===0);
   const ranged = !spell.melee && !spell.zone?.self;
   const haste = (1 + (stats?.haste ?? 0)) * (ranged && slot===0 ? 1 + (stats?.attackSpeed ?? 0) : 1);
   const crit = Math.min(1,BASE_CRIT + (stats?.crit ?? 0));
@@ -48,6 +49,7 @@ export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number
     const [a, b] = spell.damage.map((d) => Math.round((d + (stats?.flatDamage ?? 0)) * damage));
     lines.push(`<span class="dmg">Dégâts ${a} à ${b}${copies>1?' par frappe':''}</span> — critique ${pct(crit)} (×${critMult.toFixed(2).replace('.', ',')})`);
   }
+  if(spell.hybridHeal){const power=Math.min(2,Math.sqrt(Math.max(1,damage)));lines.push(`<span class="heal">Soigne aussi ${Math.round(spell.hybridHeal[0]*power)} à ${Math.round(spell.hybridHeal[1]*power)} PV</span> aux alliés dans la zone${copies>1?' par impulsion':''}`);}
   lines.push(spellShape(spell));
   if(spell.summon&&SUMMON_DESCRIPTIONS[spell.summon.monster])lines.push(SUMMON_DESCRIPTIONS[spell.summon.monster]);
   if (spell.shield) lines.push(`Absorbe ${pct(spell.shield.maxHpFraction)} de vos PV max en dégâts`);
@@ -57,14 +59,13 @@ export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number
     if (e.type === 'knockback') lines.push(`Repousse de ${cases(e.distance)}`);
     else if (e.type === 'pull') lines.push(`Attire la cible jusqu'à soi`);
     else if (e.type === 'dash') lines.push(`${e.direction === 'back' ? 'Bond en arrière' : 'Bond en avant'} de ${cases(e.distance)}`);
-    else if (e.type === 'burn') lines.push(`Brûle : ${e.dps} dégâts/s pendant ${e.duration} s`);
+    else if (e.type === 'burn') lines.push(`Brûle : ${Math.round(e.dps*damage*10)/10} dégâts/s pendant ${e.duration} s`);
     else if (e.type === 'slow') lines.push(`Ralentit de ${pct(1 - e.factor)} pendant ${e.duration} s`);
     else if (e.type === 'stun') lines.push(`Fige les ennemis pendant ${e.duration} s`);
-    else if (e.type === 'poison') lines.push(`Empoisonne : ${e.dps} dégâts/s pendant ${e.duration} s, cumulable ${e.max} fois`);
+    else if (e.type === 'poison') lines.push(`Empoisonne : ${Math.round(e.dps*damage*10)/10} dégâts/s par dose pendant ${e.duration} s, cumulable ${e.max} fois`);
     else if (e.type === 'weaken') lines.push(`Affaiblit : −${pct(e.factor)} de dégâts ennemis pendant ${e.duration} s`);
     else if (e.type === 'root') lines.push(`Enracine pendant ${e.duration} s (les ennemis attaquent encore)`);
     else if (e.type === 'vulnerable') lines.push(`Vulnérable : +${pct(e.bonus)} de dégâts subis pendant ${e.duration} s`);
-    else if (e.type === 'gold') lines.push(`${pct(e.chance)} de chances de faire tomber ${e.amount[0]}-${e.amount[1]} kamas`);
     else if (e.type === 'lifesteal') lines.push(`${slot===0?'Vol de vie des autos':'Vampirisme du sort'} : ${pct(Math.min(slot===0?lifestealCap(isRangedAttack(spell)):.5,e.fraction))} des dégâts effectifs (plafond ${slot===0?(isRangedAttack(spell)?10:20):50} %, bonus compris)`);
   }
   if (spell.gamble) lines.push(`Pari : ${pct(spell.gamble.chance)} de chances de dégâts ×${String(spell.gamble.win).replace('.', ',')}, sinon ×${String(spell.gamble.lose).replace('.', ',')}`);
@@ -73,6 +74,6 @@ export function spellDetailsHtml(spell: SpellDef, stats?: Record<StatKey, number
     lines.push((spell.buff.randomOne ? 'Au hasard : ' : '') + parts.join(spell.buff.randomOne ? ' ou ' : ', '));
   }
   if (spell.missingHpBonus) lines.push(`Jusqu'à +${pct(spell.missingHpBonus)} de dégâts selon vos PV manquants`);
-  lines.push(`Recharge : ${(spell.cooldown / 1000 / haste).toFixed(spell.cooldown < 1000 ? 2 : 1)} s`);
+  lines.push(`Recharge : ${(effectiveSpellCooldown(spell,stats,slot) / 1000).toFixed(spell.cooldown < 1000 ? 2 : 1)} s`);
   return lines.map((l) => `<div>${l}</div>`).join('');
 }

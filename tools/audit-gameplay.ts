@@ -18,6 +18,7 @@ function outfit(tier:number):EquippedGear {
   return out;
 }
 function drive(sim:Simulation,p:PlayerRt):void {
+  if(p.state.boonChoices!=='[]')sim.chooseBoon(p.id,0,p.state.choiceRevision);
   let enemy:ReturnType<Simulation['spawnMonster']>|undefined; let distance=Infinity;
   for(const m of sim.monsters.values()) {
     if(m.state.ally) continue;

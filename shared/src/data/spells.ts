@@ -3,7 +3,9 @@
 // ou data/talents.ts (sort à débloquer). Aucune logique à modifier tant que les mécaniques
 // existantes suffisent (projectile, mêlée, zone, piège, glyphe, invocation, bonus, téléportation...).
 import type { SpellDef } from '../types.ts';
+import {rogueliteSpellView} from '../roguelite/effective.ts';
 import { PET_ATTACK_SPELLS } from './pet-attacks.ts';
+import { installClassSpellRework } from './class-rework.ts';
 
 type SpellBase = Omit<SpellDef, 'id' | 'icon'> & { icon?: string };
 
@@ -834,14 +836,14 @@ export const SPELLS: Record<string, SpellDef> = define({
   // =========================================================================
   lancer_de_pieces: {
     name: 'Lancer de Pièces',
-    description: 'Lance une pièce ; chaque cible touchée peut lâcher quelques kamas.',
+    description: 'Lance une pièce magique qui ralentit brièvement sa cible.',
     color: 0xf0c840,
     element: 'eau',
     cooldown: 1100,
     range: 8,
     damage: [11, 15],
     projectile: { speed: 15, radius: 0.3 },
-    effects: [{ type: 'gold', chance: 0.12, amount: [1, 3] }],
+    effects: [{ type: 'slow', factor: .9, duration: .75 }],
   },
   malchance: {
     name: 'Malchance',
@@ -1052,8 +1054,10 @@ export const SUMMON_DESCRIPTIONS:Record<string,string>={
   poupee_gonflable:'Soin de proximité et bouclier de 4 % de vos PV max lorsqu’un allié est sous 75 % de vie, toutes les 8 s. Hérite de votre puissance et de votre cadence.',
   coffre_anime:'Attaque au contact et heurt ralentissant toutes les 6 s. Reçoit les dégâts à votre place ; ses PV max sont égaux aux vôtres. Hérite de vos bonus offensifs.',
 };
+installClassSpellRework(SPELLS);
+
 export function getSpell(id: string): SpellDef {
-  const s = Object.hasOwn(SPELLS,id)?SPELLS[id]:undefined;
+  const s = rogueliteSpellView(id) ?? (Object.hasOwn(SPELLS,id)?SPELLS[id]:undefined);
   if (!s) throw new Error(`Sort inconnu : ${id}`);
   return s;
 }

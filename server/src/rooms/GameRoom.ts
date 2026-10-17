@@ -3,9 +3,10 @@
 import { Room, type Client } from '@colyseus/core';
 import { MAX_PLAYERS, NAME_MAX_LENGTH, PATCH_MS, ROOM_CODE_LENGTH, TICK_RATE, type CastMessage, type InputMessage } from '@rod/shared';
 import { Simulation } from '../game/Simulation.ts';
+import type {PermanentSpellRanks} from '@rod/shared/roguelite';
 import { GameState } from '../state.ts';
 import {authenticate,recordScore,cloudScoresEnabled,ScoreWriteError,scoreFailureCode} from '../cloud.ts';
-import {PHASE_LOBBY,type SpellLevelBook,type RunReward} from '@rod/shared';
+import {PHASE_LOBBY,type RunReward} from '@rod/shared';
 
 /** Codes des parties en cours, pour éviter les doublons. */
 const activeCodes = new Set<string>();
@@ -34,7 +35,7 @@ export class GameRoom extends Room<{ state: GameState }> {
   private sim!: Simulation;
   private accounts=new Map<string,string>();
   private pausedForReconnect=false;
-  private progression=new Map<string,SpellLevelBook>();
+  private progression=new Map<string,PermanentSpellRanks>();
   private accessTokens=new Map<string,string>();
   private refreshing=new Map<string,Promise<void>>();
   private starting=false;
@@ -75,12 +76,12 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage('dash', (client: Client, message: { dx?: number; dy?: number }) => this.sim.playerDash(client.sessionId, message));
     this.onMessage('pause', (client: Client, message: { paused?: boolean }) => this.sim.setPaused(client.sessionId, message?.paused));
     this.onMessage('equipment', (client: Client, message: { equipment?: unknown }) => this.sim.setEquipment(client.sessionId, message?.equipment));
-    this.onMessage('buy', (client: Client, message: { index?: number }) => this.sim.buy(client.sessionId, message?.index));
-    this.onMessage('shopReroll',(client:Client)=>this.sim.rerollShop(client.sessionId));
-    this.onMessage('shopReady',(client:Client)=>this.sim.shopReady(client.sessionId));
+    this.onMessage('restReady',(client:Client)=>this.sim.restReady(client.sessionId));
     this.onMessage('mode', (client: Client, message: { mode?: number }) => this.sim.setMode(client.sessionId, message?.mode));
     this.onMessage('interact', (client: Client) => this.sim.interact(client.sessionId));
-    this.onMessage('boon',(client:Client,message:{choice?:unknown})=>this.sim.chooseBoon(client.sessionId,message?.choice));
+    this.onMessage('boon',(client:Client,message:{choice?:unknown;revision?:number;runId?:string})=>{if(Number.isInteger(message?.revision)&&message.runId===this.state.runId)this.sim.chooseBoon(client.sessionId,message?.choice,message.revision,message.runId);});
+    this.onMessage('reroll',(client:Client,message:{runId?:unknown;revision?:unknown})=>this.sim.rerollBoon(client.sessionId,message));
+    this.onMessage('banish',(client:Client,message:{runId?:unknown;revision?:unknown;choiceId?:unknown})=>this.sim.banishBoon(client.sessionId,message));
     this.onMessage('classAction',(client:Client,message:{tx?:unknown;ty?:unknown;choice?:unknown})=>this.sim.classAction(client.sessionId,message));
     this.onMessage('start', async (client: Client) => {
       if(client.sessionId!==this.state.hostId||this.state.phase!==PHASE_LOBBY||this.starting)return;
@@ -91,7 +92,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     console.log(`[salle ${this.roomId}] créée`);
   }
 
-  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown; blessing?:unknown;accessToken?:unknown },auth?:{userId?:string;spellLevels?:SpellLevelBook;unlockedMode?:number;skinBook?:Record<string,string>}|boolean): void {
+  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown; blessing?:unknown;accessToken?:unknown },auth?:{userId?:string;spellLevels?:PermanentSpellRanks;unlockedMode?:number;skinBook?:Record<string,string>}|boolean): void {
     if(auth&&typeof auth==='object'&&auth.userId)this.accounts.set(client.sessionId,auth.userId);
     client.send('cloudStatus',{ranked:this.accounts.has(client.sessionId)&&cloudScoresEnabled});
     const name = cleanName(auth&&typeof auth==='object'&&'name' in auth?auth.name:options?.name);
@@ -121,6 +122,7 @@ export class GameRoom extends Room<{ state: GameState }> {
   onDrop(client:Client):void {
     const p=this.sim.players.get(client.sessionId);
     if(p){p.state.connected=false;p.dx=p.dy=0;p.autoAttack=false;p.state.moving=false;p.pendingInputSeq=p.state.inputSeq;}
+    this.sim.connectionChanged();
     if([...this.sim.players.values()].every(p=>!p.state.connected)&&!this.state.paused){this.state.paused=true;this.pausedForReconnect=true;}
     this.allowReconnection(client,120);
   }

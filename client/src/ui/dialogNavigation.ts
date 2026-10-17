@@ -1,9 +1,9 @@
 // Les fenêtres gardent le clavier : Tab parcourt leurs commandes, Échap ferme la plus haute.
 export function setupDialogNavigation(): void {
-  const closes:Record<string,string>={equipment:'equipment-close',encyclopedia:'encyclopedia-close',talents:'talents-close',details:'details-close',shop:'shop-close',history:'history-close','account-panel':'account-close',ladder:'ladder-close','game-settings':'game-settings-close',atlas:'atlas-close'};
+  const closes:Record<string,string>={equipment:'equipment-close',encyclopedia:'encyclopedia-close',talents:'talents-close',details:'details-close',rest:'rest-close',history:'history-close','account-panel':'account-close',ladder:'ladder-close','game-settings':'game-settings-close',atlas:'atlas-close'};
   document.addEventListener('keydown',event=>{
     if(event.key!=='Tab' && event.key!=='Escape') return;
-    const dialogs=[...document.querySelectorAll<HTMLElement>('.overlay:not(.hidden)')].filter(el=>el.getBoundingClientRect().width>0).sort((a,b)=>Number(getComputedStyle(b).zIndex)-Number(getComputedStyle(a).zIndex));
+    const dialogs=[...document.querySelectorAll<HTMLElement>('#boon-choices:not(.hidden),.overlay:not(.hidden)')].filter(el=>el.getBoundingClientRect().width>0).sort((a,b)=>Number(getComputedStyle(b).zIndex)-Number(getComputedStyle(a).zIndex));
     const dialog=dialogs[0];
     if(!dialog) return;
     // Tab ouvre le panneau de détails en jeu : la même touche le referme (Shift+Tab parcourt toujours ses commandes).

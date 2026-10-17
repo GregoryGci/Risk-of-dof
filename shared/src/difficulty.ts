@@ -89,19 +89,15 @@ export interface GameMode {
   spawn: number;
   /** Multiplicateur des kamas de fin de partie. Le mode améliore aussi le butin permanent. */
   reward: number;
-  /** Kamas gagnés pendant la run (monstres) : plus de besoins en coffres et marchands. */
-  runKamas: number;
-  /** Prix des coffres et du marchand : moins élevé que la hausse des gains. */
-  chestPrice: number;
   /** Gardiens simultanés (trois toutes les trois zones pour le Cauchemar). */
   nightmare?:boolean;
 }
 
 export const GAME_MODES: GameMode[] = [
-  { id: 0, name: 'Facile', description: 'Moins de monstres, moins coriaces.', hp: 0.8, damage: 0.75, spawn: 0.85, reward: 1, runKamas: 1, chestPrice: 1 },
-  { id: 1, name: 'Normal', description: 'Adapté à une première tenue. Plus de monstres à vaincre et ×1,5 kamas en fin de run.', hp: 1.25, damage: 1.15, spawn: 1.15, reward: 1.5, runKamas: 1.25, chestPrice: 1.15 },
-  { id: 2, name: 'Difficile', description: 'Conseillé avec une tenue de palier 80 ou plus. Davantage de monstres, ×2,2 kamas en fin de run.', hp: 1.9, damage: 1.65, spawn: 1.5, reward: 2.2, runKamas: 1.6, chestPrice: 1.4 },
-  { id: 3, name: 'Cauchemar', description: 'Fin de jeu : dégâts ennemis ×6 dès le départ, deux gardiens par zone, trois toutes les trois zones. Tenue 190–200 conseillée. Hordes renforcées, ×3,4 kamas en fin de run.', hp: 4.2, damage: 6, spawn: 2.25, reward: 3.4, nightmare:true, runKamas: 2.1, chestPrice: 1.7 },
+  { id: 0, name: 'Facile', description: 'Moins de monstres, moins coriaces.', hp: 0.8, damage: 0.75, spawn: 0.85, reward: 1 },
+  { id: 1, name: 'Normal', description: 'Adapté à une première tenue. Plus de monstres à vaincre et ×1,5 kamas en fin de run.', hp: 1.25, damage: 1.15, spawn: 1.15, reward: 1.5 },
+  { id: 2, name: 'Difficile', description: 'Conseillé avec une tenue de palier 80 ou plus. Davantage de monstres, ×2,2 kamas en fin de run.', hp: 1.9, damage: 1.65, spawn: 1.5, reward: 2.2 },
+  { id: 3, name: 'Cauchemar', description: 'Fin de jeu : dégâts ennemis ×6 dès le départ, deux gardiens par zone, trois toutes les trois zones. Tenue 190–200 conseillée. Hordes renforcées, ×3,4 kamas en fin de run.', hp: 4.2, damage: 6, spawn: 2.25, reward: 3.4, nightmare:true },
 ];
 
 export function getMode(id: number): GameMode {

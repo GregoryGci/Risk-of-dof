@@ -51,8 +51,8 @@ body.underworld .pact-heading h3{margin:6px 0}
 body.underworld .pact-heading p{margin:7px 0}
 body.underworld .pact-grid{margin-top:11px}
 body.underworld .start-adventure{position:sticky;bottom:-15px;z-index:3;margin-top:13px;box-shadow:0 -8px 15px #18121f}
-body.underworld :is(.home-class,.spell-card,.talent,.shop-offer,.gear-card,.gear-slot,.catalog-card,.set-summary,.history-card){border-radius:0}
-body.underworld :is(.setup-character,.character-action,.mode-option,.home-class,.spell-card,.talent,.shop-offer,.details-panel section,.gear-character,.gear-inspector,.catalog-detail){background:#13111a8c;border-color:#a4735c50}
+
+
 body.underworld :is(.gear-card,.gear-slot,.gear-detail-icon){background:#15121c}
 body.underworld .gear-character{background:radial-gradient(ellipse at 50% 40%,#84293839,transparent 65%),#15121b}
 body.underworld .gear-avatar .avatar-halo{background:radial-gradient(ellipse,#db69462e,transparent 65%)}
@@ -71,8 +71,8 @@ body.underworld .spell{border-radius:0;background:#261d2b;border-color:#b87e5d}.
 body.underworld #boss{background:#1b111aeb;border:1px solid #d65d4e8c;border-bottom:3px solid #b83b3f;border-radius:0;transform:translateX(-50%) skewX(-4deg)}
 body.underworld #boss-name{font:bold italic 17px Georgia,serif;letter-spacing:1px;color:#ffd9ad}body.underworld #boss-bar{background:linear-gradient(90deg,#9b233c,#e96942)}
 body.underworld .overlay{background:#0b0813db;backdrop-filter:none}body.underworld :is(#toast,#prompt,#spell-tip,#boon-choices){background:#201626f5;border-color:#dd8f5b80}
-body.underworld .shop-info b{font:bold italic 22px Georgia,serif;color:#f4d6ac}body.underworld .shop-offer{border-top:2px solid #96654b;background:#19131f}
-body.underworld .shop-actions{background:#201824f5;border-top-color:#bb715a66}body.underworld .route-card.selected{border-color:#ed9d67;background:#833c4130}body.underworld .route-card b{font-style:italic}
+
+body.underworld .rest-actions{background:#201824f5;border-top-color:#bb715a66}body.underworld .route-card.selected{border-color:#ed9d67;background:#833c4130}body.underworld .route-card b{font-style:italic}
 body.underworld #game::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,transparent 55%,#170a233a 100%);box-shadow:inset 0 3px #b8503655}
 body.underworld #boon-choices{width:min(760px,92vw);top:20%;padding:24px;border-top:4px solid #e07a50}body.underworld #boon-choices>b{font:bold italic 26px Georgia,serif;color:#f9dfb3}body.underworld #boon-choices button{border-top:2px solid #db956a;min-height:140px;background:#352332;display:flex;flex-direction:column;gap:9px}
 body.underworld #boon-choices button>b{font:bold italic 21px Georgia,serif;color:#ffe1b1}body.underworld #boon-choices small{color:#c2a8ad}body.underworld #boon-choices button>span{line-height:1.6;color:#e3d1bc}
@@ -109,10 +109,10 @@ body.underworld .home-view #menu-error{padding:0 24px}
 body.underworld .home-view-content .view-intro{margin-top:0;font-size:13px}
 body.underworld :is(.sheet,.archive-sheet,.equipment-sheet,.details-panel,.home-view){border-top:3px solid #d15b48;border-bottom:2px solid #ae7451;background:linear-gradient(125deg,#271c2bfc,#17111dfc)}
 body.underworld .details-panel{padding:0;overflow:hidden}
-body.underworld :is(#details-body,#talents-body,#shop-body){padding:22px 25px;overflow:auto;max-height:calc(90dvh - 90px)}
+body.underworld :is(#details-body,#talents-body,#rest-body){padding:22px 25px;overflow:auto;max-height:calc(90dvh - 90px)}
 body.underworld .details-head{gap:14px}
 body.underworld .details-head .btn{font-size:12px;padding:10px 14px}
-body.underworld :is(.section-caption,.setup-label,.talents-slot>h3,.details-panel h3,.catalog-tier-title,.shop-info b,.gear-detail-head h3){font:italic 23px var(--display);letter-spacing:.5px;text-transform:uppercase;color:#f4d6b0}
+
 body.underworld .section-caption>span{font:11px 'Trebuchet MS',sans-serif;text-transform:none;letter-spacing:0;color:#c1a7a0}
 body.underworld .sheet-close{width:36px;height:36px;background:#291a27!important;border:1px solid #ca8b5b80!important;border-radius:0!important;color:#f4cca0}
 body.underworld .btn{min-height:35px;font-size:12px;padding:10px 16px;background:#33202e;transition:background .15s,border-color .15s}
@@ -176,7 +176,79 @@ body.underworld .atlas-card h3{font:italic 24px var(--display);text-transform:up
 body.underworld .atlas-card small{font-size:11px;line-height:1.6}
 body.underworld .atlas-card-detail{font-size:12px}
 body.underworld .talents-grid .talents-slot>h3,body.underworld .pact-heading h3{font:italic 23px var(--display);text-transform:uppercase;letter-spacing:.5px}
-body.underworld .catalog-tier-title{font:italic 23px var(--display)!important;color:#edc497!important}
+/* L'ID surpasse le :is(... td:last-child) !important de l'ancien habillage. */
+body.underworld #encyclopedia .catalog-tier-title{font:italic 23px var(--display)!important;color:#edc497!important}
+
+/* Finitions du Pacte. Toutes les règles restent dans ce thème ; les teintes de
+   soins, de rareté, de classe et les aperçus du terrain gardent leur sens. */
+body.underworld{--pact-border:#a7755b80;--pact-selected:#7f293d;--pact-selected-soft:#833c4130}
+
+/* HUD : surfaces neutres et états de combat, sans recolorer les jauges utiles. */
+body.underworld #hud-minimap #minimap{background:var(--parchemin-fonce);border-color:var(--pact-border)}
+body.underworld #hud .meter-tabs button{background:var(--parchemin);border-color:var(--pact-border);color:var(--encre-douce)}
+body.underworld #hud .meter-tabs button.active{background:var(--pact-selected);border-color:var(--or);color:var(--encre)}
+body.underworld #hud-meter .meter-row{background:#e7b77512}
+body.underworld #spellbar .spell-key{background:var(--parchemin-fonce);border-color:var(--pact-border);color:var(--encre)}
+body.underworld .mechanic-track{background:var(--parchemin-fonce)}
+body.underworld #hud #class-mechanic{background:#1c1a22ed;border-color:var(--pact-border)}
+body.underworld .spell-charges{background:var(--parchemin-fonce);border-color:var(--or);color:var(--encre)}
+body.underworld .mechanic-passive{color:var(--encre-douce)}
+body.underworld .hand-card{background:var(--parchemin);border-color:var(--pact-border);color:var(--encre)}
+body.underworld .hand-card.red{color:#f28176}
+body.underworld #dofus-announcement{background:linear-gradient(110deg,#141219f5,#352133f5,#141219f5);border-color:var(--or)}
+body.underworld #dofus-announcement b{font-style:italic;font-weight:700}
+body.underworld #dofus-announcement div>span,body.underworld #toast small{color:var(--encre-douce)}
+body.underworld .loot-toast-icon{background:var(--parchemin-fonce)}
+
+/* Défilement : les fenêtres longues utilisent les mêmes surfaces que les panneaux. */
+body.underworld,body.underworld *{scrollbar-color:#a7755b #141219}
+body.underworld ::-webkit-scrollbar-track{background:var(--parchemin-fonce)}
+body.underworld ::-webkit-scrollbar-thumb{background:#a7755b}
+body.underworld ::-webkit-scrollbar-thumb:hover{background:var(--or)}
+
+/* Grimoire et encyclopédie : rouge pour la sélection, jade pour une découverte. */
+body.underworld .talent.equipped{box-shadow:inset 3px 0 0 var(--rouge)}
+body.underworld .catalog-progress-track{background:var(--parchemin-fonce)}
+body.underworld .catalog-progress-track i{background:linear-gradient(90deg,var(--rouge),var(--or))}
+body.underworld .catalog-book-symbol{color:#e7b77566}
+body.underworld #encyclopedia .catalog-card{background:var(--parchemin-fonce);border-color:var(--pact-border)}
+body.underworld #encyclopedia .catalog-card.found{border-color:#6ce6d780}
+body.underworld .catalog-card.found small{color:var(--jade)}
+body.underworld #encyclopedia .catalog-card:hover,body.underworld #encyclopedia .catalog-card.selected{background:var(--pact-selected-soft);border-color:var(--or)}
+body.underworld #encyclopedia .catalog-card.selected{box-shadow:inset 0 0 0 1px #e7b77540}
+body.underworld .catalog-art{background:radial-gradient(ellipse,#e7b77525,transparent 70%)}
+body.underworld #encyclopedia .catalog-progress b,body.underworld #encyclopedia .catalog-rates td:last-child{color:var(--or)!important}
+body.underworld .catalog-progress{background:var(--parchemin);border-color:var(--pact-border)}
+body.underworld .catalog-progress div>span{color:var(--encre-douce)}
+body.underworld .catalog-progress b small,body.underworld .catalog-progress>span{color:var(--encre-douce)}
+
+/* Réglages : cibler les interrupteurs seuls préserve les pastilles de couleur du viseur. */
+body.underworld .home-setting>input[type=checkbox]+i{background:var(--parchemin-fonce);border-color:var(--pact-border)}
+body.underworld .home-setting>input[type=checkbox]:checked+i{background:var(--jade);border-color:var(--jade)}
+body.underworld .home-setting>input[type=checkbox]+i::after{background:var(--encre)}
+body.underworld .home-setting .setting-range{accent-color:var(--rouge)}
+body.underworld .home-setting output{color:var(--encre)}
+body.underworld .home-controls kbd{background:var(--parchemin-fonce);border-color:var(--pact-border)}
+body.underworld .setup-mode{background:var(--parchemin);border-color:var(--pact-border)}
+body.underworld .mode-option.active{background:var(--pact-selected-soft);border-color:var(--or);box-shadow:inset 0 -2px var(--rouge)}
+
+/* Inventaire et compte : les bordures de rareté restent définies par l'objet. */
+body.underworld .gear-quantity{background:var(--parchemin-fonce);color:var(--encre)}
+body.underworld .gear-card.selected::after{color:var(--jade)}
+body.underworld .gear-pet:not(.rare):not(.epique):not(.legendaire){border-left-color:var(--or)}
+body.underworld .history-card{background:#14121980}
+body.underworld .history-card .history-row .history-time small{color:var(--encre-douce)}
+body.underworld .history-loot div{background:var(--parchemin-fonce)}
+body.underworld .history-loot div span{background:#1c1a22e6;color:var(--encre)}
+body.underworld .auth-form input{background:var(--parchemin-fonce);border-color:var(--pact-border);color:var(--encre)}
+body.underworld .auth-form .profile-avatar{background:var(--parchemin);border-color:var(--pact-border);color:var(--encre)}
+body.underworld .auth-form .profile-avatar:has(input:checked){background:#6ce6d718;border-color:var(--jade);box-shadow:inset 0 0 0 1px #6ce6d740}
+
+/* Titres secondaires : conserver les tailles, harmoniser famille, graisse et italique. */
+body.underworld .home-topline>.home-profile .profile-name,
+body.underworld .home-topline>.home-profile .profile-stat b,
+body.underworld :is(.setup-character b,.setup-mode b,.multiplayer-option h3,.auth-heading,.account-identity h3,.gear-empty>span,.catalog-progress b,.catalog-progress>span,.atlas-number,.skin-shop-card h3),
+body.underworld .home-view #code{font-family:Georgia,serif;font-weight:700;font-style:italic}
 body:not(.underworld) .gear-layout>.gear-inspector{grid-column:2}
 body:not(.underworld) .gear-character{grid-row:1/span 2}
 body.underworld #equipment .equipment-sheet{display:flex;flex-direction:column}
@@ -185,9 +257,9 @@ body.underworld #equipment-body{display:flex;flex-direction:column;min-height:0;
 body.underworld .gear-layout{flex:1;min-height:0;max-height:none;overflow:hidden}
 @media(max-width:1180px){body.underworld .gear-layout{overflow:auto;max-height:none}body.underworld .gear-character,body.underworld .gear-inventory{overflow:visible}body.underworld .gear-layout>.gear-inspector{grid-column:1/-1}}
 @media(max-width:1180px){body.underworld .gear-layout{grid-template-columns:280px minmax(0,1fr);max-height:calc(92dvh - 175px);overflow:auto}body.underworld .gear-inspector{grid-column:1/-1;overflow:visible;border-left:0;border-top:1px solid #ba75584f}body.underworld .gear-inventory{max-height:650px}body.underworld .gear-grid{grid-template-columns:repeat(auto-fill,minmax(95px,1fr))}}
-@media(max-width:760px){body.underworld .home-view-content{padding:19px}body.underworld :is(.sheet-head,.details-head,.home-view-head){min-height:73px;padding:17px 19px}body.underworld .sheet-head>span{font-size:28px}body.underworld :is(.details-head h2,.home-view-head h2){font-size:32px!important}body.underworld .gear-layout{display:block;overflow:auto;max-height:calc(92dvh - 180px)}body.underworld .gear-character{border-right:0}.gear-paperdoll{max-width:330px;margin:auto}body.underworld .gear-inventory{max-height:none}.gear-detail-icon img{width:47px;height:43px}body.underworld .details-head{flex-wrap:wrap}body.underworld :is(#details-body,#talents-body,#shop-body){padding:18px;max-height:calc(90dvh - 115px)}body.underworld .home-nav-button>span:first-child{font-size:25px}body.underworld .gear-footer{align-items:flex-start;flex-direction:column;gap:10px}body.underworld .gear-rarity-legend{flex-wrap:wrap}body.underworld .home-setting{gap:15px}}
+@media(max-width:760px){body.underworld .home-view-content{padding:19px}body.underworld :is(.sheet-head,.details-head,.home-view-head){min-height:73px;padding:17px 19px}body.underworld .sheet-head>span{font-size:28px}body.underworld :is(.details-head h2,.home-view-head h2){font-size:32px!important}body.underworld .gear-layout{display:block;overflow:auto;max-height:calc(92dvh - 180px)}body.underworld .gear-character{border-right:0}.gear-paperdoll{max-width:330px;margin:auto}body.underworld .gear-inventory{max-height:none}.gear-detail-icon img{width:47px;height:43px}body.underworld .details-head{flex-wrap:wrap}body.underworld :is(#details-body,#talents-body,#rest-body){padding:18px;max-height:calc(90dvh - 115px)}body.underworld .home-nav-button>span:first-child{font-size:25px}body.underworld .gear-footer{align-items:flex-start;flex-direction:column;gap:10px}body.underworld .gear-rarity-legend{flex-wrap:wrap}body.underworld .home-setting{gap:15px}}
 .spell-ranks{display:flex;align-items:center;gap:5px;margin:12px 0 7px}.spell-ranks i{display:grid;place-items:center;width:24px;height:24px;border:1px solid #84634e;color:#947d69;font-style:normal}.spell-ranks i.active{background:#bb4335;border-color:#f0b471;color:#fff3dc}.spell-ranks b{margin-left:6px;color:#ebca9d;font-size:11px}.spell-evolution{font-size:12px;line-height:1.6;color:#dfc395;margin:8px 0}.spell-upgrade{padding:11px 0;border-top:1px solid #ae745339;margin-top:10px;display:grid;gap:10px}.spell-upgrade>small{font-size:11px;line-height:1.6;color:#c8b49a}.spell-upgrade .btn{width:100%}.spell-level{position:absolute;right:2px;top:2px;padding:1px 5px;background:#291e17;border:1px solid #d0995a;color:#ffe9be;font-size:10px;pointer-events:none}#momentum-hud{color:#ffe4a3;background:#422019e6;border-left:3px solid #ffcb76;padding:7px 10px;font-size:11px;font-weight:bold;letter-spacing:.7px;animation:momentum-appear .15s ease-out;pointer-events:none}@keyframes momentum-appear{from{transform:translateY(5px);opacity:0}to{transform:translateY(0);opacity:1}}
 body.underworld .spell-ranks b{font:italic 18px var(--display);text-transform:uppercase}body.underworld .spell-upgrade .btn{font-size:18px}
-.boon-selection>summary{cursor:pointer;font-size:11px;color:#c8b49a;margin:12px 0}.boon-selection>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}#boon-choices .blessing-choice{border-top-color:var(--pact);text-align:left;white-space:normal;padding:16px}#boon-choices .blessing-choice img{width:44px;height:44px;object-fit:contain}#boon-choices .blessing-choice .pact-family{font-size:9px;color:var(--pact);letter-spacing:1px}#boon-choices .blessing-choice>span:last-child{font-size:12px;line-height:1.6}.blessing-icons{display:flex;gap:3px;flex-wrap:wrap;max-width:230px}#blessing-hud .blessing-icons img{width:22px;height:22px}.run-blessings{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.run-blessings .blessing-detail>img{width:32px;height:32px;float:right}.run-blessings .blessing-detail h3{font-size:20px!important}.run-blessings .blessing-detail p{font-size:12px;line-height:1.6}body.underworld #boon-choices{max-height:72dvh;overflow:auto}body.underworld #boon-choices>b{font:italic 27px var(--display);text-transform:uppercase}body.underworld #boon-choices button>b{font:italic 24px var(--display);text-transform:uppercase}@media(max-width:760px){.boon-selection>div{grid-template-columns:1fr}body.underworld #boon-choices{top:8%;max-height:80dvh}#boon-choices .blessing-choice{min-height:0;padding:12px}#boon-choices .blessing-choice img{display:none}}
-body.underworld :is(#details,#talents,#shop) h3{font-family:var(--display);font-style:italic;font-weight:400;text-transform:uppercase;letter-spacing:.5px}body.underworld .talents-bank small{display:block;font-size:12px;line-height:1.7;margin-top:7px;max-width:760px}body.underworld .talents-slot>h3 small{display:block;font:10px 'Trebuchet MS',sans-serif;margin:6px 0 11px;color:#b8a2a5;text-transform:none;letter-spacing:0}
+#boon-choices .blessing-choice{border-top-color:var(--pact);text-align:left;white-space:normal;padding:16px}#boon-choices .blessing-choice img{width:44px;height:44px;object-fit:contain}#boon-choices .blessing-choice .pact-family{font-size:9px;color:var(--pact);letter-spacing:1px}#boon-choices .blessing-choice>span:last-child{font-size:12px;line-height:1.6}.blessing-icons{display:flex;gap:3px;flex-wrap:wrap;max-width:230px}#blessing-hud .blessing-icons img{width:22px;height:22px}.run-blessings{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.run-blessings .blessing-detail>img{width:32px;height:32px;float:right}.run-blessings .blessing-detail h3{font-size:20px!important}.run-blessings .blessing-detail p{font-size:12px;line-height:1.6}body.underworld #boon-choices{max-height:72dvh;overflow:auto}body.underworld #boon-choices>b{font:italic 27px var(--display);text-transform:uppercase}body.underworld #boon-choices button>b{font:italic 24px var(--display);text-transform:uppercase}@media(max-width:760px){body.underworld #boon-choices{top:8%;max-height:80dvh}#boon-choices .blessing-choice{min-height:0;padding:12px}#boon-choices .blessing-choice img{display:none}}
+body.underworld :is(#details,#talents,#rest) h3{font-family:var(--display);font-style:italic;font-weight:400;text-transform:uppercase;letter-spacing:.5px}body.underworld .talents-bank small{display:block;font-size:12px;line-height:1.7;margin-top:7px;max-width:760px}body.underworld .talents-slot>h3 small{display:block;font:10px 'Trebuchet MS',sans-serif;margin:6px 0 11px;color:#b8a2a5;text-transform:none;letter-spacing:0}
 .setup-mode.locked{opacity:.5;cursor:not-allowed}.history-result{display:block;font-size:10px;font-weight:bold;letter-spacing:1.3px}.history-result.won{color:#8fddaf}.history-result.lost{color:#d68f89}.victory-unlock{display:block;margin-top:16px;padding:12px;border:1px solid #8bc5a368;color:#bde9c5;background:#22513a36;font-weight:bold}body.underworld #gameover.victory .menu-panel{border-top:4px solid #e7bc74}body.underworld #gameover.victory h1{color:#ffe3a2;font-size:60px;text-shadow:3px 3px #6d4132}

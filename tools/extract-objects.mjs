@@ -28,8 +28,6 @@ const OBJECTS = {
   piton: ['o1:193', 'o1:194'],
   totem: ['o1:161'],
   balise_defi: ['o1:161'],
-  coffre: ['o1:418'],
-  coffre_ouvert: ['o1:423'],
   zaap: ['o4:7000'],
 };
 

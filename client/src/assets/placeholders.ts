@@ -168,40 +168,6 @@ function makeObjects(scene: Phaser.Scene): void {
     g.fillStyle(0xd83a4a, 1);
     for (const [x, y] of [[18, 20], [32, 14], [38, 26], [24, 28]]) g.fillCircle(x, y, 2);
   });
-  for (const opened of [false, true]) {
-    make(scene, opened ? 'ph_obj_coffre_ouvert' : 'ph_obj_coffre', 48, 44, (g) => {
-      g.fillStyle(0x000000, 0.25);
-      g.fillEllipse(24, 38, 44, 10);
-      // Caisse
-      g.fillStyle(0x7a4a22, 1);
-      g.fillRect(6, 20, 36, 18);
-      g.fillStyle(0x5a3416, 1);
-      g.fillRect(6, 20, 36, 3);
-      // Ferrures dorées
-      g.fillStyle(0xe0b030, 1);
-      g.fillRect(6, 27, 36, 3);
-      g.fillRect(10, 20, 3, 18);
-      g.fillRect(35, 20, 3, 18);
-      if (opened) {
-        // Couvercle relevé, intérieur vide
-        g.fillStyle(0x2a1608, 1);
-        g.fillRect(8, 16, 32, 5);
-        g.fillStyle(0x8a5628, 1);
-        g.fillPoints([{ x: 6, y: 16 }, { x: 42, y: 16 }, { x: 38, y: 4 }, { x: 10, y: 4 }], true);
-        g.fillStyle(0xe0b030, 1);
-        g.fillRect(10, 9, 28, 2);
-      } else {
-        // Couvercle bombé et serrure
-        g.fillStyle(0x8a5628, 1);
-        g.fillRoundedRect(6, 8, 36, 14, 6);
-        g.fillStyle(0xe0b030, 1);
-        g.fillRect(6, 13, 36, 2);
-        g.fillRoundedRect(20, 16, 8, 9, 2);
-        g.fillStyle(0x2a1608, 1);
-        g.fillCircle(24, 20, 1.6);
-      }
-    });
-  }
   // Zaap : arche de pierre avec un portail bleu.
   make(scene, 'ph_obj_zaap', 96, 120, (g) => {
     g.fillStyle(0x000000, 0.28);

@@ -1,8 +1,8 @@
-// Classes jouables. Une classe = des stats de base + 4 sorts de base (voir data/spells.ts).
-// Les sorts alternatifs à débloquer sont dans data/talents.ts.
+// Base character stats; signature and innate come from the roguelite registry.
 import type { ClassDef } from '../types.ts';
+import {ROGUELITE_SIGNATURES,ROGUELITE_INNATES} from '../roguelite/content.ts';
 
-export const CLASSES: Record<string, ClassDef> = {
+const baseClasses:Record<string,Omit<ClassDef,'spells'>> = {
   cra: {
     id: 'cra',
     name: 'Crâ',
@@ -11,7 +11,6 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 120,
     speed: 4.6,
     regen: 1,
-    spells: ['fleche_magique', 'fleche_enflammee', 'fleche_de_recul', 'fleche_explosive'],
   },
   iop: {
     id: 'iop',
@@ -22,7 +21,6 @@ export const CLASSES: Record<string, ClassDef> = {
     speed: 4.6,
     regen: 2.5,
     armor: 3,
-    spells: ['pression', 'epee_de_iop', 'tempete_de_puissance', 'colere_de_iop'],
   },
   eniripsa: {
     id: 'eniripsa',
@@ -32,7 +30,6 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 130,
     speed: 4.7,
     regen: 1.5,
-    spells: ['mot_blessant', 'mot_curatif', 'mot_de_frayeur', 'mot_de_reconstitution'],
   },
   sacrieur: {
     id: 'sacrieur',
@@ -42,7 +39,6 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 210,
     speed: 4.8,
     regen: 3,
-    spells: ['pied_du_sacrieur', 'attirance', 'assaut', 'punition'],
   },
   sram: {
     id: 'sram',
@@ -52,7 +48,6 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 130,
     speed: 5,
     regen: 1.2,
-    spells: ['sournoiserie', 'piege_sournois', 'invisibilite', 'piege_de_masse'],
   },
   sadida: {
     id: 'sadida',
@@ -62,7 +57,6 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 140,
     speed: 4.5,
     regen: 1.5,
-    spells: ['ronce', 'ronces_agressives', 'poison_paralysant', 'vent_empoisonne'],
   },
   ecaflip: {
     id: 'ecaflip',
@@ -72,7 +66,6 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 150,
     speed: 4.7,
     regen: 1.2,
-    spells: ['pile_ou_face', 'roue_de_la_fortune', 'odorat', 'rekop'],
   },
   feca: {
     id: 'feca',
@@ -82,7 +75,6 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 160,
     speed: 4.4,
     regen: 1.5,
-    spells: ['attaque_naturelle', 'glyphe_agressif', 'glyphe_d_immobilisation', 'glyphe_enflamme'],
   },
   osamodas: {
     id: 'osamodas',
@@ -92,7 +84,6 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 130,
     speed: 4.5,
     regen: 1.2,
-    spells: ['fouet', 'invocation_de_tofu', 'invocation_de_bouftou', 'invocation_de_dragonnet_rouge'],
   },
   enutrof: {
     id: 'enutrof',
@@ -102,7 +93,6 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 140,
     speed: 4.2,
     regen: 1.2,
-    spells: ['lancer_de_pieces', 'malchance', 'coffre_anime', 'pelle_du_jugement'],
   },
   xelor: {
     id: 'xelor',
@@ -112,7 +102,6 @@ export const CLASSES: Record<string, ClassDef> = {
     maxHp: 120,
     speed: 4.6,
     regen: 1,
-    spells: ['aiguille', 'gelure', 'vol_du_temps', 'sablier_de_xelor'],
   },
   pandawa: {
     id: 'pandawa',
@@ -123,9 +112,10 @@ export const CLASSES: Record<string, ClassDef> = {
     speed: 4.4,
     regen: 1.5,
     armor: 2,
-    spells: ['poing_enflamme', 'karcham', 'ivresse', 'lait_de_bambou'],
   },
 };
+
+export const CLASSES:Record<string,ClassDef>=Object.fromEntries(Object.entries(baseClasses).map(([id,base])=>[id,{...base,spells:[ROGUELITE_SIGNATURES[id]],description:ROGUELITE_INNATES[id].description}]));
 
 export const DEFAULT_CLASS = 'cra';
 

@@ -1,12 +1,12 @@
 // Mini-carte (canvas 2D) : même orientation isométrique que le jeu.
 // Le terrain est dessiné une fois par carte, les points mobiles à chaque frame.
-// Coffres et Zaap n'apparaissent qu'une fois découverts par un joueur de l'équipe.
-import { PHASE_PLAYING, ZAAP_IDLE, getMonster, getZone, type ChestView, type GameMap, type GameStateView, type PlayerView } from '@rod/shared';
+// Défis et Zaap n'apparaissent qu'une fois découverts par un joueur de l'équipe.
+import { PHASE_PLAYING, ZAAP_IDLE, getMonster, getZone, type ChallengeView, type GameMap, type GameStateView, type PlayerView } from '@rod/shared';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 
 const W = 360;
 const H = 184;
-/** Distance (cases) à laquelle un joueur « découvre » un coffre ou le Zaap. */
+/** Distance (cases) à laquelle un joueur « découvre » un défi ou le Zaap. */
 const DISCOVER_RANGE = 11;
 
 export class Minimap {
@@ -15,7 +15,7 @@ export class Minimap {
   private terrain = document.createElement('canvas');
   private size = 1;
   private seed = -1;
-  private foundChests = new Set<string>();
+  private foundChallenges = new Set<string>();
   private zaapFound = false;
   private lastDraw=-Infinity;
 
@@ -34,7 +34,7 @@ export class Minimap {
   setMap(map: GameMap): void {
     this.size = map.size;
     this.seed = map.seed;
-    this.foundChests.clear();
+    this.foundChallenges.clear();
     this.zaapFound = false;
     this.lastDraw=-Infinity;
     const c = this.terrain.getContext('2d')!;
@@ -51,15 +51,15 @@ export class Minimap {
     }
   }
 
-  /** Marque comme découverts les coffres et le Zaap proches d'un joueur vivant. */
+  /** Marque comme découverts les défis et le Zaap proches d'un joueur vivant. */
   private discover(state: GameStateView): void {
     const alive: PlayerView[] = [];
     state.players.forEach((p) => {
       if (p.alive) alive.push(p);
     });
     const near = (x: number, y: number) => alive.some((p) => Math.hypot(p.x - x, p.y - y) <= DISCOVER_RANGE);
-    state.chests.forEach((ch: ChestView, id: string) => {
-      if (!this.foundChests.has(id) && near(ch.x, ch.y)) this.foundChests.add(id);
+    state.challenges.forEach((ch: ChallengeView, id: string) => {
+      if (!this.foundChallenges.has(id) && near(ch.x, ch.y)) this.foundChallenges.add(id);
     });
     if (!this.zaapFound && state.phase === PHASE_PLAYING && near(state.zaapX, state.zaapY)) this.zaapFound = true;
   }
@@ -107,20 +107,10 @@ export class Minimap {
 
     if(state.hasCursedZaap&&this.zaapFound&&state.phase===PHASE_PLAYING)dot(state.cursedZaapX,state.cursedZaapY,5,'#f2366a','#ffd6e3');
 
-    // Coffres découverts et encore fermés : petit coffre doré.
-    state.chests.forEach((ch: ChestView, id: string) => {
-      if (ch.opened || !this.foundChests.has(id)) return;
-      const [px, py] = this.project(ch.x, ch.y);
-      if(ch.kind==='challenge') {
-        dot(ch.x,ch.y,3.5,'#d5915b','#fff1cc');
-        return;
-      }
-      c.fillStyle = '#5a3a00';
-      c.fillRect(px - 5, py - 4, 10, 8);
-      c.fillStyle = '#ffd23a';
-      c.fillRect(px - 4, py - 3, 8, 6);
-      c.fillStyle = '#a86f00';
-      c.fillRect(px - 4, py - 0.5, 8, 1.5);
+    // Défis découverts et encore fermés : petit défi doré.
+    state.challenges.forEach((ch: ChallengeView, id: string) => {
+      if (ch.opened || !this.foundChallenges.has(id)) return;
+      dot(ch.x,ch.y,3.5,'#d5915b','#fff1cc');
     });
 
     state.monsters.forEach((m) => dot(m.x, m.y, getMonster(m.type).boss ? 4.5 : m.ally ? 2.2 : 1.6, m.ally ? '#72e4db' : '#e02a1a'));

@@ -14,6 +14,8 @@
     "test": "node --import tsx --test tests/*.test.ts",
     "tables": "node --import tsx tools/equipment-tables.ts",
     "audit:gameplay": "node --import tsx tools/audit-gameplay.ts",
+    "audit:progression": "node --import tsx tools/audit-progression.ts",
+    "audit:xp-economy": "node --import tsx tools/economy-table.ts",
     "simulate:runs": "node --import tsx tools/simulate-runs.ts",
     "build": "npm run build -w client",
     "start": "npm run start -w server",

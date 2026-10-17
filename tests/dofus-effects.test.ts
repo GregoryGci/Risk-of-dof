@@ -1,3 +1,4 @@
+import {dofusOnCast} from '../server/src/game/dofus.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {EQUIPMENT_BASES,DOFUS_EFFECTS,createEquipment,getMonster} from '@rod/shared';
@@ -26,7 +27,7 @@ test('Dofus Vulbis et Nébuleux : esquive plus courte, recharge après l’ultim
   const plain=withDofus(),vulbis=withDofus('dofus_vulbis','dofus_nebuleux');
   for(const {sim,p} of [plain,vulbis])sim.playerDash(p.id,{dx:1,dy:0});
   assert.ok(vulbis.p.dashReadyAt-vulbis.sim.now<plain.p.dashReadyAt-plain.sim.now);
-  vulbis.sim.playerCast('p',{slot:3,tx:vulbis.p.state.x+3,ty:vulbis.p.state.y});assert.equal(vulbis.p.dashReadyAt,vulbis.sim.now);
+  dofusOnCast(vulbis.sim,vulbis.p,0);assert.equal(vulbis.p.dashReadyAt,vulbis.sim.now);
 });
 
 test('Dofus Dolmanax : +15 % contre les élites',()=>{

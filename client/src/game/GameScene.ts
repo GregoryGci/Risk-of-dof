@@ -1,4 +1,4 @@
-import {runBonusText} from '@rod/shared';
+import {classSpellShape,runBonusText} from '@rod/shared';
 // Scène principale : affiche l'état reçu du serveur, envoie les entrées du joueur.
 // Aucune règle de jeu ici : le client ne décide ni des dégâts ni des temps de recharge.
 import Phaser from 'phaser';
@@ -22,15 +22,13 @@ import {
   RARITY_NAMES,
   getMonster,
   getSpell,
-  leveledSpell,
-  parseSpellLevels,
   blessingSpell,parseBlessings,
   screenToWorld,
   stepMovement,
   worldToScreen,
   type AttackEvent,
   type CastEvent,
-  type ChestView,
+  type ChallengeView,
   type DamageEvent,
   type BuffEvent,
   type DeathEvent,
@@ -54,10 +52,13 @@ import { Minimap } from '../ui/Minimap.ts';
 import { Details } from '../ui/Details.ts';
 import { gameSettings } from '../ui/GameSettings.ts';
 import { SpellPreview } from './SpellPreview.ts';
-import { ShopPanel } from '../ui/Shop.ts';
+import { RestPanel } from '../ui/Rest.ts';
+import {XpView} from './XpView.ts';
 import { settings } from '../settings.ts';
 import { Controls } from './Controls.ts';
+import {readBuild,effectiveAbilityPreview,type EffectiveRogueliteAbility} from '@rod/shared/roguelite';
 import {MechanicHud} from '../ui/MechanicHud.ts';
+import {RogueliteEffects} from './RogueliteEffects.ts';
 import {MovementPrediction} from './Prediction.ts';
 import { Effects } from './Effects.ts';
 import {installTextureStateRefresh} from './textureState.ts';
@@ -95,10 +96,12 @@ export class GameScene extends Phaser.Scene {
   private hud!: Hud;
   private controls!: Controls;
   private effects!: Effects;
+  private rogueliteEffects!:RogueliteEffects;
   private minimap = new Minimap();
   private details!: Details;
-  private shop!: ShopPanel;
-  private merchant?: EntityView;
+  private rest!: RestPanel;
+  private xpView!:XpView;
+  private guide?: EntityView;
   private preview!: SpellPreview;
   /** Sort dont la zone est affichée (survol de son icône), ou null. */
   private previewSlot: number | null = null;
@@ -129,7 +132,7 @@ export class GameScene extends Phaser.Scene {
   private myLevelsKey = '';
   private myLevels:Record<string,number> = {};
   private dashCdEnd = 0;
-  private chests = new Map<string, { image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite; opened: boolean }>();
+  private challenges = new Map<string, { image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite; opened: boolean }>();
   private potions = new Map<string, Phaser.GameObjects.Image>();
   private ogrineViews=new Map<string,Phaser.GameObjects.Text>();
   private cursedZaap?:{image:Phaser.GameObjects.Image;glow:Phaser.GameObjects.Image};
@@ -141,7 +144,7 @@ export class GameScene extends Phaser.Scene {
   /** Pendant un bond imposé par le serveur, on suit sa position au lieu de prédire. */
   private followServerUntil = 0;
 
-  private lastInput = { dx: 0, dy: 0, dir: -1, autoAttack: false };
+  private lastInput: {dx:number;dy:number;dir:number;aimAngle?:number} = { dx: 0, dy: 0, dir: -1 };
   private lastInputAt = 0;
   private cdEnd = [0, 0, 0, 0];
   private cdTotal = [1, 1, 1, 1];
@@ -180,7 +183,7 @@ export class GameScene extends Phaser.Scene {
     this.inputSeq=this.state.players.get(this.room.sessionId)?.inputSeq??0;
     const zone=zoneForStage(this.state.stage??1);
     const characters:string[]=[];this.state.players.forEach(p=>characters.push(p.classId));
-    this.store.preload(this,[...zone.monsters,zone.boss,'epouvantail','marchand','coffre','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable'],characters);
+    this.store.preload(this,[...zone.monsters,zone.boss,'epouvantail','marchand','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable'],characters);
 
     // Écran de chargement : les spritesheets Dofus pèsent quelques Mo.
     const { width, height } = this.scale;
@@ -198,12 +201,13 @@ export class GameScene extends Phaser.Scene {
       const state=this.state,p=state.players.get(this.room.sessionId);
       if(!p?.alive||state.paused||state.phase===PHASE_LOST)return;
       const aim=this.aimPoint();this.room.send('classAction',{tx:aim.x,ty:aim.y,choice});
-    },choice=>this.room.send('boon',{choice}));
+    },(choice,revision)=>this.room.send('boon',{choice,revision,runId:this.state.runId}),(type,revision,choiceId)=>this.room.send(type,{revision,choiceId,runId:this.state.runId}));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.mechanicHud.destroy());
     this.store.finalize(this);
     this.cameras.main.setBackgroundColor(0x1a2611);
     this.controls = new Controls(this.game.canvas);
     this.effects = new Effects(this, this.store);
+    this.rogueliteEffects=new RogueliteEffects(this,this.store,()=>this.map,()=>this.state,this.room.sessionId);
     installTextureStateRefresh(this);
     this.preview = new SpellPreview(this);
     // Accès console en développement (débogage).
@@ -222,7 +226,8 @@ export class GameScene extends Phaser.Scene {
     menu.onToggle = (open) => { this.controls.releaseAll(); this.room.send('pause', { paused: open }); };
     document.getElementById('details-settings')!.onclick = () => { this.details.toggle(false); menu.toggle(true); };
     this.hud.setSpellHover((slot) => (this.previewSlot = slot));
-    this.shop = new ShopPanel(this.store, (index) => this.room.send('buy', { index }),()=>this.room.send('shopReroll'),()=>{this.controls.releaseAll();this.room.send('shopReady');},route=>this.room.send('routeChoice',{route}));
+    this.rest = new RestPanel(()=>{this.controls.releaseAll();this.room.send('restReady');},route=>this.room.send('routeChoice',{route}));
+    this.xpView=new XpView(this);
 
     this.scale.on(Phaser.Scale.Events.RESIZE, this.applyZoom, this);
     this.applyZoom();
@@ -231,7 +236,8 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('pong',(e:{sentAt:number})=>{this.ping=Math.max(0,Math.round(performance.now()-e.sentAt));});
     this.room.onMessage('cast', (e: CastEvent) => this.onCast(e));
     this.room.onMessage('momentum',(e:{player:string;x:number;y:number})=>{if(!document.hidden)this.effects.blessingBurst(e.x,e.y,1,0xffd58a);});
-    this.room.onMessage('projEnd', (e: ProjEndEvent) => this.effects.endProjectile(e.id, e.x, e.y));
+    this.room.onMessage('projEnd', (e: ProjEndEvent) => {this.effects.endProjectile(e.id,e.x,e.y);this.rogueliteEffects.end(e.id);});
+    this.room.onMessage('abilityFx',(e:Parameters<RogueliteEffects['event']>[0])=>{if(document.hidden)return;this.rogueliteEffects.event(e);if(e.kind==='impact'&&e.asset)this.effects.playSpellFx(e.asset,e.x,e.y);});
     this.room.onMessage('explode', (e: ExplodeEvent) => this.onExplode(e));
     this.room.onMessage('spellImpact',(e:{spell:string;x:number;y:number;dx:number;dy:number})=>{if(!document.hidden)this.effects.playSpellFx(e.spell,e.x,e.y,e.dx,e.dy);});
     this.room.onMessage('bounce',(e:{spell:string;x:number;y:number;tx:number;ty:number})=>{if(!document.hidden)this.effects.dashTrail(e.x,e.y,e.tx,e.ty,getSpell(e.spell).color);});
@@ -248,7 +254,7 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('bossImpact',(e:{x:number;y:number;radius:number;color:number})=>{
       if(!document.hidden)this.effects.explosion(e.x,e.y,e.radius,e.color);
     });
-    this.room.onMessage('merchant',()=>this.hud.toast('<b>Halte marchande</b> — prenez le temps de choisir vos bonus'));
+    this.room.onMessage('rest',()=>this.hud.toast('<b>Halte de l’équipe</b> — choisissez la route de la prochaine zone'));
     this.room.onMessage('dmg', (e: DamageEvent) => this.onDamage(e));
     this.room.onMessage('death', (e: DeathEvent) => this.onDeath(e));
     this.room.onMessage('boss', (e: { name: string; challenge?:boolean;rogue?:boolean;cursed?:boolean }) => {
@@ -278,10 +284,8 @@ export class GameScene extends Phaser.Scene {
       this.followServerUntil = this.time.now + 300;
     });
     this.room.onMessage('item', (e: StatGainEvent) => this.onItem(e));
-    // Lancer de Pièces (Enutrof) : kamas tombés d'une cible.
-    this.room.onMessage('kamas', (e: { amount: number; x: number; y: number }) => {
-      if (!document.hidden) this.effects.floatText(e.x, e.y + 0.6, `+${e.amount} K`, '#ffd84a', 12, 22);
-    });
+    this.room.onMessage('xpPickup',(e:{x:number;y:number})=>this.xpView.pickup(e));
+    this.room.onMessage('xpSweep',()=>{if(!document.hidden){this.cameras.main.flash(250,20,90,170);this.state.players.forEach(p=>{if(p.alive)this.effects.beam(p.x,p.y,0x49baff);});}});
     this.room.onMessage('atk', (e: AttackEvent) => this.monsters.get(e.id)?.attack());
     this.room.onMessage('mechanicFx',(e:{player:string;kind:string;x:number;y:number;r:number;tx?:number;ty?:number;color:number})=>{
       if(document.hidden)return;
@@ -311,7 +315,7 @@ export class GameScene extends Phaser.Scene {
     // Mort : un clic change de joueur observé.
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.cycleSpectate());
 
-    const clean=()=>{const menu=gameSettings();menu.onToggle=()=>{};menu.toggle(false);this.effects.clear();this.controls.destroy();this.details.destroy();this.shop.destroy();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
+    let cleaned=false;const clean=()=>{if(cleaned)return;cleaned=true;const menu=gameSettings();menu.onToggle=()=>{};menu.toggle(false);this.effects.clear();this.rogueliteEffects.destroy();this.xpView.destroy();this.controls.destroy();this.details.destroy();this.rest.destroy();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, clean);
     this.events.once(Phaser.Scenes.Events.DESTROY, clean);
   }
@@ -340,6 +344,7 @@ export class GameScene extends Phaser.Scene {
     if (!this.mapView || this.map.seed !== state.seed || this.map.zoneId !== zoneForStage(state.stage).id) this.rebuildMap(state.seed);
 
     this.syncOgrines(state);
+    this.xpView.update(state,dt);
     const myState = state.players.get(this.room.sessionId);
     if(time>=this.nextAssetCheck){
     this.nextAssetCheck=time+150;
@@ -348,8 +353,8 @@ export class GameScene extends Phaser.Scene {
     this.store.loadMonsters(this,monsterIds);
     const skins:string[]=[],characters:string[]=[];state.players.forEach(p=>{skins.push(p.skin);characters.push(p.classId);});this.store.loadSkins(this,skins);this.store.loadCharacters(this,characters);
     }
-    if(state.intermission!==this.lastIntermission){this.lastIntermission=state.intermission;this.shop.toggle(state.intermission);this.controls.releaseAll();this.targeting=null;}
-    if(myState&&myState.cooldowns!==this.lastCooldownState){this.lastCooldownState=myState.cooldowns;try{const cds:number[]=JSON.parse(myState.cooldowns);for(let i=0;i<4;i++)this.cdEnd[i]=i===1&&myState.secondaryMax>1&&myState.secondaryCharges>0?0:time+(cds[i]??0)*1000;this.dashCdEnd=time+(cds[4]??0)*1000;}catch{/* Attend le patch. */}}
+    if(state.intermission!==this.lastIntermission){this.lastIntermission=state.intermission;this.rest.toggle(state.intermission);this.controls.releaseAll();this.targeting=null;}
+    if(myState&&myState.cooldowns!==this.lastCooldownState){this.lastCooldownState=myState.cooldowns;try{const cds:number[]=JSON.parse(myState.cooldowns);for(let i=0;i<4;i++)this.cdEnd[i]=time+(cds[i]??0)*1000;this.dashCdEnd=time+(cds[4]??0)*1000;}catch{/* Attend le patch. */}}
     const progressionOpen = ['equipment','talents','encyclopedia'].some(id => !document.getElementById(id)!.classList.contains('hidden'));
     // Tab (ou Échap pour fermer) : panneau de détails.
     if (this.controls.consumePress('Tab') && !progressionOpen) this.details.toggle();
@@ -359,23 +364,25 @@ export class GameScene extends Phaser.Scene {
         const top = ['encyclopedia','equipment','talents'].find(id => !document.getElementById(id)!.classList.contains('hidden'));
         if (top) document.getElementById(top)!.classList.add('hidden');
       } else if (this.targeting !== null) this.targeting = null;
-      else if (this.shop.isOpen) this.shop.toggle(false);
+      else if (this.rest.isOpen) this.rest.toggle(false);
       else if (this.details.isOpen) this.details.toggle(false);
       // Rien à fermer : Échap ouvre les réglages (la partie se met en pause en solo).
       else gameSettings().toggle(true);
     }
     if (progressionOpen) this.controls.releaseAll();
     // Pendant une pause, les temps de recharge affichés sont figés eux aussi.
-    if (state.paused && this.lastFrameTime > 0) for (let i = 0; i < 4; i++) this.cdEnd[i] += time - this.lastFrameTime;
+    const choicePaused=state.players.size===1&&myState?.boonChoices!=='[]'&&!state.xpSweepUntil;
+    if ((state.paused||choicePaused) && this.lastFrameTime > 0){for(let i=0;i<4;i++)this.cdEnd[i]+=time-this.lastFrameTime;this.dashCdEnd+=time-this.lastFrameTime;}
     this.lastFrameTime = time;
-    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !progressionOpen && !this.details.isOpen && !gameSettings().isOpen && !this.shop.isOpen && !state.paused && !document.hidden && document.hasFocus();
+    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !(myState?.boonChoices!=='[]'&&!state.xpSweepUntil) && !progressionOpen && !this.details.isOpen && !gameSettings().isOpen && !this.rest.isOpen && !state.paused && !document.hidden && document.hasFocus();
 
-    if (myState && (myState.classId !== this.myClass || myState.spells !== this.mySpellsKey || myState.spellLevels !== this.myLevelsKey)) {
+    if (myState && (myState.classId !== this.myClass || myState.spells !== this.mySpellsKey || myState.abilities+myState.build !== this.myLevelsKey)) {
       // Première frame, changement de classe ou de sorts équipés : la barre de sorts suit.
       this.myClass = myState.classId;
       this.mySpellsKey = myState.spells;
       this.mySpells = myState.spells ? myState.spells.split(',') : getClass(myState.classId).spells;
-      this.myLevelsKey=myState.spellLevels;this.myLevels=parseSpellLevels(myState.spellLevels);
+      this.myLevelsKey=myState.abilities+myState.build;this.myLevels=Object.fromEntries(readBuild(myState.build,myState.classId).spells.flatMap(s=>s?[[s.spellId,s.level]]:[]));
+      this.hud.setRunAbilities(myState.abilities);
       this.hud.setSpells(this.mySpells,this.myLevels);
       this.cdEnd = [0, 0, 0, 0];
     }
@@ -384,9 +391,10 @@ export class GameScene extends Phaser.Scene {
     this.syncMonsters(state, dt);
     this.syncGrounds(state, time);
     this.syncPotions(state, time);
-    const prompt = this.syncZaap(state, canAct) || this.syncMerchant(state, canAct, dt) || this.syncChests(state, myState, canAct);
-    this.shop.update(state, this.room.sessionId);
+    const prompt = this.syncZaap(state, canAct) || this.syncRest(state, canAct, dt) || this.syncChallenges(state, myState, canAct);
+    this.rest.update(state, this.room.sessionId);
     this.effects.update(dt);
+    this.rogueliteEffects.update(dt);
     this.updateCamera(state, myState, dt);
     const watched=myState?.alive ? this.me : state.players.get(this.spectating??'');
     if(watched) this.mapView?.revealPlayer(watched.x,watched.y,dt);
@@ -395,12 +403,13 @@ export class GameScene extends Phaser.Scene {
     this.details.update(state, this.room.sessionId, time);
     // Aperçu de la zone d'effet du sort survolé, depuis la position du joueur dans la direction visée.
     const hovered = this.previewSlot !== null && myState ? this.mySpells[this.previewSlot] : undefined;
-    const targeted = this.targeting !== null && myState ? this.mySpells[this.targeting] : undefined;
-    if (hovered) this.preview.draw(blessingSpell(leveledSpell(hovered,this.myLevels[hovered]),parseBlessings(myState?.blessings)), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y,undefined,this.hud.playerStats.range);
-    else if (targeted) this.preview.draw(blessingSpell(leveledSpell(targeted,this.myLevels[targeted]),parseBlessings(myState?.blessings)), this.me.x, this.me.y, this.aimDir.x, this.aimDir.y, Math.hypot(this.aimPos.x - this.me.x, this.aimPos.y - this.me.y),this.hud.playerStats.range);
-    else this.preview.hide();
+    if(hovered&&myState&&this.previewSlot!==null){
+      let ability:EffectiveRogueliteAbility|undefined;
+      try{ability=JSON.parse(myState.abilities)[this.previewSlot];}catch{}
+      if(ability)this.preview.draw(effectiveAbilityPreview(ability),this.me.x,this.me.y,this.aimDir.x,this.aimDir.y);
+      else this.preview.hide();
+    }else this.preview.hide();
     this.hud.updateCooldowns(time, this.cdEnd, this.cdTotal);
-    if(myState)this.hud.updateCharges(myState.secondaryCharges,myState.secondaryMax);
     this.hud.updateDash(time, this.dashCdEnd);
     if(time>=this.nextHudUpdate){
       this.nextHudUpdate=time+100;
@@ -427,13 +436,13 @@ export class GameScene extends Phaser.Scene {
 
   private rebuildMap(seed: number): void {
     for(const view of this.monsters.values())view.destroy();this.monsters.clear();
-    const zone=zoneForStage(this.state.intermission?this.state.stage+1:this.state.stage),keep=[...zone.monsters,zone.boss,'epouvantail','marchand','coffre','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable'];
+    const zone=zoneForStage(this.state.intermission?this.state.stage+1:this.state.stage),keep=[...zone.monsters,zone.boss,'epouvantail','marchand','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable'];
     this.state.monsters.forEach(m=>keep.push(m.type));this.store.releaseMonsters(this,keep);this.store.loadMonsters(this,keep);
     this.mapView?.destroy();
     this.map = generateMap(seed,undefined,this.state.stage);
     this.mapView = new MapView(this, this.store, this.map,this.state.cursed);
     this.minimap.setMap(this.map);
-    this.effects.clear();
+    this.effects.clear();this.rogueliteEffects.clear();
     // Nouvelle partie : on repart de la position serveur et les sorts sont de nouveau prêts.
     this.meReady = false;
     this.cam.ready = false;
@@ -471,10 +480,10 @@ export class GameScene extends Phaser.Scene {
     const dir = this.facing;
 
     // Envoi des entrées : seulement quand elles changent, plus un rappel périodique.
-    const autoAttack = canAct && !this.state.intermission && settings.autoAttack && this.targeting === null && !this.controls.isHeld(0) && !this.suppressHeld[0];
-    const changed = move.x !== this.lastInput.dx || move.y !== this.lastInput.dy || dir !== this.lastInput.dir || autoAttack !== this.lastInput.autoAttack;
+    const aimAngle=settings.mouseAim?Math.atan2(this.aimDir.y,this.aimDir.x):undefined;
+    const changed = move.x !== this.lastInput.dx || move.y !== this.lastInput.dy || dir !== this.lastInput.dir || aimAngle !== this.lastInput.aimAngle;
     if ((changed && time - this.lastInputAt > 16) || (moving && time-this.lastInputAt>33) || time - this.lastInputAt > 500) {
-      this.lastInput = { dx: move.x, dy: move.y, dir, autoAttack };
+      this.lastInput = { dx: move.x, dy: move.y, dir, aimAngle };
       this.lastInputAt = time;
       this.room.send('input', {...this.lastInput,seq:++this.inputSeq});
     }
@@ -511,44 +520,6 @@ export class GameScene extends Phaser.Scene {
       this.room.send('dash', { dx: d.x, dy: d.y });
     }
 
-    // Smart cast désactivé : la touche d'un sort ouvre le ciblage, le clic gauche confirme, le clic droit annule.
-    if (!settings.smartCast) {
-      for (const slot of [2, 3]) {
-        if (!this.controls.consumeKeySlot(slot)) continue;
-        this.targeting = this.targeting === slot ? null : slot;
-      }
-      if (this.targeting !== null) {
-        if (this.controls.consumeMouse(0)) {
-          if (time >= this.cdEnd[this.targeting]) this.castSlot(time, this.targeting, aim);
-          this.targeting = null;
-          this.suppressHeld[0] = true;
-        } else if (this.controls.consumeMouse(2)) {
-          this.targeting = null;
-          this.suppressHeld[1] = true;
-        }
-      }
-    }
-    this.controls.consumeMouse(0);
-    this.controls.consumeMouse(2);
-    for (let slot = 0; slot < 2; slot++) if (!this.controls.isHeld(slot)) this.suppressHeld[slot] = false;
-
-    // Sorts : une touche maintenue relance dès que le sort est prêt.
-    for (let slot = 0; slot < 4; slot++) {
-      if (!this.controls.isHeld(slot) || this.suppressHeld[slot]) continue;
-      if (!settings.smartCast && this.controls.isKeyboardSlot(slot)) continue;
-      if (this.targeting !== null && slot < 2) continue;
-      if ((time < this.cdEnd[slot] && !(slot===1&&s.secondaryMax>1&&s.secondaryCharges>0)) || time - this.lastCastSent[slot] < 120) continue;
-      this.castSlot(time, slot, aim);
-    }
-    if (settings.smartCast) for (const slot of [2, 3]) this.controls.consumeKeySlot(slot);
-  }
-
-  /** Envoie un sort au serveur et tourne le personnage vers la cible le temps de l'animation. */
-  private castSlot(time: number, slot: number, target: { x: number; y: number }): void {
-    this.lastCastSent[slot] = time;
-    this.room.send('cast', { slot, tx: target.x, ty: target.y });
-    this.facing = dirFromVector(target.x - this.me.x, target.y - this.me.y);
-    this.castFacingUntil = time + 400;
   }
 
   private syncPlayers(state: GameStateView, dt: number): void {
@@ -637,6 +608,7 @@ export class GameScene extends Phaser.Scene {
   /** Pièges et glyphes : un marqueur au sol par objet synchronisé. */
   private syncGrounds(state: GameStateView, time: number): void {
     state.grounds.forEach((g: GroundView, id: string) => {
+      if(g.length)return; // Oriented fire strips are drawn by RogueliteEffects.
       let view = this.grounds.get(id);
       if (!view) {
         view = { marker: this.effects.groundMarker(g.x, g.y, g.radius, getSpell(g.spell).color, g.kind) };
@@ -709,98 +681,55 @@ export class GameScene extends Phaser.Scene {
     const near = Math.hypot(state.zaapX - this.me.x, state.zaapY - this.me.y) <= ZAAP_RANGE;
     if (!canAct || !near) return '';
     if (state.zaapState === ZAAP_CHARGING) return '';
-    // La touche est consommée ici : un coffre voisin ne s'ouvrira pas par erreur.
+    // La touche est consommée ici : un défi voisin ne s’activera pas par erreur.
     if (this.controls.consumePress('KeyE')) this.room.send('interact');
     return state.zaapState === ZAAP_IDLE ? '<b>E</b> — Activer le Zaap (son gardien apparaîtra)' : '<b>E</b> — Partir pour la zone suivante';
   }
 
-  /**
-   * Affiche les coffres et gère l'interaction (touche E).
-   * Retourne le texte d'aide à afficher si un coffre est à portée.
-   */
-  private syncChests(state: GameStateView, myState: PlayerView | undefined, canAct: boolean): string {
-    let nearestChest = Infinity;
-    let nearestChallenge = Infinity;
-    const chestSprite = this.store.chestSprite(this);
-    state.chests.forEach((c: ChestView, id: string) => {
-      let view = this.chests.get(id);
-      const challenge = c.kind === 'challenge';
-      if (!challenge && chestSprite && (!view || view.opened !== c.opened)) {
-        // Coffre animé : on garde le même sprite, l'ouverture joue l'animation de « mort » (il crache ses pièces).
-        if (!view) {
-          const p = worldToScreen(c.x, c.y);
-          const sprite = this.add.sprite(p.x, p.y, chestSprite.key).setOrigin(chestSprite.origin[0], chestSprite.origin[1]).setScale(chestSprite.scale).setDepth(p.y);
-          view = { image: sprite, opened: false };
-          this.chests.set(id, view);
-        }
-        const anim = this.store.resolveAnim(this, chestSprite, c.opened ? 'death' : 'idle', 1);
-        if (anim) (view.image as Phaser.GameObjects.Sprite).setFlipX(anim.flipX).play(anim.key);
-        view.opened = c.opened;
-      } else if (!view || view.opened !== c.opened) {
-        view?.image.destroy();
-        const v = this.store.objectVisual(challenge ? 'balise_defi' : c.opened ? 'coffre_ouvert' : 'coffre', 0);
-        const p = worldToScreen(c.x, c.y);
-        const image = this.add.image(p.x, p.y, v.key).setOrigin(v.origin[0], v.origin[1]).setScale(v.scale).setDepth(p.y);
-        if(challenge) image.setTint(0xffd9ab);
-        if (c.opened) image.setAlpha(challenge ? 0.3 : 0.75);
-        view = { image, opened: c.opened };
-        this.chests.set(id, view);
-      }
-      if (c.opened) return;
-      const d = Math.hypot(c.x - this.me.x, c.y - this.me.y);
-      if (challenge) nearestChallenge = Math.min(nearestChallenge, d);
-      else nearestChest = Math.min(nearestChest, d);
+  /** Balises facultatives conservées, sans paiement ni coffre de récompense. */
+  private syncChallenges(state:GameStateView,myState:PlayerView|undefined,canAct:boolean):string {
+    let nearest=Infinity;
+    state.challenges.forEach((c:ChallengeView,id:string)=>{
+      let view=this.challenges.get(id);
+      if(!view){const v=this.store.objectVisual('balise_defi',0),p=worldToScreen(c.x,c.y);view={image:this.add.image(p.x,p.y,v.key).setOrigin(v.origin[0],v.origin[1]).setScale(v.scale).setDepth(p.y).setTint(0xffd9ab),opened:c.opened};this.challenges.set(id,view);}
+      view.image.setAlpha(c.opened?.3:1);if(!c.opened)nearest=Math.min(nearest,Math.hypot(c.x-this.me.x,c.y-this.me.y));
     });
-    for (const [id, view] of this.chests) {
-      if (state.chests.get(id)) continue;
-      view.image.destroy();
-      this.chests.delete(id);
-    }
-
-    const pressed = this.controls.consumePress('KeyE');
-    if (!canAct || !myState || state.phase !== PHASE_PLAYING) return '';
-    if (nearestChallenge <= INTERACT_RANGE && nearestChallenge <= nearestChest) {
-      if (pressed) this.room.send('interact');
-      return `<b>E</b> — Balise de défi : vaincre un élite pour choisir une bénédiction parmi trois`;
-    }
-    if (nearestChest > INTERACT_RANGE) return '';
-    const affordable = myState.kamas >= state.chestCost;
-    if (pressed && affordable) this.room.send('interact');
-    return affordable
-      ? `<b>E</b> — Ouvrir le coffre (${state.chestCost} K)`
-      : `Coffre : ${state.chestCost} K <span class="missing">(il vous manque ${state.chestCost - myState.kamas} K)</span>`;
+    for(const[id,v]of this.challenges)if(!state.challenges.get(id)){v.image.destroy();this.challenges.delete(id);}
+    if(!canAct||!myState||state.phase!==PHASE_PLAYING||nearest>INTERACT_RANGE)return '';
+    if(this.controls.consumePress('KeyE'))this.room.send('interact');
+    return '<b>E</b> — Défi gratuit : élite, XP et bénédiction personnelle';
   }
 
   /** Marchand de la zone : PNJ immobile ; E ouvre sa boutique. */
-  private syncMerchant(state: GameStateView, canAct: boolean, dt: number): string {
-    const present = state.phase === PHASE_PLAYING && state.merchantX > 0 && !!state.shop;
+  private syncRest(state: GameStateView, canAct: boolean, dt: number): string {
+    const present = state.phase === PHASE_PLAYING && state.restX > 0 && state.intermission;
     if (!present) {
-      this.merchant?.destroy();
-      this.merchant = undefined;
-      if (this.shop.isOpen) this.shop.toggle(false);
+      this.guide?.destroy();
+      this.guide = undefined;
+      if (this.rest.isOpen) this.rest.toggle(false);
       return '';
     }
-    if (!this.merchant) {
-      this.merchant = new EntityView(this, this.store, this.store.monster(this, 'marchand'), state.merchantX, state.merchantY, {
-        label: 'Marchand',
+    if (!this.guide) {
+      this.guide = new EntityView(this, this.store, this.store.monster(this, 'marchand'), state.restX, state.restY, {
+        label: 'Guide',
         labelColor: '#ffcf6e',
         barWidth: 0,
         barColor: 0,
         barAlways: false,
       });
     }
-    this.merchant.setPosition(state.merchantX, state.merchantY);
-    this.merchant.update(dt);
-    const near = state.intermission || Math.hypot(state.merchantX - this.me.x, state.merchantY - this.me.y) <= 2.5;
+    this.guide.setPosition(state.restX, state.restY);
+    this.guide.update(dt);
+    const near = state.intermission || Math.hypot(state.restX - this.me.x, state.restY - this.me.y) <= 2.5;
     if (!near) {
-      if (this.shop.isOpen) this.shop.toggle(false);
+      if (this.rest.isOpen) this.rest.toggle(false);
       return '';
     }
     if (canAct && this.controls.consumePress('KeyE')) {
       this.controls.releaseAll();
-      this.shop.toggle(true);
+      this.rest.toggle(true);
     }
-    return '<b>E</b> — Parler au marchand';
+    return '<b>E</b> — Préparer la prochaine zone';
   }
 
   // -------------------------------------------------------------------------
@@ -854,9 +783,15 @@ export class GameScene extends Phaser.Scene {
   // -------------------------------------------------------------------------
 
   private onCast(e: CastEvent): void {
+    if(e.visual){
+      if(!document.hidden)this.rogueliteEffects.cast(e);
+      this.players.get(e.caster)?.attack(this.store.spellFx(this,e.visual.assetKey)?.casterAnim??0);
+      if(e.caster===this.room.sessionId&&e.slot!==undefined){this.cdTotal[e.slot]=e.cooldown??0;this.cdEnd[e.slot]=this.time.now+(e.cooldown??0);}
+      return;
+    }
     // Onglet en arrière-plan : la boucle de rendu est en pause, on n'empile pas d'effets.
     if (!document.hidden) this.effects.spawnProjectile(e);
-    const spell = leveledSpell(e.spell,e.level);
+    const spell = getSpell(e.spell);
     // Animation officielle Dofus : sur le lanceur pour les bonus (type 10), au point visé sinon.
     // Les projectiles l'ont déjà en vol (clip « move ») ; les zones à retardement la jouent à l'impact.
     // Pièges : l'animation joue quand ils se déclenchent (événement « explode »), pas à la pose.
@@ -977,6 +912,5 @@ export class GameScene extends Phaser.Scene {
     }
     const m = this.state.monsters.get(e.id);
     this.effects.poof(e.x, e.y, m ? getMonster(m.type).color : 0xffffff);
-    if (e.kamas) this.effects.floatText(e.x, e.y + 0.6, `+${e.kamas} K`, '#ffd84a', 12, 22);
   }
 }

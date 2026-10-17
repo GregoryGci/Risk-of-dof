@@ -1,0 +1,374 @@
+{
+  "cra": {
+    "fleche_magique": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "fleche_enflammee": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "fleche_de_recul": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "fleche_explosive": {
+      "slot": 3,
+      "unlockCost": 0
+    },
+    "fleche_punitive": {
+      "slot": 0,
+      "unlockCost": 300
+    },
+    "fleche_glacee": {
+      "slot": 1,
+      "unlockCost": 400
+    },
+    "fleche_d_immobilisation": {
+      "slot": 2,
+      "unlockCost": 350
+    },
+    "pluie_de_fleches": {
+      "slot": 3,
+      "unlockCost": 800
+    }
+  },
+  "iop": {
+    "pression": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "epee_de_iop": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "bond": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "colere_de_iop": {
+      "slot": 3,
+      "unlockCost": 0
+    },
+    "intimidation": {
+      "slot": 0,
+      "unlockCost": 250
+    },
+    "epee_celeste": {
+      "slot": 1,
+      "unlockCost": 400
+    },
+    "vitalite": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "epee_du_jugement": {
+      "slot": 3,
+      "unlockCost": 900
+    },
+    "tempete_de_puissance": {
+      "slot": 2,
+      "unlockCost": 0
+    }
+  },
+  "eniripsa": {
+    "mot_blessant": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "mot_curatif": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "mot_de_frayeur": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "mot_de_reconstitution": {
+      "slot": 3,
+      "unlockCost": 0
+    },
+    "mot_interdit": {
+      "slot": 0,
+      "unlockCost": 300
+    },
+    "mot_de_regeneration": {
+      "slot": 1,
+      "unlockCost": 450
+    },
+    "mot_d_envol": {
+      "slot": 2,
+      "unlockCost": 350
+    },
+    "mot_stimulant": {
+      "slot": 3,
+      "unlockCost": 800
+    }
+  },
+  "sacrieur": {
+    "pied_du_sacrieur": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "attirance": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "assaut": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "punition": {
+      "slot": 3,
+      "unlockCost": 0
+    },
+    "absorption": {
+      "slot": 0,
+      "unlockCost": 300
+    },
+    "chatiment_agile": {
+      "slot": 2,
+      "unlockCost": 400
+    },
+    "folie_sanguinaire": {
+      "slot": 3,
+      "unlockCost": 800
+    }
+  },
+  "sram": {
+    "sournoiserie": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "piege_sournois": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "invisibilite": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "piege_de_masse": {
+      "slot": 3,
+      "unlockCost": 0
+    },
+    "attaque_mortelle": {
+      "slot": 0,
+      "unlockCost": 300
+    },
+    "piege_empoisonne": {
+      "slot": 1,
+      "unlockCost": 400
+    },
+    "fourvoiement": {
+      "slot": 2,
+      "unlockCost": 350
+    }
+  },
+  "sadida": {
+    "ronce": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "la_folle": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "arbre_sadida": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "ronces_multiples": {
+      "slot": 3,
+      "unlockCost": 0
+    },
+    "ronce_apaisante": {
+      "slot": 0,
+      "unlockCost": 250
+    },
+    "la_bloqueuse": {
+      "slot": 2,
+      "unlockCost": 300
+    },
+    "tremblement": {
+      "slot": 2,
+      "unlockCost": 450
+    },
+    "la_gonflable": {
+      "slot": 2,
+      "unlockCost": 500
+    },
+    "ronces_agressives": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "poison_paralysant": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "vent_empoisonne": {
+      "slot": 3,
+      "unlockCost": 0
+    }
+  },
+  "ecaflip": {
+    "pile_ou_face": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "roue_de_la_fortune": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "odorat": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "rekop": {
+      "slot": 3,
+      "unlockCost": 0
+    },
+    "tout_ou_rien": {
+      "slot": 0,
+      "unlockCost": 350
+    },
+    "trefle": {
+      "slot": 1,
+      "unlockCost": 400
+    },
+    "bond_du_felin": {
+      "slot": 2,
+      "unlockCost": 200
+    },
+    "perception": {
+      "slot": 3,
+      "unlockCost": 800
+    }
+  },
+  "feca": {
+    "attaque_naturelle": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "glyphe_agressif": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "glyphe_d_immobilisation": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "glyphe_enflamme": {
+      "slot": 3,
+      "unlockCost": 0
+    },
+    "bulle": {
+      "slot": 0,
+      "unlockCost": 300
+    },
+    "glyphe_paralysant": {
+      "slot": 1,
+      "unlockCost": 350
+    },
+    "bouclier_feca": {
+      "slot": 2,
+      "unlockCost": 300
+    },
+    "teleportation": {
+      "slot": 2,
+      "unlockCost": 250
+    },
+    "treve": {
+      "slot": 2,
+      "unlockCost": 300
+    },
+    "glyphe_de_ralentissement": {
+      "slot": 1,
+      "unlockCost": 400
+    }
+  },
+  "osamodas": {
+    "fouet": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "invocation_de_tofu": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "invocation_de_bouftou": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "invocation_de_dragonnet_rouge": {
+      "slot": 3,
+      "unlockCost": 0
+    },
+    "laisse_spirituelle": {
+      "slot": 3,
+      "unlockCost": 600
+    }
+  },
+  "enutrof": {
+    "lancer_de_pieces": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "malchance": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "coffre_anime": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "pelle_du_jugement": {
+      "slot": 3,
+      "unlockCost": 0
+    }
+  },
+  "xelor": {
+    "aiguille": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "gelure": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "vol_du_temps": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "sablier_de_xelor": {
+      "slot": 3,
+      "unlockCost": 0
+    }
+  },
+  "pandawa": {
+    "poing_enflamme": {
+      "slot": 0,
+      "unlockCost": 0
+    },
+    "karcham": {
+      "slot": 1,
+      "unlockCost": 0
+    },
+    "souffle_alcoolise": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "pandatak": {
+      "slot": 3,
+      "unlockCost": 0
+    },
+    "ivresse": {
+      "slot": 2,
+      "unlockCost": 0
+    },
+    "lait_de_bambou": {
+      "slot": 3,
+      "unlockCost": 0
+    }
+  }
+}

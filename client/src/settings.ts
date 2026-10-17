@@ -4,13 +4,10 @@ export interface Settings {
   uiTheme:'underworld'|'retro';
   showPerformance:boolean;
   renderMode:'standard'|'compatible';
-  /**
-   * Smart cast activé : la touche d'un sort le lance immédiatement vers la souris.
-   * Désactivé : la touche affiche la zone du sort, un clic gauche confirme (clic droit, Échap ou la même touche annule).
-   */
-  smartCast: boolean;
-  /** Attaque de base automatique, dirigée vers l'ennemi le plus proche à portée. */
-  autoAttack: boolean;
+  /** Direction souris utilisée lorsque le ciblage automatique n'a pas d'ennemi. */
+  mouseAim: boolean;
+  /** Effets décoratifs des alliés ; les avertissements restent toujours visibles. */
+  allyEffects: boolean;
   /** Volumes de 0 (coupé) à 1 : musique, ambiance (bruits de zone, annonces), sorts et combat. */
   musicVolume: number;
   ambianceVolume: number;
@@ -29,7 +26,7 @@ export const SCREEN_SHAKES: readonly ScreenShake[] = ['off', 'light', 'normal'];
 const KEY = 'rod.reglages';
 export type VolumeKey = 'musicVolume' | 'ambianceVolume' | 'sfxVolume';
 export const VOLUMES: readonly VolumeKey[] = ['musicVolume', 'ambianceVolume', 'sfxVolume'];
-const DEFAULTS: Settings = { uiTheme:'underworld', showPerformance:false, renderMode:'standard', smartCast: true, autoAttack: false, musicVolume: 0.4, ambianceVolume: 0.5, sfxVolume: 0.7, crosshairShape: 'classique', crosshairColor: 'or', dpsMode: 'total', screenShake: 'light' };
+const DEFAULTS: Settings = { uiTheme:'underworld', showPerformance:false, renderMode:'standard', mouseAim: false, allyEffects: true, musicVolume: 0.4, ambianceVolume: 0.5, sfxVolume: 0.7, crosshairShape: 'classique', crosshairColor: 'or', dpsMode: 'total', screenShake: 'light' };
 
 function load(): Settings {
   try {
@@ -57,7 +54,7 @@ export function replaceSettings(raw:unknown):void {
     if(r.renderMode==='standard'||r.renderMode==='compatible')settings.renderMode=r.renderMode;
     if(r.dpsMode==='total'||r.dpsMode==='recent')settings.dpsMode=r.dpsMode;
     if(SCREEN_SHAKES.includes(r.screenShake as ScreenShake))settings.screenShake=r.screenShake as ScreenShake;
-    for(const key of ['smartCast','autoAttack','showPerformance'] as const)if(typeof r[key]==='boolean')settings[key]=r[key];
+    for(const key of ['mouseAim','allyEffects','showPerformance'] as const)if(typeof r[key]==='boolean')settings[key]=r[key];
     for(const key of VOLUMES)if(typeof r[key]==='number'&&Number.isFinite(r[key]))settings[key]=Math.min(1,Math.max(0,r[key]));
     for(const key of ['crosshairShape','crosshairColor'] as const)if(typeof r[key]==='string')settings[key]=r[key].slice(0,24);
   }

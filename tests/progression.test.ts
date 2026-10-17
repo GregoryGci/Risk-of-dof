@@ -10,9 +10,9 @@ test('migration conserve la bourse, les sorts et les runs créditées, une seule
   const old = { bank: 500, orbs: 50, stats: { vitalite: 3, puissance: 4 }, unlocked: ['vitalite'], loadouts: { iop: ['pression','epee_divine','vitalite','colere'] }, credited: ['ancienne-run'] };
   const migrated = migrateAccount(old);
   assert.equal(migrated.version,3);
-  assert.equal(migrated.bank,500);
-  assert.deepEqual(migrated.unlocked, old.unlocked);
-  assert.deepEqual(migrated.loadouts, old.loadouts);
+  assert.equal(migrated.bank,500+migrated.rogueliteMigration.refund);
+  assert.deepEqual(migrated.rogueliteMigration.source.unlocked, old.unlocked);
+  assert.deepEqual(migrated.rogueliteMigration.source.loadouts, old.loadouts);
   assert.deepEqual(migrated.credited, old.credited);
   assert.ok(migrated.inventory.length >= 8);
   assert.ok(equippedStats(equippedFromAccount(migrated)).maxHp > 0);
@@ -67,7 +67,7 @@ test('serveur : équipement figé pendant la run, récompense à la défaite, ch
   // La graine de carte change à chaque zone, l'identité de run reste stable.
   state.seed++;
   state.stage=4;
-  p.state.kamasEarned=50;
+  state.time=120;state.waves=5;
   sim.damagePlayer(p,1e6);
   assert.equal(state.phase,PHASE_LOST);
   const rewards=JSON.parse(p.state.rewards);
@@ -81,18 +81,6 @@ test('serveur : équipement figé pendant la run, récompense à la défaite, ch
   assert.equal(p.state.rewards,'');
   sim.start();
   assert.notEqual(state.runId,runId);
-});
-test('Vitalité absorbe les dégâts, puis le bouclier expire sans augmenter les PV', () => {
-  const state=new GameState(); const sim=new Simulation(state,()=>{});
-  sim.addPlayer('p','Iop','iop',['pression','epee_divine','vitalite','colere']);
-  sim.start(); const p=sim.players.get('p')!;
-  sim.playerCast('p',{slot:2,tx:p.state.x,ty:p.state.y});
-  assert.equal(p.state.shield,p.state.maxHp*.5);
-  const hp=p.state.hp; sim.damagePlayer(p,10);
-  assert.equal(p.state.hp,hp); assert.equal(p.state.shield,p.state.maxHp*.5-Math.round(10*Math.pow(.92,p.stats.armor)));
-  // Pause le directeur en supprimant ses ennemis avant l'expiration.
-  for(let i=0;i<160;i++) { sim.monsters.clear(); sim.update(1/30); }
-  assert.equal(p.state.shield,0);
 });
 test('potion : pleine vie préserve le drop, blessure soigne de 50 % sans dépassement', () => {
   const state=new GameState(); const sim=new Simulation(state,()=>{});
@@ -129,7 +117,7 @@ test('attaque automatique : vise un ennemi plutôt qu’une invocation et respec
   sim.addPlayer('p','Test','cra');sim.start();const p=sim.players.get('p')!;
   const ally=sim.spawnMonster(getMonster('poupee_folle'),p.state.x,p.state.y+.5,1,1,1);ally.allyOwner='p';ally.expiresAt=100;
   const enemy=sim.spawnMonster(getMonster('bouftou'),p.state.x+3,p.state.y,1,1,1);
-  sim.setInput('p',{dx:0,dy:0,dir:0,autoAttack:true});sim.update(1/30);
+  sim.setInput('p',{dx:0,dy:0,dir:0,autoAttack:true});sim.update(1/30);sim.update(1/30);
   const casts=()=>events.filter(e=>e.type==='cast' && e.data.caster==='p');
   assert.equal(casts().length,1);
   assert.ok((casts()[0].data.tx as number)>p.state.x);
@@ -137,18 +125,11 @@ test('attaque automatique : vise un ennemi plutôt qu’une invocation et respec
   sim.update(1/30);assert.equal(casts().length,1);
   assert.ok(ally.state.hp>0);
 });
-test('Tempête touche le point visé et ne déplace pas le Iop',()=>{
-  const state=new GameState();const sim=new Simulation(state,()=>{});sim.addPlayer('p','Iop','iop');sim.start();
-  const p=sim.players.get('p')!;const initial={x:p.state.x,y:p.state.y};
-  const enemy=sim.spawnMonster(getMonster('bouftou'),p.state.x+3,p.state.y,1,1,1);const hp=enemy.state.hp;
-  sim.playerCast('p',{slot:2,tx:enemy.state.x,ty:enemy.state.y});
-  assert.equal(p.push,null);assert.equal(p.state.x,initial.x);assert.equal(p.state.y,initial.y);assert.ok(enemy.state.hp<hp);
-});
-test('invocations alliées : aucun kamas, potion ou équipement à leur mort',()=>{
+test('invocations alliées : aucune XP, potion ou équipement à leur mort',()=>{
   const state=new GameState();const sim=new Simulation(state,()=>{});sim.addPlayer('p','Test','cra');sim.start();const p=sim.players.get('p')!;
   const ally=sim.spawnMonster(getMonster('poupee_folle'),p.state.x+.5,p.state.y,1,1,1);
   sim.damageMonster(ally,1e6,'p');
-  assert.equal(p.loot.length,0);assert.equal(state.potions.size,0);assert.equal(state.kills,0);assert.equal(p.state.kamasEarned,0);
+  assert.equal(p.loot.length,0);assert.equal(state.potions.size,0);assert.equal(state.kills,0);assert.equal(state.totalXp,0);assert.equal(state.xpOrbs.size,0);
 });
 test('piles, fusion de 10 identiques, tiers légendaires et crédit exactement une fois', async () => {
   const storage=new Map<string,string>();

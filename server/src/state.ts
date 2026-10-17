@@ -2,10 +2,13 @@
 // Seul ce qui doit être affiché par les clients vit ici ; le reste (cooldowns,
 // IA, projectiles) reste dans la simulation côté serveur.
 import { schema, t } from '@colyseus/schema';
-import { PHASE_LOBBY,GAME_PROTOCOL_VERSION } from '@rod/shared';
+import { PHASE_LOBBY,GAME_PROTOCOL_VERSION,xpToNextLevel } from '@rod/shared';
 
 export const PlayerState = schema(
   {
+    build:t.string().default('{}'),
+    abilities:t.string().default('[]'),
+    choiceOffer:t.string().default('null'),
     skin:t.string().default(''),
     ogrinesEarned:t.uint16().default(0),
     ogrineGrants:t.string().default('[]'),
@@ -23,13 +26,13 @@ export const PlayerState = schema(
     runLoot: t.string().default('[]'),
     forgeGrants: t.string().default('[]'),
     boonChoices: t.string().default('[]'),
+    combatStats:t.string().default('{}'),
+    pendingLevels:t.uint32().default(0),
+    choiceRevision:t.uint32().default(0),
+    choiceRemaining:t.float32().default(0),
     mechanic: t.string().default('{}'),
     cooldowns: t.string().default('[0,0,0,0,0]'),
-    secondaryCharges: t.uint16().default(1),
-    secondaryMax: t.uint16().default(1),
-    shop: t.string().default(''),
-    shopRerolled: t.boolean().default(false),
-    shopReady: t.boolean().default(false),
+    restReady: t.boolean().default(false),
     inputSeq: t.uint32().default(0),
     positionTime: t.float64().default(0),
     motionEpoch: t.uint32().default(0),
@@ -47,9 +50,7 @@ export const PlayerState = schema(
     shield: t.float32().default(0),
     alive: t.boolean().default(true),
     moving: t.boolean().default(false),
-    kamas: t.uint32().default(0),
-    kamasEarned: t.uint32().default(0),
-    kills: t.uint16().default(0),
+    kills: t.uint32().default(0),
     bossKills:t.uint16().default(0),
     deathCause:t.string().default(''),
     /** Compteurs de la partie (addon de dégâts) : dégâts infligés, soins prodigués, dégâts subis. */
@@ -59,7 +60,6 @@ export const PlayerState = schema(
     /** Sorts équipés (arbre de talents) : "id,id,id,id". */
     spells: t.string().default(''),
     invisible: t.boolean().default(false),
-    bought: t.string().default(''),
     /** Inventaire encodé en texte (voir formatInventory). */
     bonuses: t.string().default(''),
   },
@@ -88,16 +88,15 @@ export const MonsterState = schema(
 );
 export type MonsterState = InstanceType<typeof MonsterState>;
 
-export const ChestState = schema(
+export const ChallengeState = schema(
   {
-    kind: t.string().default('chest'),
     x: t.float32().default(0),
     y: t.float32().default(0),
     opened: t.boolean().default(false),
   },
-  'ChestState',
+  'ChallengeState',
 );
-export type ChestState = InstanceType<typeof ChestState>;
+export type ChallengeState = InstanceType<typeof ChallengeState>;
 
 /** Potion de vie ramassée au contact. */
 export const PotionState = schema(
@@ -115,6 +114,9 @@ export const GroundState = schema(
     x: t.float32().default(0),
     y: t.float32().default(0),
     radius: t.float32().default(1),
+    angle:t.float32().default(0),
+    length:t.float32().default(0),
+    width:t.float32().default(0),
     armed: t.boolean().default(false),
   },
   'GroundState',
@@ -122,6 +124,8 @@ export const GroundState = schema(
 export type GroundState = InstanceType<typeof GroundState>;
 
 export const OgrineState=schema({owner:t.string().default(''),x:t.float32().default(0),y:t.float32().default(0)},'OgrineState');
+
+export const XpOrbState=schema({x:t.float32().default(0),y:t.float32().default(0),value:t.float64().default(0),target:t.string().default(''),sweep:t.boolean().default(false)},'XpOrbState');
 
 export const GameState = schema(
   {
@@ -146,19 +150,23 @@ export const GameState = schema(
     zoneWave:t.uint16().default(0),
     difficulty: t.float32().default(1),
     hostId: t.string().default(''),
-    kills: t.uint16().default(0),
+    kills: t.uint32().default(0),
     players: t.map(PlayerState),
     monsters: t.map(MonsterState),
-    chests: t.map(ChestState),
+    challenges: t.map(ChallengeState),
+    xpOrbs:t.map(XpOrbState),
+    runLevel:t.uint32().default(1),
+    runXp:t.float64().default(0),
+    totalXp:t.float64().default(0),
+    xpToNext:t.float64().default(xpToNextLevel(1)),
+    xpSweepUntil:t.float64().default(0),
     grounds: t.map(GroundState),
     potions: t.map(PotionState),
-    chestCost: t.uint32().default(90),
     stage: t.uint8().default(1),
     paused: t.boolean().default(false),
     mode: t.uint8().default(1),
-    merchantX: t.float32().default(0),
-    merchantY: t.float32().default(0),
-    shop: t.string().default(''),
+    restX: t.float32().default(0),
+    restY: t.float32().default(0),
     zaapX: t.float32().default(0),
     zaapY: t.float32().default(0),
     zaapState: t.uint8().default(0),

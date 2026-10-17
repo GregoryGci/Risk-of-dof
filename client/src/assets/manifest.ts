@@ -79,7 +79,7 @@ export interface Manifest {
   monsters?: Record<string, SpriteDef>;
   /** Tiles de sol par type : herbe, fleurs, chemin, ble. Plusieurs variantes possibles. */
   tiles?: Record<string, string | string[]>;
-  /** Décors : arbre, rocher, foin, buisson, souche, coffre, coffre_ouvert, zaap. */
+  /** Décors : arbre, rocher, foin, buisson, souche, balise_defi, zaap. */
   objects?: Record<string, ImageDef | ImageDef[]>;
   /** Icônes de sorts par clé d'icône (voir shared/src/data/spells.ts). */
   spells?: Record<string, string>;

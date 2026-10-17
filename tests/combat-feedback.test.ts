@@ -1,6 +1,7 @@
+import {permanentSpellCost} from '@rod/shared/roguelite';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {getMonster, getSpell, RUN_BONUSES, ZAAP_CHARGING, ZAAP_READY, PHASE_PLAYING, chestCost, merchantPrice, statText, makeRng} from '@rod/shared';
+import {getMonster, getSpell, RUN_BONUSES, ZAAP_CHARGING, ZAAP_READY, PHASE_PLAYING, runKamasReward,  statText, makeRng} from '@rod/shared';
 import {Simulation} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 import {updateBoss} from '../server/src/game/bosses.ts';
@@ -38,11 +39,11 @@ test('Potions : environ 2 % des morts, six au sol maximum, sans remplacer un dro
   }finally{Math.random=saved;}
 });
 
-test('Échos : douze projectiles supplémentaires cumulés, description conforme au nombre réel',()=>{
-  const {sim,p,events}=create();p.stats.multishot=12;
-  sim.playerCast(p.id,{slot:0,tx:p.state.x+6,ty:p.state.y});
-  assert.equal(events.filter(e=>e.type==='cast'&&e.data.spell===getSpell(p.spells[0]).id).length,13);
-  assert.match(statText('multishot',12),/12 projectiles/);assert.match(statText('multishot',12),/100 %/);
+test('Échos : projectiles supplémentaires plafonnés à deux, description conforme au nombre réel',()=>{
+  const {sim,p,events}=create();p.meta.multishot=12;sim.applyStats(p);(sim as any).director.update=()=>{};sim.spawnMonster(getMonster('epouvantail'),p.state.x+6,p.state.y,1,1,1);
+  p.readyAt[0]=0;sim.roguelite.castSlot(p,0);p.readyAt[0]=Infinity;advance(sim,.3);
+  assert.equal(events.filter(e=>e.type==='cast'&&e.data.spell===getSpell(p.spells[0]).id).length,3);
+  assert.match(statText('multishot',12),/2 attaques/);assert.match(statText('multishot',12),/100 %/);
 });
 
 test('Boss : onde annoncée puis dégâts, météores esquivables et annulation à la mort',()=>{
@@ -68,10 +69,7 @@ test('Météores multi : chaque joueur est ciblé, dégâts une fois par salve m
   for(const player of[p,q])assert.equal(events.filter(e=>e.type==='dmg'&&e.data.target===player.id).length,1);
 });
 
-test('Économie : coffre de départ à 90 K, marchand 180/360/720 K et progression du prix',()=>{
-  assert.equal(chestCost(1),90);
-  for(const [rarity,price]of [['commun',180],['rare',360],['epique',720]] as const){
-    const bonus=Object.values(RUN_BONUSES).find(b=>b.rarity===rarity)!;assert.equal(merchantPrice(bonus,1),price);
-  }
-  assert.ok(chestCost(6)>chestCost(3)*2);
+test('Économie : gains uniquement en fin de partie et cinq coûts permanents progressifs',()=>{
+ assert.equal(runKamasReward(120,10,2,false),336);assert.equal(runKamasReward(120,10,2,true),936);
+ const costs=[1,2,3,4,5].map(level=>permanentSpellCost('sp.fleche_magique',level));assert.deepEqual(costs,[200,400,650,950,1400]);assert.equal(permanentSpellCost('sp.fleche_magique',6),Infinity);
 });

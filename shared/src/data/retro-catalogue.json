@@ -26,7 +26,7 @@
           "damage": 0.076,
           "haste": 0.018,
           "speed": 0.008,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 2473,
         "icon": {
@@ -47,7 +47,7 @@
           "damage": 0.076,
           "haste": 0.018,
           "speed": 0.008,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 2474,
         "icon": {
@@ -68,7 +68,7 @@
           "damage": 0.076,
           "haste": 0.018,
           "speed": 0.008,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 2475,
         "icon": {
@@ -89,7 +89,7 @@
           "damage": 0.076,
           "haste": 0.018,
           "speed": 0.008,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 2476,
         "icon": {
@@ -110,7 +110,7 @@
           "damage": 0.076,
           "haste": 0.018,
           "speed": 0.008,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 2477,
         "icon": {
@@ -130,7 +130,7 @@
           "maxHp": 15,
           "damage": 0.088,
           "speed": 0.008,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 2478,
         "icon": {
@@ -390,7 +390,7 @@
         "stats": {
           "maxHp": 15,
           "damage": 0.028,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 8538,
         "icon": {
@@ -645,7 +645,7 @@
         "stats": {
           "maxHp": 15,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 8214,
         "icon": {
@@ -664,7 +664,7 @@
         "stats": {
           "maxHp": 11,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 8220,
         "icon": {
@@ -683,7 +683,7 @@
         "stats": {
           "maxHp": 15,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 8226,
         "icon": {
@@ -702,7 +702,7 @@
         "stats": {
           "maxHp": 18,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 8232,
         "icon": {
@@ -721,7 +721,7 @@
         "stats": {
           "maxHp": 16,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 8238,
         "icon": {
@@ -740,7 +740,7 @@
         "stats": {
           "maxHp": 20,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 8244,
         "icon": {
@@ -1075,7 +1075,7 @@
         "stats": {
           "maxHp": 23,
           "damage": 0.058,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 8124,
         "icon": {
@@ -1170,7 +1170,7 @@
         "stats": {
           "maxHp": 18,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 8131,
         "icon": {
@@ -1765,7 +1765,7 @@
         "stats": {
           "maxHp": 11,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 8255,
         "icon": {
@@ -2349,7 +2349,7 @@
           "maxHp": 88,
           "damage": 0.166,
           "speed": 0.014,
-          "kamas": 0.031
+          "luck": 0.016
         },
         "sourceId": 9410,
         "icon": {
@@ -2408,7 +2408,7 @@
           "maxHp": 39,
           "damage": 0.124,
           "speed": 0.011,
-          "kamas": 0.025
+          "luck": 0.013
         },
         "sourceId": 9413,
         "icon": {
@@ -2580,7 +2580,7 @@
         "stats": {
           "maxHp": 33,
           "damage": 0.168,
-          "kamas": 0.025
+          "luck": 0.013
         },
         "sourceId": 9415,
         "icon": {
@@ -2599,7 +2599,7 @@
         "stats": {
           "maxHp": 11,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 9416,
         "icon": {
@@ -2911,7 +2911,7 @@
         "stats": {
           "maxHp": 18,
           "damage": 0.142,
-          "kamas": 0.023
+          "luck": 0.012
         },
         "sourceId": 9403,
         "icon": {
@@ -3053,7 +3053,7 @@
         "stats": {
           "maxHp": 18,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 6916,
         "icon": {
@@ -3073,7 +3073,7 @@
           "maxHp": 20,
           "damage": 0.078,
           "haste": 0.018,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 6917,
         "icon": {
@@ -3092,7 +3092,7 @@
         "stats": {
           "maxHp": 20,
           "damage": 0.068,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 6918,
         "icon": {
@@ -3295,7 +3295,7 @@
         "stats": {
           "maxHp": 33,
           "damage": 0.168,
-          "kamas": 0.025
+          "luck": 0.013
         },
         "sourceId": 9485,
         "icon": {
@@ -3550,7 +3550,7 @@
           "maxHp": 67,
           "damage": 0.142,
           "haste": 0.029,
-          "kamas": 0.029
+          "luck": 0.015
         },
         "sourceId": 9937,
         "icon": {
@@ -3569,7 +3569,7 @@
         "stats": {
           "maxHp": 43,
           "damage": 0.155,
-          "kamas": 0.029
+          "luck": 0.015
         },
         "sourceId": 9939,
         "icon": {
@@ -3588,7 +3588,7 @@
         "stats": {
           "maxHp": 52,
           "damage": 0.299,
-          "kamas": 0.033
+          "luck": 0.017
         },
         "sourceId": 9943,
         "icon": {
@@ -3609,7 +3609,7 @@
           "damage": 0.174,
           "haste": 0.033,
           "crit": 0.022,
-          "kamas": 0.033
+          "luck": 0.017
         },
         "sourceId": 9944,
         "icon": {
@@ -3732,8 +3732,8 @@
         "stats": {
           "maxHp": 105,
           "damage": 0.157,
-          "kamas": 0.034,
-          "armor": 0.574
+          "armor": 0.574,
+          "luck": 0.017
         },
         "sourceId": 2517,
         "icon": {
@@ -3753,8 +3753,8 @@
           "maxHp": 93,
           "damage": 0.184,
           "haste": 0.034,
-          "kamas": 0.034,
-          "armor": 0.564
+          "armor": 0.564,
+          "luck": 0.017
         },
         "sourceId": 2519,
         "icon": {
@@ -3774,8 +3774,8 @@
           "maxHp": 52,
           "damage": 0.299,
           "crit": 0.022,
-          "kamas": 0.033,
-          "armor": 0.553
+          "armor": 0.553,
+          "luck": 0.017
         },
         "sourceId": 2521,
         "icon": {
@@ -4056,7 +4056,7 @@
           "maxHp": 107,
           "damage": 0.199,
           "speed": 0.017,
-          "kamas": 0.037
+          "luck": 0.019
         },
         "sourceId": 9160,
         "icon": {
@@ -4112,7 +4112,7 @@
           "maxHp": 101,
           "damage": 0.162,
           "range": 0.361,
-          "kamas": 0.043
+          "luck": 0.022
         },
         "sourceId": 2446,
         "icon": {
@@ -4132,7 +4132,7 @@
           "maxHp": 114,
           "damage": 0.361,
           "haste": 0.043,
-          "kamas": 0.043
+          "luck": 0.022
         },
         "sourceId": 2447,
         "icon": {
@@ -4171,7 +4171,7 @@
           "maxHp": 89,
           "damage": 0.162,
           "speed": 0.036,
-          "kamas": 0.043
+          "luck": 0.022
         },
         "sourceId": 2470,
         "icon": {
@@ -4358,7 +4358,7 @@
         "stats": {
           "maxHp": 13,
           "damage": 0.088,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 2075,
         "icon": {
@@ -4377,8 +4377,8 @@
         "stats": {
           "maxHp": 55,
           "damage": 0.278,
-          "kamas": 0.032,
-          "armor": 0.533
+          "armor": 0.533,
+          "luck": 0.016
         },
         "sourceId": 2534,
         "icon": {
@@ -4398,8 +4398,8 @@
           "maxHp": 62,
           "damage": 0.217,
           "haste": 0.032,
-          "kamas": 0.032,
-          "armor": 0.533
+          "armor": 0.533,
+          "luck": 0.016
         },
         "sourceId": 2535,
         "icon": {
@@ -4418,8 +4418,8 @@
         "stats": {
           "maxHp": 51,
           "damage": 0.278,
-          "kamas": 0.032,
-          "armor": 0.533
+          "armor": 0.533,
+          "luck": 0.016
         },
         "sourceId": 2537,
         "icon": {
@@ -4439,8 +4439,8 @@
           "maxHp": 50,
           "damage": 0.288,
           "crit": 0.022,
-          "kamas": 0.033,
-          "armor": 0.543
+          "armor": 0.543,
+          "luck": 0.017
         },
         "sourceId": 6731,
         "icon": {
@@ -4459,8 +4459,8 @@
         "stats": {
           "maxHp": 37,
           "damage": 0.288,
-          "kamas": 0.033,
-          "armor": 0.543
+          "armor": 0.543,
+          "luck": 0.017
         },
         "sourceId": 6732,
         "icon": {
@@ -4480,7 +4480,7 @@
           "maxHp": 50,
           "damage": 0.183,
           "crit": 0.021,
-          "kamas": 0.032
+          "luck": 0.016
         },
         "sourceId": 6750,
         "icon": {
@@ -4903,8 +4903,8 @@
           "maxHp": 93,
           "damage": 0.184,
           "haste": 0.034,
-          "kamas": 0.034,
-          "armor": 0.564
+          "armor": 0.564,
+          "luck": 0.017
         },
         "sourceId": 6939,
         "icon": {
@@ -4923,8 +4923,8 @@
         "stats": {
           "maxHp": 105,
           "damage": 0.157,
-          "kamas": 0.034,
-          "armor": 0.574
+          "armor": 0.574,
+          "luck": 0.017
         },
         "sourceId": 6941,
         "icon": {
@@ -4996,7 +4996,7 @@
         "stats": {
           "maxHp": 23,
           "damage": 0.102,
-          "kamas": 0.019
+          "luck": 0.01
         },
         "sourceId": 9418,
         "icon": {
@@ -5035,7 +5035,7 @@
           "maxHp": 21,
           "damage": 0.111,
           "haste": 0.025,
-          "kamas": 0.025
+          "luck": 0.013
         },
         "sourceId": 9452,
         "icon": {
@@ -5087,7 +5087,7 @@
         "stats": {
           "maxHp": 121,
           "damage": 0.207,
-          "kamas": 0.036
+          "luck": 0.018
         },
         "sourceId": 9652,
         "icon": {
@@ -5107,7 +5107,7 @@
           "maxHp": 71,
           "damage": 0.266,
           "haste": 0.036,
-          "kamas": 0.036
+          "luck": 0.018
         },
         "sourceId": 9654,
         "icon": {
@@ -5127,7 +5127,7 @@
           "maxHp": 65,
           "damage": 0.275,
           "haste": 0.037,
-          "kamas": 0.037
+          "luck": 0.019
         },
         "sourceId": 9655,
         "icon": {
@@ -5147,7 +5147,7 @@
           "maxHp": 84,
           "damage": 0.2,
           "haste": 0.036,
-          "kamas": 0.036
+          "luck": 0.018
         },
         "sourceId": 9658,
         "icon": {
@@ -5181,7 +5181,7 @@
           "maxHp": 49,
           "damage": 0.381,
           "range": 0.312,
-          "kamas": 0.037
+          "luck": 0.019
         },
         "sourceId": 9125,
         "icon": {
@@ -5201,7 +5201,7 @@
           "maxHp": 67,
           "damage": 0.381,
           "crit": 0.025,
-          "kamas": 0.037
+          "luck": 0.019
         },
         "sourceId": 9152,
         "icon": {
@@ -5220,7 +5220,7 @@
         "stats": {
           "maxHp": 107,
           "damage": 0.199,
-          "kamas": 0.037
+          "luck": 0.019
         },
         "sourceId": 9161,
         "icon": {
@@ -5240,7 +5240,7 @@
           "maxHp": 102,
           "damage": 0.181,
           "haste": 0.037,
-          "kamas": 0.037
+          "luck": 0.019
         },
         "sourceId": 9170,
         "icon": {
@@ -5274,7 +5274,7 @@
           "maxHp": 55,
           "damage": 0.095,
           "crit": 0.022,
-          "kamas": 0.033
+          "luck": 0.017
         },
         "sourceId": 8132,
         "icon": {
@@ -5372,8 +5372,8 @@
           "damage": 0.483,
           "speed": 0.019,
           "crit": 0.028,
-          "kamas": 0.042,
-          "armor": 0.703
+          "armor": 0.703,
+          "luck": 0.021
         },
         "sourceId": 8116,
         "icon": {
@@ -5526,7 +5526,7 @@
         "stats": {
           "maxHp": 89,
           "damage": 0.51,
-          "kamas": 0.043
+          "luck": 0.022
         },
         "sourceId": 2530,
         "icon": {
@@ -5566,7 +5566,7 @@
           "damage": 0.336,
           "haste": 0.043,
           "crit": 0.029,
-          "kamas": 0.043
+          "luck": 0.022
         },
         "sourceId": 2532,
         "icon": {
@@ -5698,8 +5698,8 @@
           "haste": 0.043,
           "speed": 0.036,
           "range": 0.361,
-          "kamas": 0.043,
-          "armor": 0.722
+          "armor": 0.722,
+          "luck": 0.022
         },
         "sourceId": 8071
       }
@@ -5791,7 +5791,7 @@
           "maxHp": 50,
           "damage": 0.183,
           "crit": 0.021,
-          "kamas": 0.032
+          "luck": 0.016
         },
         "sourceId": 2415,
         "icon": {
@@ -5868,8 +5868,8 @@
         "stats": {
           "maxHp": 51,
           "damage": 0.278,
-          "kamas": 0.032,
-          "armor": 0.533
+          "armor": 0.533,
+          "luck": 0.016
         },
         "sourceId": 2427,
         "icon": {
@@ -5965,7 +5965,7 @@
           "maxHp": 50,
           "damage": 0.183,
           "crit": 0.021,
-          "kamas": 0.032
+          "luck": 0.016
         },
         "sourceId": 6751,
         "icon": {
@@ -6022,8 +6022,8 @@
         "stats": {
           "maxHp": 51,
           "damage": 0.278,
-          "kamas": 0.032,
-          "armor": 0.533
+          "armor": 0.533,
+          "luck": 0.016
         },
         "sourceId": 6758,
         "icon": {
@@ -6081,7 +6081,7 @@
           "maxHp": 67,
           "damage": 0.207,
           "haste": 0.033,
-          "kamas": 0.033
+          "luck": 0.017
         },
         "sourceId": 7226,
         "icon": {
@@ -6100,7 +6100,7 @@
         "stats": {
           "maxHp": 55,
           "damage": 0.278,
-          "kamas": 0.032
+          "luck": 0.016
         },
         "sourceId": 7230,
         "icon": {
@@ -6140,7 +6140,7 @@
           "maxHp": 38,
           "damage": 0.215,
           "speed": 0.013,
-          "kamas": 0.028
+          "luck": 0.014
         },
         "sourceId": 7242,
         "icon": {
@@ -6179,7 +6179,7 @@
           "maxHp": 69,
           "damage": 0.183,
           "crit": 0.021,
-          "kamas": 0.032
+          "luck": 0.016
         },
         "sourceId": 7250,
         "icon": {
@@ -6199,7 +6199,7 @@
           "maxHp": 38,
           "damage": 0.299,
           "crit": 0.022,
-          "kamas": 0.033
+          "luck": 0.017
         },
         "sourceId": 7254,
         "icon": {
@@ -6656,7 +6656,7 @@
         "stats": {
           "maxHp": 129,
           "damage": 0.099,
-          "kamas": 0.034
+          "luck": 0.017
         },
         "sourceId": 6930,
         "icon": {
@@ -6807,7 +6807,7 @@
           "maxHp": 64,
           "damage": 0.186,
           "speed": 0.014,
-          "kamas": 0.031
+          "luck": 0.016
         },
         "sourceId": 9542,
         "icon": {
@@ -6848,7 +6848,7 @@
           "haste": 0.036,
           "speed": 0.016,
           "crit": 0.024,
-          "kamas": 0.036
+          "luck": 0.018
         },
         "sourceId": 9549,
         "icon": {
@@ -6901,7 +6901,7 @@
           "maxHp": 130,
           "damage": 0.121,
           "haste": 0.037,
-          "kamas": 0.037
+          "luck": 0.019
         },
         "sourceId": 7553,
         "icon": {
@@ -6941,7 +6941,7 @@
           "damage": 0.329,
           "haste": 0.037,
           "speed": 0.017,
-          "kamas": 0.037
+          "luck": 0.019
         },
         "sourceId": 7555,
         "icon": {
@@ -7013,7 +7013,7 @@
         "stats": {
           "maxHp": 107,
           "damage": 0.199,
-          "kamas": 0.037
+          "luck": 0.019
         },
         "sourceId": 9158,
         "icon": {
@@ -7201,7 +7201,7 @@
           "damage": 0.183,
           "speed": 0.014,
           "crit": 0.021,
-          "kamas": 0.032
+          "luck": 0.016
         },
         "sourceId": 6752,
         "icon": {
@@ -7260,8 +7260,8 @@
           "maxHp": 51,
           "damage": 0.278,
           "speed": 0.014,
-          "kamas": 0.032,
-          "armor": 0.533
+          "armor": 0.533,
+          "luck": 0.016
         },
         "sourceId": 6759
       },
@@ -7423,7 +7423,7 @@
           "haste": 0.018,
           "speed": 0.015,
           "range": 0.15,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 10185,
         "icon": {
@@ -8034,7 +8034,7 @@
         "stats": {
           "maxHp": 107,
           "damage": 0.199,
-          "kamas": 0.037
+          "luck": 0.019
         },
         "sourceId": 9159,
         "icon": {
@@ -8090,7 +8090,7 @@
           "maxHp": 15,
           "damage": 0.088,
           "speed": 0.008,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 7880,
         "icon": {
@@ -8187,7 +8187,7 @@
           "damage": 0.235,
           "speed": 0.013,
           "crit": 0.02,
-          "kamas": 0.029
+          "luck": 0.015
         },
         "sourceId": 7885,
         "icon": {
@@ -8207,8 +8207,8 @@
           "maxHp": 77,
           "damage": 0.345,
           "speed": 0.016,
-          "kamas": 0.036,
-          "armor": 0.594
+          "armor": 0.594,
+          "luck": 0.018
         },
         "sourceId": 7886,
         "icon": {
@@ -8246,7 +8246,7 @@
           "damage": 0.083,
           "haste": 0.018,
           "speed": 0.008,
-          "kamas": 0.018
+          "luck": 0.009
         },
         "sourceId": 1748,
         "icon": {
@@ -8306,7 +8306,7 @@
           "damage": 0.162,
           "haste": 0.043,
           "crit": 0.029,
-          "kamas": 0.043
+          "luck": 0.022
         },
         "sourceId": 6498,
         "icon": {
@@ -8327,7 +8327,7 @@
           "damage": 0.423,
           "speed": 0.019,
           "range": 0.361,
-          "kamas": 0.043
+          "luck": 0.022
         },
         "sourceId": 6499,
         "icon": {
@@ -8347,8 +8347,8 @@
           "maxHp": 114,
           "damage": 0.296,
           "haste": 0.043,
-          "kamas": 0.043,
-          "armor": 0.722
+          "armor": 0.722,
+          "luck": 0.022
         },
         "sourceId": 6500,
         "icon": {
@@ -8515,7 +8515,7 @@
           "maxHp": 142,
           "damage": 0.464,
           "haste": 0.055,
-          "kamas": 0.055
+          "luck": 0.028
         },
         "sourceId": 9126,
         "icon": {
@@ -8578,8 +8578,8 @@
           "damage": 0.423,
           "haste": 0.055,
           "crit": 0.036,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 9171,
         "icon": {
@@ -8613,7 +8613,7 @@
           "maxHp": 142,
           "damage": 0.464,
           "haste": 0.055,
-          "kamas": 0.055
+          "luck": 0.028
         },
         "sourceId": 9129,
         "icon": {
@@ -8633,8 +8633,8 @@
           "maxHp": 202,
           "damage": 0.533,
           "haste": 0.076,
-          "kamas": 0.055,
-          "regen": 1.838
+          "regen": 1.838,
+          "luck": 0.028
         },
         "sourceId": 9156,
         "icon": {
@@ -8656,8 +8656,8 @@
           "speed": 0.045,
           "crit": 0.036,
           "range": 0.455,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 9165,
         "icon": {
@@ -8678,8 +8678,8 @@
           "damage": 0.423,
           "haste": 0.055,
           "crit": 0.036,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 9174,
         "icon": {
@@ -8834,7 +8834,7 @@
         "stats": {
           "maxHp": 93,
           "damage": 0.162,
-          "kamas": 0.043
+          "luck": 0.022
         },
         "sourceId": 8008,
         "icon": {
@@ -9037,7 +9037,7 @@
           "maxHp": 142,
           "damage": 0.464,
           "haste": 0.055,
-          "kamas": 0.055
+          "luck": 0.028
         },
         "sourceId": 9127,
         "icon": {
@@ -9100,8 +9100,8 @@
           "damage": 0.423,
           "haste": 0.055,
           "crit": 0.036,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 9172,
         "icon": {
@@ -9229,7 +9229,7 @@
           "damage": 0.31,
           "haste": 0.044,
           "speed": 0.02,
-          "kamas": 0.044
+          "luck": 0.022
         },
         "sourceId": 6952,
         "icon": {
@@ -9270,8 +9270,8 @@
           "damage": 0.18,
           "haste": 0.046,
           "range": 0.38,
-          "kamas": 0.046,
-          "regen": 1.286
+          "regen": 1.286,
+          "luck": 0.023
         },
         "sourceId": 6954,
         "icon": {
@@ -9290,8 +9290,8 @@
         "stats": {
           "maxHp": 82,
           "damage": 0.306,
-          "kamas": 0.037,
-          "armor": 0.614
+          "armor": 0.614,
+          "luck": 0.019
         },
         "sourceId": 6955,
         "icon": {
@@ -9312,8 +9312,8 @@
           "damage": 0.332,
           "haste": 0.038,
           "speed": 0.017,
-          "kamas": 0.038,
-          "armor": 0.634
+          "armor": 0.634,
+          "luck": 0.019
         },
         "sourceId": 6956,
         "icon": {
@@ -9334,7 +9334,7 @@
           "damage": 0.47,
           "speed": 0.018,
           "crit": 0.028,
-          "kamas": 0.042
+          "luck": 0.021
         },
         "sourceId": 8129,
         "icon": {
@@ -9430,7 +9430,7 @@
           "maxHp": 109,
           "damage": 0.489,
           "speed": 0.022,
-          "kamas": 0.049
+          "luck": 0.025
         },
         "sourceId": 6821,
         "icon": {
@@ -9491,7 +9491,7 @@
         "stats": {
           "maxHp": 119,
           "damage": 0.208,
-          "kamas": 0.049
+          "luck": 0.025
         },
         "sourceId": 6831,
         "icon": {
@@ -9513,8 +9513,8 @@
           "haste": 0.049,
           "speed": 0.022,
           "range": 0.409,
-          "kamas": 0.049,
-          "armor": 0.817
+          "armor": 0.817,
+          "luck": 0.025
         },
         "sourceId": 6834,
         "icon": {
@@ -9573,8 +9573,8 @@
           "maxHp": 181,
           "damage": 0.316,
           "speed": 0.021,
-          "kamas": 0.046,
-          "armor": 0.77
+          "armor": 0.77,
+          "luck": 0.023
         },
         "sourceId": 7233,
         "icon": {
@@ -9634,7 +9634,7 @@
           "damage": 0.31,
           "haste": 0.042,
           "speed": 0.018,
-          "kamas": 0.042
+          "luck": 0.021
         },
         "sourceId": 7249,
         "icon": {
@@ -9787,7 +9787,7 @@
           "maxHp": 205,
           "damage": 0.433,
           "haste": 0.074,
-          "kamas": 0.053
+          "luck": 0.027
         },
         "sourceId": 7012,
         "icon": {
@@ -9825,7 +9825,7 @@
           "damage": 0.452,
           "haste": 0.076,
           "crit": 0.036,
-          "kamas": 0.055
+          "luck": 0.028
         },
         "sourceId": 6766,
         "icon": {
@@ -9925,8 +9925,8 @@
           "maxHp": 148,
           "damage": 0.625,
           "haste": 0.055,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 6776,
         "icon": {
@@ -9983,7 +9983,7 @@
           "damage": 0.452,
           "haste": 0.076,
           "crit": 0.036,
-          "kamas": 0.055
+          "luck": 0.028
         },
         "sourceId": 8298,
         "icon": {
@@ -10004,8 +10004,8 @@
           "damage": 0.533,
           "haste": 0.055,
           "speed": 0.024,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 8299,
         "icon": {
@@ -10045,8 +10045,8 @@
           "damage": 0.558,
           "speed": 0.045,
           "crit": 0.036,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 8301,
         "icon": {
@@ -10066,8 +10066,8 @@
           "maxHp": 214,
           "damage": 0.472,
           "haste": 0.055,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 8302,
         "icon": {
@@ -10087,8 +10087,8 @@
           "maxHp": 148,
           "damage": 0.625,
           "haste": 0.055,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 8303,
         "icon": {
@@ -10109,8 +10109,8 @@
           "damage": 0.257,
           "haste": 0.055,
           "range": 0.455,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 8304,
         "icon": {
@@ -10145,7 +10145,7 @@
           "damage": 0.464,
           "haste": 0.055,
           "speed": 0.024,
-          "kamas": 0.055
+          "luck": 0.028
         },
         "sourceId": 9128,
         "icon": {
@@ -10207,8 +10207,8 @@
           "haste": 0.055,
           "speed": 0.024,
           "crit": 0.036,
-          "kamas": 0.055,
-          "armor": 0.909
+          "armor": 0.909,
+          "luck": 0.028
         },
         "sourceId": 9173,
         "icon": {
@@ -10247,8 +10247,8 @@
           "damage": 0.377,
           "haste": 0.052,
           "range": 0.432,
-          "kamas": 0.052,
-          "armor": 0.864
+          "armor": 0.864,
+          "luck": 0.026
         },
         "sourceId": 7227,
         "icon": {
@@ -10422,8 +10422,8 @@
           "maxHp": 189,
           "damage": 0.893,
           "speed": 0.029,
-          "kamas": 0.065,
-          "armor": 1.087
+          "armor": 1.087,
+          "luck": 0.033
         },
         "sourceId": 6799,
         "icon": {
@@ -10444,8 +10444,8 @@
           "damage": 0.718,
           "haste": 0.091,
           "crit": 0.043,
-          "kamas": 0.065,
-          "armor": 1.087
+          "armor": 1.087,
+          "luck": 0.033
         },
         "sourceId": 6804,
         "icon": {
@@ -10465,8 +10465,8 @@
           "maxHp": 189,
           "damage": 0.893,
           "speed": 0.029,
-          "kamas": 0.065,
-          "armor": 1.087
+          "armor": 1.087,
+          "luck": 0.033
         },
         "sourceId": 6805,
         "icon": {
@@ -10487,8 +10487,8 @@
           "damage": 0.748,
           "haste": 0.065,
           "speed": 0.054,
-          "kamas": 0.065,
-          "armor": 1.087
+          "armor": 1.087,
+          "luck": 0.033
         },
         "sourceId": 6807,
         "icon": {
@@ -10507,7 +10507,7 @@
         "stats": {
           "maxHp": 230,
           "damage": 1.156,
-          "kamas": 0.065
+          "luck": 0.033
         },
         "sourceId": 6811,
         "icon": {
@@ -10529,8 +10529,8 @@
           "haste": 0.065,
           "speed": 0.029,
           "crit": 0.043,
-          "kamas": 0.065,
-          "armor": 1.087
+          "armor": 1.087,
+          "luck": 0.033
         },
         "sourceId": 6812,
         "icon": {
@@ -10552,8 +10552,8 @@
           "haste": 0.065,
           "speed": 0.029,
           "range": 0.544,
-          "kamas": 0.065,
-          "armor": 1.087
+          "armor": 1.087,
+          "luck": 0.033
         },
         "sourceId": 6813,
         "icon": {
@@ -10687,8 +10687,8 @@
           "maxHp": 348,
           "damage": 0.591,
           "haste": 0.064,
-          "kamas": 0.064,
-          "armor": 1.07
+          "armor": 1.07,
+          "luck": 0.032
         },
         "sourceId": 7228,
         "icon": {
@@ -10751,7 +10751,7 @@
           "damage": 0.624,
           "speed": 0.04,
           "crit": 0.032,
-          "kamas": 0.048
+          "luck": 0.024
         },
         "sourceId": 7244,
         "icon": {
@@ -10793,9 +10793,9 @@
           "maxHp": 231,
           "damage": 0.733,
           "haste": 0.084,
-          "kamas": 0.06,
           "armor": 1.008,
-          "regen": 2.259
+          "regen": 2.259,
+          "luck": 0.03
         },
         "sourceId": 7252,
         "icon": {
@@ -11087,8 +11087,8 @@
           "haste": 0.057,
           "speed": 0.025,
           "crit": 0.038,
-          "kamas": 0.057,
-          "armor": 0.946
+          "armor": 0.946,
+          "luck": 0.029
         },
         "sourceId": 8181,
         "icon": {
@@ -11121,8 +11121,8 @@
           "maxHp": 325,
           "damage": 0.653,
           "haste": 0.063,
-          "kamas": 0.063,
-          "armor": 1.043
+          "armor": 1.043,
+          "luck": 0.032
         },
         "sourceId": 8823,
         "icon": {
@@ -11141,9 +11141,9 @@
         "stats": {
           "maxHp": 196,
           "damage": 0.75,
-          "kamas": 0.064,
           "armor": 1.061,
-          "regen": 2.502
+          "regen": 2.502,
+          "luck": 0.032
         },
         "sourceId": 8834,
         "icon": {
@@ -11162,8 +11162,8 @@
         "stats": {
           "maxHp": 258,
           "damage": 0.693,
-          "kamas": 0.061,
-          "armor": 1.017
+          "armor": 1.017,
+          "luck": 0.031
         },
         "sourceId": 8870,
         "icon": {
@@ -11219,8 +11219,8 @@
           "maxHp": 406,
           "damage": 0.435,
           "haste": 0.098,
-          "kamas": 0.071,
-          "regen": 3.104
+          "regen": 3.104,
+          "luck": 0.036
         },
         "sourceId": 8268,
         "icon": {
@@ -11240,8 +11240,8 @@
           "maxHp": 273,
           "damage": 0.398,
           "haste": 0.068,
-          "kamas": 0.068,
-          "armor": 1.13
+          "armor": 1.13,
+          "luck": 0.034
         },
         "sourceId": 8269,
         "icon": {
@@ -11261,7 +11261,7 @@
           "maxHp": 272,
           "damage": 0.422,
           "haste": 0.07,
-          "kamas": 0.07
+          "luck": 0.035
         },
         "sourceId": 8274,
         "icon": {
@@ -11282,9 +11282,9 @@
           "damage": 0.447,
           "haste": 0.072,
           "speed": 0.06,
-          "kamas": 0.072,
           "armor": 1.199,
-          "regen": 3.194
+          "regen": 3.194,
+          "luck": 0.036
         },
         "sourceId": 8276,
         "icon": {
@@ -11304,9 +11304,9 @@
           "maxHp": 447,
           "damage": 0.422,
           "haste": 0.07,
-          "kamas": 0.07,
           "armor": 1.165,
-          "regen": 3.015
+          "regen": 3.015,
+          "luck": 0.035
         },
         "sourceId": 8279,
         "icon": {
@@ -11326,9 +11326,9 @@
           "maxHp": 428,
           "damage": 0.435,
           "haste": 0.071,
-          "kamas": 0.071,
           "armor": 1.182,
-          "regen": 3.104
+          "regen": 3.104,
+          "luck": 0.036
         },
         "sourceId": 8282,
         "icon": {
@@ -11405,7 +11405,7 @@
           "haste": 0.069,
           "speed": 0.031,
           "crit": 0.046,
-          "kamas": 0.069
+          "luck": 0.035
         },
         "sourceId": 8271,
         "icon": {
@@ -11449,8 +11449,8 @@
           "damage": 0.535,
           "haste": 0.062,
           "speed": 0.051,
-          "kamas": 0.062,
-          "armor": 1.026
+          "armor": 1.026,
+          "luck": 0.031
         },
         "sourceId": 8278,
         "icon": {
@@ -11469,8 +11469,8 @@
         "stats": {
           "maxHp": 392,
           "damage": 0.606,
-          "kamas": 0.067,
-          "armor": 1.113
+          "armor": 1.113,
+          "luck": 0.034
         },
         "sourceId": 8281,
         "icon": {
@@ -11492,8 +11492,8 @@
           "haste": 0.064,
           "speed": 0.029,
           "crit": 0.043,
-          "kamas": 0.064,
-          "armor": 1.07
+          "armor": 1.07,
+          "luck": 0.032
         },
         "sourceId": 8285,
         "icon": {
@@ -11633,8 +11633,8 @@
           "damage": 0.744,
           "speed": 0.029,
           "crit": 0.044,
-          "kamas": 0.066,
-          "armor": 1.105
+          "armor": 1.105,
+          "luck": 0.033
         },
         "sourceId": 8455,
         "icon": {
@@ -11655,8 +11655,8 @@
           "damage": 0.722,
           "haste": 0.065,
           "speed": 0.054,
-          "kamas": 0.065,
-          "armor": 1.078
+          "armor": 1.078,
+          "luck": 0.033
         },
         "sourceId": 8456,
         "icon": {
@@ -11691,8 +11691,8 @@
           "damage": 0.629,
           "haste": 0.064,
           "speed": 0.028,
-          "kamas": 0.064,
-          "armor": 1.061
+          "armor": 1.061,
+          "luck": 0.032
         },
         "sourceId": 8819,
         "icon": {
@@ -11736,8 +11736,8 @@
           "haste": 0.065,
           "speed": 0.054,
           "range": 0.544,
-          "kamas": 0.065,
-          "armor": 1.087
+          "armor": 1.087,
+          "luck": 0.033
         },
         "sourceId": 8858,
         "icon": {
@@ -11758,9 +11758,9 @@
           "damage": 0.748,
           "haste": 0.094,
           "speed": 0.03,
-          "kamas": 0.068,
           "armor": 1.13,
-          "regen": 2.84
+          "regen": 2.84,
+          "luck": 0.034
         },
         "sourceId": 8874,
         "icon": {
@@ -11922,7 +11922,7 @@
           "damage": 0.585,
           "haste": 0.064,
           "speed": 0.029,
-          "kamas": 0.064
+          "luck": 0.032
         },
         "sourceId": 8448,
         "icon": {
@@ -12108,8 +12108,8 @@
           "maxHp": 482,
           "damage": 0.719,
           "haste": 0.072,
-          "kamas": 0.072,
-          "armor": 1.207
+          "armor": 1.207,
+          "luck": 0.036
         },
         "sourceId": 8463,
         "icon": {
@@ -12129,8 +12129,8 @@
           "maxHp": 405,
           "damage": 0.818,
           "haste": 0.072,
-          "kamas": 0.072,
-          "armor": 1.207
+          "armor": 1.207,
+          "luck": 0.036
         },
         "sourceId": 8464,
         "icon": {
@@ -12150,8 +12150,8 @@
           "maxHp": 342,
           "damage": 0.766,
           "haste": 0.098,
-          "kamas": 0.07,
-          "armor": 1.173
+          "armor": 1.173,
+          "luck": 0.035
         },
         "sourceId": 8465,
         "icon": {
@@ -12171,8 +12171,8 @@
           "maxHp": 264,
           "damage": 0.733,
           "haste": 0.072,
-          "kamas": 0.072,
-          "armor": 1.199
+          "armor": 1.199,
+          "luck": 0.036
         },
         "sourceId": 8466,
         "icon": {
@@ -12193,8 +12193,8 @@
           "damage": 0.752,
           "haste": 0.07,
           "speed": 0.059,
-          "kamas": 0.07,
-          "armor": 1.173
+          "armor": 1.173,
+          "luck": 0.035
         },
         "sourceId": 8467,
         "icon": {
@@ -12215,8 +12215,8 @@
           "damage": 0.733,
           "haste": 0.071,
           "crit": 0.047,
-          "kamas": 0.071,
-          "armor": 1.182
+          "armor": 1.182,
+          "luck": 0.036
         },
         "sourceId": 8468,
         "icon": {
@@ -12270,8 +12270,8 @@
           "damage": 0.731,
           "haste": 0.076,
           "range": 0.637,
-          "kamas": 0.076,
-          "armor": 1.275
+          "armor": 1.275,
+          "luck": 0.038
         },
         "sourceId": 8864,
         "icon": {
@@ -12291,8 +12291,8 @@
           "maxHp": 322,
           "damage": 0.766,
           "crit": 0.05,
-          "kamas": 0.075,
-          "armor": 1.258
+          "armor": 1.258,
+          "luck": 0.038
         },
         "sourceId": 8865,
         "icon": {
@@ -12326,8 +12326,8 @@
           "haste": 0.081,
           "speed": 0.036,
           "range": 0.679,
-          "kamas": 0.081,
-          "armor": 1.358
+          "armor": 1.358,
+          "luck": 0.041
         },
         "sourceId": 8826,
         "icon": {
@@ -12348,8 +12348,8 @@
           "damage": 1.184,
           "haste": 0.079,
           "speed": 0.035,
-          "kamas": 0.079,
-          "armor": 1.325
+          "armor": 1.325,
+          "luck": 0.04
         },
         "sourceId": 8846,
         "icon": {
@@ -12403,8 +12403,8 @@
           "damage": 1.02,
           "haste": 0.075,
           "range": 0.629,
-          "kamas": 0.075,
-          "armor": 1.258
+          "armor": 1.258,
+          "luck": 0.038
         },
         "sourceId": 6494,
         "icon": {
@@ -12423,9 +12423,9 @@
         "stats": {
           "maxHp": 322,
           "damage": 0.766,
-          "kamas": 0.075,
           "armor": 1.258,
-          "regen": 3.516
+          "regen": 3.516,
+          "luck": 0.038
         },
         "sourceId": 6998,
         "icon": {
@@ -12481,9 +12481,9 @@
           "damage": 0.912,
           "haste": 0.082,
           "speed": 0.036,
-          "kamas": 0.082,
           "armor": 1.366,
-          "regen": 4.145
+          "regen": 4.145,
+          "luck": 0.041
         },
         "sourceId": 8457,
         "icon": {
@@ -12505,9 +12505,9 @@
           "haste": 0.08,
           "speed": 0.036,
           "range": 0.671,
-          "kamas": 0.08,
           "armor": 1.341,
-          "regen": 3.997
+          "regen": 3.997,
+          "luck": 0.04
         },
         "sourceId": 8458,
         "icon": {
@@ -12528,8 +12528,8 @@
           "damage": 0.947,
           "haste": 0.114,
           "speed": 0.037,
-          "kamas": 0.082,
-          "armor": 1.374
+          "armor": 1.374,
+          "luck": 0.041
         },
         "sourceId": 8459,
         "icon": {
@@ -12550,8 +12550,8 @@
           "damage": 0.852,
           "speed": 0.036,
           "crit": 0.054,
-          "kamas": 0.081,
-          "armor": 1.349
+          "armor": 1.349,
+          "luck": 0.041
         },
         "sourceId": 8460,
         "icon": {
@@ -12572,8 +12572,8 @@
           "damage": 0.907,
           "haste": 0.082,
           "speed": 0.036,
-          "kamas": 0.082,
-          "armor": 1.366
+          "armor": 1.366,
+          "luck": 0.041
         },
         "sourceId": 8461,
         "icon": {
@@ -12594,9 +12594,9 @@
           "damage": 0.937,
           "haste": 0.082,
           "speed": 0.069,
-          "kamas": 0.082,
           "armor": 1.374,
-          "regen": 4.195
+          "regen": 4.195,
+          "luck": 0.041
         },
         "sourceId": 8462,
         "icon": {
@@ -12631,8 +12631,8 @@
           "damage": 0.912,
           "haste": 0.082,
           "speed": 0.037,
-          "kamas": 0.082,
-          "armor": 1.374
+          "armor": 1.374,
+          "luck": 0.041
         },
         "sourceId": 8822,
         "icon": {
@@ -12653,8 +12653,8 @@
           "damage": 0.937,
           "haste": 0.081,
           "speed": 0.036,
-          "kamas": 0.081,
-          "armor": 1.358
+          "armor": 1.358,
+          "luck": 0.041
         },
         "sourceId": 8835,
         "icon": {
@@ -12696,8 +12696,8 @@
           "damage": 0.73,
           "haste": 0.079,
           "speed": 0.035,
-          "kamas": 0.079,
-          "armor": 1.325
+          "armor": 1.325,
+          "luck": 0.04
         },
         "sourceId": 8871,
         "icon": {
@@ -12733,8 +12733,8 @@
           "maxHp": 626,
           "damage": 0.539,
           "range": 0.658,
-          "kamas": 0.079,
-          "armor": 1.316
+          "armor": 1.316,
+          "luck": 0.04
         },
         "sourceId": 8286,
         "icon": {
@@ -12792,8 +12792,8 @@
           "maxHp": 383,
           "damage": 0.546,
           "haste": 0.079,
-          "kamas": 0.079,
-          "regen": 3.899
+          "regen": 3.899,
+          "luck": 0.04
         },
         "sourceId": 8289,
         "icon": {
@@ -12815,8 +12815,8 @@
           "haste": 0.108,
           "speed": 0.034,
           "crit": 0.052,
-          "kamas": 0.077,
-          "armor": 1.291
+          "armor": 1.291,
+          "luck": 0.039
         },
         "sourceId": 8290,
         "icon": {
@@ -12837,9 +12837,9 @@
           "damage": 1.06,
           "speed": 0.067,
           "crit": 0.053,
-          "kamas": 0.08,
           "armor": 1.333,
-          "regen": 3.948
+          "regen": 3.948,
+          "luck": 0.04
         },
         "sourceId": 8291,
         "icon": {
@@ -12871,7 +12871,7 @@
           "maxHp": 440,
           "damage": 0.623,
           "haste": 0.118,
-          "kamas": 0.085
+          "luck": 0.043
         },
         "sourceId": 8827,
         "icon": {
@@ -12890,8 +12890,8 @@
         "stats": {
           "maxHp": 705,
           "damage": 0.797,
-          "kamas": 0.082,
-          "armor": 1.374
+          "armor": 1.374,
+          "luck": 0.041
         },
         "sourceId": 8847,
         "icon": {
@@ -12928,8 +12928,8 @@
           "damage": 0.901,
           "haste": 0.121,
           "crit": 0.058,
-          "kamas": 0.087,
-          "armor": 1.447
+          "armor": 1.447,
+          "luck": 0.044
         },
         "sourceId": 8262,
         "icon": {
@@ -12950,8 +12950,8 @@
           "damage": 1.002,
           "speed": 0.035,
           "range": 0.654,
-          "kamas": 0.078,
-          "armor": 1.308
+          "armor": 1.308,
+          "luck": 0.039
         },
         "sourceId": 8263,
         "icon": {
@@ -12973,8 +12973,8 @@
           "haste": 0.081,
           "speed": 0.067,
           "crit": 0.054,
-          "kamas": 0.081,
-          "armor": 1.349
+          "armor": 1.349,
+          "luck": 0.041
         },
         "sourceId": 8264,
         "icon": {
@@ -12995,8 +12995,8 @@
           "damage": 0.861,
           "haste": 0.085,
           "crit": 0.057,
-          "kamas": 0.085,
-          "armor": 1.415
+          "armor": 1.415,
+          "luck": 0.043
         },
         "sourceId": 8265,
         "icon": {
@@ -13017,8 +13017,8 @@
           "damage": 0.72,
           "haste": 0.078,
           "range": 0.65,
-          "kamas": 0.078,
-          "armor": 1.3
+          "armor": 1.3,
+          "luck": 0.039
         },
         "sourceId": 8266,
         "icon": {
@@ -13040,8 +13040,8 @@
           "haste": 0.086,
           "speed": 0.038,
           "crit": 0.057,
-          "kamas": 0.086,
-          "armor": 1.431
+          "armor": 1.431,
+          "luck": 0.043
         },
         "sourceId": 8267,
         "icon": {
@@ -13077,8 +13077,8 @@
           "maxHp": 529,
           "damage": 0.962,
           "haste": 0.117,
-          "kamas": 0.084,
-          "regen": 4.397
+          "regen": 4.397,
+          "luck": 0.042
         },
         "sourceId": 8469,
         "icon": {
@@ -13099,8 +13099,8 @@
           "damage": 0.964,
           "haste": 0.085,
           "crit": 0.057,
-          "kamas": 0.085,
-          "armor": 1.415
+          "armor": 1.415,
+          "luck": 0.043
         },
         "sourceId": 8470,
         "icon": {
@@ -13121,8 +13121,8 @@
           "damage": 0.934,
           "haste": 0.083,
           "speed": 0.07,
-          "kamas": 0.083,
-          "armor": 1.39
+          "armor": 1.39,
+          "luck": 0.042
         },
         "sourceId": 8471,
         "icon": {
@@ -13142,8 +13142,8 @@
           "maxHp": 646,
           "damage": 0.956,
           "haste": 0.086,
-          "kamas": 0.086,
-          "armor": 1.439
+          "armor": 1.439,
+          "luck": 0.043
         },
         "sourceId": 8472,
         "icon": {
@@ -13165,9 +13165,9 @@
           "haste": 0.086,
           "crit": 0.057,
           "range": 0.716,
-          "kamas": 0.086,
           "armor": 1.431,
-          "regen": 4.551
+          "regen": 4.551,
+          "luck": 0.043
         },
         "sourceId": 8473,
         "icon": {
@@ -13188,9 +13188,9 @@
           "damage": 1.042,
           "haste": 0.088,
           "crit": 0.059,
-          "kamas": 0.088,
           "armor": 1.463,
-          "regen": 4.76
+          "regen": 4.76,
+          "luck": 0.044
         },
         "sourceId": 8474,
         "icon": {
@@ -13862,8 +13862,8 @@
           "maxHp": 465,
           "damage": 1.211,
           "haste": 0.094,
-          "kamas": 0.094,
-          "armor": 1.568
+          "armor": 1.568,
+          "luck": 0.047
         },
         "sourceId": 8837,
         "icon": {
@@ -13885,8 +13885,8 @@
           "haste": 0.093,
           "crit": 0.062,
           "range": 0.776,
-          "kamas": 0.093,
-          "regen": 5.35
+          "regen": 5.35,
+          "luck": 0.047
         },
         "sourceId": 8848,
         "icon": {
@@ -14581,8 +14581,8 @@
           "haste": 0.103,
           "crit": 0.068,
           "range": 0.854,
-          "kamas": 0.103,
-          "armor": 1.709
+          "armor": 1.709,
+          "luck": 0.052
         },
         "sourceId": 9138,
         "icon": {
@@ -14604,8 +14604,8 @@
           "haste": 0.102,
           "speed": 0.085,
           "range": 0.851,
-          "kamas": 0.102,
-          "armor": 1.701
+          "armor": 1.701,
+          "luck": 0.051
         },
         "sourceId": 9139,
         "icon": {
@@ -14626,8 +14626,8 @@
           "damage": 1.133,
           "haste": 0.104,
           "crit": 0.069,
-          "kamas": 0.104,
-          "armor": 1.732
+          "armor": 1.732,
+          "luck": 0.052
         },
         "sourceId": 9145,
         "icon": {
@@ -14664,9 +14664,9 @@
           "maxHp": 443,
           "damage": 1.016,
           "haste": 0.091,
-          "kamas": 0.091,
           "armor": 1.512,
-          "regen": 5.079
+          "regen": 5.079,
+          "luck": 0.046
         },
         "sourceId": 8270,
         "icon": {
@@ -14688,7 +14688,7 @@
           "haste": 0.131,
           "crit": 0.063,
           "range": 0.784,
-          "kamas": 0.094
+          "luck": 0.047
         },
         "sourceId": 8272,
         "icon": {
@@ -14708,9 +14708,9 @@
           "maxHp": 417,
           "damage": 1.265,
           "haste": 0.091,
-          "kamas": 0.091,
           "armor": 1.512,
-          "regen": 5.079
+          "regen": 5.079,
+          "luck": 0.046
         },
         "sourceId": 8275,
         "icon": {
@@ -14732,8 +14732,8 @@
           "haste": 0.096,
           "speed": 0.08,
           "range": 0.804,
-          "kamas": 0.096,
-          "regen": 5.74
+          "regen": 5.74,
+          "luck": 0.048
         },
         "sourceId": 8277,
         "icon": {
@@ -14754,7 +14754,7 @@
           "damage": 1.177,
           "haste": 0.093,
           "crit": 0.062,
-          "kamas": 0.093
+          "luck": 0.047
         },
         "sourceId": 8280,
         "icon": {
@@ -14774,9 +14774,9 @@
           "maxHp": 620,
           "damage": 1.078,
           "haste": 0.09,
-          "kamas": 0.09,
           "armor": 1.496,
-          "regen": 4.971
+          "regen": 4.971,
+          "luck": 0.045
         },
         "sourceId": 8283,
         "icon": {
@@ -14797,9 +14797,9 @@
           "damage": 1.157,
           "haste": 0.094,
           "crit": 0.062,
-          "kamas": 0.094,
           "armor": 1.56,
-          "regen": 5.405
+          "regen": 5.405,
+          "luck": 0.047
         },
         "sourceId": 8284,
         "icon": {
@@ -14834,8 +14834,8 @@
           "haste": 0.091,
           "speed": 0.041,
           "crit": 0.061,
-          "kamas": 0.091,
-          "armor": 1.52
+          "armor": 1.52,
+          "luck": 0.046
         },
         "sourceId": 8818,
         "icon": {
@@ -14856,8 +14856,8 @@
           "damage": 1.476,
           "haste": 0.099,
           "speed": 0.044,
-          "kamas": 0.099,
-          "armor": 1.646
+          "armor": 1.646,
+          "luck": 0.05
         },
         "sourceId": 8844,
         "icon": {
@@ -14879,8 +14879,8 @@
           "haste": 0.094,
           "speed": 0.042,
           "range": 0.784,
-          "kamas": 0.094,
-          "armor": 1.568
+          "armor": 1.568,
+          "luck": 0.047
         },
         "sourceId": 8859,
         "icon": {
@@ -14937,8 +14937,8 @@
           "haste": 0.104,
           "speed": 0.046,
           "crit": 0.069,
-          "kamas": 0.104,
-          "armor": 1.732
+          "armor": 1.732,
+          "luck": 0.052
         },
         "sourceId": 9177,
         "icon": {
@@ -14960,8 +14960,8 @@
           "haste": 0.148,
           "speed": 0.047,
           "crit": 0.071,
-          "kamas": 0.106,
-          "armor": 1.771
+          "armor": 1.771,
+          "luck": 0.053
         },
         "sourceId": 9179,
         "icon": {
@@ -14983,8 +14983,8 @@
           "haste": 0.107,
           "speed": 0.047,
           "range": 0.889,
-          "kamas": 0.107,
-          "armor": 1.778
+          "armor": 1.778,
+          "luck": 0.054
         },
         "sourceId": 9180,
         "icon": {
@@ -15018,8 +15018,8 @@
           "damage": 1.309,
           "haste": 0.104,
           "crit": 0.07,
-          "kamas": 0.104,
-          "armor": 1.74
+          "armor": 1.74,
+          "luck": 0.052
         },
         "sourceId": 9132,
         "icon": {
@@ -15040,8 +15040,8 @@
           "damage": 1.289,
           "haste": 0.105,
           "speed": 0.087,
-          "kamas": 0.105,
-          "armor": 1.748
+          "armor": 1.748,
+          "luck": 0.053
         },
         "sourceId": 9140,
         "icon": {
@@ -15062,8 +15062,8 @@
           "damage": 1.185,
           "haste": 0.103,
           "crit": 0.069,
-          "kamas": 0.103,
-          "armor": 1.717
+          "armor": 1.717,
+          "luck": 0.052
         },
         "sourceId": 9144,
         "icon": {
@@ -15097,8 +15097,8 @@
           "maxHp": 1141,
           "damage": 0.925,
           "haste": 0.103,
-          "kamas": 0.103,
-          "armor": 1.724
+          "armor": 1.724,
+          "luck": 0.052
         },
         "sourceId": 7680,
         "icon": {
@@ -15118,7 +15118,7 @@
           "maxHp": 670,
           "damage": 0.942,
           "haste": 0.104,
-          "kamas": 0.104
+          "luck": 0.052
         },
         "sourceId": 9117,
         "icon": {
@@ -15138,8 +15138,8 @@
           "maxHp": 907,
           "damage": 0.95,
           "haste": 0.146,
-          "kamas": 0.105,
-          "armor": 1.748
+          "armor": 1.748,
+          "luck": 0.053
         },
         "sourceId": 9130,
         "icon": {
@@ -15160,8 +15160,8 @@
           "damage": 0.984,
           "haste": 0.107,
           "range": 0.889,
-          "kamas": 0.107,
-          "armor": 1.778
+          "armor": 1.778,
+          "luck": 0.054
         },
         "sourceId": 9146,
         "icon": {
@@ -15196,8 +15196,8 @@
           "damage": 1.45,
           "haste": 0.104,
           "crit": 0.069,
-          "kamas": 0.104,
-          "armor": 1.732
+          "armor": 1.732,
+          "luck": 0.052
         },
         "sourceId": 9178,
         "icon": {
@@ -15218,9 +15218,9 @@
           "damage": 1.673,
           "haste": 0.109,
           "crit": 0.072,
-          "kamas": 0.109,
           "armor": 1.809,
-          "regen": 7.273
+          "regen": 7.273,
+          "luck": 0.055
         },
         "sourceId": 9181,
         "icon": {
@@ -15241,9 +15241,9 @@
           "damage": 1.526,
           "haste": 0.106,
           "speed": 0.089,
-          "kamas": 0.106,
           "armor": 1.771,
-          "regen": 6.968
+          "regen": 6.968,
+          "luck": 0.053
         },
         "sourceId": 9182,
         "icon": {
@@ -15265,9 +15265,9 @@
           "haste": 0.105,
           "crit": 0.07,
           "range": 0.874,
-          "kamas": 0.105,
           "armor": 1.748,
-          "regen": 6.787
+          "regen": 6.787,
+          "luck": 0.053
         },
         "sourceId": 9183,
         "icon": {
@@ -15303,8 +15303,8 @@
           "haste": 0.108,
           "speed": 0.048,
           "range": 0.901,
-          "kamas": 0.108,
-          "armor": 1.801
+          "armor": 1.801,
+          "luck": 0.054
         },
         "sourceId": 9131,
         "icon": {
@@ -15326,7 +15326,7 @@
           "haste": 0.108,
           "speed": 0.048,
           "crit": 0.072,
-          "kamas": 0.108
+          "luck": 0.054
         },
         "sourceId": 9137,
         "icon": {
@@ -15348,8 +15348,8 @@
           "haste": 0.105,
           "speed": 0.047,
           "crit": 0.07,
-          "kamas": 0.105,
-          "armor": 1.748
+          "armor": 1.748,
+          "luck": 0.053
         },
         "sourceId": 9141,
         "icon": {
@@ -15371,8 +15371,8 @@
           "haste": 0.107,
           "speed": 0.047,
           "crit": 0.071,
-          "kamas": 0.107,
-          "armor": 1.778
+          "armor": 1.778,
+          "luck": 0.054
         },
         "sourceId": 9147,
         "icon": {
@@ -15406,9 +15406,9 @@
           "maxHp": 610,
           "damage": 1.436,
           "haste": 0.107,
-          "kamas": 0.107,
           "armor": 1.786,
-          "regen": 7.089
+          "regen": 7.089,
+          "luck": 0.054
         },
         "sourceId": 9133,
         "icon": {
@@ -15429,9 +15429,9 @@
           "damage": 1.35,
           "haste": 0.109,
           "crit": 0.073,
-          "kamas": 0.109,
           "armor": 1.817,
-          "regen": 7.335
+          "regen": 7.335,
+          "luck": 0.055
         },
         "sourceId": 9142,
         "icon": {
@@ -15452,9 +15452,9 @@
           "damage": 1.373,
           "haste": 0.11,
           "crit": 0.073,
-          "kamas": 0.11,
           "armor": 1.832,
-          "regen": 7.459
+          "regen": 7.459,
+          "luck": 0.055
         },
         "sourceId": 9143,
         "icon": {
@@ -15474,9 +15474,9 @@
           "maxHp": 903,
           "damage": 1.33,
           "haste": 0.151,
-          "kamas": 0.109,
           "armor": 1.809,
-          "regen": 7.273
+          "regen": 7.273,
+          "luck": 0.055
         },
         "sourceId": 9463,
         "icon": {
@@ -15512,9 +15512,9 @@
           "speed": 0.05,
           "crit": 0.075,
           "range": 0.943,
-          "kamas": 0.113,
           "armor": 1.885,
-          "regen": 7.899
+          "regen": 7.899,
+          "luck": 0.057
         },
         "sourceId": 8877,
         "icon": {
@@ -15534,8 +15534,8 @@
           "maxHp": 625,
           "damage": 1.564,
           "haste": 0.109,
-          "kamas": 0.109,
-          "armor": 1.809
+          "armor": 1.809,
+          "luck": 0.055
         },
         "sourceId": 8991,
         "icon": {
@@ -15557,8 +15557,8 @@
           "haste": 0.154,
           "crit": 0.074,
           "range": 0.924,
-          "kamas": 0.111,
-          "regen": 7.583
+          "regen": 7.583,
+          "luck": 0.056
         },
         "sourceId": 9464,
         "icon": {

@@ -1,49 +1,57 @@
-import {runBonusText} from '@rod/shared';
-import {affinityForBonus, RARITY_NAMES,CLASS_MECHANICS,getRunBonus,statText,type GameStateView,type MechanicView,type StatKey} from '@rod/shared';
+import {getBlessing,parseBlessings,blessingDescription,PHASE_PLAYING,type GameStateView} from '@rod/shared';
+import {ROGUELITE_CATALOG as C,ROGUELITE_INNATES,readBuild,describeRogueliteChoice} from '@rod/shared/roguelite';
 import {escapeHtml} from './Hud.ts';
-import {getBlessing,parseBlessings,blessingDescription} from '@rod/shared';
-import {PHASE_PLAYING} from '@rod/shared';
+interface Choice {id:string;kind:string;definitionId:string;nextLevel:number;targetId?:string}
+interface Offer {revision:number;source:string;choices:Choice[]}
 export class MechanicHud {
-  private el=document.getElementById('class-mechanic')!;
-  private boons=document.getElementById('boon-choices')!;
-  private key='';private boonKey='';private abort=new AbortController();
-  private structure='';
-  private blessing=document.createElement('div');private blessingKey='';
-  private momentum=document.createElement('div');private momentumActive=false;
-  constructor(action:(choice:number)=>void,choose:(choice:number)=>void) {
-    this.blessing.id='blessing-hud';this.el.before(this.blessing);
-    this.momentum.id='momentum-hud';this.momentum.className='hidden';this.momentum.textContent='ÉLAN · prochaine attaque +15 %';this.momentum.title='Attaquez dans les 0,65 s après une esquive : projectiles perforants, mêlée élargie et bref arrêt des ennemis ordinaires.';this.el.before(this.momentum);
-    this.el.addEventListener('click',e=>{const b=(e.target as HTMLElement).closest<HTMLElement>('[data-class-action]');if(b)action(Number(b.dataset.classAction));},{signal:this.abort.signal});
-    this.boons.addEventListener('click',e=>{const b=(e.target as HTMLElement).closest<HTMLElement>('[data-boon]');if(b)choose(Number(b.dataset.boon));},{signal:this.abort.signal});
+ private el=document.getElementById('class-mechanic')!;
+ private boons=document.getElementById('boon-choices')!;
+ private passives=document.createElement('div');
+ private blessing=document.createElement('div');
+ private abort=new AbortController();
+ private key='';private choicesKey='';
+ constructor(action:(choice:number)=>void,choose:(choice:number,revision:number)=>void,private rewardAction:(type:'reroll'|'banish',revision:number,choiceId?:string)=>void=()=>{}) {
+  this.passives.id='passive-slots';this.el.before(this.passives);this.blessing.id='blessing-hud';this.el.before(this.blessing);
+  this.el.addEventListener('click',e=>{if((e.target as HTMLElement).closest('[data-class-action]'))action(0);},{signal:this.abort.signal});
+  this.boons.addEventListener('click',e=>{
+   const target=(e.target as HTMLElement).closest<HTMLElement>('[data-boon],[data-reroll],[data-banish]');if(!target)return;
+   const revision=Number(target.dataset.revision);
+   if(target.hasAttribute('data-reroll'))this.rewardAction('reroll',revision);
+   else if(target.hasAttribute('data-banish'))this.rewardAction('banish',revision,target.dataset.banish);
+   else choose(Number(target.dataset.boon),revision);
+  },{signal:this.abort.signal});
+ }
+ update(state:GameStateView,id:string):void {
+  const p=state.players.get(id);if(!p)return;
+  const key=p.build+p.mechanic+p.blessings+p.alive+state.paused+state.intermission;
+  if(key!==this.key){this.key=key;const build=readBuild(p.build,p.classId),innate=ROGUELITE_INNATES[p.classId];
+   let mechanic:{status?:string;readyIn?:number;choices?:string[]}={};try{mechanic=JSON.parse(p.mechanic);}catch{}
+   const action=p.classId==='osamodas'?'Cri sauvage':p.classId==='pandawa'?'Sobre / Ivre':'';
+   this.el.innerHTML=`<div class="mechanic-caption"><b>${escapeHtml(innate.name)}</b>${action?`<button class="btn mechanic-action" data-class-action ${!p.alive||state.paused||state.intermission||(mechanic.readyIn??0)>0?'disabled':''}>F · ${action}${(mechanic.readyIn??0)>0?' · '+mechanic.readyIn!.toFixed(1)+' s':''}</button>`:'<span>PASSIF INNÉ</span>'}</div><small>${escapeHtml(mechanic.status??innate.description)}</small>${mechanic.choices?.length?`<span class="hand-card">${mechanic.choices.map(escapeHtml).join(' ')}</span>`:''}`;
+   this.passives.innerHTML=build.passives.map(slot=>{
+    if(!slot)return '<div class="passive-slot empty" title="Emplacement de passif disponible">＋</div>';
+    const def=C.passive(slot.passiveId)!,ready=C.evolutions().some(e=>e.passiveId===slot.passiveId&&build.spells.some(s=>s?.spellId===e.sourceSpellId&&s.level===8));
+    return `<div class="passive-slot ${ready?'evolution-ready':''}" title="${escapeHtml(def.description)}"><b>${escapeHtml(def.name)}</b><small>${slot.level}/5${ready?' · ✦ Évolution':''}</small></div>`;
+   }).join('');
+   const blessings=Object.entries(parseBlessings(p.blessings));this.blessing.classList.toggle('hidden',!blessings.length);
+   this.blessing.innerHTML=blessings.map(([key,rank])=>{const def=getBlessing(key)!;return `<img src="assets/dofus/spells/${def.icon}.png" alt="${escapeHtml(def.name)}" title="${escapeHtml(blessingDescription(key,rank))}">`;}).join('');
   }
-  update(state:GameStateView,id:string):void {
-    const p=state.players.get(id);if(!p)return;
-    const momentum=!!p.momentum&&p.alive&&!state.intermission&&state.phase===PHASE_PLAYING;if(momentum!==this.momentumActive){this.momentumActive=momentum;this.momentum.classList.toggle('hidden',!momentum);}if(momentum){const rank=parseBlessings(p.blessings).precision??0;this.momentum.textContent=`ÉLAN · prochaine attaque +${rank?Math.round(35*(1+.2*(rank-1))):15} %`;}
-    const blessingKey=`${p.blessings}|${state.phase}`;
-    if(this.blessingKey!==blessingKey){this.blessingKey=blessingKey;const owned=Object.entries(parseBlessings(p.blessings));this.blessing.classList.toggle('hidden',!owned.length||state.phase!==PHASE_PLAYING);this.blessing.style.setProperty('--pact','#e8be72');this.blessing.title='Bénédictions de la run · détails sur Tab';this.blessing.innerHTML=`<b>${owned.length} bénédiction${owned.length>1?'s':''}</b><span class="blessing-icons">${owned.map(([id,rank])=>{const b=getBlessing(id)!;return`<img src="assets/dofus/spells/${b.icon}.png" alt="${b.name}" title="${escapeHtml(b.name+' · Rang '+rank+' · '+blessingDescription(id,rank))}">`;}).join('')}</span>`;}
-    const key=`${p.classId}|${p.mechanic}|${p.alive}|${state.paused}|${state.intermission}`;
-    if(key!==this.key) {
-      this.key=key;const def=CLASS_MECHANICS[p.classId];let m:MechanicView;
-      try{m=JSON.parse(p.mechanic);}catch{return;}
-      if(!m.name)return;
-      const disabled=!p.alive||state.paused||state.intermission||m.readyIn>0;
-      const structure=`${p.classId}|${m.choices.join(',')}`;
-      if(structure!==this.structure) {
-        this.structure=structure;
-        this.el.innerHTML=`<div class="mechanic-caption"><b>${escapeHtml(m.name)}</b><span class="mechanic-value"></span>${def.action?`<button class="btn mechanic-action" data-class-action="0" title="${escapeHtml(def.action)}"></button>`:'<span class="mechanic-passive">Passif</span>'}</div><div class="mechanic-track"><i style="background:#${def.color.toString(16)}"></i></div>${m.choices.length?`<div class="mechanic-choices mechanic-cards">${m.choices.map(c=>`<span class="hand-card ${/[♥♦]/.test(c)?'red':''}">${escapeHtml(c)}</span>`).join('')}</div>`:''}`;
-      }
-      this.el.querySelector('.mechanic-value')!.textContent=m.status||`${m.value} / ${m.max}`;
-      const action=this.el.querySelector('.mechanic-action');if(action)action.textContent=`F ${m.readyIn>0?m.readyIn.toFixed(1)+' s':def.action}`;
-      this.el.querySelector<HTMLElement>('.mechanic-track i')!.style.width=`${Math.min(100,m.value/m.max*100)}%`;
-      this.el.querySelectorAll<HTMLButtonElement>('button').forEach(b=>b.disabled=disabled);
-    }
-    const boonKey=`${p.boonChoices}|${p.blessings}|${p.alive}|${state.paused}|${state.stage}|${state.zoneWave}`;
-    if(boonKey!==this.boonKey) {
-      this.boonKey=boonKey;let choices:string[]=[];try{choices=JSON.parse(p.boonChoices);}catch{/* Attend le patch. */}
-      this.boons.classList.toggle('hidden',!choices.length||!p.alive);
-      const ranks=parseBlessings(p.blessings),elite=choices.some(id=>!!getBlessing(id));
-      this.boons.innerHTML=choices.length?`<b>${elite?'Élite vaincue · choisissez une bénédiction':'Récompense du gardien'}</b><small>${elite?'Votre choix est personnel et reste actif jusqu’à la fin de la run.':'Choisissez un bonus de stats pour cette run.'}</small><details class="boon-selection" open><summary>Afficher / masquer les choix</summary><div>${choices.map((id,i)=>{const b=getBlessing(id);if(b){const rank=(ranks[id]??0)+1;return`<button class="btn blessing-choice" data-boon="${i}" style="--pact:#${b.color.toString(16)}" ${state.paused?'disabled':''}><span class="pact-family">${b.family} · ${rank>1?'RENFORCER · RANG '+rank:'NOUVEAU'}</span><img src="assets/dofus/spells/${b.icon}.png" alt=""><b>${escapeHtml(b.name)}</b><span>${escapeHtml(blessingDescription(id,rank))}</span></button>`;}const bonus=getRunBonus(id);if(!bonus)return '';return`<button class="btn" data-boon="${i}" ${state.paused?'disabled':''}><b>${escapeHtml(bonus.name)}</b><small>${RARITY_NAMES[bonus.rarity]}${affinityForBonus(bonus.base)?` · ${affinityForBonus(bonus.base)!.name}`:''}</small><span>${escapeHtml(runBonusText(bonus,{stage:state.stage,zoneWave:state.zoneWave,mode:state.mode}))}</span></button>`;}).join('')}</div></details>`:'';
-    }
-  }
-  destroy():void{this.abort.abort();this.blessing.remove();this.momentum.remove();this.el.innerHTML='';this.boons.classList.add('hidden');}
+  const choicesKey=p.choiceOffer+p.build+p.combatStats+p.spellLevels+state.phase+state.paused+Math.ceil(p.choiceRemaining)+(state.xpSweepUntil>0);
+  if(choicesKey===this.choicesKey)return;this.choicesKey=choicesKey;
+  let offer:Offer|null=null;try{offer=JSON.parse(p.choiceOffer);}catch{}
+  this.boons.classList.toggle('hidden',!offer?.choices.length||state.phase!==PHASE_PLAYING||state.xpSweepUntil>0);
+  if(!offer?.choices.length)return;
+  const build=readBuild(p.build,p.classId),stats=JSON.parse(p.combatStats||'{}'),ranks=JSON.parse(p.spellLevels||'{}');
+  this.boons.setAttribute('role','dialog');this.boons.setAttribute('aria-label','Choix personnel de progression');
+  const focus=(document.activeElement as HTMLElement)?.dataset.boon;
+  const title=offer.source==='boss'?'Coffre d’évolution':offer.source==='elite'?'Élite vaincue':`Niveau ${state.runLevel}`;
+  this.boons.innerHTML=`<b>${title} · choisissez une récompense</b><small>Votre build personnel. ${p.pendingLevels>1?`${p.pendingLevels} niveaux en attente. `:''}${state.players.size>1?`Le combat continue · choix automatique dans ${Math.ceil(p.choiceRemaining)} s.`:'Combat suspendu pendant le choix.'}</small><div class="level-choice-grid" style="--choice-count:${offer.choices.length}">${offer.choices.map((choice,index)=>{
+   const blessing=choice.kind==='blessing'?getBlessing(choice.definitionId):undefined;
+   const card=blessing?{name:blessing.name,description:blessingDescription(blessing.id,(parseBlessings(p.blessings)[blessing.id]??0)+1),values:'',assetKey:blessing.icon,association:'',target:undefined}:describeRogueliteChoice(choice,build,stats,ranks);
+   const label=choice.kind==='evolution'?'ÉVOLUTION ULTIME':choice.kind==='acquireSpell'?'NOUVEAU SORT':choice.kind==='upgradeSpell'?`SORT · NIVEAU ${choice.nextLevel}/8`:choice.kind==='acquirePassive'?'NOUVEAU PASSIF':choice.kind==='upgradePassive'?`PASSIF · NIVEAU ${choice.nextLevel}/5`:choice.kind==='blessing'?'BÉNÉDICTION':'RÉCOMPENSE DE SECOURS';
+   return `<div class="reward-card"><button class="btn level-choice ${choice.kind==='evolution'?'evolution-card':''}" data-boon="${index}" data-revision="${offer!.revision}" ${state.paused?'disabled':''}>${card.assetKey?`<img src="assets/dofus/spells/${card.assetKey==='epee_du_jugement'?'epee_celeste':card.assetKey}.png" alt="">`:'<span class="xp-card-star">✦</span>'}<small>${label}</small><b>${escapeHtml(card.name)}${card.target?' · '+escapeHtml(card.target):''}</b><span>${escapeHtml(card.description)}</span><span>${escapeHtml(card.values)}</span>${card.association?`<small class="reward-synergy">✦ ${escapeHtml(card.association)}</small>`:''}</button>${offer!.source==='level'&&build.banishes>0?`<button class="btn banish-card" data-banish="${escapeHtml(choice.id)}" data-revision="${offer!.revision}">Bannir</button>`:''}</div>`;
+  }).join('')}</div>${offer.source==='level'?`<div class="reward-actions"><button class="btn" data-reroll data-revision="${offer.revision}" ${build.rerolls<=0?'disabled':''}>Relancer · ${build.rerolls}/5</button><small>Bannissements restants : ${build.banishes}/3</small></div>`:''}`;
+  if(focus!==undefined)this.boons.querySelector<HTMLElement>(`[data-boon="${focus}"]`)?.focus({preventScroll:true});
+ }
+ destroy():void{this.abort.abort();this.passives.remove();this.blessing.remove();this.el.innerHTML='';this.boons.classList.add('hidden');}
 }

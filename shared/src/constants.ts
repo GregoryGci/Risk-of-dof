@@ -8,7 +8,7 @@ export const PATCH_MS = 50;
 export const SERVER_PORT = 2567;
 export const ROOM_NAME = 'partie';
 /** Cartes et schéma doivent correspondre entre le site et le serveur publié. */
-export const GAME_PROTOCOL_VERSION=7;
+export const GAME_PROTOCOL_VERSION=9;
 export const MAX_PLAYERS = 4;
 export const ROOM_CODE_LENGTH = 4;
 export const NAME_MAX_LENGTH = 16;
@@ -36,8 +36,7 @@ export const MSTATE_NORMAL = 0;
 export const MSTATE_WINDUP = 1; // prépare une charge / une attaque (télégraphe)
 export const MSTATE_CHARGE = 2; // charge en ligne droite
 
-/** Coffres présents en permanence sur la carte, et distance d'interaction (cases). */
-export const CHEST_COUNT = 12;
+/** Distance d'interaction (cases). */
 export const INTERACT_RANGE = 1.6;
 
 /** Zaap (téléporteur de fin de zone) : états, portée d'interaction, durée de charge (s). */
@@ -47,6 +46,5 @@ export const ZAAP_READY = 2;
 export const ZAAP_RANGE = 2.4;
 export const ZAAP_CHARGE_TIME = 45;
 
-/** Balises de défi par zone (font apparaître un élite) et offres du marchand. */
+/** Balises de défi par zone (font apparaître un élite) sans coût en monnaie. */
 export const CHALLENGE_COUNT = 2;
-export const SHOP_SIZE = 6;

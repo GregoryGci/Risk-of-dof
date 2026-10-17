@@ -1,8 +1,8 @@
 import {RETRO_ITEMS} from './retro-equipment.ts';
-// Équipements permanents. Les objets de coffre restent cumulables pendant la run.
+// Équipements permanents. Les bonus de niveau restent propres à chaque run.
 // Adaptation Retro : caractéristiques élémentaires -> dégâts, sagesse -> récupération,
 // PM -> déplacement, PA -> recharge (aucune stat PA), résistances -> armure,
-// prospection -> kamas/chance. Les niveaux sont des paliers propres à Risk of Dof.
+// prospection -> chance. Les niveaux sont des paliers propres à Risk of Dof.
 import type { StatKey } from '../types.ts';
 import { emptyStats, sumRunStats } from './items.ts';
 import { makeRng } from '../rng.ts';
@@ -81,7 +81,7 @@ export const EQUIPMENT_BASES: Record<string, EquipmentBase> = {
   torque_ancestral: { name: 'Torque Ancestral', kind: 'amulette', tier: 3, stats: { damage: 0.1, haste: 0.065, maxHp: 28 } },
   anneau_ancestral: { name: 'Anneau Ancestral', kind: 'anneau', tier: 3, stats: { damage: 0.085, crit: 0.03, maxHp: 20 } },
   anneau_dragon_cochon: { name: 'Anneau du Dragon Cochon', kind: 'anneau', tier: 3, stats: { damage: 0.07, crit: 0.045, critDamage: 0.08 } },
-  abrature_ancestrale: { name: 'Abrature Ancestrale', kind: 'ceinture', tier: 3, stats: { maxHp: 38, armor: 0.65, kamas: 0.07 } },
+  abrature_ancestrale: { name: 'Abrature Ancestrale', kind: 'ceinture', tier: 3, stats: { maxHp: 38, armor: 0.65, luck: 0.04 } },
   abrabottes_ancestrales: { name: 'Protège-Tibias Ancestraux', kind: 'bottes', tier: 3, stats: { maxHp: 28, speed: 0.075, damage: 0.06 } },
   fendeuse_ancestrale: { name: "Fendeuse d'Abraknyde Ancestral", kind: 'arme', tier: 3, stats: { damage: 0.15, critDamage: 0.14 } },
   dofus_pourpre: { name: 'Dofus Pourpre', kind: 'dofus', tier: 3, stats: { damage: 0.12 } },
@@ -114,13 +114,13 @@ export const EQUIPMENT_BASES: Record<string, EquipmentBase> = {
   anneau_scarafeuille: { name: 'Scaranneau Vert', kind: 'anneau', tier: 2, stats: { damage: 0.055, crit: 0.02, armor: 0.3 } },
   ceinture_scarafeuille: { name: 'Scarature Verte', kind: 'ceinture', tier: 2, stats: { maxHp: 25, armor: 0.55, regen: 0.2 } },
   kwakcoiffe: { name: 'Kwakoiffe de Flammes', kind: 'coiffe', tier: 2, stats: { damage: 0.075, haste: 0.025, crit: 0.015 } },
-  dofus_kaliptus: { name: 'Dofus Kaliptus', kind: 'dofus', tier: 2, stats: { luck: 0.06, kamas: 0.1 } },
+  dofus_kaliptus: { name: 'Dofus Kaliptus', kind: 'dofus', tier: 2, stats: { luck: 0.1 } },
   solomonk: { name: 'Solomonk', kind: 'coiffe', tier: 3, stats: { damage: 0.11, crit: 0.045, critDamage: 0.1 } },
   cape_dragon_cochon: { name: 'Cape du Dragon Cochon', kind: 'cape', tier: 3, stats: { maxHp: 28, damage: 0.075, crit: 0.035 } },
   collier_dragon_cochon: { name: 'Collier du Dragon Cochon', kind: 'amulette', tier: 3, stats: { damage: 0.085, haste: 0.055, crit: 0.035 } },
   mules_dragon_cochon: { name: 'Mules du Dragon Cochon', kind: 'bottes', tier: 3, stats: { speed: 0.075, damage: 0.07, crit: 0.025 } },
   dagues_ancestrales: { name: 'Dagues Ancestrales', kind: 'arme', tier: 3, stats: { damage: 0.13, crit: 0.035, attackSpeed: 0.04 } },
-  familier_nomoon: { name: 'Nomoon', kind: 'familier', tier: 3, stats: { luck: 0.07, kamas: 0.12 } },
+  familier_nomoon: { name: 'Nomoon', kind: 'familier', tier: 3, stats: { luck: 0.12 } },
   dofus_ocre: { name: 'Dofus Ocre', kind: 'dofus', tier: 3, stats: { haste: 0.1 } },
   coiffe_meulou: { name: 'Coiffe du Meulou', kind: 'coiffe', tier: 4, stats: { maxHp: 45, damage: 0.13, range: 0.5 } },
   cape_meulou: { name: 'Cape du Meulou', kind: 'cape', tier: 4, stats: { maxHp: 35, damage: 0.1, crit: 0.04 } },
@@ -139,7 +139,7 @@ export const EQUIPMENT_BASES: Record<string, EquipmentBase> = {
   dofus_sylvestre: { name: 'Dofus Sylvestre', kind: 'dofus', tier: 3, stats: { maxHp: 40 } },
   dofus_veilleurs: { name: 'Dofus des Veilleurs', kind: 'dofus', tier: 4, stats: { armor: 1 } },
   dofus_tachete: { name: 'Dofus Tacheté', kind: 'dofus', tier: 2, stats: { luck: 0.05 } },
-  dofus_argente: { name: 'Dofus Argenté', kind: 'dofus', tier: 2, stats: { kamas: 0.1 } },
+  dofus_argente: { name: 'Dofus Argenté', kind: 'dofus', tier: 2, stats: { luck: 0.06 } },
   dofus_nebuleux: { name: 'Dofus Nébuleux', kind: 'dofus', tier: 4, stats: { haste: 0.08 } },
   dofus_forgelave: { name: 'Dofus Forgelave', kind: 'dofus', tier: 4, stats: { damage: 0.11 } },
   dofus_givrefoux: { name: 'Dofus Givrefoux', kind: 'dofus', tier: 4, stats: { critDamage: 0.15 } },
@@ -399,11 +399,11 @@ export function monsterEquipmentDrops(stage: number, boss: boolean, random = Mat
   return items;
 }
 /** Un équipement garanti de palier atteint + les trouvailles réellement tombées. */
-export function equipmentReward(runId: string, seed: number, stage: number, modeId: number, kamasEarned: number, loot: GearDrop[] = []): RunReward {
+export function equipmentReward(runId: string, seed: number, stage: number, modeId: number, completionKamas: number, loot: GearDrop[] = []): RunReward {
   const tier = equipmentTier(stage);
   const random = makeRng(seed);
   const candidates = dropPool(stage,false,modeId);
   const bonus = createEquipment(candidates[Math.floor(random()*candidates.length)],dropRarity(random,stageRarityBoost(stage)));
   const drops = [...loot,{claimId:`${runId}:${seed}:completion`,gear:bonus}];
-  return { runId, stage, tier, kamas: Math.max(0, Math.round((kamasEarned + (stage - 1) * 100) * getMode(modeId).reward)), gear: stackEquipment(drops.map(d=>d.gear)), drops };
+  return { runId, stage, tier, kamas: Math.max(0, Math.round(completionKamas * getMode(modeId).reward)), gear: stackEquipment(drops.map(d=>d.gear)), drops };
 }
