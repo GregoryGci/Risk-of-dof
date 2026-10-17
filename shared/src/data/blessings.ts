@@ -29,7 +29,7 @@ export const BLESSINGS:Record<string,BlessingDef>=Object.fromEntries([
  b('cascade','Cascade','SOUFFLE','bond_du_felin','Tous les 3 dashs, réduit de 1,5 s la recharge restante du clic droit ; rend aussi plus vite la prochaine charge.'),
  b('afterimage','Contre-pied','SOUFFLE','vol_du_temps','Une onde frappe à votre arrivée 0,2 s après le dash : rayon 2, dégâts 40 % de votre attaque de base.'),
  b('repulse','Onde de recul','SOUFFLE','fleche_de_recul','Chaque dash repousse de 1,2 case les ennemis ordinaires à 2,8 cases du départ. Les élites et les boss résistent.'),
- b('legion','Légion fidèle','PACTE','invocation_de_tofu','Les nouvelles invocations gagnent 35 % de PV max. Le Coffre Animé conserve ses PV égaux aux vôtres.','summon'),
+ b('legion','Légion fidèle','PACTE','invocation_de_tofu','Les nouvelles invocations gagnent 35 % de PV max. Le Coffre Animé conserve ses PV égaux à 1,2 fois les vôtres.','summon'),
  b('pack','Marque de meute','PACTE','fouet','Une invocation qui frappe marque sa cible 3 s. Vos sorts infligent 20 % de dégâts supplémentaires à cette cible.','summon'),
  b('sanctum','Domaine sacré','PACTE','glyphe_enflamme','Les nouveaux glyphes et pièges gagnent 0,4 case de rayon. Pour les pièges, l’explosion grandit aussi.','ground'),
  b('bulwark','Contre-garde','PACTE','vitalite','Vos sorts infligent 20 % de dégâts supplémentaires tant que vous avez un bouclier.'),

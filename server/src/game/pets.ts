@@ -29,7 +29,7 @@ export function updatePets(sim:Simulation):void {
     // Les attaques au contact partent à côté de la cible : le compagnon bondit sur elle.
     const reach=spell.melee?Math.max(0,Math.hypot(target.state.x-p.state.x,target.state.y-p.state.y)-spell.range*.6):0,len=Math.hypot(target.state.x-p.state.x,target.state.y-p.state.y)||1;
     const ox=p.state.x+(target.state.x-p.state.x)/len*reach,oy=p.state.y+(target.state.y-p.state.y)/len*reach;
-    sim.cast(spell,ox,oy,target.state.x,target.state.y,p.id,true,PET_ATTACK_POWER*sourceDamageMultiplier(p.stats.damage,false),Math.min(1,.05+p.stats.crit),undefined,undefined,1.5+p.stats.critDamage);
+    sim.cast(spell,ox,oy,target.state.x,target.state.y,p.id,true,PET_ATTACK_POWER*sourceDamageMultiplier(p.stats.damage,false),Math.min(1,.05+p.stats.crit),undefined,undefined,1.5+p.stats.critDamage,0,`pet:${p.id}`);
     p.petAttackAt=sim.now+interval;
   }
 }

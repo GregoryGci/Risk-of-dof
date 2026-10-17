@@ -56,6 +56,8 @@ export const PlayerState = schema(
     dmgDealt: t.uint32().default(0),
     healDone: t.uint32().default(0),
     dmgTaken: t.uint32().default(0),
+    /** Dégâts infligés par type d'invocation : "type:dégâts,type:dégâts" (mis à jour chaque seconde). */
+    summonDmg: t.string().default(''),
     /** Sorts équipés (arbre de talents) : "id,id,id,id". */
     spells: t.string().default(''),
     invisible: t.boolean().default(false),
@@ -77,8 +79,11 @@ export const MonsterState = schema(
     maxHp: t.float32().default(0),
     level: t.uint8().default(1),
     state: t.uint8().default(0),
-    /** Invocation alliée des joueurs. */
+    /** Invocation alliée des joueurs : maître, temps restant et durée de vie maximale (s), pour le HUD des invocations. */
     ally: t.boolean().default(false),
+    owner: t.string().default(''),
+    lifeLeft: t.float32().default(0),
+    lifeMax: t.float32().default(0),
     elite: t.boolean().default(false),
     carried: t.boolean().default(false),
     rogue: t.boolean().default(false),

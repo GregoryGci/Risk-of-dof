@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {CLASS_MECHANICS,createEquipment,forgeCost,recycleValue,equipmentReward,getMonster,getSpell,generateMap,isBlocked,evaluateHand,monsterEquipmentDrops,makeRng,RUN_BONUSES,ZAAP_READY} from '@rod/shared';
+import {SUMMON_HP_MULT,CLASS_MECHANICS,createEquipment,forgeCost,recycleValue,equipmentReward,getMonster,getSpell,generateMap,isBlocked,evaluateHand,monsterEquipmentDrops,makeRng,RUN_BONUSES,ZAAP_READY} from '@rod/shared';
 import {GameState} from '../server/src/state.ts';
 import {Simulation,type PlayerRt} from '../server/src/game/Simulation.ts';
 import {MovementPrediction} from '../client/src/game/Prediction.ts';
@@ -121,16 +121,17 @@ test('Féca : chaque glyphe traversé se réactive une fois par dash et reste en
   p.dashReadyAt=0;sim.playerDash(p.id,{dx:-1,dy:0});advance(sim,.18);assert.equal(events.filter(e=>e.type==='explode'&&e.message.spell==='glyphe_agressif').length,4);
   action(sim,p);assert.equal(sim.grounds.size,2);
 });
-test('Osamodas : Fouet marque, quatre invocations au plus et Cri sauvage',()=>{
+test('Osamodas : Fouet marque, invocations cumulées et Cri sauvage',()=>{
   const {sim,p,target}=setup('osamodas');cast(sim,p,1);cast(sim,p,2,p.state.x-1,p.state.y);cast(sim,p,0);
   advance(sim,.1);assert.equal(sim.mechanics.get(p).target,target.id);const ally=[...sim.monsters.values()].find(m=>m.state.ally)!;assert.equal(sim.mechanics.allyTarget(ally)?.id,target.id);
   assert.equal([...sim.monsters.values()].filter(m=>m.state.ally).length,3,'deux Tofus et un Bouftou');
-  cast(sim,p,1);cast(sim,p,3);assert.equal([...sim.monsters.values()].filter(m=>m.allyOwner===p.id).length,4);
+  // La limite est de 12 : deux Tofus et un Dragonnet de plus s'ajoutent sans rien remplacer.
+  cast(sim,p,1);cast(sim,p,3);assert.equal([...sim.monsters.values()].filter(m=>m.allyOwner===p.id).length,6);
   action(sim,p);assert.ok((p.summonRoarUntil??0)>sim.now);
 });
-test('Enutrof : coffre aux PV max, intercepte les dégâts puis laisse passer le surplus',()=>{
-  const {sim,p}=setup('enutrof');cast(sim,p,2);const chest=[...sim.monsters.values()].find(m=>m.state.ally)!;assert.equal(chest.state.maxHp,p.state.maxHp);assert.equal(chest.def.taunt,false);
-  const hp=p.state.hp;sim.damagePlayer(p,30);assert.equal(p.state.hp,hp);assert.equal(chest.state.hp,p.state.maxHp-30);
+test('Enutrof : coffre au triple des PV max, intercepte les dégâts puis laisse passer le surplus',()=>{
+  const {sim,p}=setup('enutrof');cast(sim,p,2);const chest=[...sim.monsters.values()].find(m=>m.state.ally)!;assert.equal(chest.state.maxHp,p.state.maxHp*SUMMON_HP_MULT);assert.equal(chest.def.taunt,false);
+  const hp=p.state.hp;sim.damagePlayer(p,30);assert.equal(p.state.hp,hp);assert.equal(chest.state.hp,p.state.maxHp*SUMMON_HP_MULT-30);
   sim.damagePlayer(p,chest.state.hp+20);assert.equal(sim.monsters.has(chest.id),false);assert.equal(p.state.hp,hp-20);
   const random=makeRng(123);let gear=0,dofus=0;for(let i=0;i<50000;i++)for(const drop of monsterEquipmentDrops(9,true,random,2)){if(drop.base.startsWith('dofus_'))dofus++;else gear++;}
   assert.ok(gear>2700&&gear<3300);assert.ok(dofus>2700&&dofus<3300);

@@ -9,6 +9,9 @@ import type { GearManifest, GearTracks } from '../assets/manifest.ts';
 const INTERP_S = (PATCH_MS * 1.3) / 1000;
 /** Au-delà de cette distance (cases), on téléporte au lieu d'interpoler. */
 const SNAP_DIST = 5;
+/** Taille à l'écran de l'icône du familier (px) et durée de son bond d'attaque (ms). */
+const PET_SIZE = 38;
+const PET_LUNGE_MS = 420;
 
 export interface EntityViewOptions {
   label?: string;
@@ -60,17 +63,69 @@ export class EntityView {
   private gear?: { tracks: GearTracks; manifest: GearManifest; worn: { base: string; head: boolean; img: Phaser.GameObjects.Image; part: Part }[] };
   private gearKey = '';
 
-  private pet?: { key: string; img: Phaser.GameObjects.Image; part: Part };
+  private pet?: { key: string; img: Phaser.GameObjects.Image; part: Part; scale: number };
+  /** Bond du familier vers sa cible : début (horloge de la scène, ms) et décalage écran de la cible par rapport au joueur. */
+  private petLunge?: { at: number; dx: number; dy: number };
   /** Compagnon : icône du familier qui flotte et suit le joueur, un peu derrière lui. */
   setPet(key?: string): void {
     if (this.pet?.key === key) return;
     if (this.pet) { this.pet.img.destroy(); this.parts = this.parts.filter(p => p !== this.pet!.part); this.pet = undefined; }
     if (!key) return;
     const img = this.scene.add.image(0, 0, key).setOrigin(.5, 1);
-    img.setScale(Math.min(1, 26 / Math.max(img.width, img.height)));
+    const scale = Math.min(1.4, PET_SIZE / Math.max(img.width, img.height));
+    img.setScale(scale);
     const part: Part = { obj: img, ox: 0, oy: 0, dz: -0.05 };
     this.parts.push(part);
-    this.pet = { key, img, part };
+    this.pet = { key, img, part, scale };
+    this.petAt = undefined;
+  }
+
+  /** Attaque du familier : il bondit vers le point visé (monde), au plus `maxPx` px, puis revient à sa place. */
+  petStrike(wx: number, wy: number, maxPx: number): void {
+    if (!this.pet) return;
+    const target = worldToScreen(wx, wy), me = worldToScreen(this.wx, this.wy);
+    // Il s'arrête un peu avant la cible : bond au contact, ou simple élan pour un tir.
+    const dx = target.x - me.x, dy = target.y - me.y, len = Math.hypot(dx, dy) || 1, reach = Math.min(len * 0.85, maxPx) / len;
+    this.petLunge = { at: this.scene.time.now, dx: dx * reach, dy: dy * reach };
+  }
+
+  /** Place du familier par rapport au joueur (px écran) : il le suit avec un temps de retard. */
+  private petAt?: { x: number; y: number };
+  /**
+   * Familier : se tient à côté du joueur, du côté opposé au regard, et le rattrape avec un léger retard
+   * (en sautillant s'il court). Pendant une attaque : bond aller-retour vers la cible.
+   */
+  private updatePet(dt: number): void {
+    if (!this.pet) return;
+    const side = this.body.flipX ? 1 : -1;
+    const restX = side * 30, restY = 4;
+    const at = (this.petAt ??= { x: restX, y: restY });
+    // Retard : la place visée est atteinte en ~0,3 s ; on part de l'ancienne place relative, corrigée du déplacement du joueur.
+    const k = 1 - Math.exp(-dt * 7);
+    at.x += (restX - at.x) * k;
+    at.y += (restY - at.y) * k;
+    const lag = Math.hypot(restX - at.x, restY - at.y);
+    const hop = this.moving || lag > 6 ? Math.abs(Math.sin(this.clock * 11)) * 7 : Math.sin(this.clock * 3) * 1.5;
+    const t = this.petLunge ? (this.scene.time.now - this.petLunge.at) / PET_LUNGE_MS : 1;
+    let x = at.x, y = at.y - hop, squash = 1, flip = side > 0;
+    if (this.petLunge && t < 1) {
+      // Aller rapide (35 %), puis retour ; petit saut en arc et écrasement à l'impact.
+      const e = t < 0.35 ? Phaser.Math.Easing.Quadratic.Out(t / 0.35) : 1 - Phaser.Math.Easing.Quadratic.InOut((t - 0.35) / 0.65);
+      x = at.x + (this.petLunge.dx - at.x) * e;
+      y = at.y + (this.petLunge.dy - at.y) * e - Math.sin(e * Math.PI) * 22;
+      squash = t >= 0.3 && t < 0.45 ? 1.3 : 1;
+      flip = this.petLunge.dx < 0;
+    } else this.petLunge = undefined;
+    this.pet.part.ox = x;
+    this.pet.part.oy = y;
+    // Profondeur selon sa propre position : devant le joueur quand il passe en dessous de lui à l'écran.
+    this.pet.part.dz = y + hop - 0.05;
+    this.pet.img.setScale(this.pet.scale * squash, this.pet.scale / squash).setFlipX(flip).setAlpha(this.body.alpha).setVisible(!this.dead);
+  }
+
+  /** Déplacement du joueur à l'écran depuis l'image précédente : le familier, laissé sur place, le rattrape. */
+  private trailPet(dx: number, dy: number): void {
+    if (this.petAt && Math.hypot(dx, dy) < 200) { this.petAt.x -= dx; this.petAt.y -= dy; }
   }
 
   /** Objets d'apparence portés (coiffe, cape) ; sans effet sur un placeholder ou un monstre. */
@@ -344,17 +399,15 @@ export class EntityView {
 
   update(dt: number): void {
     this.clock += dt;
-    if (this.pet) {
-      // Flotte à côté, du côté opposé au regard, avec un léger balancement.
-      const side = this.body.flipX ? 1 : -1;
-      this.pet.part.ox = side * 22;
-      this.pet.part.oy = -8 + Math.sin(this.clock * 3) * 3;
-      this.pet.img.setFlipX(side > 0).setAlpha(this.body.alpha).setVisible(!this.dead);
-    }
     if (this.t < 1) {
       this.t = Math.min(1, this.t + dt / INTERP_S);
       this.wx = this.fromX + (this.toX - this.fromX) * this.t;
       this.wy = this.fromY + (this.toY - this.fromY) * this.t;
+    }
+    if (this.pet) {
+      const p = worldToScreen(this.wx, this.wy);
+      this.trailPet(p.x - this.sx, p.y - this.sy);
+      this.updatePet(dt);
     }
     this.place();
 

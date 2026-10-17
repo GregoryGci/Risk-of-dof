@@ -1,6 +1,7 @@
 import {CLASSES,getClass} from './classes.ts';
 import {TALENTS} from './talents.ts';
 import {getSpell} from './spells.ts';
+import {SUMMON_FAMILIES} from './monsters.ts';
 import type {SpellDef} from '../types.ts';
 
 export type SpellLevelBook=Record<string,Record<string,number>>;
@@ -23,11 +24,16 @@ export function spellUpgradeCost(classId:string,spellId:string,next:number):numb
   const cls=getClass(classId),slot=cls.spells.indexOf(spellId),talent=(TALENTS[cls.id]??[]).find(t=>t.spell===spellId),kind=slot<0?talent?.slot??1:slot;
   return(kind===0?600:kind===3?1400:900)*(next===3?4:1);
 }
+/**
+ * Durée des invocations améliorées : +20 % par niveau, sauf pour les familles de l'Osamodas (Tofu, Bouftou, Dragonnet),
+ * dont la durée reste fixe : elles ne vivent plus longtemps qu'en tuant (SUMMON_ROLES).
+ */
+function summonDurationBonus(monsterId:string,level:number):number{return SUMMON_FAMILIES[monsterId]?1:1+.2*(level-1);}
 /** Même définition au serveur, dans les infobulles et pour les effets du client. */
 export function leveledSpell(id:string,rawLevel=1):SpellDef{
   const original=getSpell(id),level=Math.max(1,Math.min(3,Math.floor(rawLevel)||1));if(level===1)return original;
   const s:SpellDef={...original,upgradeLevel:level};
-  if(s.summon){const chest=s.summon.monster==='coffre_anime';s.summon={...s.summon,max:chest?s.summon.max:s.summon.max+level-1,duration:s.summon.duration*(1+.2*(level-1)),count:chest?1:level};}
+  if(s.summon){const chest=s.summon.monster==='coffre_anime';s.summon={...s.summon,max:chest?s.summon.max:s.summon.max+level-1,duration:s.summon.duration*summonDurationBonus(s.summon.monster,level),count:chest?1:level};}
   else if(s.shield)s.shield={...s.shield,duration:s.shield.duration*(1+.2*(level-1)),allies:level-1,allyRadius:4};
   else if(s.revive)s.reviveCount=level;
   else if(s.buff){s.buff={...s.buff,duration:s.buff.invisible?s.buff.duration+.25*(level-1):s.buff.duration*(1+.2*(level-1)),...(level===3&&!s.buff.invisible&&!s.buff.invulnerable?{zone:Math.max(4,s.buff.zone??0)}:{})};}
@@ -48,7 +54,10 @@ export function spellCopies(spell:SpellDef):number{
 export function spellCopyPower(level:number):number{return level===2?.75:level>=3?.6:1;}
 export function spellEvolutionText(id:string,level:number):string{
   const s=getSpell(id);if(level<=1)return 'Version d’origine.';const n=Math.min(3,level),share=Math.round(spellCopyPower(n)*100);
-  if(s.summon)return s.summon.monster==='coffre_anime'?`Le coffre dure ${Math.round(s.summon.duration*(1+.2*(n-1)))} s. Ses PV restent égaux à vos PV max.`:`Invoque ${n} créatures par lancement, limite +${n-1}, durée +${20*(n-1)} %.`;
+  if(s.summon){
+    const bonus=Math.round((summonDurationBonus(s.summon.monster,n)-1)*100);
+    return s.summon.monster==='coffre_anime'?`Le coffre dure ${Math.round(s.summon.duration*(1+.2*(n-1)))} s. Ses PV restent égaux à 1,2 fois vos PV max.`:`Invoque ${n} créatures par lancement, limite +${n-1}${bonus?`, durée +${bonus} %`:''}.`;
+  }
   if(s.shield)return`Durée +${20*(n-1)} % ; partage aussi un demi-bouclier avec ${n-1} allié${n>2?'s':''} à 4 cases.`;
   if(s.revive)return`Ressuscite jusqu’à ${n} alliés proches du point visé.`;
   if(s.buff?.invisible)return`Durée +${((n-1)*.25).toLocaleString('fr')} s.`;

@@ -1,4 +1,4 @@
-import {skinFits,getPetAttack,lifestealCrowdFactor,LIFESTEAL_HEAL_PER_SECOND,innateLifesteal,modeDifficulty,skinById,OGRINE_DROP_CHANCE,sourceDamageMultiplier,clampCombatStats,isRangedAttack,lifestealCap,bonusUseful} from '@rod/shared';
+import {fusionFrom,summonRole,OSAMODAS_SUMMON_CAP,SUMMON_DAMAGE_COEF,SUMMON_HP_MULT,skinFits,getPetAttack,lifestealCrowdFactor,LIFESTEAL_HEAL_PER_SECOND,innateLifesteal,modeDifficulty,skinById,OGRINE_DROP_CHANCE,sourceDamageMultiplier,clampCombatStats,isRangedAttack,lifestealCap,bonusUseful} from '@rod/shared';
 // Simulation autoritaire d'une partie : joueurs, sorts, projectiles, dégâts.
 // L'IA des monstres est dans monsters.ts, le spawn dans director.ts.
 import {
@@ -95,6 +95,8 @@ export interface PlayerRt {
   petAttack?:string;
   petAttackAt?:number;
   petShieldCount?:number;
+  /** Compteur de dégâts : dégâts infligés par type d'invocation depuis le début de la run (synchronisés dans state.summonDmg). */
+  summonDmg?:Map<string,number>;
   leechSecond?:number;
   leechHealed?:number;
   blessingRanks:Record<string,number>;
@@ -142,6 +144,12 @@ export interface PlayerRt {
 export interface MonsterRt {
   allySkillAt?:number;
   allyBaseHp?:number;
+  /** Sort qui a fait apparaître l'invocation : sa place dans la barre fixe sa priorité (Osamodas). */
+  summonSpell?:string;
+  /** Durée de vie maximale (s) : plafond des prolongations par famille. */
+  lifetime?:number;
+  /** Fusion sortie de l'écran du maître, en train de le rejoindre. */
+  returning?:boolean;
   id: string;
   state: MonsterState;
   def: MonsterDef;
@@ -155,6 +163,8 @@ export interface MonsterRt {
   burnUntil: number;
   burnNextTick: number;
   burnOwner: string;
+  /** Invocation à l'origine de la brûlure ou du poison en cours (compteur de dégâts, temps rendu par kill). */
+  burnSummon?:MonsterRt;
   burnAttack?:boolean;
   /** Doses de poison cumulées (effet `poison`). */
   poisonStacks?:number;
@@ -227,6 +237,8 @@ export interface Projectile {
   hit: Set<string>;
   slot?:number;
   proc:boolean;
+  /** Invocation qui a lancé le sort (crédité à son maître) : compteur de dégâts et temps rendu par kill. */
+  summon?:MonsterRt;
   iopShield?:boolean;
   shieldHits?:Set<string>;
   cardRolled?:boolean;
@@ -450,7 +462,20 @@ export class Simulation {
     p.state.dmgDealt = 0;
     p.state.healDone = 0;
     p.state.dmgTaken = 0;
+    p.summonDmg?.clear();
+    p.state.summonDmg = '';
   }
+
+  /** Dégâts par invocation vers le client, une fois par seconde au plus : "type:dégâts,type:dégâts". */
+  private syncSummonMeters(): void {
+    if(this.now<this.summonMeterAt)return;
+    this.summonMeterAt=this.now+1;
+    for(const p of this.players.values()){
+      const text=[...p.summonDmg??[]].map(([id,dmg])=>`${id}:${Math.round(dmg)}`).join(',');
+      if(p.state.summonDmg!==text)p.state.summonDmg=text;
+    }
+  }
+  private summonMeterAt=0;
 
   /** Joueur à créditer pour une action : le joueur lui-même, ou le maître d'une invocation. */
   private creditOf(ownerId: string): PlayerRt | undefined {
@@ -852,6 +877,8 @@ export class Simulation {
     }
     const id = this.nextProjectileId++;
     const pr: Projectile = { id, spell, owner, fromPlayer, x, y, dx, dy, remaining: 0, damageMult, critChance, critMult, hit: new Set(),slot,proc:slot===undefined };
+    const summon=visualCaster!==owner?this.monsters.get(visualCaster):undefined;
+    if(summon?.allyOwner===owner)pr.summon=summon;
     const event: CastEvent = { id, caster: visualCaster, spell: spell.id, x, y, tx: x + dx, ty: y + dy,level:spell.upgradeLevel,dashStrike:spell.dashStrike };
     if (slot !== undefined) {
       event.slot = slot;
@@ -918,7 +945,7 @@ export class Simulation {
       event.tx = aimX;
       event.ty = aimY;
       this.broadcast('cast', event);
-      for(let i=0;i<(spell.summon.count??1);i++){const a=i*Math.PI*2/(spell.summon.count??1),r=i?.9:0;this.summonAlly(caster,spell.summon,aimX+Math.cos(a)*r,aimY+Math.sin(a)*r);}
+      for(let i=0;i<(spell.summon.count??1);i++){const a=i*Math.PI*2/(spell.summon.count??1),r=i?.9:0;this.summonAlly(caster,spell.summon,aimX+Math.cos(a)*r,aimY+Math.sin(a)*r,spell.id);}
       return { x: dx, y: dy };
     }
     if (spell.ground) {
@@ -1027,6 +1054,7 @@ export class Simulation {
 
     this.runTimers();
     if(this.state.phase===PHASE_LOST)return;
+    this.syncSummonMeters();
     this.updatePlayers(dt);
     if(this.state.intermission)return;
     this.mechanics.update(dt);
@@ -1272,6 +1300,7 @@ export class Simulation {
         m.burnUntil = this.now + e.duration;
         m.burnNextTick = this.now + 0.5;
         m.burnOwner = pr.owner;
+        m.burnSummon = pr.summon;
         m.burnAttack=!!pr.spell.autoAttack;
       } else if (e.type === 'poison') {
         // Même empoisonneur : une dose de plus ; sinon le nouveau poison remplace l'ancien.
@@ -1280,7 +1309,7 @@ export class Simulation {
         m.burnDps=e.dps*pr.damageMult*m.poisonStacks;
         m.burnUntil=this.now+e.duration;
         if(!same)m.burnNextTick=this.now+.5;
-        m.burnOwner=pr.owner;m.burnAttack=!!pr.spell.autoAttack;
+        m.burnOwner=pr.owner;m.burnSummon=pr.summon;m.burnAttack=!!pr.spell.autoAttack;
       } else if (e.type === 'weaken') {
         m.weakenFactor=Math.max(m.weakenUntil!>this.now?m.weakenFactor??0:0,e.factor);
         m.weakenUntil=Math.max(m.weakenUntil??0,this.now+e.duration);
@@ -1312,7 +1341,7 @@ export class Simulation {
     if(pr.slot===0&&!pr.proc&&['sournoiserie','fouet','attaque_mortelle'].includes(pr.spell.id))this.broadcast('spellImpact',{spell:pr.spell.id,x:m.state.x,y:m.state.y,dx:dirX,dy:dirY});
     if(this.monsters.has(m.id)){
       const actual=Math.min(Math.max(1,Math.round(amount)),Math.max(0,m.state.hp));
-      this.damageMonster(m,amount,pr.owner,crit);
+      this.damageMonster(m,amount,pr.owner,crit,pr.summon);
       this.leechDamage(pr.owner,actual,!!pr.spell.autoAttack,innateLifesteal(pr.spell));
     }
     if(owner)this.blessings.onHit(owner,pr,m);
@@ -1456,9 +1485,9 @@ export class Simulation {
     }
   }
 
-  private summonAlly(owner: PlayerRt, summon: NonNullable<SpellDef['summon']>, x: number, y: number): void {
+  private summonAlly(owner: PlayerRt, summon: NonNullable<SpellDef['summon']>, x: number, y: number, sourceSpell: string): void {
     const def = getMonster(summon.monster);
-    const mine = [...this.monsters.values()].filter((m) => m.allyOwner === owner.id && m.def.id === def.id);
+    const mine = [...this.monsters.values()].filter((m) => m.allyOwner === owner.id && m.def.id === def.id && m.summonSpell === sourceSpell);
     // Point libre près du point visé.
     let px = clamp(x,1+def.radius,this.map.size-1-def.radius);
     let py = clamp(y,1+def.radius,this.map.size-1-def.radius);
@@ -1472,19 +1501,61 @@ export class Simulation {
       if(isBlocked(this.map,px,py,def.radius))return;
     }
     if (mine.length >= summon.max) this.removeMonster(mine[0].id);
-    // Lien bestial : l'Osamodas commande 4 invocations au plus, toutes espèces confondues.
-    if(owner.def.id==='osamodas'){const all=[...this.monsters.values()].filter(m=>m.allyOwner===owner.id);if(all.length>=4)this.removeMonster(all[0].id);}
+    // Lien bestial : l'Osamodas commande 16 invocations au plus, toutes espèces confondues.
+    if(owner.def.id==='osamodas')this.enforceSummonCap(owner);
+    this.spawnAlly(owner,def,px,py,summon.duration,sourceSpell);
+    if(owner.def.id==='osamodas'&&owner.spells.includes(sourceSpell))this.fuseSummons(owner,def.id,sourceSpell);
+  }
+
+  /**
+   * Au-delà de la limite, l'invocation la moins prioritaire disparaît : celle dont le sort est le plus à gauche
+   * de la barre (un sort absent de la barre, comme le familier, passe en premier), puis la plus ancienne.
+   */
+  private enforceSummonCap(owner:PlayerRt):void {
+    const all=[...this.monsters.values()].filter(m=>m.allyOwner===owner.id);
+    if(all.length<OSAMODAS_SUMMON_CAP)return;
+    const rank=(m:MonsterRt)=>owner.spells.indexOf(m.summonSpell??'');
+    // Les monstres sont rangés par ordre d'apparition : à rang égal, le premier trouvé est le plus ancien.
+    let victim=all[0];
+    for(const m of all)if(rank(m)<rank(victim))victim=m;
+    this.removeMonster(victim.id);
+  }
+
+  /** Fusion de l'Osamodas : les plus anciennes invocations identiques laissent place à une seule, plus forte. */
+  private fuseSummons(owner:PlayerRt,baseId:string,sourceSpell:string):void {
+    const found=fusionFrom(baseId);if(!found)return;
+    const [id,fusion]=found;
+    const group=[...this.monsters.values()].filter(m=>m.allyOwner===owner.id&&m.def.id===baseId&&m.summonSpell===sourceSpell);
+    if(group.length<fusion.count)return;
+    const merged=group.slice(0,fusion.count),def=getMonster(id),last=merged[merged.length-1].state;
+    let x=merged.reduce((s,m)=>s+m.state.x,0)/merged.length,y=merged.reduce((s,m)=>s+m.state.y,0)/merged.length;
+    if(isBlocked(this.map,x,y,def.radius)){x=last.x;y=last.y;}
+    for(const m of merged)this.removeMonster(m.id);
+    this.broadcast('mechanicFx',{player:owner.id,kind:'burst',x,y,r:1.5,color:def.color});
+    this.spawnAlly(owner,def,x,y,fusion.duration,sourceSpell);
+    // Palier suivant : 3 Gros Tofus deviennent un Mini Tofu Royal, etc.
+    this.fuseSummons(owner,id,sourceSpell);
+  }
+
+
+  private spawnAlly(owner:PlayerRt,def:MonsterDef,x:number,y:number,duration:number,sourceSpell:string):MonsterRt {
     // Les poupées profitent des dégâts de leur maître et deviennent plus résistantes avec la difficulté.
-    const ally = this.spawnMonster(def, px, py, 1+owner.stats.maxHp/owner.def.maxHp, sourceDamageMultiplier(owner.stats.damage,false)*1.6, 1);
+    const ally = this.spawnMonster(def, x, y, SUMMON_HP_MULT*(1+owner.stats.maxHp/owner.def.maxHp), sourceDamageMultiplier(owner.stats.damage,false)*SUMMON_DAMAGE_COEF, 1);
     ally.state.ally = true;
     ally.allyOwner = owner.id;
-    ally.expiresAt = this.now + summon.duration;
+    ally.state.owner = owner.id;
+    ally.summonSpell = sourceSpell;
+    ally.expiresAt = this.now + duration;
+    ally.lifetime = duration;
+    ally.state.lifeMax = duration;
+    ally.state.lifeLeft = duration;
     ally.meleeReadyAt = this.now;
     ally.specialReadyAt = this.now;
     ally.allySkillAt=this.now+2;
-    if(def.id==='coffre_anime')ally.state.hp=ally.state.maxHp=owner.state.maxHp;
+    if(def.id==='coffre_anime')ally.state.hp=ally.state.maxHp=owner.state.maxHp*SUMMON_HP_MULT;
     else if(owner.blessingRanks.legion)ally.state.hp=ally.state.maxHp=Math.round(ally.state.maxHp*(1+.35*blessingPower(owner.blessingRanks.legion)));
     ally.allyBaseHp=ally.state.maxHp/(1+owner.stats.maxHp/owner.def.maxHp);
+    return ally;
   }
 
   // -------------------------------------------------------------------------
@@ -1496,7 +1567,8 @@ export class Simulation {
     if(m.state.ally||this.now>=m.burnUntil||!(m.poisonStacks??0))return;
     const owner=this.creditOf(m.burnOwner);return owner?.def.id==='sadida'?owner:undefined;
   }
-  damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false): void {
+  /** `summon` : invocation auteur du coup quand `ownerId` est son maître (sorts lancés par l'invocation). */
+  damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false, summon?: MonsterRt): void {
     if(this.state.phase===PHASE_LOST)return;
     if(!this.monsters.has(m.id))return;
     if(this.sadidaPoison(m))amount*=1.1;
@@ -1504,7 +1576,14 @@ export class Simulation {
     amount = Math.max(1, Math.round(amount));
     const dealer = m.state.ally ? undefined : this.creditOf(ownerId);
     if(dealer&&dealer.id!==ownerId)this.blessings.mark(dealer,m);
-    if (dealer) dealer.state.dmgDealt += Math.min(amount, Math.max(0, m.def.behavior.type === 'dummy' ? amount : m.state.hp));
+    // Coup au contact d'une invocation : ownerId est l'invocation elle-même.
+    summon??=this.monsters.get(ownerId);
+    if(summon&&summon.allyOwner!==dealer?.id)summon=undefined;
+    if (dealer) {
+      const dealt=Math.min(amount, Math.max(0, m.def.behavior.type === 'dummy' ? amount : m.state.hp));
+      dealer.state.dmgDealt += dealt;
+      if(summon){dealer.summonDmg??=new Map();dealer.summonDmg.set(summon.def.id,(dealer.summonDmg.get(summon.def.id)??0)+dealt);}
+    }
     m.state.hp -= amount;
     if (m.state.elite && this.players.has(ownerId)) m.hitBy.add(ownerId);
     if (m.def.behavior.type === 'dummy') m.phaseUntil = this.now;
@@ -1524,7 +1603,7 @@ export class Simulation {
     // Sève corrompue : le poison restant passe à l'ennemi le plus proche (4 cases).
     if(this.sadidaPoison(m)){
       const next=[...this.monsters.values()].filter(o=>o!==m&&!o.state.ally&&o.state.hp>0&&Math.hypot(o.state.x-m.state.x,o.state.y-m.state.y)<=4).sort((a,b)=>Math.hypot(a.state.x-m.state.x,a.state.y-m.state.y)-Math.hypot(b.state.x-m.state.x,b.state.y-m.state.y))[0];
-      if(next&&(next.poisonStacks??0)<m.poisonStacks!){next.poisonStacks=m.poisonStacks;next.burnDps=m.burnDps;next.burnUntil=m.burnUntil;next.burnNextTick=this.now+.5;next.burnOwner=m.burnOwner;next.burnAttack=m.burnAttack;}
+      if(next&&(next.poisonStacks??0)<m.poisonStacks!){next.poisonStacks=m.poisonStacks;next.burnDps=m.burnDps;next.burnUntil=m.burnUntil;next.burnNextTick=this.now+.5;next.burnOwner=m.burnOwner;next.burnSummon=m.burnSummon;next.burnAttack=m.burnAttack;}
     }
     // Mort : les kamas sont partagés, chaque joueur reçoit la somme entière.
     const [kMin, kMax] = m.def.kamas;
@@ -1535,6 +1614,9 @@ export class Simulation {
       p.state.kamasEarned += gain;
     }
     const killer = dealer;
+    // Chaque ennemi achevé rend du temps à l'invocation (selon son rôle : tueuse ou tank), sans dépasser sa durée initiale.
+    const killTime=summonRole(summon?.summonSpell)?.killTime??0;
+    if(summon&&killTime&&this.monsters.get(summon.id)===summon)summon.expiresAt=Math.min(this.now+(summon.lifetime??0),summon.expiresAt+killTime);
     if (killer) {
       killer.state.kills++;
       if (killer.state.alive && killer.stats.killHeal > 0) killer.state.hp = Math.min(killer.state.maxHp, killer.state.hp + killer.stats.killHeal);

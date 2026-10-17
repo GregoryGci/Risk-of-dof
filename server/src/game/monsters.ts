@@ -1,8 +1,8 @@
 // IA des monstres : chaque monstre cible le joueur visible le plus proche (ou une invocation alliée,
 // en priorité celles qui provoquent). Les invocations alliées ont leur propre IA (updateAlly).
-import { BOSS_MIN_SPEED, MONSTER_MAX_SPEED, MAX_MONSTERS, MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getMonster, getSpell, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, resolveCollisions, stepMovement } from '@rod/shared';
+import { BOSS_MIN_SPEED, MONSTER_MAX_SPEED, MAX_MONSTERS, MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getMonster, getSpell, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, resolveCollisions, stepMovement, SUMMON_HP_MULT } from '@rod/shared';
 import { updateBoss } from './bosses.ts';
-import {summonPower,trySummonSkill} from './summons.ts';
+import {fusionAttack,fusionReturning,summonPower,trySummonSkill} from './summons.ts';
 import {enemyPopulationLimit} from './spawn-pressure.ts';
 import type { MonsterRt, PlayerRt, Simulation } from './Simulation.ts';
 
@@ -38,7 +38,7 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
   if (sim.now < m.burnUntil && sim.now >= m.burnNextTick) {
     m.burnNextTick += 0.5;
     const actual=Math.min(Math.max(1,Math.round(m.burnDps*.5)),Math.max(0,s.hp));
-    sim.damageMonster(m, m.burnDps * 0.5, m.burnOwner);
+    sim.damageMonster(m, m.burnDps * 0.5, m.burnOwner, false, m.burnSummon);
     sim.leechDamage(m.burnOwner,actual,!!m.burnAttack);
     if (!sim.monsters.has(m.id)) return;
   }
@@ -242,7 +242,10 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
     sim.removeMonster(m.id);
     return;
   }
-  if(m.allyBaseHp){const max=Math.round(m.def.id==='coffre_anime'?owner.state.maxHp:m.allyBaseHp*(1+owner.stats.maxHp/owner.def.maxHp));if(max!==s.maxHp){s.hp=s.hp/Math.max(1,s.maxHp)*max;s.maxHp=max;}}
+  // Temps restant affiché par le HUD des invocations (pas de 0,25 s pour limiter le trafic).
+  const lifeLeft=Math.ceil((m.expiresAt-sim.now)*4)/4;
+  if(Number.isFinite(lifeLeft)&&lifeLeft!==s.lifeLeft)s.lifeLeft=lifeLeft;
+  if(m.allyBaseHp){const max=Math.round(m.def.id==='coffre_anime'?owner.state.maxHp*SUMMON_HP_MULT:m.allyBaseHp*(1+owner.stats.maxHp/owner.def.maxHp));if(max!==s.maxHp){s.hp=s.hp/Math.max(1,s.maxHp)*max;s.maxHp=max;}}
   if(owner.stats.regen>0)s.hp=Math.min(s.maxHp,s.hp+owner.stats.regen*dt*s.maxHp/Math.max(1,owner.state.maxHp));
   if (m.push) {
     const pos = { x: s.x, y: s.y };
@@ -297,6 +300,8 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
     }
   }
   if(m.def.id==='coffre_anime'&&Math.hypot(s.x-owner.state.x,s.y-owner.state.y)>3){moveTo(owner.state.x,owner.state.y,1.5);return;}
+  // Fusion hors de l'écran du maître : elle le rejoint sans combattre.
+  if(fusionReturning(m,owner)){moveTo(owner.state.x,owner.state.y,1.5);return;}
   if (!enemy) {
     // Rien à frapper : il suit son maître.
     moveTo(owner.state.x, owner.state.y, 2.5);
@@ -321,9 +326,17 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
     m.attackHoldUntil=sim.now+.35;
     m.meleeReadyAt = sim.now + m.def.melee.cooldown/inherited.cadence;
     sim.broadcast('atk', { id: m.id });
+    const zone=fusionAttack(m);
+    if(zone){
+      // Fusion : frappe de zone au point visé ; les dommages fixes s'ajoutent dans Simulation.applyHit.
+      sim.cast(zone,s.x,s.y,enemy.state.x,enemy.state.y,owner.id,true,m.damageMult,inherited.crit,undefined,undefined,inherited.critMult,0,m.id);
+      sim.blessings.mark(owner,enemy);
+      return;
+    }
     const crit=Math.random()<inherited.crit;
-    const actual=Math.min(Math.max(1,Math.round(m.def.melee.damage*m.damageMult*(crit?inherited.critMult:1))),Math.max(0,enemy.state.hp));
-    sim.damageMonster(enemy, m.def.melee.damage * m.damageMult*(crit?inherited.critMult:1), m.id,crit);
+    const amount=(m.def.melee.damage+owner.stats.flatDamage)*m.damageMult*(crit?inherited.critMult:1);
+    const actual=Math.min(Math.max(1,Math.round(amount)),Math.max(0,enemy.state.hp));
+    sim.damageMonster(enemy, amount, m.id,crit);
     sim.leechDamage(m.id,actual,false);
   } else if(best>m.def.melee.range+enemy.def.radius) {
     moveTo(enemy.state.x, enemy.state.y, m.def.melee.range+enemy.def.radius);

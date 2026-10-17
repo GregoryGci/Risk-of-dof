@@ -104,7 +104,7 @@ export class Details {
       html += `<div class="spell-card" data-slot="${slot}">
         <div class="spell-card-icon">${url ? `<img src="${url}" alt="">` : spellIconSvg(spell)}</div>
         <div><div class="spell-card-name">${escapeHtml(spell.name)} <small>${SLOT_KEYS[slot]} · NIV. ${level}</small></div>
-        <div class="spell-card-desc">${escapeHtml(spell.description)}</div><p class="spell-evolution">${escapeHtml(spellEvolutionText(id,level))}</p>${spellDetailsHtml(spell, stats, slot)}</div>
+        <div class="spell-card-desc">${escapeHtml(spell.description)}</div><p class="spell-evolution">${escapeHtml(spellEvolutionText(id,level))}</p>${spellDetailsHtml(spell, stats, slot, {classMaxHp:cls.maxHp,legion:parseBlessings(me.blessings).legion})}</div>
       </div>`;
     });
     // Mécanique de classe : sa description n'est affichée qu'ici, pas sous la barre de sorts.

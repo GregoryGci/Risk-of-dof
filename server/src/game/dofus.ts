@@ -24,8 +24,8 @@ export function dofusOnHit(sim:Simulation,p:PlayerRt,pr:Projectile,m:MonsterRt,a
   if(has(p,'dolmanax')&&(m.def.boss||m.state.elite))amount*=1.15;
   if(has(p,'domakuro'))amount*=1+.3*Math.min(1,Math.max(0,(1-p.state.hp/p.state.maxHp)/.8));
   if(has(p,'dokoko')&&pr.spell.autoAttack&&!pr.proc&&Math.random()<.1)amount*=2;
-  if(has(p,'ebene')&&now>=m.burnUntil){m.poisonStacks=0;m.burnDps=amount*.15/3;m.burnUntil=now+3;m.burnNextTick=now+.5;m.burnOwner=p.id;m.burnAttack=false;}
-  else if(has(p,'forgelave')&&(pr.spell.zone||pr.spell.area)&&now>=m.burnUntil){m.poisonStacks=0;m.burnDps=amount*.1/2;m.burnUntil=now+2;m.burnNextTick=now+.5;m.burnOwner=p.id;m.burnAttack=false;}
+  if(has(p,'ebene')&&now>=m.burnUntil){m.poisonStacks=0;m.burnDps=amount*.15/3;m.burnUntil=now+3;m.burnNextTick=now+.5;m.burnOwner=p.id;m.burnSummon=undefined;m.burnAttack=false;}
+  else if(has(p,'forgelave')&&(pr.spell.zone||pr.spell.area)&&now>=m.burnUntil){m.poisonStacks=0;m.burnDps=amount*.1/2;m.burnUntil=now+2;m.burnNextTick=now+.5;m.burnOwner=p.id;m.burnSummon=undefined;m.burnAttack=false;}
   if(has(p,'givrefoux')&&now>=(timer.givrefouxAt??0)&&!m.def.boss){timer.givrefouxAt=now+15;m.stunUntil=Math.max(m.stunUntil,now+1.5);sim.broadcast('buff',{target:p.id,label:'Givrefoux',duration:1});}
   return amount;
 }

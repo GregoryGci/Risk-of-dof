@@ -20,6 +20,8 @@ export interface Settings {
   crosshairColor: string;
   /** Compteur de DPS de l'addon : moyenne de la run, ou des 5 dernières secondes. */
   dpsMode: 'total' | 'recent';
+  /** Dégâts des invocations dans l'addon : regroupés par famille, ou détaillés par invocation. */
+  summonMeter: 'family' | 'each';
   /** Tremblement d'écran (coups reçus, grosses explosions) : désactivé, léger ou normal. */
   screenShake: ScreenShake;
 }
@@ -29,7 +31,7 @@ export const SCREEN_SHAKES: readonly ScreenShake[] = ['off', 'light', 'normal'];
 const KEY = 'rod.reglages';
 export type VolumeKey = 'musicVolume' | 'ambianceVolume' | 'sfxVolume';
 export const VOLUMES: readonly VolumeKey[] = ['musicVolume', 'ambianceVolume', 'sfxVolume'];
-const DEFAULTS: Settings = { uiTheme:'underworld', showPerformance:false, renderMode:'standard', smartCast: true, autoAttack: false, musicVolume: 0.4, ambianceVolume: 0.5, sfxVolume: 0.7, crosshairShape: 'classique', crosshairColor: 'or', dpsMode: 'total', screenShake: 'light' };
+const DEFAULTS: Settings = { uiTheme:'underworld', showPerformance:false, renderMode:'standard', smartCast: true, autoAttack: false, musicVolume: 0.4, ambianceVolume: 0.5, sfxVolume: 0.7, crosshairShape: 'classique', crosshairColor: 'or', dpsMode: 'total', summonMeter: 'family', screenShake: 'light' };
 
 function load(): Settings {
   try {
@@ -39,6 +41,7 @@ function load(): Settings {
     if(!['underworld','retro'].includes(saved.uiTheme))saved.uiTheme=DEFAULTS.uiTheme;
     if(!['standard','compatible'].includes(saved.renderMode))saved.renderMode='standard';
     if(!['total','recent'].includes(saved.dpsMode))saved.dpsMode=DEFAULTS.dpsMode;
+    if(!['family','each'].includes(saved.summonMeter))saved.summonMeter=DEFAULTS.summonMeter;
     if(!SCREEN_SHAKES.includes(saved.screenShake))saved.screenShake=DEFAULTS.screenShake;
     return saved;
   } catch {
@@ -56,6 +59,7 @@ export function replaceSettings(raw:unknown):void {
     if(r.uiTheme==='underworld'||r.uiTheme==='retro')settings.uiTheme=r.uiTheme;
     if(r.renderMode==='standard'||r.renderMode==='compatible')settings.renderMode=r.renderMode;
     if(r.dpsMode==='total'||r.dpsMode==='recent')settings.dpsMode=r.dpsMode;
+    if(r.summonMeter==='family'||r.summonMeter==='each')settings.summonMeter=r.summonMeter;
     if(SCREEN_SHAKES.includes(r.screenShake as ScreenShake))settings.screenShake=r.screenShake as ScreenShake;
     for(const key of ['smartCast','autoAttack','showPerformance'] as const)if(typeof r[key]==='boolean')settings[key]=r[key];
     for(const key of VOLUMES)if(typeof r[key]==='number'&&Number.isFinite(r[key]))settings[key]=Math.min(1,Math.max(0,r[key]));
