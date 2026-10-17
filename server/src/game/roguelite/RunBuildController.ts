@@ -1,8 +1,8 @@
 import {makeRng} from '@rod/shared';
-import {applyEvolution, applyLevelReward, createRunBuild, validateRunBuild,eligibleEvolutions, generateLevelRewards,
+import {applyEvolution, applyLevelReward, applyRetune, retuneOptions, createRunBuild, validateRunBuild,eligibleEvolutions, generateLevelRewards,
   type LevelReward, type RogueliteCatalog, type RunBuild} from '@rod/shared/roguelite';
 
-export type RunChoice=LevelReward|{id:string;kind:'evolution'|'blessing';definitionId:string;nextLevel:number};
+export type RunChoice=LevelReward|{id:string;kind:'evolution'|'blessing';definitionId:string;nextLevel:number}|{id:string;kind:'retune';definitionId:string;nextLevel:number;targetId:string};
 export interface BuildChoiceOffer {runId: string; revision: number; buildRevision: number; expiresAtMs: number; choices: RunChoice[];source:'level'|'boss'|'elite'}
 /**
  * Authoritative personal build, wired to the existing shared XP callback.
@@ -57,7 +57,13 @@ export class RunBuildController {
     if(bonus) {
       const evolutions=eligibleEvolutions(this.catalog,this.build,bonus.source).map(id=>({id:`evolution:${id}`,kind:'evolution' as const,definitionId:id,nextLevel:1}));
       if(bonus.source==='elite')choices=[...bonus.blessings.slice(0,evolutions.length?2:3).map(id=>({id:`blessing:${id}`,kind:'blessing' as const,definitionId:id,nextLevel:1})),...evolutions.slice(0,1)];
-      else choices=evolutions.length?evolutions:generateLevelRewards(this.catalog,this.build,makeRng((this.seed+this.offerRevision*31)>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:++this.offerNumber});
+      else if(evolutions.length)choices=evolutions;
+      else {
+        // Aucune évolution : le coffre propose d'abord un Réaccord pour débloquer un sort N8 verrouillé par ses passifs.
+        const retunes=retuneOptions(this.catalog,this.build).slice(0,2).map(o=>({id:`retune:${o.passiveIn}`,kind:'retune' as const,definitionId:o.passiveIn,nextLevel:1,targetId:o.passiveOut}));
+        const regular=generateLevelRewards(this.catalog,this.build,makeRng((this.seed+this.offerRevision*31)>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:++this.offerNumber});
+        choices=[...retunes,...regular.slice(0,Math.max(1,regular.length-retunes.length))];
+      }
     } else choices=generateLevelRewards(this.catalog,this.build,makeRng((this.seed+Math.imul(this.offerRevision,0x9e3779b9))>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:++this.offerNumber});
     // Plus rien à proposer (secours plafonnés, Potion bannie) : le niveau ou le bonus est consommé sans carte.
     if(!choices.length){if(bonus)this.bonusQueue.shift();else{this.pendingLevels--;this.levelCursor++;}this.ensureOffer(nowMs);return;}
@@ -73,7 +79,8 @@ export class RunBuildController {
     if(selected.kind==='evolution') {
       const bonus=this.bonusQueue[0];if(!bonus)return;
       this.build=applyEvolution(this.catalog,this.build,selected.definitionId,bonus.source);
-    }else if(selected.kind!=='blessing')this.build=applyLevelReward(this.catalog,this.build,selected as LevelReward);
+    }else if(selected.kind==='retune')this.build=applyRetune(this.catalog,this.build,selected.definitionId);
+    else if(selected.kind!=='blessing')this.build=applyLevelReward(this.catalog,this.build,selected as LevelReward);
     else this.build.revision++;
     if(this.offer.source==='level'){this.pendingLevels--;this.levelCursor++;}
     else this.bonusQueue.shift();

@@ -26,7 +26,7 @@ test('XP commune : récupération simultanée, joueur éloigné/KO, choix indép
   sim.experience.drop(40,40,xpToNextLevel(1));sim.update(1/30);assert.equal(state.totalXp,12);assert.equal(state.runLevel,2);assert.equal(state.runXp,0);
   for(const player of[p,q!]){assert.equal(player.state.pendingLevels,1);assert.equal(JSON.parse(player.state.boonChoices).length,3);}
   const revision=p.state.choiceRevision,other=q!.state.boonChoices;sim.chooseBoon(p.id,0,revision);sim.chooseBoon(p.id,0,revision);assert.equal(p.state.pendingLevels,0);assert.equal(q!.state.boonChoices,other);assert.equal(q!.build.currentBuild.revision,0);
-  q!.state.alive=false;q!.state.connected=false;sim.experience.drop(40,40,17);sim.update(1/30);assert.equal(state.runLevel,3);assert.equal(q!.state.pendingLevels,2);sim.chooseBoon(q!.id,1,q!.state.choiceRevision);assert.equal(q!.state.pendingLevels,1);
+  q!.state.alive=false;q!.state.connected=false;sim.experience.drop(40,40,24);sim.update(1/30);assert.equal(state.runLevel,3);assert.equal(q!.state.pendingLevels,2);sim.chooseBoon(q!.id,1,q!.state.choiceRevision);assert.equal(q!.state.pendingLevels,1);
 });
 test('Surplus : plusieurs niveaux en file, trois choix valides après chaque cumul et suspension solo',()=>{
   const {sim,state,p}=setup();const total=[1,2,3,4].reduce((n,l)=>n+xpToNextLevel(l),0)+7;sim.experience.drop(40,40,total);sim.update(1/30);assert.equal(state.runLevel,5);assert.equal(state.runXp,7);assert.equal(p.state.pendingLevels,4);
@@ -61,7 +61,7 @@ test('Fin de run : statistiques et sorts temporaires effacés, métaprogression 
   sim.restart();assert.equal(state.phase,PHASE_LOBBY);assert.equal(state.runLevel,1);assert.equal(state.totalXp,0);assert.equal(state.xpOrbs.size,0);sim.start();assert.equal(p.state.pendingLevels,0);
 });
 test('Arrivée tardive : rattrapage des choix sans ajouter d’XP ni changer les builds existants',()=>{
-  const {sim,state,p}=setup();sim.experience.drop(40,40,58);sim.update(1/30);clearChoices(sim);const build=p.state.build,total=state.totalXp;
+  const {sim,state,p}=setup();sim.experience.drop(40,40,89);sim.update(1/30);clearChoices(sim);const build=p.state.build,total=state.totalXp;
   sim.addPlayer('new','Renfort','feca');const newcomer=sim.players.get('new')!;assert.equal(state.runLevel,4);assert.equal(state.totalXp,total);assert.equal(newcomer.state.pendingLevels,3);assert.equal(JSON.parse(newcomer.state.boonChoices).length,3);assert.equal(p.state.build,build);
 });
 test('Les valeurs de combat synchronisées incluent les buffs, les plafonds et la classe',()=>{

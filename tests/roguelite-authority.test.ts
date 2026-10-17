@@ -46,7 +46,7 @@ test('Relancer et bannir : validation atomique, compteurs personnels et exclusio
 });
 
 test('Multijoueur : morts et déconnectés gardent leurs choix, délai de sélection borné',()=>{
- const {sim,p,q,state}=setupRoguelite('cra',true);q!.state.alive=false;q!.state.connected=false;sim.experience.deliver(58,p.id);sim.update(1/30);
+ const {sim,p,q,state}=setupRoguelite('cra',true);q!.state.alive=false;q!.state.connected=false;sim.experience.deliver(89,p.id);sim.update(1/30);
  assert.equal(p.state.pendingLevels,3);assert.equal(q!.state.pendingLevels,3);const before=p.build.getSnapshot().build;
  const offer=q!.build.getSnapshot().offer!;sim.now=offer.expiresAtMs/1000+.1;sim.update(1/30);assert.equal(q!.state.pendingLevels,2);assert.equal(state.runLevel,4);assert.notDeepEqual(q!.build.currentBuild,before);
 });

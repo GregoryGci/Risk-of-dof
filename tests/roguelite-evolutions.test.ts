@@ -36,7 +36,7 @@ test('E10 : Colère frappe la ligne du plus robuste au cinquième coup et émet 
  for(let i=0;i<5;i++){cast(s);advance(s.sim,.05);}assert.ok(distant.state.hp<hp);assert.ok(s.events.some(e=>e.type==='abilityFx'&&e.data.kind==='beam'&&e.data.width===2));assert.ok(s.events.some(e=>e.type==='cast'&&e.data.visual?.projectile?.pierce));
 });
 test('E11 : Jugement plante les grandes épées et produit les six impacts de l’anneau',()=>{
- const s=setup('sp.epee_celeste');dummy(s.sim,44);cast(s);advance(s.sim,1.4);assert.ok(s.sim.grounds.size>0);assert.ok(s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius===1.2).length>=6);
+ const s=setup('sp.epee_celeste');dummy(s.sim,44);cast(s);advance(s.sim,1.4);assert.ok(s.sim.grounds.size>0);assert.ok(s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius===.8).length>=6);
 });
 test('E12 : un seul Royal, nuée chercheuse, écrasement et maintien près du propriétaire',()=>{
  const s=setup('sp.invocation_de_tofu');dummy(s.sim,44);cast(s);advance(s.sim,3.3);const owned=[...s.sim.monsters.values()].filter(m=>m.allyOwner===s.p.id),royal=owned.filter(m=>m.rogueliteSummon?.royal);
@@ -59,6 +59,7 @@ test('E16 : le Sceau soigne l’équipe, convertit le surplus en bouclier et son
  advance(s.sim,4.3);assert.ok(q.state.shield>0);assert.ok(q.state.shield<=q.state.maxHp*.15);assert.ok(s.events.some(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius===6));
 });
 test('E18 : Piège de Masse détonne le réseau connecté une seule fois',()=>{
- const s=setup('sp.piege_sournois');cast(s);advance(s.sim,.5);const traps=[...s.sim.grounds.values()];assert.ok(traps.length>=2);const count=traps.length;
+ // Les fils ne sont actifs qu'à partir de 4 pièges armés : deux lancers de 2 pièges.
+ const s=setup('sp.piege_sournois');cast(s);advance(s.sim,.1);cast(s);advance(s.sim,.5);const traps=[...s.sim.grounds.values()];assert.ok(traps.length>=4);const count=traps.length;
  dummy(s.sim,traps[0].state.x,traps[0].state.y);advance(s.sim,.1);assert.equal(s.sim.grounds.size,0);const impacts=s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact').length;advance(s.sim,.5);assert.equal(s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact').length,impacts);assert.ok(impacts>=count+1);
 });

@@ -1,7 +1,8 @@
 import type {MonsterDef} from '../types.ts';
 /** Paramètres ajustables de progression. L'XP ne sert jamais aux achats permanents. */
 export const RUN_PROGRESSION={
-  xp:{first:12,linear:4,power:1.5,perCost:3,elite:24,boss:65,stageGrowth:.12,teamGrowth:.3},
+  // Courbe recalibrée sur l'XP réellement collectée (audit final) : niveaux 10/14/18/24/32 en fin de zones 2/3/4/6/9.
+  xp:{first:12,linear:11,power:1.65,perCost:3,elite:24,boss:65,stageGrowth:.12,teamGrowth:.3},
   orbs:{max:320,mergeRadius:1.4,pickupRadius:3,contactRadius:.35,startSpeed:2,acceleration:16,maxSpeed:25,bossDuration:1.35},
   choices:{count:3,multiplayerTimeout:25},
   meta:{perMinute:18,perWave:6,perBoss:120,victory:600},

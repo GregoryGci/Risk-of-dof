@@ -29,6 +29,7 @@ export class RogueliteCombat {
     for(const[k]of this.densityCache)if(k.startsWith(owner+':'))this.densityCache.delete(k);
     for(const[k]of this.extraArrows)if(k.startsWith(owner+':'))this.extraArrows.delete(k);
     for(const[k]of this.forestRoots)if(k.startsWith(owner+':'))this.forestRoots.delete(k);
+    for(const[k]of this.glyphTicks)if(k.startsWith(owner+':'))this.glyphTicks.delete(k);
     for(const[k,row]of this.carried)if(row.owner===owner){const m=this.sim.monsters.get(k);if(m)m.state.carried=false;this.carried.delete(k);for(const key of this.flails.keys())if(key.startsWith(k+':'))this.flails.delete(key);}
     for(const[k,row]of this.storage)if(row.owner===owner)this.storage.delete(k);
     this.bloodOrbs=this.bloodOrbs.filter(orb=>orb.owner!==owner);this.reductions.delete(owner);
@@ -163,7 +164,8 @@ export class RogueliteCombat {
           const aim=a.targeting.kind==='densest'?this.dense(p,s.range,4,points):point;points.push(aim);this.ground(p,a,slot,aim.x,aim.y,power);break;
         }
         case 'trap': {
-          const d=p.facingAngle+Math.PI,pos=v.mass?{x:p.state.x+Math.cos(rt.count*72*Math.PI/180+i*72*Math.PI/180)*2.5,y:p.state.y+Math.sin(rt.count*72*Math.PI/180+i*72*Math.PI/180)*2.5}:{x:p.state.x+Math.cos(d)*i*1.5,y:p.state.y+Math.sin(d)*i*1.5};
+          // Piège de Masse : angle d'or (137,5°) pour que les pièges successifs ne se superposent jamais.
+          const golden=((rt.count-1)*s.projectiles+i)*137.5*Math.PI/180,d=p.facingAngle+Math.PI,pos=v.mass?{x:p.state.x+Math.cos(golden)*3.5,y:p.state.y+Math.sin(golden)*3.5}:{x:p.state.x+Math.cos(d)*i*1.5,y:p.state.y+Math.sin(d)*i*1.5};
           this.ground(p,a,slot,pos.x,pos.y,power);break;
         }
         case 'cone':this.later(p,i*.15,()=>this.cone(p,a,slot,direction,power*(i? .7:1),proc));break;
@@ -195,9 +197,12 @@ export class RogueliteCombat {
         if(v.impactWave)this.area(p,a,slot,aim.x,aim.y,v.impactWaveRadius,scale*v.impactWave,true,{flat:.5,stun:0});
         if(v.fissures)this.fissures(p,a,slot,aim,scale);
         if(v.planted) {
-          const planted={...a,stats:{...a.stats,durationMs:v.planted*1000,intervalMs:500},parameters:{...v,min:v.plantedMin,max:v.plantedMax,flat:.25,ring:0,judged:0}};
+          const planted={...a,stats:{...a.stats,radius:.8,durationMs:v.planted*1000,intervalMs:500},parameters:{...v,min:v.plantedMin,max:v.plantedMax,flat:.25,ring:0,judged:0,planted:0}};
           this.ground(p,planted,slot,aim.x,aim.y,scale);
-          this.later(p,.5,()=>{for(let k=0;k<v.ring;k++){const d=k*2*Math.PI/v.ring;this.area(p,a,slot,aim.x+Math.cos(d)*v.ringRadius,aim.y+Math.sin(d)*v.ringRadius,1.2,scale,true,{min:v.ringMin,max:v.ringMax,flat:.5,judged:0});}});
+          // Couronne : chaque ennemi n'est touché qu'une fois par couronne, même si les épées se chevauchent sur une horde serrée.
+          this.later(p,.5,()=>{const seen=new Set<string>(),ring=this.instance(p,{...a,parameters:{...v,min:v.ringMin,max:v.ringMax,flat:.5,judged:0}},slot,scale,true);
+            for(let k=0;k<v.ring;k++){const d=k*2*Math.PI/v.ring,x=aim.x+Math.cos(d)*v.ringRadius,y=aim.y+Math.sin(d)*v.ringRadius;this.fx(p,a,'impact',x,y,{radius:.8});
+              for(const m of this.enemies(x,y,.8))if(!seen.has(m.id)){seen.add(m.id);this.hit(ring,m,0,0);}}});
         }
       });
     });
@@ -240,7 +245,7 @@ export class RogueliteCombat {
       const row=pending.shift()!;if(!this.sim.monsters.has(row.m.id))continue;
       if(seen.has(row.m.id))continue;seen.add(row.m.id);hit++;
       this.fx(p,a,'beam',row.from.x,row.from.y,{tx:row.m.state.x,ty:row.m.state.y});
-      this.hit(this.instance(p,a,slot,row.power,proc),row.m,0,0);
+      this.hit(this.instance(p,a,slot,row.depth===0?row.power*(v.firstTarget??1):row.power,proc),row.m,0,0);
       if(a.handler==='branch_chain'&&row.depth>=v.depth)continue;
       const neighbors=local.filter(m=>!seen.has(m.id)&&m.state.hp>0&&dist(m.state,row.m.state)<=v.jump).sort((x,y)=>dist(x.state,row.m.state)-dist(y.state,row.m.state));
       const take=a.handler==='branch_chain'?2:1;
@@ -267,17 +272,28 @@ export class RogueliteCombat {
     if(g.state.kind==='trap') {
       if(now<g.armedAt)return;g.state.armed=true;
       let trigger=this.enemies(g.state.x,g.state.y,v.detection??.9).length>0;
-      if(v.mass&&!trigger)for(const other of this.trapNeighbors(g)) {
+      // Les fils ne s'activent qu'avec un réseau d'au moins 4 pièges armés : sinon la horde les coupe avant qu'il grandisse.
+      if(v.mass&&!trigger&&this.armedTraps(g.owner)>=4)for(const other of this.trapNeighbors(g)) {
         const dx=other.state.x-g.state.x,dy=other.state.y-g.state.y,len2=dx*dx+dy*dy;
         trigger=this.enemies(g.state.x,g.state.y,5).some(m=>{const t=Math.max(0,Math.min(1,((m.state.x-g.state.x)*dx+(m.state.y-g.state.y)*dy)/(len2||1)));return Math.hypot(m.state.x-g.state.x-dx*t,m.state.y-g.state.y-dy*t)<=m.def.radius+.1;});if(trigger)break;
       }
+      // Le réseau se referme sur la horde : 3 ennemis à l'intérieur d'un réseau d'au moins 4 pièges suffisent.
+      if(v.mass&&!trigger)trigger=this.networkClosed(g);
       if(trigger)this.detonate(g);return;
     }
     if(v.wave)this.updateGroundWaves(g,p,a);
     if(now<g.nextTick)return;g.nextTick=now+(g.pr.spell.ground?.tick??.5);
     if(v.line){const pr={...g.pr,hit:new Set<string>()};for(const m of this.enemies(g.state.x,g.state.y,v.lineLength/2+1))if(circleTouchesStrip(m.state,m.def.radius,g.state,v.lineAngle,v.lineLength,v.lineWidth))this.hit(pr,m,0,0);return;}
-    this.area(p,a,snapshot.slot,g.state.x,g.state.y,g.state.radius,snapshot.scale,false,{},snapshot.stats);
+    if(a.id==='sp.glyphe_agressif') {
+      // Un ennemi ne subit les ticks que d'une Glyphe Agressive à la fois, même si plusieurs se superposent.
+      const tick=g.pr.spell.ground?.tick??.5,pr=this.instance(p,{...a,parameters:{...v,persistentTick:1}},snapshot.slot,snapshot.scale,false,snapshot.stats);pr.x=g.state.x;pr.y=g.state.y;
+      this.fx(p,a,'impact',g.state.x,g.state.y,{radius:g.state.radius});
+      for(const m of this.enemies(g.state.x,g.state.y,g.state.radius)){const key=p.id+':'+m.id;if(now<(this.glyphTicks.get(key)??0))continue;this.glyphTicks.set(key,now+tick*.9);this.hit(pr,m,0,0);}
+      return;
+    }
+    this.area(p,a,snapshot.slot,g.state.x,g.state.y,g.state.radius,snapshot.scale,false,{persistentTick:1},snapshot.stats);
   }
+  private glyphTicks=new Map<string,number>();
   private groundWaves=new Map<string,{next:number;index:number;waves:{began:number;inward:boolean;hits:Set<string>}[]}>();
   triggerGround(g:GroundRt) {const a=g.pr.spell.roguelite?.ability,p=this.sim.players.get(g.owner);if(!a||!p)return;if(a.parameters.wave)this.beginGroundWave(g,p,a);else this.updateGround({...g,nextTick:0});}
   private beginGroundWave(g:GroundRt,p:PlayerRt,a:Ability) {
@@ -298,6 +314,12 @@ export class RogueliteCombat {
     }
     rt.waves=rt.waves.filter(w=>this.sim.now-w.began<.6);
   }
+  private networkClosed(g:GroundRt):boolean {
+    const traps=[...this.sim.grounds.values()].filter(o=>o.owner===g.owner&&o.state.kind==='trap'&&this.sim.now>=o.armedAt);if(traps.length<4)return false;
+    const x=traps.reduce((n,o)=>n+o.state.x,0)/traps.length,y=traps.reduce((n,o)=>n+o.state.y,0)/traps.length,r=traps.reduce((n,o)=>n+dist(o.state,{x,y}),0)/traps.length;
+    return this.enemies(x,y,r*.9).length>=3;
+  }
+  private armedTraps(owner:string):number {let n=0;for(const o of this.sim.grounds.values())if(o.owner===owner&&o.state.kind==='trap'&&this.sim.now>=o.armedAt)n++;return n;}
   private trapNeighbors(g:GroundRt):GroundRt[] {
     const list=[...this.sim.grounds.values()].filter(o=>o!==g&&o.owner===g.owner&&o.state.kind==='trap'&&this.sim.now>=o.armedAt&&dist(o.state,g.state)<=5);
     const nearest=(x:GroundRt,others:GroundRt[])=>others.sort((a,b)=>dist(a.state,x.state)-dist(b.state,x.state)).slice(0,2);
@@ -305,15 +327,15 @@ export class RogueliteCombat {
   }
   detonate(start:GroundRt):void {
     const p=this.sim.players.get(start.owner),snapshot=start.pr.spell.roguelite;if(!p||!snapshot)return;
-    const a=snapshot.ability,v=a.parameters,pending=[start],connected:GroundRt[]=[],seen=new Set<string>();
+    const a=snapshot.ability,v=a.parameters,pending=[start],connected:GroundRt[]=[],seen=new Set<string>(),wired=!!v.mass&&this.armedTraps(start.owner)>=4,chainPower=v.chainPower??(v.mass?.2:0);
     while(pending.length) {
       const g=pending.shift()!;if(seen.has(g.id)||!this.sim.grounds.has(g.id))continue;seen.add(g.id);connected.push(g);
-      if(v.networkRange)pending.push(...(v.mass?this.trapNeighbors(g):[...this.sim.grounds.values()].filter(o=>o.owner===g.owner&&o.state.kind==='trap'&&this.sim.now>=o.armedAt&&dist(o.state,g.state)<=v.networkRange)));
+      if(v.networkRange)pending.push(...(wired?this.trapNeighbors(g):[...this.sim.grounds.values()].filter(o=>o.owner===g.owner&&o.state.kind==='trap'&&this.sim.now>=o.armedAt&&dist(o.state,g.state)<=(v.mass?3:v.networkRange))));
     }
     for(const g of connected)this.sim.removeGround(g.id);
-    connected.forEach((g,i)=>this.area(p,g.pr.spell.roguelite!.ability,snapshot.slot,g.state.x,g.state.y,g.state.radius,snapshot.scale*(1+Math.min(.6,i*(v.chainPower??0))),true));
+    connected.forEach((g,i)=>this.area(p,g.pr.spell.roguelite!.ability,snapshot.slot,g.state.x,g.state.y,g.state.radius,snapshot.scale*(1+Math.min(.6,i*chainPower)),true));
     if(v.mass&&connected.length) {const x=connected.reduce((n,g)=>n+g.state.x,0)/connected.length,y=connected.reduce((n,g)=>n+g.state.y,0)/connected.length;
-      this.area(p,a,snapshot.slot,x,y,Math.min(4,2+.4*connected.length),snapshot.scale,true,{min:Math.min(320,40*connected.length),max:Math.min(320,40*connected.length),poison:0,knockback:1.5});}
+      this.area(p,a,snapshot.slot,x,y,Math.min(4,2+.4*connected.length),snapshot.scale,true,{min:Math.max(120,Math.min(320,40*connected.length)),max:Math.max(120,Math.min(320,40*connected.length)),poison:0,knockback:1.5});}
   }
   private fireLine(p:PlayerRt,a:Ability,slot:number,direction:number,scale:number,castSerial:number,last:boolean) {
     const length=a.stats.range,line={...a,stats:{...a.stats,radius:length/2},parameters:{...a.parameters,min:a.parameters.trailMin,max:a.parameters.trailMax,flat:.25,line:1,lineAngle:direction,lineLength:length,lineWidth:1,knockback:0,castSerial,maxActive:6}};
@@ -398,8 +420,8 @@ export class RogueliteCombat {
     return !v.homing||pr.remaining>0;
   }
   private jackpot(p:PlayerRt,a:Ability,slot:number,x:number,y:number) {
-    const draw=this.sim.random(),all=draw>=.9;
-    const result=draw<.35?'♠':draw<.6?'♥':draw<.9?'♦':'★';this.fx(p,a,'jackpot',x,y,{result});
+    const draw=this.sim.random(),all=draw>=.94;
+    const result=draw<.35?'♠':draw<.6?'♥':draw<.94?'♦':'★';this.fx(p,a,'jackpot',x,y,{result});
     if(result==='♠'||all)this.area(p,a,slot,x,y,3.5,1,true,{min:100,max:120,flat:1.5});
     if(result==='♥'||all)for(const ally of this.sim.players.values())if(ally.state.alive&&dist(ally.state,{x,y})<=6){this.sim.healPlayer(ally,ally.state.maxHp*.04,p);this.shield(ally,.04,3);}
     if((result==='♦'||all)&&this.sim.now>=(this.reductions.get(p.id)??0)){this.reductions.set(p.id,this.sim.now+1);for(let i=0;i<p.readyAt.length;i++)p.readyAt[i]=this.sim.now+Math.max(0,p.readyAt[i]-this.sim.now)*.75;}
@@ -481,7 +503,7 @@ export class RogueliteCombat {
       this.carried.delete(target.id);if(!this.sim.monsters.has(target.id))return;
       target.state.carried=false;target.state.x=point.x;target.state.y=point.y;
       this.hit(this.instance(p,a,slot,scale,proc),target,0,0);
-      this.area(p,a,slot,point.x,point.y,a.stats.radius,scale,true,{min:v.impactMin,max:v.impactMax,flat:1});
+      this.area(p,a,slot,point.x,point.y,a.stats.radius,scale,true,{min:v.impactMin,max:v.impactMax,flat:v.hold?.5:1});
       if(v.throwBounce) {const direction=angle(p.state,point);this.later(p,.3,()=>this.area(p,a,slot,point.x+Math.cos(direction)*3,point.y+Math.sin(direction)*3,a.stats.radius,scale*.6,true,{min:v.impactMin,max:v.impactMax,flat:1}));}
       this.fx(p,a,'throw',p.state.x,p.state.y,{monsterId:target.id,tx:point.x,ty:point.y,duration:.5});
     });
@@ -512,7 +534,7 @@ export class RogueliteCombat {
         if(neighbor)this.addDot(p,dot.ability,dot.slot,neighbor,'poison',dot.dps,dot.ability.parameters.effectDuration,dot.max);
       }
       if(this.sim.now<dot.next)continue;dot.next+=.5;
-      const a={...dot.ability,parameters:{...dot.ability.parameters,min:dot.dps*dot.stacks*.5,max:dot.dps*dot.stacks*.5,flat:0,burn:0,poison:0,periodic:1,resolvedPeriodic:Number(dot.kind==='infection')}};
+      const a={...dot.ability,parameters:{...dot.ability.parameters,min:dot.dps*dot.stacks*.5,max:dot.dps*dot.stacks*.5,flat:.2,burn:0,poison:0,periodic:1,resolvedPeriodic:Number(dot.kind==='infection')}};
       this.hit(this.instance(p,a,dot.slot,1,true),m,0,0);
     }
   }
@@ -524,14 +546,14 @@ export class RogueliteCombat {
     const rg=pr.spell.roguelite,p=this.sim.players.get(pr.owner);if(!rg||!p||m.state.ally||m.state.carried||m.state.hp<=0||!this.sim.monsters.has(m.id))return;
     const a=rg.ability,v=a.parameters,stats=rg.stats,periodic=!!v.periodic;
     const judged=(this.judged.get(m.id)??0)>this.sim.now?.15:0;
-    const summon=['summon','royal','totem'].includes(a.handler),inherit=summon?(p.def.id==='osamodas'?.6:0):1;
+    const summon=['summon','royal','totem'].includes(a.handler),inherit=summon?(p.def.id==='osamodas'?.6:0):1,gearInherit=summon?(p.def.id==='osamodas'?.7:.4):1;
     const critical=!periodic&&this.sim.random()<Math.min(1,(summon?0:.05)+(stats.crit??0)*inherit+(v.crit??0)+judged);
     const raw=(v.min??0)+this.sim.random()*((v.max??0)-(v.min??0));
     const extraPower=(p.build.currentBuild.fallbackCounts[`fb.eveil:${a.id}`]??0)*.08;
-    let amount=rogueliteDamage({base:raw*(v.permanentPower??1),flat:stats.flatDamage??0,coefficient:v.flat??1,equipment:(stats.damage??0)*inherit,rapid:!!v.rapid,power:(v.runPower??0)+(v.creationPower??0)+extraPower,
+    let amount=rogueliteDamage({base:raw*(v.permanentPower??1),flat:stats.flatDamage??0,coefficient:v.flat??1,equipment:(stats.damage??0)*gearInherit,rapid:!!v.rapid,power:(v.runPower??0)+(v.creationPower??0)+extraPower+(v.zonePower??0)+(periodic||v.persistentTick||v.line?v.dotPower??0:0),
       innate:this.sim.mechanics.innatePower(p)+(v.signatureBouncePower??0),surcharge:.02*(p.build.currentBuild.fallbackCounts['fb.surcharge']??0),conditional:this.sim.blessings.conditionalBonus(p,m)+dofusConditional(p,m)+(v.castConditional??0)+(this.sim.now<p.momentumUntil?this.sim.blessings.momentumDamage(p)-1:0),vulnerability:this.vulnerability(m),critical,criticalDamage:dofusCriticalDamage(p,(stats.critDamage??0)*inherit),hpPart:v.hpPart});
     if(v.resolvedPeriodic)amount=raw*(1+this.vulnerability(m));
-    amount*=rg.scale;
+    amount*=rg.scale*(v.multitudeScale??1);
     if(!periodic) {
       if(v.knockback&&!m.def.boss) {const duration=.18,distance=v.knockback*(m.state.elite?.5:1);m.push={vx:dx*distance/duration,vy:dy*distance/duration,time:duration};this.sim.mechanics.onDisplaced(p,m);}
       if(v.slow){m.slowFactor=1-v.slow*(m.def.boss?.5:1);m.slowUntil=this.sim.now+(p.def.id==='xelor'?1.25:1);}
@@ -545,7 +567,8 @@ export class RogueliteCombat {
       const canProc=critical&&!rg.proc&&this.sim.now>=(this.critReady.get(p.id)??0);
       if(canProc){this.critReady.set(p.id,this.sim.now+.1);amount=dofusOnHit(this.sim,p,pr,m,amount,true);
         if(a.handler==='sky_volley'&&this.extraArrow(p,rg.slot,v.castSerial??0))this.later(p,.08,()=>{const target=this.enemies(m.state.x,m.state.y,5)[0];if(target)this.hit(this.instance(p,a,rg.slot,rg.scale,true),target,0,0);});
-        if(v.planted)for(let k=0;k<2;k++)this.later(p,.1+k*.1,()=>this.area(p,a,rg.slot,m.state.x,m.state.y,1.2,rg.scale,true,{min:v.ringMin,max:v.ringMax,flat:.5,judged:0}));
+        // 2 épées supplémentaires sur un critique du coup principal uniquement (jamais des ticks de l'épée plantée).
+        if(v.planted&&!v.persistentTick)for(let k=0;k<2;k++)this.later(p,.1+k*.1,()=>this.area(p,a,rg.slot,m.state.x,m.state.y,1.2,rg.scale,true,{min:v.ringMin,max:v.ringMax,flat:.5,judged:0}));
       }else if(!critical&&!rg.proc)amount=dofusOnHit(this.sim,p,pr,m,amount,false);
     }
     const actual=Math.min(Math.max(0,Math.round(amount)),Math.max(0,m.state.hp));
@@ -617,7 +640,15 @@ export class RogueliteCombat {
       this.fx(p,a,'intercept',pr.x,pr.y,{radius:.5});return true;
     }return false;
   }
+  private sweepAt=0;
+  /** Les tables indexées par monstre sont purgées de leurs entrées expirées : sinon elles grossissent à chaque mort. */
+  private sweep():void {
+    const now=this.sim.now;if(now<this.sweepAt)return;this.sweepAt=now+5;
+    for(const table of [this.flails,this.forestRoots,this.glyphTicks])for(const[k,until]of table)if(until<=now)table.delete(k);
+    for(const rows of this.slots.values())for(const rt of rows)if(rt)for(const[k,until]of rt.hits)if(until<=now)rt.hits.delete(k);
+  }
   update(dt:number):void {
+    this.sweep();
     for(const id of this.groundWaves.keys())if(!this.sim.grounds.has(id))this.groundWaves.delete(id);
     for(const[key,value]of this.extraArrows)if(value.until<=this.sim.now)this.extraArrows.delete(key);
     this.damageDots();
@@ -640,7 +671,7 @@ export class RogueliteCombat {
       const d=this.sim.now*3+row.index*2*Math.PI/3;m.state.x=p.state.x+Math.cos(d)*1.6;m.state.y=p.state.y+Math.sin(d)*1.6;
       if(row.ability.parameters.hold)for(const target of this.enemies(m.state.x,m.state.y,1).slice(0,30)) {
         const key=id+':'+target.id;if(this.sim.now<(this.flails.get(key)??0))continue;this.flails.set(key,this.sim.now+.8);
-        this.hit(this.instance(p,{...row.ability,parameters:{...row.ability.parameters,min:row.ability.parameters.flailMin,max:row.ability.parameters.flailMax,knockback:1,flat:.5}},row.slot,1+p.stats.speed,true),target,Math.cos(d),Math.sin(d));
+        this.hit(this.instance(p,{...row.ability,parameters:{...row.ability.parameters,min:row.ability.parameters.flailMin,max:row.ability.parameters.flailMax,knockback:1,flat:.25}},row.slot,1+p.stats.speed,true),target,Math.cos(d),Math.sin(d));
       }
     }
   }
@@ -655,7 +686,8 @@ export class RogueliteCombat {
         const direction=(now-rt.began)*(a.handler==='clock'?(i===0?2*Math.PI/1.2:2*Math.PI/6)*(1+.5*p.stats.haste):v.rotation*Math.PI/180)+i*2*Math.PI/count;
         const radius=a.handler==='clock'?(i===0?3.5:2.5):a.stats.radius,x=p.state.x+Math.cos(direction)*radius,y=p.state.y+Math.sin(direction)*radius;
         for(const m of this.enemies(p.state.x,p.state.y,radius+1)) {
-          let touches=dist(m.state,{x,y})<=(v.collision??.3)+m.def.radius;
+          const rx=m.state.x-p.state.x,ry=m.state.y-p.state.y,radial=rx*Math.cos(direction)+ry*Math.sin(direction);
+          let touches=radial>=.6-m.def.radius&&radial<=radius+m.def.radius&&Math.abs(-rx*Math.sin(direction)+ry*Math.cos(direction))<=(v.collision??.3)+m.def.radius;
           if(a.handler==='clock'){const dx=m.state.x-p.state.x,dy=m.state.y-p.state.y,along=dx*Math.cos(direction)+dy*Math.sin(direction);touches=along>=0&&along<=radius&&Math.abs(-dx*Math.sin(direction)+dy*Math.cos(direction))<=m.def.radius+(i?.6:.3);}
           const key=`${i}:${m.id}`;if(!touches||now<(rt.hits.get(key)??0))continue;rt.hits.set(key,now+.6);
           const ability=i&&a.handler==='clock'?{...a,parameters:{...v,min:v.hourMin,max:v.hourMax}}:a;this.hit(this.instance(p,ability,slot),m,0,0);

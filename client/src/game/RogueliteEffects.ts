@@ -239,7 +239,8 @@ export class RogueliteEffects {
      const count=a.handler==='clock'?2:a.stats.projectiles;
      for(let i=0;i<count;i++){const d=age*(a.handler==='clock'?(i?2*Math.PI/6:2*Math.PI/1.2):p.rotation*Math.PI/180)+i*2*Math.PI/count;
       const r=a.handler==='clock'?(i?2.5:3.5):radius;
-      this.line(this.graphics,a.handler==='clock'?player.x:player.x+Math.cos(d)*r*.85,a.handler==='clock'?player.y:player.y+Math.sin(d)*r*.85,player.x+Math.cos(d)*r,player.y+Math.sin(d)*r,color,.9,i?5:3);
+      // Aiguilles : segments de 0,6 case au rayon, comme leur collision serveur.
+      this.line(this.graphics,a.handler==='clock'?player.x:player.x+Math.cos(d)*.6,a.handler==='clock'?player.y:player.y+Math.sin(d)*.6,player.x+Math.cos(d)*r,player.y+Math.sin(d)*r,color,.9,i?5:3);
      }
     }
    }
@@ -258,7 +259,8 @@ export class RogueliteEffects {
   // Trap wires are inferred from authoritative ground positions; no per-tick network messages.
   const traps:{id:string;x:number;y:number;owner:string}[]=[];state.grounds.forEach((g,id)=>{if(g.spell==='ev.piege_de_masse')traps.push({id,x:g.x,y:g.y,owner:g.owner});});
   const wire=.3+.15*(1+Math.sin(now/180));
-  const wires=new Set<string>();for(const trap of traps){const neighbors=traps.filter(g=>g!==trap&&g.owner===trap.owner&&Math.hypot(g.x-trap.x,g.y-trap.y)<=5).sort((a,b)=>Math.hypot(a.x-trap.x,a.y-trap.y)-Math.hypot(b.x-trap.x,b.y-trap.y)).slice(0,2);
+  // Fils actifs seulement à partir de 4 pièges du même joueur, comme sur le serveur.
+  const wires=new Set<string>();for(const trap of traps){if(traps.filter(o=>o.owner===trap.owner).length<4)continue;const neighbors=traps.filter(g=>g!==trap&&g.owner===trap.owner&&Math.hypot(g.x-trap.x,g.y-trap.y)<=5).sort((a,b)=>Math.hypot(a.x-trap.x,a.y-trap.y)-Math.hypot(b.x-trap.x,b.y-trap.y)).slice(0,2);
    for(const n of neighbors){const key=[trap.id,n.id].sort().join(':');if(wires.has(key))continue;wires.add(key);this.line(this.graphics,trap.x,trap.y,n.x,n.y,0xb04ad0,wire,2);}}
   state.grounds.forEach(g=>{if(!g.length)return;const dx=Math.cos(g.angle??0)*g.length/2,dy=Math.sin(g.angle??0)*g.length/2;this.line(this.graphics,g.x-dx,g.y-dy,g.x+dx,g.y+dy,0xff7722,.45,(g.width??1)*20);});
  }

@@ -55,7 +55,8 @@ test('Féca : armure innée et rayon persistant calculés une fois, sans modifie
 });
 test('Osamodas : seule l’action F commande le cri, invocations présentes et apparition valide au bord',()=>{
  const {sim,p}=setupRoguelite('osamodas');p.state.x=p.state.y=1.5;p.readyAt[0]=0;assert.ok(sim.roguelite.castSlot(p,0));
- const summons=[...sim.monsters.values()].filter(m=>m.allyOwner===p.id);assert.equal(summons.length,3);for(const m of summons)assert.ok(!isBlocked(sim.map,m.state.x,m.state.y,m.def.radius));
+ // Tofus N1 : 3 de base + 1 du Lien bestial.
+ const summons=[...sim.monsters.values()].filter(m=>m.allyOwner===p.id);assert.equal(summons.length,4);for(const m of summons)assert.ok(!isBlocked(sim.map,m.state.x,m.state.y,m.def.radius));
  sim.classAction(p.id,{tx:2,ty:2});assert.equal(p.summonRoarUntil,sim.now+5);const until=p.summonRoarUntil;sim.classAction(p.id,{});assert.equal(p.summonRoarUntil,until);
 });
 test('Enutrof : pépite toutes les quinze victimes, perte au coup et récupération, maximum six',()=>{
@@ -67,7 +68,8 @@ test('Enutrof : pépite toutes les quinze victimes, perte au coup et récupérat
 test('Xélor : quatrième lancer immédiat rejoué à 50 %, sans nouvel écho ni charge',()=>{
  const {sim,p,events}=setupRoguelite('xelor');installBuild(sim,buildWith('xelor',['sp.fleche_magique'],1));dummy(sim,43);const slot=1;
  for(let i=0;i<4;i++){p.readyAt[slot]=0;sim.roguelite.castSlot(p,slot);}p.readyAt[slot]=Infinity;assert.equal(sim.mechanics.get(p).charge,0);
- advance(sim,.7);const shots=events.filter(e=>e.type==='cast'&&e.data.spell==='sp.fleche_magique');assert.equal(shots.length,5);assert.equal(sim.mechanics.get(p).charge,0);advance(sim,1);assert.equal(events.filter(e=>e.type==='cast'&&e.data.spell==='sp.fleche_magique').length,5);
+ advance(sim,.7);const shots=events.filter(e=>e.type==='cast'&&e.data.spell==='sp.fleche_magique');// Flèche Magique N1 tire 2 flèches par lancer : 4 lancers + 1 écho = 10 flèches.
+ assert.equal(shots.length,10);assert.equal(sim.mechanics.get(p).charge,0);advance(sim,1);assert.equal(events.filter(e=>e.type==='cast'&&e.data.spell==='sp.fleche_magique').length,10);
 });
 test('Pandawa : bascule sobre/ivre avec délai, sans changer définitivement les sorts',()=>{
  const {sim,p}=setupRoguelite('pandawa');const radius=sim.roguelite.ability(p,0)!.stats.radius,armor=p.stats.armor;

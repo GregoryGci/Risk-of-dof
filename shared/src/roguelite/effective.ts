@@ -5,6 +5,8 @@ import {resolveAbility} from './build.ts';
 import type {RunBuild,SpellSlot} from './types.ts';
 
 export type PermanentSpellRanks=Record<string,number>;
+/** Formes dont les dégâts profitent du bonus de zone d'Expansion. */
+const ZONE_HANDLERS=['glyph','lob','sweep','aura','blood_aura','totem','trap','delayed','vortex','clock','barrier'];
 export function sanitizePermanentSpellRanks(raw:unknown):PermanentSpellRanks {
   if(!raw||typeof raw!=='object'||Array.isArray(raw))return{};
   return Object.fromEntries(Object.entries(raw).filter(([id,n])=>C.spell(id)?.acquire&&typeof n==='number'&&Number.isInteger(n)&&n>=1&&n<=5)) as PermanentSpellRanks;
@@ -22,7 +24,10 @@ export function effectiveRogueliteAbility(slot:SpellSlot,build:RunBuild,stats:Pa
   const floor=Math.max(B.caps.cooldownMs,base.stats.cooldownMs*B.caps.cooldownFraction);
   s.cooldownMs=Math.max(floor,s.cooldownMs*(1-B.permanent.cooldown*permanent)/(1+haste)/(signature&&handler!=='orbit'&&handler!=='summon'&&handler!=='royal'?1+(stats.attackSpeed??0):1));
   const quantity=passives.quantity??0,echoes=signature?Math.min(2,Math.ceil(stats.multishot??0)):0;
+  const own=Math.min(p.quantityCap,s.projectiles);
   p.baseQuantity=Math.min(p.quantityCap,s.projectiles+(handler==='aura'||handler==='blood_aura'||handler==='clock'?0:quantity));
+  // Les instances ajoutées par Multitude comptent pour 60 % : le facteur s'applique à toutes les touches du sort.
+  const added=p.baseQuantity-own;p.multitudeScale=added>0?(own+.6*added)/(own+added):1;
   s.projectiles=Math.min(p.quantityCap,p.baseQuantity+echoes);p.echoShare=echoes?Math.min(1,(stats.multishot??0)/echoes):0;
   if(handler==='summon'||handler==='royal')s.projectiles=Math.min(6,s.projectiles+(passives.extraSummon??0)+(build.classId==='osamodas'?1:0));
   const radiusBonus=(passives.expansion??0)+(context.innateRadius??0),scale=1+radiusBonus;
@@ -50,6 +55,7 @@ export function effectiveRogueliteAbility(slot:SpellSlot,build:RunBuild,stats:Pa
   if(p.maxActive)p.maxActive=Math.min(handler==='trap'?(p.mass?12:10):handler==='glyph'?6:3,p.maxActive+(handler==='trap'?2*quantity:quantity));
   if(p.spread)p.spread=Math.min(100,p.spread+5*quantity);
   p.permanentPower=1+B.permanent.damage*permanent;p.runPower=passives.runPower??0;
+  p.zonePower=ZONE_HANDLERS.includes(handler)?passives.zoneDamage??0:0;p.dotPower=passives.dotDamage??0;
   p.creationPower=p.creation?passives.creationPower??0:0;
   p.signature=Number(signature);p.rapid=Number(base.stats.cooldownMs<=1000||ability.stats.intervalMs>0&&ability.stats.intervalMs<=500);
   p.bounce=signature?Math.min(3,stats.bounce??0):0;

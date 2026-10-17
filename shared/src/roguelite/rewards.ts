@@ -1,5 +1,5 @@
 import type {RogueliteCatalog} from './catalog.ts';
-import {availableLevelRewards, fallbackRewards} from './build.ts';
+import {availableLevelRewards, fallbackRewards, missingEvolutionPassives} from './build.ts';
 import type {LevelReward, RunBuild} from './types.ts';
 import {compareStableIds} from './data.ts';
 
@@ -10,7 +10,10 @@ export function generateLevelRewards(catalog: RogueliteCatalog, build: RunBuild,
     ...build.spells.flatMap(s => s ? catalog.spell(s.spellId)?.tags ?? [] : []),
     ...build.passives.flatMap(p => p ? catalog.passive(p.passiveId)?.tags ?? [] : []),
   ]);
-  const candidates = availableLevelRewards(catalog, build).filter(c=>!options.exclude?.includes(c.id)).sort((a, b) => compareStableIds(a.id, b.id));
+  let candidates = availableLevelRewards(catalog, build).filter(c=>!options.exclude?.includes(c.id)).sort((a, b) => compareStableIds(a.id, b.id));
+  // Deux derniers emplacements de passif : seulement les passifs qui feront évoluer un sort possédé, s'il en reste.
+  const wanted=missingEvolutionPassives(catalog,build);
+  if(catalog.config.rewardRules&&build.passives.filter(p=>!p).length<=2&&wanted.size)candidates=candidates.filter(c=>c.kind!=='acquirePassive'||wanted.has(c.definitionId));
   const result: LevelReward[] = [], usedKinds = new Set<string>();
   const rules=catalog.config.rewardRules,level=options.level??2;
   const count=catalog.config.choiceCount+(rules&&random()<Math.min(rules.fourthMax,rules.fourthPerLuck*Math.max(0,options.luck??0))?1:0);

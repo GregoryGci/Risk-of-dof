@@ -42,7 +42,8 @@ test('Potions : environ 2 % des morts, six au sol maximum, sans remplacer un dro
 test('Échos : projectiles supplémentaires plafonnés à deux, description conforme au nombre réel',()=>{
   const {sim,p,events}=create();p.meta.multishot=12;sim.applyStats(p);(sim as any).director.update=()=>{};sim.spawnMonster(getMonster('epouvantail'),p.state.x+6,p.state.y,1,1,1);
   p.readyAt[0]=0;sim.roguelite.castSlot(p,0);p.readyAt[0]=Infinity;advance(sim,.3);
-  assert.equal(events.filter(e=>e.type==='cast'&&e.data.spell===getSpell(p.spells[0]).id).length,3);
+  // Flèche Magique N1 : 2 flèches + 2 échos au plus.
+  assert.equal(events.filter(e=>e.type==='cast'&&e.data.spell===getSpell(p.spells[0]).id).length,4);
   assert.match(statText('multishot',12),/2 attaques/);assert.match(statText('multishot',12),/100 %/);
 });
 

@@ -102,6 +102,35 @@ export function eligibleEvolutions(catalog: RogueliteCatalog, build: RunBuild, s
     return e.sources.includes(source) && spell?.level === catalog.spell(e.sourceSpellId)!.maxLevel && (passive?.level ?? 0) >= e.minPassiveLevel;
   }).map(e => e.id).sort();
 }
+/** Passifs qui font évoluer un sort possédé encore non évolué et qui ne sont pas encore pris. */
+export function missingEvolutionPassives(catalog: RogueliteCatalog, build: RunBuild): Set<string> {
+  return new Set(catalog.evolutions().filter(e => build.spells.some(s => s?.spellId === e.sourceSpellId) && !build.passives.some(p => p?.passiveId === e.passiveId)).map(e => e.passiveId));
+}
+export interface RetuneOption {spellId: string; passiveIn: string; passiveOut: string}
+/**
+ * Réaccord (coffre d'évolution sans évolution éligible) : remplace, au même rang, le passif de plus bas rang qui ne fait
+ * évoluer aucun sort possédé par le passif associé à un sort N8 non évolué. Uniquement quand les 4 passifs sont pris.
+ */
+export function retuneOptions(catalog: RogueliteCatalog, build: RunBuild): RetuneOption[] {
+  if (build.passives.some(p => !p)) return [];
+  const owned = new Set(build.spells.flatMap(s => s ? [s.spellId] : []));
+  const useful = (passiveId: string) => catalog.evolutions().some(e => e.passiveId === passiveId && owned.has(e.sourceSpellId));
+  const out = build.passives.filter((p): p is NonNullable<typeof p> => !!p && !useful(p.passiveId)).sort((a, b) => a.level - b.level || a.passiveId.localeCompare(b.passiveId))[0];
+  if (!out) return [];
+  const seen = new Set<string>();
+  return catalog.evolutions().filter(e => {
+    const spell = build.spells.find(s => s?.spellId === e.sourceSpellId);
+    if (!spell || spell.level !== catalog.spell(e.sourceSpellId)!.maxLevel || build.passives.some(p => p?.passiveId === e.passiveId) || seen.has(e.passiveId)) return false;
+    seen.add(e.passiveId); return true;
+  }).map(e => ({spellId: e.sourceSpellId, passiveIn: e.passiveId, passiveOut: out.passiveId}));
+}
+export function applyRetune(catalog: RogueliteCatalog, build: RunBuild, passiveIn: string): RunBuild {
+  const option = retuneOptions(catalog, build).find(o => o.passiveIn === passiveIn);
+  insist(option, 'unavailable retune');
+  const next = copyRogueliteData(build), index = next.passives.findIndex(p => p?.passiveId === option.passiveOut);
+  next.passives[index] = {passiveId: passiveIn, level: next.passives[index]!.level};
+  next.revision++; validateRunBuild(catalog, next); return next;
+}
 /** Server controller must additionally consume an earned boss/elite token. */
 export function applyEvolution(catalog: RogueliteCatalog, build: RunBuild, evolutionId: string, source: 'boss' | 'elite'): RunBuild {
   insist(eligibleEvolutions(catalog, build, source).includes(evolutionId), 'ineligible evolution');
