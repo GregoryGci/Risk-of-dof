@@ -300,7 +300,7 @@ export class Hud {
     const spell=getSpell(this.spellIds[slot]);
     tip.innerHTML=`<div class="tip-name">${escapeHtml(spell.name)}</div>${spellDetailsHtml(spell,this.stats,slot)}`;
     // Toujours juste au-dessus de la barre du bas, quelle que soit sa hauteur (objets sur plusieurs lignes).
-    tip.style.bottom = `${$('hud-bottom').offsetHeight + 18}px`;
+    tip.style.bottom = `${Math.round($('hud-bottom').getBoundingClientRect().height) + 18}px`;
     tip.classList.remove('hidden');
   }
 
@@ -404,7 +404,9 @@ export class Hud {
     this.setHtml('prompt', prompt);
     $('prompt').classList.toggle('hidden', prompt === '');
     if (prompt) {
-      const bottom=`${this.bottomHeight+18}px`;
+      // La barre du bas est réduite sur petit écran (--hud-scale) : l'aide se pose juste au-dessus.
+      const scale=Number(getComputedStyle(document.documentElement).getPropertyValue('--hud-scale'))||1;
+      const bottom=`${Math.round(this.bottomHeight*scale)+18}px`;
       if(this.cache.promptBottom!==bottom) { this.cache.promptBottom=bottom;$('prompt').style.bottom=bottom; }
     }
 

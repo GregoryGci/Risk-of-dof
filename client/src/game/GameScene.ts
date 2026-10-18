@@ -59,6 +59,7 @@ import {XpView} from './XpView.ts';
 import { settings } from '../settings.ts';
 import { Controls } from './Controls.ts';
 import { TouchControls } from './TouchControls.ts';
+import { watchHudScale } from '../ui/hudScale.ts';
 import {readBuild,effectiveAbilityPreview,type EffectiveRogueliteAbility} from '@rod/shared/roguelite';
 import {MechanicHud,choiceReadiness} from '../ui/MechanicHud.ts';
 import {RogueliteEffects} from './RogueliteEffects.ts';
@@ -102,6 +103,7 @@ export class GameScene extends Phaser.Scene {
   private hud!: Hud;
   private controls!: Controls;
   private touch!: TouchControls;
+  private unwatchHudScale = (): void => {};
   private effects!: Effects;
   private rogueliteEffects!:RogueliteEffects;
   private minimap = new Minimap();
@@ -213,6 +215,7 @@ export class GameScene extends Phaser.Scene {
     this.store.finalize(this);
     this.cameras.main.setBackgroundColor(0x1a2611);
     this.controls = new Controls(this.game.canvas);
+    this.unwatchHudScale = watchHudScale();
     this.touch = new TouchControls(this.controls, { menu: () => this.controls.press('Escape'), details: () => this.controls.press('Tab') });
     this.effects = new Effects(this, this.store);
     this.rogueliteEffects=new RogueliteEffects(this,this.store,()=>this.map,()=>this.state,this.room.sessionId);
@@ -325,7 +328,7 @@ export class GameScene extends Phaser.Scene {
     // Mort : un clic change de joueur observé.
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.cycleSpectate());
 
-    let cleaned=false;const clean=()=>{if(cleaned)return;cleaned=true;const menu=gameSettings();menu.onToggle=()=>{};menu.toggle(false);this.effects.clear();this.rogueliteEffects.destroy();this.xpView.destroy();this.controls.destroy();this.touch.destroy();this.details.destroy();this.rest.destroy();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
+    let cleaned=false;const clean=()=>{if(cleaned)return;cleaned=true;const menu=gameSettings();menu.onToggle=()=>{};menu.toggle(false);this.effects.clear();this.rogueliteEffects.destroy();this.xpView.destroy();this.controls.destroy();this.touch.destroy();this.unwatchHudScale();this.details.destroy();this.rest.destroy();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, clean);
     this.events.once(Phaser.Scenes.Events.DESTROY, clean);
   }
