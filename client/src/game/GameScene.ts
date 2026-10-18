@@ -58,6 +58,7 @@ import { RestPanel } from '../ui/Rest.ts';
 import {XpView} from './XpView.ts';
 import { settings } from '../settings.ts';
 import { Controls } from './Controls.ts';
+import { TouchControls } from './TouchControls.ts';
 import {readBuild,effectiveAbilityPreview,type EffectiveRogueliteAbility} from '@rod/shared/roguelite';
 import {MechanicHud,choiceReadiness} from '../ui/MechanicHud.ts';
 import {RogueliteEffects} from './RogueliteEffects.ts';
@@ -100,6 +101,7 @@ export class GameScene extends Phaser.Scene {
   private store!: AssetStore;
   private hud!: Hud;
   private controls!: Controls;
+  private touch!: TouchControls;
   private effects!: Effects;
   private rogueliteEffects!:RogueliteEffects;
   private minimap = new Minimap();
@@ -211,6 +213,7 @@ export class GameScene extends Phaser.Scene {
     this.store.finalize(this);
     this.cameras.main.setBackgroundColor(0x1a2611);
     this.controls = new Controls(this.game.canvas);
+    this.touch = new TouchControls(this.controls, { menu: () => this.controls.press('Escape'), details: () => this.controls.press('Tab') });
     this.effects = new Effects(this, this.store);
     this.rogueliteEffects=new RogueliteEffects(this,this.store,()=>this.map,()=>this.state,this.room.sessionId);
     installTextureStateRefresh(this);
@@ -322,7 +325,7 @@ export class GameScene extends Phaser.Scene {
     // Mort : un clic change de joueur observé.
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.cycleSpectate());
 
-    let cleaned=false;const clean=()=>{if(cleaned)return;cleaned=true;const menu=gameSettings();menu.onToggle=()=>{};menu.toggle(false);this.effects.clear();this.rogueliteEffects.destroy();this.xpView.destroy();this.controls.destroy();this.details.destroy();this.rest.destroy();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
+    let cleaned=false;const clean=()=>{if(cleaned)return;cleaned=true;const menu=gameSettings();menu.onToggle=()=>{};menu.toggle(false);this.effects.clear();this.rogueliteEffects.destroy();this.xpView.destroy();this.controls.destroy();this.touch.destroy();this.details.destroy();this.rest.destroy();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, clean);
     this.events.once(Phaser.Scenes.Events.DESTROY, clean);
   }
@@ -418,6 +421,7 @@ export class GameScene extends Phaser.Scene {
     }else this.preview.hide();
     this.hud.updateCooldowns(time, this.cdEnd, this.cdTotal);
     this.hud.updateDash(time, this.dashCdEnd);
+    this.touch.update(canAct, canAct && !!prompt?.includes('<b>E</b>'), this.dashCdEnd - time, 2500);
     if(time>=this.nextHudUpdate){
       this.nextHudUpdate=time+100;
       this.hud.update(state, this.room.sessionId, myState && !myState.alive ? this.spectating : null, prompt);
@@ -461,6 +465,7 @@ export class GameScene extends Phaser.Scene {
 
   /** Point visé par la souris, en coordonnées monde. */
   private aimPoint(): { x: number; y: number } {
+    if (this.touch.active) return { x: this.me.x + this.aimDir.x * 4, y: this.me.y + this.aimDir.y * 4 };
     const pointer = this.input.activePointer;
     pointer.updateWorldPoint(this.cameras.main);
     return screenToWorld(pointer.worldX, pointer.worldY + AIM_OFFSET_Y);
@@ -479,7 +484,8 @@ export class GameScene extends Phaser.Scene {
     // La visée n'est mise à jour que si la souris est sur le jeu (pas sur le HUD).
     const overCanvas = (this.input.activePointer.event?.target as HTMLElement | undefined)?.tagName === 'CANVAS';
     const aimLen = Math.hypot(aim.x - this.me.x, aim.y - this.me.y);
-    if (overCanvas && aimLen > 0.2) this.aimDir = { x: (aim.x - this.me.x) / aimLen, y: (aim.y - this.me.y) / aimLen };
+    if (this.touch.active) { if (move.x !== 0 || move.y !== 0) this.aimDir = { x: move.x, y: move.y }; }
+    else if (overCanvas && aimLen > 0.2) this.aimDir = { x: (aim.x - this.me.x) / aimLen, y: (aim.y - this.me.y) / aimLen };
 
     // Orientation : le personnage regarde où il marche ; seul un sort le tourne (brièvement) vers la visée.
     const moving = move.x !== 0 || move.y !== 0;
@@ -487,7 +493,7 @@ export class GameScene extends Phaser.Scene {
     const dir = this.facing;
 
     // Envoi des entrées : seulement quand elles changent, plus un rappel périodique.
-    const aimAngle=settings.mouseAim?Math.atan2(this.aimDir.y,this.aimDir.x):undefined;
+    const aimAngle=settings.mouseAim&&!this.touch.active?Math.atan2(this.aimDir.y,this.aimDir.x):undefined;
     const changed = move.x !== this.lastInput.dx || move.y !== this.lastInput.dy || dir !== this.lastInput.dir || aimAngle !== this.lastInput.aimAngle;
     if ((changed && time - this.lastInputAt > 16) || (moving && time-this.lastInputAt>33) || time - this.lastInputAt > 500) {
       this.lastInput = { dx: move.x, dy: move.y, dir, aimAngle };

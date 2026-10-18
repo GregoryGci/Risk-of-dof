@@ -1,0 +1,67 @@
+/* Contrôles tactiles : au-dessus du HUD (10), sous les fenêtres (40 et plus). */
+#touch-controls{position:fixed;inset:0;z-index:20;pointer-events:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#touch-controls:is(.hidden,.idle){display:none}
+/* Joystick : moitié gauche, hors de la barre de sorts centrée en bas. */
+.touch-stick-zone{position:absolute;left:0;bottom:0;width:36%;height:74%;pointer-events:auto;touch-action:none}
+.touch-stick{position:fixed;width:124px;height:124px;margin:-62px 0 0 -62px;border-radius:50%;border:2px solid #f4e7c860;background:radial-gradient(circle,#0000 52%,#0008);pointer-events:none}
+.touch-stick.hidden{display:none}
+.touch-stick i{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff8e6,#cdb88d);box-shadow:0 4px 12px #000a}
+#touch-controls button{display:grid;place-items:center;padding:0;border-radius:50%;border:2px solid #f4e7c88a;background:#16110dcc;color:#f6ecd6;font:700 15px/1 Georgia,serif;box-shadow:0 6px 16px #0009;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent}
+#touch-controls button:active{transform:scale(.94);background:#2c2117e6}
+.touch-actions{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(22px,env(safe-area-inset-bottom));display:flex;align-items:flex-end;gap:14px}
+#touch-controls .touch-dash{position:relative;width:82px;height:82px;font-size:17px;overflow:hidden}
+.touch-dash.cooling::after{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(#000b calc(var(--cooldown) * 360deg),#0000 0)}
+#touch-controls .touch-interact{width:64px;height:64px;margin-bottom:46px;font-size:22px;border-color:#ffd77a;color:#ffe7a6;animation:touch-pulse 1.2s ease-in-out infinite}
+#touch-controls .touch-interact.hidden{display:none}
+@keyframes touch-pulse{50%{box-shadow:0 0 0 7px #ffd77a33,0 6px 16px #0009}}
+.touch-top{position:absolute;top:calc(max(8px,env(safe-area-inset-top)) + 50px);left:max(10px,env(safe-area-inset-left));display:flex;gap:8px}
+#touch-controls .touch-top button{width:38px;height:38px;font-size:17px}
+/* Au doigt, pas de survol : pas d’infobulle de sort. */
+body.touch-mode #spell-tip{display:none!important}
+body.touch-mode #game canvas{touch-action:none}
+/* Ni rebond de page ni rafraîchissement par glissé pendant la partie. */
+body.touch-mode{overscroll-behavior:none}
+
+/* HUD compact sur petit écran (téléphone en paysage ou en portrait). #game ~ #hud passe devant les thèmes. */
+@media (max-height:560px),(max-width:700px){
+  #game ~ #hud #hud-team{transform:scale(.7);transform-origin:top left}
+  #game ~ #hud #hud-timer{transform:translateX(-50%) scale(.7);transform-origin:top center}
+  #game ~ #hud #hud-right{transform:scale(.6);transform-origin:top right}
+  #game ~ #hud #hud-meter{display:none}
+  #game ~ #hud #hud-bottom{transform:translateX(-50%) scale(.68);transform-origin:bottom center}
+  #game ~ #hud #boss{transform:translateX(-50%) scale(.75);transform-origin:top center}
+}
+/* Choix de niveau en paysage : tout tient sans faire défiler. */
+@media (max-height:560px){
+  #game ~ #hud #boon-choices{top:6px;bottom:auto;transform:translateX(-50%);max-height:calc(100dvh - 12px);padding:8px 12px}
+  #game ~ #hud #boon-choices .choice-head{padding:2px 0 6px;min-height:0}
+  #game ~ #hud #boon-choices .choice-head h2{font-size:20px;margin:0}
+  #game ~ #hud #boon-choices .choice-head .eyebrow{display:none}
+  #game ~ #hud #boon-choices .choice-pairs{display:none}
+  #game ~ #hud #boon-choices .level-choice-grid{gap:8px;margin:0}
+  #game ~ #hud #boon-choices .reward-card{min-height:0}
+  #game ~ #hud #boon-choices .level-choice{min-height:0;padding:10px 12px;gap:3px;row-gap:3px}
+  #game ~ #hud #boon-choices .level-choice>*{margin-top:0;margin-bottom:0}
+  #game ~ #hud #boon-choices .reward-icon,#game ~ #hud #boon-choices .reward-icon img{width:28px;height:28px}
+  #game ~ #hud #boon-choices .level-choice b{font-size:16px;line-height:1.15}
+  #game ~ #hud #boon-choices .reward-text{font-size:11px;line-height:1.35}
+  #game ~ #hud #boon-choices .reward-synergy{padding-top:4px}
+  #game ~ #hud #boon-choices .reward-actions{margin-top:6px}
+  /* Fenêtres de la partie : en-tête et pied resserrés pour laisser la place au contenu. */
+  :is(#game-settings,#details,#rest,#gameover) .sheet-head{padding:8px 16px;min-height:0}
+  :is(#game-settings,#details,#rest,#gameover) .sheet-head :is(small,p,.subtitle){display:none}
+  #game-settings .game-settings-body{padding:8px 16px}
+  #game-settings .game-settings-actions{padding:8px 16px}
+  #game-settings .game-settings-actions .btn{min-height:0;padding-top:8px;padding-bottom:8px}
+}
+/* Portrait : le chrono passe sous les panneaux du haut, les boutons d'action au-dessus de la barre de sorts. */
+@media (max-width:700px){
+  #game ~ #hud #hud-timer{top:58px;transform:translateX(-50%) scale(.55)}
+  #game ~ #hud #hud-right{transform:scale(.5)}
+  #game ~ #hud #hud-bottom{transform:translateX(-50%) scale(.62)}
+  .touch-top{flex-direction:column}
+  .touch-actions{bottom:calc(max(22px,env(safe-area-inset-bottom)) + 140px)}
+  .touch-stick-zone{width:55%;height:auto;top:30%;bottom:150px}
+  /* Les cartes rappellent déjà le passif d’évolution ; la liste des paires prendrait tout l’écran. */
+  #game ~ #hud #boon-choices .choice-pairs{display:none}
+}

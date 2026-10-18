@@ -7,6 +7,8 @@ export class Controls {
   private keys = new Set<string>();
   /** Touches enfoncées depuis la dernière lecture (actions ponctuelles comme « interagir »). */
   private pressed = new Set<string>();
+  /** Joystick tactile, en direction écran (-1..1) ; (0,0) au repos. */
+  private stick = { x: 0, y: 0 };
   private cleanup: (() => void)[] = [];
 
   constructor(canvas: HTMLCanvasElement) {
@@ -37,6 +39,15 @@ export class Controls {
     this.pressed.clear();
   }
 
+  /** Appui ponctuel venu d'un bouton tactile, lu comme une touche. */
+  press(code: string): void {
+    this.pressed.add(code);
+  }
+
+  setStick(x: number, y: number): void {
+    this.stick = { x, y };
+  }
+
   private down(...codes: string[]): boolean {
     return codes.some((c) => this.keys.has(c));
   }
@@ -52,6 +63,7 @@ export class Controls {
     if (this.down('KeyS', 'ArrowDown')) sy += 1;
     if (this.down('KeyA', 'ArrowLeft')) sx -= 1;
     if (this.down('KeyD', 'ArrowRight')) sx += 1;
+    if (sx === 0 && sy === 0) { sx = this.stick.x; sy = this.stick.y; }
     if (sx === 0 && sy === 0) return { x: 0, y: 0 };
     const x = sx / TILE_W + sy / TILE_H;
     const y = sy / TILE_H - sx / TILE_W;
