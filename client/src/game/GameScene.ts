@@ -80,6 +80,8 @@ const VIEW_W = 1320;
 const VIEW_H = 720;
 /** Décalage vertical de la visée : on vise le corps des monstres, pas leurs pieds. */
 const AIM_OFFSET_Y = 10;
+/** Écart (cases) laissé à l'arrêt entre l'affichage et le serveur : moins que le rayon du personnage, rattrapé au déplacement suivant. */
+const IDLE_CORRECTION_TOLERANCE = 0.2;
 
 /** Coiffe et cape équipées d'un joueur (JSON de son état), mémorisées par chaîne. */
 const wornCache = new Map<string, [string | undefined, string | undefined, string | undefined]>();
@@ -501,10 +503,15 @@ export class GameScene extends Phaser.Scene {
     const ex = target.x - this.me.x;
     const ey = target.y - this.me.y;
     const err = Math.hypot(ex, ey);
+    // À l'arrêt, le serveur avance encore avec l'entrée précédente tant qu'il n'a pas reçu l'arrêt :
+    // corriger avant ferait reculer le personnage puis repartir. On attend que l'arrêt soit appliqué.
+    // Ensuite, un écart minime (arrondi au tick serveur, gigue réseau) attend le prochain déplacement pour être rattrapé.
+    const settling = predicting && !moving && (s.inputSeq < this.inputSeq || s.moving);
+    const tolerance = predicting && !moving ? IDLE_CORRECTION_TOLERANCE : 0.001;
     if (err > 3 || !canAct) {
       this.me.x = s.x;
       this.me.y = s.y;
-    } else if (err > 0.001) {
+    } else if (err > tolerance && !settling) {
       const rate = time < this.followServerUntil ? 25 : moving ? 3 : 10;
       const k = 1 - Math.exp(-rate * dt);
       this.me.x += ex * k;
