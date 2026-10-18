@@ -1,4 +1,4 @@
-import {getBlessing,parseBlessings,blessingDescription,PHASE_PLAYING,type GameStateView} from '@rod/shared';
+import {getBlessing,parseBlessings,blessingDescription,PHASE_PLAYING,type GameStateView,type PlayerView} from '@rod/shared';
 import {ROGUELITE_CATALOG as C,ROGUELITE_INNATES,readBuild,describeRogueliteChoice,evolutionPairs} from '@rod/shared/roguelite';
 import {escapeHtml} from './Hud.ts';
 interface Choice {id:string;kind:string;definitionId:string;nextLevel:number;targetId?:string}
@@ -18,7 +18,7 @@ export class MechanicHud {
  private blessing=document.createElement('div');
  private waiting=document.createElement('div');
  private abort=new AbortController();
- private key='';private choicesKey='';
+ private key='';private choicesKey='';private choicesHtml='';private waitHtml='';
  constructor(action:(choice:number)=>void,choose:(choice:number,revision:number)=>void,private rewardAction:(type:'reroll'|'banish',revision:number,choiceId?:string)=>void=()=>{}) {
   this.passives.id='passive-slots';this.el.before(this.passives);this.blessing.id='blessing-hud';this.el.before(this.blessing);
   this.waiting.id='choice-wait';this.waiting.className='hidden';this.waiting.setAttribute('role','status');this.boons.after(this.waiting);
@@ -54,15 +54,22 @@ export class MechanicHud {
    this.blessing.innerHTML=blessings.map(([key,rank])=>{const def=getBlessing(key)!;return `<img src="assets/dofus/spells/${def.icon}.png" alt="${escapeHtml(def.name)}" title="${escapeHtml(blessingDescription(key,rank))}">`;}).join('');
   }
   const team=state.players.size>1,readiness=choiceReadiness(state);
-  const choicesKey=p.choiceOffer+p.build+p.combatStats+p.spellLevels+state.phase+state.paused+Math.ceil(p.choiceRemaining)+(state.xpSweepUntil>0)+readiness.ready+'/'+readiness.total+readiness.paused;
-  if(choicesKey===this.choicesKey)return;this.choicesKey=choicesKey;
+  // En équipe, ceux qui ont choisi voient l'avancement des autres pendant la pause.
+  const waiting=team&&readiness.paused&&p.boonChoices==='[]';
+  this.waiting.classList.toggle('hidden',!waiting);
+  const waitHtml=waiting?`<small class="eyebrow">Combat en pause</small><b>Joueurs prêts ${readiness.ready}/${readiness.total}</b><small>En attente des choix de l’équipe…</small>`:'';
+  if(waitHtml!==this.waitHtml){this.waitHtml=waitHtml;this.waiting.innerHTML=waitHtml;}
+  // Compte à rebours et joueurs prêts changent sans reconstruire les cartes (leur animation d'entrée rejouerait).
+  const status=`${p.pendingLevels>1?`${p.pendingLevels} niveaux en attente · `:''}${team?`Combat en pause · joueurs prêts ${readiness.ready}/${readiness.total} · choix automatique dans ${Math.ceil(p.choiceRemaining)} s`:'Combat suspendu pendant le choix'}`;
+  const choicesKey=p.choiceOffer+p.build+p.combatStats+p.spellLevels+p.blessings+state.phase+state.paused+state.runLevel+(state.xpSweepUntil>0);
+  if(choicesKey!==this.choicesKey){this.choicesKey=choicesKey;this.renderChoices(state,p);}
+  const statusEl=this.boons.querySelector('.choice-status');
+  if(statusEl&&statusEl.textContent!==status)statusEl.textContent=status;
+ }
+ private renderChoices(state:GameStateView,p:PlayerView):void {
   let offer:Offer|null=null;try{offer=JSON.parse(p.choiceOffer);}catch{}
   this.boons.classList.toggle('hidden',!offer?.choices.length||state.phase!==PHASE_PLAYING||state.xpSweepUntil>0);
-  // En équipe, ceux qui ont choisi voient l'avancement des autres pendant la pause.
-  const waiting=team&&readiness.paused&&!offer?.choices.length;
-  this.waiting.classList.toggle('hidden',!waiting);
-  if(waiting)this.waiting.innerHTML=`<small class="eyebrow">Combat en pause</small><b>Joueurs prêts ${readiness.ready}/${readiness.total}</b><small>En attente des choix de l’équipe…</small>`;
-  if(!offer?.choices.length)return;
+  if(!offer?.choices.length){this.choicesHtml='';return;}
   const build=readBuild(p.build,p.classId),stats=JSON.parse(p.combatStats||'{}'),ranks=JSON.parse(p.spellLevels||'{}');
   this.boons.setAttribute('role','dialog');this.boons.setAttribute('aria-label','Choix personnel de progression');
   const focus=(document.activeElement as HTMLElement)?.dataset.boon;
@@ -72,8 +79,7 @@ export class MechanicHud {
   // Bandeau des paires : chaque sort possédé avec le passif qui le fait évoluer ; le survol relie sorts et cartes.
   const chips=pairs.map(pair=>{const asset=C.spell(pair.spellId)?.assetKey;const badge=pair.state==='evolved'?'✦ Évolué':pair.state==='ready'?'✦ Prêt pour un coffre':pair.state==='owned'?`✓ ${escapeHtml(pair.passiveName)} niv. ${pair.passiveLevel}`:`✗ ${escapeHtml(pair.passiveName)} manquant`;
    return `<div class="pair-chip ${pair.state}" data-keys="${pair.spellId} ${pair.passiveId}" tabindex="0" title="${escapeHtml(pair.spellName)} évolue en ${escapeHtml(pair.evolutionName)} avec ${escapeHtml(pair.passiveName)}">${asset?`<img src="assets/dofus/spells/${spellIcon(asset)}.png" alt="">`:''}<span><b>${escapeHtml(pair.spellName)}</b><small>${pair.state==='evolved'?'Évolution':`Niv. ${pair.level}/8`} ↔ ${escapeHtml(pair.passiveName)}</small><i>${badge}</i></span></div>`;}).join('');
-  const sub=`${p.pendingLevels>1?`${p.pendingLevels} niveaux en attente · `:''}${team?`Combat en pause · joueurs prêts ${readiness.ready}/${readiness.total} · choix automatique dans ${Math.ceil(p.choiceRemaining)} s`:'Combat suspendu pendant le choix'}`;
-  this.boons.innerHTML=`<div class="choice-head"><small class="eyebrow">${kicker}</small><h2>${title}</h2><small>${sub}</small></div>${chips?`<div class="choice-pairs"><small class="eyebrow">Vos paires d’évolution · survolez un sort</small><div class="pair-list">${chips}</div></div>`:''}<div class="level-choice-grid" style="--choice-count:${offer.choices.length}">${offer.choices.map((choice,index)=>{
+  const html=`<div class="choice-head"><small class="eyebrow">${kicker}</small><h2>${title}</h2><small class="choice-status"></small></div>${chips?`<div class="choice-pairs"><small class="eyebrow">Vos paires d’évolution · survolez un sort</small><div class="pair-list">${chips}</div></div>`:''}<div class="level-choice-grid" style="--choice-count:${offer.choices.length}">${offer.choices.map((choice,index)=>{
    const blessing=choice.kind==='blessing'?getBlessing(choice.definitionId):undefined;
    const card=blessing?{name:blessing.name,description:blessingDescription(blessing.id,(parseBlessings(p.blessings)[blessing.id]??0)+1),values:'',assetKey:blessing.icon,association:'',target:undefined}:describeRogueliteChoice(choice,build,stats,ranks);
    const label=choice.kind==='evolution'?'Évolution ultime':choice.kind==='retune'?'Réaccord':choice.kind==='acquireSpell'?'Nouveau sort':choice.kind==='upgradeSpell'?`Sort · niveau ${choice.nextLevel}/8`:choice.kind==='acquirePassive'?'Nouveau passif':choice.kind==='upgradePassive'?`Passif · niveau ${choice.nextLevel}/5`:choice.kind==='blessing'?'Bénédiction':'Récompense de secours';
@@ -86,6 +92,9 @@ export class MechanicHud {
    const banish=offer!.source==='level'&&build.banishes>0?`<button class="banish-card" data-banish="${escapeHtml(choice.id)}" data-revision="${offer!.revision}" title="Bannir : cette carte ne sera plus jamais proposée pendant la run" aria-label="Bannir ${escapeHtml(card.name)}">✕</button>`:'';
    return `<div class="reward-card ${fed.length||own&&own.state!=='missing'?'paired':''}" data-keys="${keys}"><button class="level-choice ${choice.kind==='evolution'?'evolution-card':choice.kind==='retune'?'retune-card':''}" data-boon="${index}" data-revision="${offer!.revision}" ${state.paused?'disabled':''}><span class="reward-icon">${card.assetKey?`<img src="assets/dofus/spells/${spellIcon(card.assetKey)}.png" alt="">`:'✦'}</span><small class="reward-kicker">${label}</small><b>${escapeHtml(card.name)}${card.target?' · '+escapeHtml(card.target):''}</b><span class="reward-text">${escapeHtml(retune?`Échange ${retune.out} contre ${card.name}, au même rang.`:card.description)}</span>${card.values?`<span class="reward-values">${escapeHtml(card.values)}</span>`:''}${synergy?`<small class="reward-synergy">✦ ${escapeHtml(synergy)}</small>`:''}</button>${banish}</div>`;
   }).join('')}</div>${offer.source==='level'?`<div class="reward-actions"><button class="btn reroll-button" data-reroll data-revision="${offer.revision}" ${build.rerolls<=0?'disabled':''}>↻ Relancer · ${build.rerolls}/5</button><small>✕ Bannir : ${build.banishes}/3 restants</small></div>`:''}`;
+  // Stats de combat sans effet sur le texte des cartes : rien à reconstruire.
+  if(html===this.choicesHtml)return;
+  this.choicesHtml=html;this.boons.innerHTML=html;
   if(focus!==undefined)this.boons.querySelector<HTMLElement>(`[data-boon="${focus}"]`)?.focus({preventScroll:true});
  }
  destroy():void{this.abort.abort();this.passives.remove();this.blessing.remove();this.waiting.remove();this.el.innerHTML='';this.boons.classList.add('hidden');}
