@@ -809,6 +809,16 @@ input[type='text']:focus {
   color: var(--or);
   text-shadow: 0 2px 0 var(--bois-fonce);
   padding-left: 8px;
+  cursor: pointer;
+}
+#banner .big-code:hover {
+  filter: brightness(1.25);
+}
+#banner .code-copied {
+  margin-left: 8px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  opacity: .85;
 }
 #banner > .btn {
   margin-top: 6px;

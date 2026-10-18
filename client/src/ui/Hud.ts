@@ -85,6 +85,8 @@ export class Hud {
   private dpsClockAt = 0;
   private meterShownAt = 0;
   private roomCode = '';
+  private codeCopied = false;
+  private codeCopiedTimer?: ReturnType<typeof setTimeout>;
   private solo=false;
   private dofusBanner=document.createElement('div');
   private dofusQueue:GearDrop[]=[];
@@ -148,6 +150,7 @@ export class Hud {
         if (data.action === 'start') this.callbacks.onStart();
         if (data.action === 'equipment') this.callbacks.onEquipment();
         if (data.action === 'talents') this.callbacks.onTalents();
+        if (data.action === 'copy-code') this.copyCode();
         if (data.class) this.callbacks.onClass(data.class);
         if (data.mode !== undefined) this.callbacks.onMode(Number(data.mode));
       },
@@ -186,6 +189,7 @@ export class Hud {
   }
 
   hide(): void {
+    clearTimeout(this.codeCopiedTimer);this.codeCopied=false;
     clearTimeout(this.ogrineTimer);this.ogrineBanner.remove();
     clearTimeout(this.dofusTimer);this.dofusQueue=[];this.dofusBanner.remove();document.getElementById('ranking-status')?.remove();document.getElementById('hud-performance')?.remove();
     this.resizeObserver.disconnect();
@@ -208,6 +212,15 @@ export class Hud {
       },
       () => {},
     );
+  }
+
+  /** Code seul, à saisir dans « Rejoindre » ; la confirmation apparaît au prochain rendu du bandeau. */
+  private copyCode(): void {
+    navigator.clipboard?.writeText(this.roomCode).then(() => {
+      this.codeCopied = true;
+      clearTimeout(this.codeCopiedTimer);
+      this.codeCopiedTimer = setTimeout(() => (this.codeCopied = false), 1500);
+    }, () => {});
   }
 
   /** Construit la barre de sorts à partir des données de la classe. */
@@ -534,7 +547,7 @@ export class Hud {
       // Les descriptions (classe, difficulté) passent dans les infobulles des boutons.
       banner =
         `<div class="lobby-head">` +
-        (state.singlePlayer ? `<span class="lobby-title">Préparez votre aventure</span>` : `<span class="lobby-title">Code <span class="big-code">${escapeHtml(this.roomCode)}</span></span>`) +
+        (state.singlePlayer ? `<span class="lobby-title">Préparez votre aventure</span>` : `<span class="lobby-title">Code <span class="big-code" data-action="copy-code" title="Cliquer pour copier le code">${escapeHtml(this.roomCode)}</span>${this.codeCopied ? '<span class="code-copied">Copié !</span>' : ''}</span>`) +
         `<span class="lobby-count">${state.players.size} joueur${state.players.size > 1 ? 's' : ''} · entraînez-vous</span>` +
         `<div class="mode-picker">${GAME_MODES.map((m) => {const locked=m.id>(state.players.get(state.hostId)?.unlockedMode??0);return`<button class="btn mode-btn${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" ${host&&!locked ? '' : 'disabled'} title="${escapeHtml(locked?`L’hôte doit vaincre le Krala en ${GAME_MODES[m.id-1].name}.`:m.description)}">${m.name}${locked?' · Verrouillé':''}</button>`;}).join('')}</div>` +
         `<button class="btn" data-action="equipment">Équipement</button><button class="btn" data-action="talents">Sorts & talents</button>` +
