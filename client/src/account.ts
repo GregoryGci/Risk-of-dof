@@ -2,7 +2,7 @@ import {getPetAttack,rollPetAttack,petRerollCost,type PetAttackDef} from '@rod/s
 import {skinById,skinFits,type CurrencyGrant} from '@rod/shared';
 // Progression entre les parties, mémorisée dans le navigateur :
 // bourse de kamas (gagnée en fin de partie), sorts débloqués et sorts équipés par classe.
-import { EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, fusionResult, equippedStats, sanitizeEquipment, slotKind, type EquipmentRarity, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
+import { bestLoadout, EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, fusionResult, equippedStats, sanitizeEquipment, slotKind, type EquipmentRarity, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
 import { equippedFromAccount, migrateAccount, type AccountData } from './progression.ts';
 import {forgeCost,recycleValue,type ForgeGrant} from '@rod/shared';
 import {sanitizeRunSummary,compareRuns,unlockedModeFromProgression} from '@rod/shared';
@@ -209,6 +209,12 @@ export const account = {
   },
 
   unequipGear(slot: EquipmentSlot): void { delete data.equipped[slot]; save(); },
+  /** Tenue au meilleur score global, bonus de panoplie compris, parmi les objets possédés. Faux si rien ne change. */
+  autoEquip(): boolean {
+    const next = bestLoadout(data.inventory);
+    if (EQUIPMENT_SLOTS.every(slot => next[slot] === data.equipped[slot])) return false;
+    data.equipped = next; save(); return true;
+  },
   /** Déplace un objet porté vers un autre emplacement du même type, en échangeant s'il est occupé. */
   moveGear(from: EquipmentSlot, to: EquipmentSlot): boolean {
     const a = data.equipped[from], b = data.equipped[to];

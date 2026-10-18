@@ -45,6 +45,7 @@ export class EquipmentPage {
       if(button.dataset.action==='forge' && this.canEdit()) {const uid=account.forgeGear(this.selected);if(uid){this.selected=uid;this.onChange();}}
       if(button.dataset.action==='recycle' && this.canEdit() && account.recycleGear(this.selected))this.onChange();
       if (button.dataset.action === 'fuse-all' && this.canEdit() && account.fuseAll()) this.onChange();
+      if (button.dataset.action === 'auto-equip' && this.canEdit() && account.autoEquip()) this.onChange();
       if (button.dataset.action === 'recycle-rarity') this.confirmRecycle = true;
       if (button.dataset.action === 'recycle-cancel') this.confirmRecycle = false;
       if (button.dataset.action === 'recycle-confirm' && this.canEdit()) {
@@ -243,7 +244,7 @@ export class EquipmentPage {
         : `<span class="gear-bulk-count">${this.picked.size} sélectionné${this.picked.size > 1 ? 's' : ''} · +${picked.fragments.toLocaleString('fr')} ◈</span><button class="btn" data-action="pick-visible" title="Coche les objets affichés (filtre et recherche), sauf les exemplaires portés">Tout cocher</button><button class="btn" data-action="pick-none" ${this.picked.size ? '' : 'disabled'}>Tout décocher</button><button class="btn btn-primary" data-action="pick-recycle" ${picked.count && edit ? '' : 'disabled'}>Recycler la sélection (${picked.count})</button><button class="btn" data-action="pick-stop">Terminer</button>`;
       return `<div class="gear-bulk picking"><span class="gear-bulk-hint">Cliquez sur les objets à recycler.</span>${actions}</div>`;
     }
-    return `<div class="gear-bulk"><button class="btn" data-action="pick-start" title="Cocher plusieurs objets puis les recycler d’un coup">Sélectionner…</button><button class="btn" data-action="fuse-all" ${fusable && edit ? '' : 'disabled'} title="Fusionne chaque groupe de ${FUSION_COST} exemplaires identiques, en cascade">Tout fusionner${fusable ? ` (${fusable})` : ''}</button>${recycle}</div>`;
+    return `<div class="gear-bulk"><button class="btn btn-primary" data-action="auto-equip" ${edit ? '' : 'disabled'} title="Équipe la combinaison d’objets qui donne le plus de statistiques au total, bonus de panoplie compris">Équipement auto</button><button class="btn" data-action="pick-start" title="Cocher plusieurs objets puis les recycler d’un coup">Sélectionner…</button><button class="btn" data-action="fuse-all" ${fusable && edit ? '' : 'disabled'} title="Fusionne chaque groupe de ${FUSION_COST} exemplaires identiques, en cascade">Tout fusionner${fusable ? ` (${fusable})` : ''}</button>${recycle}</div>`;
   }
   private renderSet(set:EquipmentSet|undefined):string {
     if(!set)return '';const count=setProgress(account.equipment).find(row=>row.set.id===set.id)?.count??0;
