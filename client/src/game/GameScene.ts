@@ -59,7 +59,7 @@ import {XpView} from './XpView.ts';
 import { settings } from '../settings.ts';
 import { Controls } from './Controls.ts';
 import {readBuild,effectiveAbilityPreview,type EffectiveRogueliteAbility} from '@rod/shared/roguelite';
-import {MechanicHud} from '../ui/MechanicHud.ts';
+import {MechanicHud,choiceReadiness} from '../ui/MechanicHud.ts';
 import {RogueliteEffects} from './RogueliteEffects.ts';
 import {MovementPrediction} from './Prediction.ts';
 import { Effects } from './Effects.ts';
@@ -378,10 +378,10 @@ export class GameScene extends Phaser.Scene {
     }
     if (progressionOpen) this.controls.releaseAll();
     // Pendant une pause, les temps de recharge affichés sont figés eux aussi.
-    const choicePaused=state.players.size===1&&myState?.boonChoices!=='[]'&&!state.xpSweepUntil;
+    const choicePaused=choiceReadiness(state).paused;
     if ((state.paused||choicePaused) && this.lastFrameTime > 0){for(let i=0;i<4;i++)this.cdEnd[i]+=time-this.lastFrameTime;this.dashCdEnd+=time-this.lastFrameTime;}
     this.lastFrameTime = time;
-    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !(myState?.boonChoices!=='[]'&&!state.xpSweepUntil) && !progressionOpen && !this.details.isOpen && !gameSettings().isOpen && !this.rest.isOpen && !state.paused && !document.hidden && document.hasFocus();
+    const canAct = !!myState && myState.alive && state.phase !== PHASE_LOST && !(myState?.boonChoices!=='[]'&&!state.xpSweepUntil) && !choicePaused && !progressionOpen && !this.details.isOpen && !gameSettings().isOpen && !this.rest.isOpen && !state.paused && !document.hidden && document.hasFocus();
 
     if (myState && (myState.classId !== this.myClass || myState.spells !== this.mySpellsKey || myState.abilities+myState.build !== this.myLevelsKey)) {
       // Première frame, changement de classe ou de sorts équipés : la barre de sorts suit.

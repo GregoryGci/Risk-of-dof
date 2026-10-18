@@ -295,9 +295,13 @@ export class Simulation {
   private bossRewardStages=new Set<number>();
   blessings=new Blessings(this);
 
-  /** Pause implicite de niveau : appliquée aussi aux intentions reçues du réseau. */
+  /** Horloge des choix : continue pendant la pause de choix pour borner l'attente d'un joueur absent. */
+  choiceNow=0;
+  /** Pause implicite de niveau, solo comme en équipe : tant qu'un joueur connecté choisit, la run est figée pour tous. */
   private get choicePaused():boolean{
-    return this.state.phase===PHASE_PLAYING&&this.players.size===1&&!this.experience.sweeping&&[...this.players.values()].some(p=>p.state.boonChoices!=='[]');
+    if(this.state.phase!==PHASE_PLAYING||this.experience.sweeping)return false;
+    const solo=this.players.size===1;
+    return [...this.players.values()].some(p=>p.state.boonChoices!=='[]'&&(solo||p.state.connected));
   }
 
   constructor(
@@ -356,7 +360,7 @@ export class Simulation {
     // Arrivée en cours de run : même niveau ET autant de choix que l'équipe.
     if(this.state.phase===PHASE_PLAYING&&this.state.runLevel>1){
       state.pendingLevels=this.state.runLevel-1;
-      rt.build.enqueueLevels(state.pendingLevels,this.now*1000);
+      rt.build.enqueueLevels(state.pendingLevels,this.choiceNow*1000);
       this.refreshBoonChoices(rt);
     }
 
@@ -384,8 +388,8 @@ export class Simulation {
     p.state.boonChoices=JSON.stringify(snapshot.offer?.choices.map(c=>c.id)??[]);p.state.choiceRevision=snapshot.offer?.revision??p.state.choiceRevision;
     p.choiceDeadline=(snapshot.offer?.expiresAtMs??0)/1000;
   }
-  rerollBoon(id:string,message:{runId?:unknown;revision?:unknown}):void {const p=this.players.get(id);if(p&&this.state.phase===PHASE_PLAYING&&!this.state.paused&&p.build.reroll(message,this.now*1000))this.syncBuild(p);}
-  banishBoon(id:string,message:{runId?:unknown;revision?:unknown;choiceId?:unknown}):void {const p=this.players.get(id);if(p&&this.state.phase===PHASE_PLAYING&&!this.state.paused&&p.build.banish(message,this.now*1000))this.syncBuild(p);}
+  rerollBoon(id:string,message:{runId?:unknown;revision?:unknown}):void {const p=this.players.get(id);if(p&&this.state.phase===PHASE_PLAYING&&!this.state.paused&&p.build.reroll(message,this.choiceNow*1000))this.syncBuild(p);}
+  banishBoon(id:string,message:{runId?:unknown;revision?:unknown;choiceId?:unknown}):void {const p=this.players.get(id);if(p&&this.state.phase===PHASE_PLAYING&&!this.state.paused&&p.build.banish(message,this.choiceNow*1000))this.syncBuild(p);}
 
   /** Tenue modifiable dans le salon ou après une défaite, jamais pendant la run. */
   setEquipment(id: string, equipment: unknown): void {
@@ -954,8 +958,9 @@ export class Simulation {
     // Garde-fou si le serveur a eu un gros ralentissement.
     dt = Math.min(dt, 0.1);
     if (this.state.phase === PHASE_LOST || this.state.paused) return;
-    // En solo le choix fige le combat ; en équipe il expire automatiquement.
-    if(this.choicePaused&&!this.guardiansDefeated())return;
+    this.choiceNow += dt;
+    // Le choix fige le combat ; en équipe il expire quand même au bout du délai pour ne pas bloquer les autres.
+    if(this.choicePaused&&!this.guardiansDefeated()){if(this.players.size>1)this.updateChoices();return;}
     this.now += dt;
     if(this.state.phase===PHASE_PLAYING){this.experience.update(dt);this.updateChoices();}
     // Rencontre gagnée : les attaques restantes ne peuvent pas tuer l'équipe
@@ -1608,12 +1613,12 @@ export class Simulation {
   }
 
   private refreshBoonChoices(p:PlayerRt):void {this.syncBuild(p);}
-  private offerLevel():void {for(const p of this.players.values()){p.build.enqueueLevels(1,this.now*1000);this.syncBuild(p);}this.broadcast('runLevel',{level:this.state.runLevel});}
+  private offerLevel():void {for(const p of this.players.values()){p.build.enqueueLevels(1,this.choiceNow*1000);this.syncBuild(p);}this.broadcast('runLevel',{level:this.state.runLevel});}
   private updateChoices():void {
     for(const p of this.players.values()){
-      if(!this.experience.sweeping)for(const eventId of p.pendingBossRewards.splice(0))p.build.enqueueBonus(eventId,'boss',[],this.now*1000);
-      const offer=p.build.getSnapshot().offer;p.state.choiceRemaining=this.players.size>1&&offer?Math.max(0,(offer.expiresAtMs-this.now*1000)/1000):0;
-      if(this.players.size>1&&offer&&this.now*1000>=offer.expiresAtMs)this.chooseBoon(p.id,0,offer.revision,this.state.runId);
+      if(!this.experience.sweeping)for(const eventId of p.pendingBossRewards.splice(0))p.build.enqueueBonus(eventId,'boss',[],this.choiceNow*1000);
+      const offer=p.build.getSnapshot().offer;p.state.choiceRemaining=this.players.size>1&&offer?Math.max(0,(offer.expiresAtMs-this.choiceNow*1000)/1000):0;
+      if(this.players.size>1&&offer&&this.choiceNow*1000>=offer.expiresAtMs)this.chooseBoon(p.id,0,offer.revision,this.state.runId);
       this.syncBuild(p);
     }
   }
@@ -1700,7 +1705,7 @@ export class Simulation {
   chooseBoon(id:string,choice:unknown,revision?:number,runId?:string):void {
     const p=this.players.get(id),index=Number(choice);if(!p||this.state.paused||this.state.phase!==PHASE_PLAYING||!Number.isInteger(index))return;
     const offer=p.build.getSnapshot().offer;if(!offer||index<0||index>=offer.choices.length)return;
-    const selected=p.build.choose({runId:runId??this.state.runId,revision:revision??offer.revision,choiceId:offer.choices[index].id},this.now*1000);if(!selected)return;
+    const selected=p.build.choose({runId:runId??this.state.runId,revision:revision??offer.revision,choiceId:offer.choices[index].id},this.choiceNow*1000);if(!selected)return;
     if(selected.kind==='blessing'){p.blessingRanks[selected.definitionId]=Math.min(3,(p.blessingRanks[selected.definitionId]??0)+1);p.state.blessings=JSON.stringify(p.blessingRanks);}
     if(selected.kind==='evolution'){const slot=p.build.currentBuild.spells.findIndex(s=>s?.spellId===selected.definitionId);p.readyAt[slot]=this.now;this.roguelite.evolved(p,slot);}
     if(selected.kind==='fallback'&&selected.definitionId==='fb.potion'){this.healPlayer(p,p.state.maxHp*.35);p.state.shield=Math.max(p.state.shield,p.state.maxHp*.1);p.shieldUntil=this.now+5;}
@@ -1709,7 +1714,7 @@ export class Simulation {
   private offerBlessings(p:PlayerRt):void {
     const pool=blessingPool(p.spells.map(getSpell),p.blessingRanks),choices:string[]=[];
     while(pool.length&&choices.length<3)choices.push(pool.splice(Math.floor(this.random()*pool.length),1)[0]);
-    p.build.enqueueBonus(`elite:${this.state.runId}:${this.state.kills}`,'elite',choices,this.now*1000);this.syncBuild(p);
+    p.build.enqueueBonus(`elite:${this.state.runId}:${this.state.kills}`,'elite',choices,this.choiceNow*1000);this.syncBuild(p);
   }
 
 

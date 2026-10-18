@@ -5,15 +5,23 @@ interface Choice {id:string;kind:string;definitionId:string;nextLevel:number;tar
 /** Icône Retro d'un sort ; l'Épée du Jugement réutilise celle de l'Épée Céleste. */
 const spellIcon=(asset:string)=>asset==='epee_du_jugement'?'epee_celeste':asset;
 interface Offer {revision:number;source:string;choices:Choice[]}
+/** Même règle que le serveur : la run est figée tant que le joueur solo, ou un joueur connecté, a un choix ouvert. */
+export function choiceReadiness(state:GameStateView):{paused:boolean;ready:number;total:number}{
+ const solo=state.players.size===1;let ready=0,total=0,open=false;
+ state.players.forEach(p=>{if(!solo&&!p.connected)return;total++;if(p.boonChoices==='[]')ready++;else open=true;});
+ return {paused:open&&state.phase===PHASE_PLAYING&&!state.xpSweepUntil,ready,total};
+}
 export class MechanicHud {
  private el=document.getElementById('class-mechanic')!;
  private boons=document.getElementById('boon-choices')!;
  private passives=document.createElement('div');
  private blessing=document.createElement('div');
+ private waiting=document.createElement('div');
  private abort=new AbortController();
  private key='';private choicesKey='';
  constructor(action:(choice:number)=>void,choose:(choice:number,revision:number)=>void,private rewardAction:(type:'reroll'|'banish',revision:number,choiceId?:string)=>void=()=>{}) {
   this.passives.id='passive-slots';this.el.before(this.passives);this.blessing.id='blessing-hud';this.el.before(this.blessing);
+  this.waiting.id='choice-wait';this.waiting.className='hidden';this.waiting.setAttribute('role','status');this.boons.after(this.waiting);
   this.el.addEventListener('click',e=>{if((e.target as HTMLElement).closest('[data-class-action]'))action(0);},{signal:this.abort.signal});
   this.boons.addEventListener('click',e=>{
    const target=(e.target as HTMLElement).closest<HTMLElement>('[data-boon],[data-reroll],[data-banish]');if(!target)return;
@@ -45,10 +53,15 @@ export class MechanicHud {
    const blessings=Object.entries(parseBlessings(p.blessings));this.blessing.classList.toggle('hidden',!blessings.length);
    this.blessing.innerHTML=blessings.map(([key,rank])=>{const def=getBlessing(key)!;return `<img src="assets/dofus/spells/${def.icon}.png" alt="${escapeHtml(def.name)}" title="${escapeHtml(blessingDescription(key,rank))}">`;}).join('');
   }
-  const choicesKey=p.choiceOffer+p.build+p.combatStats+p.spellLevels+state.phase+state.paused+Math.ceil(p.choiceRemaining)+(state.xpSweepUntil>0);
+  const team=state.players.size>1,readiness=choiceReadiness(state);
+  const choicesKey=p.choiceOffer+p.build+p.combatStats+p.spellLevels+state.phase+state.paused+Math.ceil(p.choiceRemaining)+(state.xpSweepUntil>0)+readiness.ready+'/'+readiness.total+readiness.paused;
   if(choicesKey===this.choicesKey)return;this.choicesKey=choicesKey;
   let offer:Offer|null=null;try{offer=JSON.parse(p.choiceOffer);}catch{}
   this.boons.classList.toggle('hidden',!offer?.choices.length||state.phase!==PHASE_PLAYING||state.xpSweepUntil>0);
+  // En équipe, ceux qui ont choisi voient l'avancement des autres pendant la pause.
+  const waiting=team&&readiness.paused&&!offer?.choices.length;
+  this.waiting.classList.toggle('hidden',!waiting);
+  if(waiting)this.waiting.innerHTML=`<small class="eyebrow">Combat en pause</small><b>Joueurs prêts ${readiness.ready}/${readiness.total}</b><small>En attente des choix de l’équipe…</small>`;
   if(!offer?.choices.length)return;
   const build=readBuild(p.build,p.classId),stats=JSON.parse(p.combatStats||'{}'),ranks=JSON.parse(p.spellLevels||'{}');
   this.boons.setAttribute('role','dialog');this.boons.setAttribute('aria-label','Choix personnel de progression');
@@ -59,7 +72,7 @@ export class MechanicHud {
   // Bandeau des paires : chaque sort possédé avec le passif qui le fait évoluer ; le survol relie sorts et cartes.
   const chips=pairs.map(pair=>{const asset=C.spell(pair.spellId)?.assetKey;const badge=pair.state==='evolved'?'✦ Évolué':pair.state==='ready'?'✦ Prêt pour un coffre':pair.state==='owned'?`✓ ${escapeHtml(pair.passiveName)} niv. ${pair.passiveLevel}`:`✗ ${escapeHtml(pair.passiveName)} manquant`;
    return `<div class="pair-chip ${pair.state}" data-keys="${pair.spellId} ${pair.passiveId}" tabindex="0" title="${escapeHtml(pair.spellName)} évolue en ${escapeHtml(pair.evolutionName)} avec ${escapeHtml(pair.passiveName)}">${asset?`<img src="assets/dofus/spells/${spellIcon(asset)}.png" alt="">`:''}<span><b>${escapeHtml(pair.spellName)}</b><small>${pair.state==='evolved'?'Évolution':`Niv. ${pair.level}/8`} ↔ ${escapeHtml(pair.passiveName)}</small><i>${badge}</i></span></div>`;}).join('');
-  const sub=`${p.pendingLevels>1?`${p.pendingLevels} niveaux en attente · `:''}${state.players.size>1?`Le combat continue · choix automatique dans ${Math.ceil(p.choiceRemaining)} s`:'Combat suspendu pendant le choix'}`;
+  const sub=`${p.pendingLevels>1?`${p.pendingLevels} niveaux en attente · `:''}${team?`Combat en pause · joueurs prêts ${readiness.ready}/${readiness.total} · choix automatique dans ${Math.ceil(p.choiceRemaining)} s`:'Combat suspendu pendant le choix'}`;
   this.boons.innerHTML=`<div class="choice-head"><small class="eyebrow">${kicker}</small><h2>${title}</h2><small>${sub}</small></div>${chips?`<div class="choice-pairs"><small class="eyebrow">Vos paires d’évolution · survolez un sort</small><div class="pair-list">${chips}</div></div>`:''}<div class="level-choice-grid" style="--choice-count:${offer.choices.length}">${offer.choices.map((choice,index)=>{
    const blessing=choice.kind==='blessing'?getBlessing(choice.definitionId):undefined;
    const card=blessing?{name:blessing.name,description:blessingDescription(blessing.id,(parseBlessings(p.blessings)[blessing.id]??0)+1),values:'',assetKey:blessing.icon,association:'',target:undefined}:describeRogueliteChoice(choice,build,stats,ranks);
@@ -75,5 +88,5 @@ export class MechanicHud {
   }).join('')}</div>${offer.source==='level'?`<div class="reward-actions"><button class="btn reroll-button" data-reroll data-revision="${offer.revision}" ${build.rerolls<=0?'disabled':''}>↻ Relancer · ${build.rerolls}/5</button><small>✕ Bannir : ${build.banishes}/3 restants</small></div>`:''}`;
   if(focus!==undefined)this.boons.querySelector<HTMLElement>(`[data-boon="${focus}"]`)?.focus({preventScroll:true});
  }
- destroy():void{this.abort.abort();this.passives.remove();this.blessing.remove();this.el.innerHTML='';this.boons.classList.add('hidden');}
+ destroy():void{this.abort.abort();this.passives.remove();this.blessing.remove();this.waiting.remove();this.el.innerHTML='';this.boons.classList.add('hidden');}
 }

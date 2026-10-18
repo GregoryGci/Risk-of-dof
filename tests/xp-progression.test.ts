@@ -78,3 +78,17 @@ test('Mort réentrante : un effet déclenché pendant la mort ne duplique ni XP,
   sim.broadcast=(type,message)=>{broadcast(type,message);if(type==='dmg'&&(message as any).target===boss.id)sim.damageMonster(boss,1e9,p.id);};
   sim.damageMonster(boss,1e9,p.id);assert.equal(state.kills,1);assert.equal(p.state.bossKills,1);assert.equal(events.filter(e=>e.type==='xpSweep').length,1);assert.equal([...state.xpOrbs.values()].reduce((n,o)=>n+o.value,0),enemyExperience(boss.def,1,1));
 });
+test('Équipe : la run se fige pendant les choix, reprend quand tous ont choisi ; absent ou déconnecté ne bloque pas',()=>{
+  const {sim,state,p,q}=setup(true);q!.state.x=p.state.x;q!.state.y=p.state.y;
+  sim.experience.drop(40,40,xpToNextLevel(1));sim.update(1/30);assert.notEqual(p.state.boonChoices,'[]');assert.notEqual(q!.state.boonChoices,'[]');
+  const time=state.time;advance(sim,2);assert.equal(state.time,time);
+  sim.chooseBoon(p.id,0,p.state.choiceRevision);assert.equal(p.state.boonChoices,'[]');advance(sim,2);assert.equal(state.time,time);
+  sim.chooseBoon(q!.id,0,q!.state.choiceRevision);advance(sim,1);assert.ok(state.time>time);
+  // Joueur inactif : le choix automatique libère l'équipe au bout du délai.
+  sim.experience.drop(40,40,xpToNextLevel(2));sim.update(1/30);sim.chooseBoon(p.id,0,p.state.choiceRevision);const frozen=state.time;
+  advance(sim,C.config.choiceTimeoutMs/1000-1);assert.equal(state.time,frozen);assert.equal(q!.state.pendingLevels,1);
+  advance(sim,1.5);assert.equal(q!.state.pendingLevels,0);assert.ok(state.time>frozen);
+  // Joueur déconnecté : il garde son choix sans figer les autres.
+  q!.state.connected=false;sim.experience.drop(40,40,xpToNextLevel(3));sim.update(1/30);sim.chooseBoon(p.id,0,p.state.choiceRevision);const running=state.time;
+  advance(sim,1);assert.ok(state.time>running);assert.equal(q!.state.pendingLevels,1);
+});
