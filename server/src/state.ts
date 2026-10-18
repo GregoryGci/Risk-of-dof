@@ -164,6 +164,8 @@ export const GameState = schema(
     potions: t.map(PotionState),
     stage: t.uint8().default(1),
     paused: t.boolean().default(false),
+    /** Joueurs dont le menu Échap fige la run d'équipe, séparés par des virgules. */
+    pausedBy: t.string().default(''),
     mode: t.uint8().default(1),
     restX: t.float32().default(0),
     restY: t.float32().default(0),

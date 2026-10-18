@@ -55,12 +55,14 @@ export class MechanicHud {
   }
   const team=state.players.size>1,readiness=choiceReadiness(state);
   // En équipe, ceux qui ont choisi voient l'avancement des autres pendant la pause.
-  const waiting=team&&readiness.paused&&p.boonChoices==='[]';
+  // Menu Échap d'un joueur : prioritaire sur l'attente des choix, la run est figée pour tous.
+  const menuPause=team&&state.paused&&!!state.pausedBy;
+  const waiting=p.boonChoices==='[]'&&(menuPause||(team&&readiness.paused));
   this.waiting.classList.toggle('hidden',!waiting);
-  const waitHtml=waiting?`<small class="eyebrow">Combat en pause</small><b>Joueurs prêts ${readiness.ready}/${readiness.total}</b><small>En attente des choix de l’équipe…</small>`:'';
+  const waitHtml=!waiting?'':menuPause?`<small class="eyebrow">Partie en pause</small><b>${escapeHtml(state.pausedBy)}</b><small>Reprise dès que le menu Échap sera refermé</small>`:`<small class="eyebrow">Combat en pause</small><b>Joueurs prêts ${readiness.ready}/${readiness.total}</b><small>En attente des choix de l’équipe…</small>`;
   if(waitHtml!==this.waitHtml){this.waitHtml=waitHtml;this.waiting.innerHTML=waitHtml;}
   // Compte à rebours et joueurs prêts changent sans reconstruire les cartes (leur animation d'entrée rejouerait).
-  const status=`${p.pendingLevels>1?`${p.pendingLevels} niveaux en attente · `:''}${team?`Combat en pause · joueurs prêts ${readiness.ready}/${readiness.total} · choix automatique dans ${Math.ceil(p.choiceRemaining)} s`:'Combat suspendu pendant le choix'}`;
+  const status=`${menuPause?`En pause : ${state.pausedBy} · `:''}${p.pendingLevels>1?`${p.pendingLevels} niveaux en attente · `:''}${team?`Combat en pause · joueurs prêts ${readiness.ready}/${readiness.total} · choix automatique dans ${Math.ceil(p.choiceRemaining)} s`:'Combat suspendu pendant le choix'}`;
   const choicesKey=p.choiceOffer+p.build+p.combatStats+p.spellLevels+p.blessings+state.phase+state.paused+state.runLevel+(state.xpSweepUntil>0);
   if(choicesKey!==this.choicesKey){this.choicesKey=choicesKey;this.renderChoices(state,p);}
   const statusEl=this.boons.querySelector('.choice-status');

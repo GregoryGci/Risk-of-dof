@@ -223,12 +223,12 @@ export class GameScene extends Phaser.Scene {
       (open) => {
         // Le panneau libère la souris : on arrête de bouger et de tirer, et on demande la pause (effective en solo).
         this.controls.releaseAll();
-        this.room.send('pause', { paused: open });
+        this.room.send('pause', { paused: open, reason: 'details' });
       },
     );
-    // Réglages en partie : même pause que le panneau de détails (effective en solo seulement).
+    // Réglages en partie (Échap) : pause en solo, et pour toute l'équipe en multijoueur.
     const menu = gameSettings();
-    menu.onToggle = (open) => { this.controls.releaseAll(); this.room.send('pause', { paused: open }); };
+    menu.onToggle = (open) => { this.controls.releaseAll(); this.room.send('pause', { paused: open, reason: 'menu' }); };
     document.getElementById('details-settings')!.onclick = () => { this.details.toggle(false); menu.toggle(true); };
     this.hud.setSpellHover((slot) => (this.previewSlot = slot));
     this.rest = new RestPanel(()=>{this.controls.releaseAll();this.room.send('restReady');},route=>this.room.send('routeChoice',{route}));

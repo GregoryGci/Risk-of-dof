@@ -335,8 +335,8 @@ export class Simulation {
   // -------------------------------------------------------------------------
 
   addPlayer(id: string, name: string, classId?: string, loadout?: unknown, equipment?: unknown, blessing?:unknown, levels?:unknown,unlockedMode=GAME_MODES.length-1): void {
-    // Un nouveau joueur arrive : plus de pause possible.
-    this.state.paused = false;
+    // Un nouveau joueur arrive : les pauses en cours sont levées.
+    this.clearPause();
     const def = getClass(classId ?? '');
     const state = new PlayerState();
     state.name = name;
@@ -439,11 +439,32 @@ export class Simulation {
     p.state.blessing=blessing as string;this.blessings.reset(id);
   }
 
-  /** Pause demandée par un joueur : seulement s'il est seul (on ne fige pas les autres). */
-  setPaused(id: string, paused: unknown): void {
+  /** Demandes de pause en cours, `<joueur>:<menu|details>`. */
+  private pauseRequests=new Set<string>();
+  /** Tous les joueurs déconnectés : la salle fige la run en attendant un retour. */
+  reconnectHold=false;
+  /**
+   * Pause demandée par un joueur. Seul, tout panneau fige la run ; en équipe, seul le menu Échap la fige
+   * pour tout le monde, jusqu'à ce que chaque joueur qui l'a ouvert le referme.
+   */
+  setPaused(id: string, paused: unknown, reason: unknown='menu'): void {
     if (!this.players.has(id)) return;
-    this.state.paused = paused === true && this.players.size === 1;
+    const key=`${id}:${reason==='details'?'details':'menu'}`;
+    if(paused===true){if(this.players.size>1&&(this.state.phase!==PHASE_PLAYING||key.endsWith(':details')))return;this.pauseRequests.add(key);}
+    else this.pauseRequests.delete(key);
+    this.refreshPause();
   }
+  refreshPause():void {
+    const team=this.players.size>1;
+    for(const key of [...this.pauseRequests]){
+      const p=this.players.get(key.slice(0,key.lastIndexOf(':')));
+      if(!p||(team&&(!p.state.connected||key.endsWith(':details'))))this.pauseRequests.delete(key);
+    }
+    const by=[...new Set([...this.pauseRequests].map(key=>this.players.get(key.slice(0,key.lastIndexOf(':')))!.state.name))];
+    this.state.paused=this.reconnectHold||by.length>0;
+    this.state.pausedBy=team?by.join(', '):'';
+  }
+  private clearPause():void {this.pauseRequests.clear();this.reconnectHold=false;this.refreshPause();}
 
   /** L'hôte lance la partie depuis le salon. */
   start(): void {
@@ -577,7 +598,7 @@ export class Simulation {
     const p=this.players.get(id);if(!p?.state.alive||!this.state.intermission||this.state.paused)return;
     p.state.restReady=true;this.finishRestIfReady();
   }
-  connectionChanged():void{this.finishRestIfReady();}
+  connectionChanged():void{this.refreshPause();this.finishRestIfReady();}
   private finishRestIfReady():void {
     if(!this.state.intermission||![...this.players.values()].some(p=>p.state.connected)||[...this.players.values()].some(p=>p.state.connected&&!p.state.restReady))return;
     this.state.stageRoute=resolveRoute([...this.players.values()].map(p=>p.state.routeChoice),this.players.get(this.state.hostId)?.state.routeChoice??'normal');
@@ -677,7 +698,7 @@ export class Simulation {
     this.state.phase = PHASE_LOBBY;
     this.state.outcome='';
     this.state.intermission=false;
-    this.state.paused = false;
+    this.clearPause();
     this.state.time = 0;
     this.state.waves=0;this.state.zoneWave=0;
     this.state.stageRoute='normal';
@@ -1555,7 +1576,7 @@ export class Simulation {
     if(this.state.phase!==PHASE_PLAYING)return;
     if(outcome==='victory')this.experience.collectAll();
     this.state.phase = PHASE_FINISHED;
-    this.state.outcome=outcome;this.state.paused=false;this.timers=[];this.projectiles=[];
+    this.state.outcome=outcome;this.clearPause();this.timers=[];this.projectiles=[];
     for (const p of this.players.values()) {
       p.dx=p.dy=0;p.autoAttack=false;p.push=null;p.state.moving=false;p.state.forcedMotion=false;p.state.momentum=false;p.momentumUntil=0;
       p.state.boonChoices='[]';p.state.pendingLevels=0;

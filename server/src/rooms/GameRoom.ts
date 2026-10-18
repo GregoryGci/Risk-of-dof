@@ -82,7 +82,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage('class', (client: Client, message: { classId?: string; spells?: string[] }) => {this.sim.setClass(client.sessionId, message?.classId, message?.spells);this.sim.setSpellLevels(client.sessionId,this.progression.get(client.sessionId));});
     this.onMessage('refreshProgression',(client:Client)=>this.refreshProgression(client.sessionId));
     this.onMessage('dash', (client: Client, message: { dx?: number; dy?: number }) => this.sim.playerDash(client.sessionId, message));
-    this.onMessage('pause', (client: Client, message: { paused?: boolean }) => this.sim.setPaused(client.sessionId, message?.paused));
+    this.onMessage('pause', (client: Client, message: { paused?: boolean; reason?: string }) => this.sim.setPaused(client.sessionId, message?.paused, message?.reason));
     this.onMessage('equipment', (client: Client, message: { equipment?: unknown }) => this.sim.setEquipment(client.sessionId, message?.equipment));
     this.onMessage('restReady',(client:Client)=>this.sim.restReady(client.sessionId));
     this.onMessage('mode', (client: Client, message: { mode?: number }) => this.sim.setMode(client.sessionId, message?.mode));
@@ -131,12 +131,13 @@ export class GameRoom extends Room<{ state: GameState }> {
     const p=this.sim.players.get(client.sessionId);
     if(p){p.state.connected=false;p.dx=p.dy=0;p.autoAttack=false;p.state.moving=false;p.pendingInputSeq=p.state.inputSeq;}
     this.sim.connectionChanged();
-    if([...this.sim.players.values()].every(p=>!p.state.connected)&&!this.state.paused){this.state.paused=true;this.pausedForReconnect=true;}
+    if([...this.sim.players.values()].every(p=>!p.state.connected)&&!this.state.paused){this.sim.reconnectHold=true;this.sim.refreshPause();this.pausedForReconnect=true;}
     this.allowReconnection(client,120);
   }
   onReconnect(client:Client):void {
     const p=this.sim.players.get(client.sessionId);if(p)p.state.connected=true;
-    if(this.pausedForReconnect){this.state.paused=false;this.pausedForReconnect=false;}
+    if(this.pausedForReconnect){this.sim.reconnectHold=false;this.pausedForReconnect=false;}
+    this.sim.refreshPause();
   }
   onLeave(client: Client): void {
     // Run quittée en cours : le score part au classement avant que le compte soit oublié.
@@ -144,7 +145,8 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.accounts.delete(client.sessionId);
     this.progression.delete(client.sessionId);this.accessTokens.delete(client.sessionId);this.refreshing.delete(client.sessionId);
     this.sim.removePlayer(client.sessionId);
-    if(this.pausedForReconnect&&[...this.sim.players.values()].some(p=>p.state.connected)){this.state.paused=false;this.pausedForReconnect=false;}
+    if(this.pausedForReconnect&&[...this.sim.players.values()].some(p=>p.state.connected)){this.sim.reconnectHold=false;this.pausedForReconnect=false;}
+    this.sim.refreshPause();
     // Si l'hôte part, le plus ancien joueur restant prend le relais.
     if (this.state.hostId === client.sessionId) {
       this.state.hostId = this.state.players.keys().next().value ?? '';

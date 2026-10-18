@@ -1,5 +1,5 @@
 // Réglages en partie (Échap, ou bouton « Réglages » du panneau de pause) : mêmes options qu'à l'accueil.
-// En solo, la scène demande la pause tant qu'ils sont ouverts ; en multijoueur, la partie continue.
+// La scène demande la pause tant qu'ils sont ouverts : en multijoueur, toute l'équipe est figée jusqu'à leur fermeture.
 import { mountSettings } from './settingsForm.ts';
 
 class GameSettings {

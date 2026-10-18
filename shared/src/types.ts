@@ -458,6 +458,8 @@ export interface GameStateView {
   zaapCharge: number;
   /** Vrai quand le joueur seul a mis la partie en pause (touche Tab). */
   paused: boolean;
+  /** Joueurs dont le menu Échap fige la run d'équipe. */
+  pausedBy: string;
   /** Position du guide pendant la halte entre zones. */
   restX: number;
   restY: number;

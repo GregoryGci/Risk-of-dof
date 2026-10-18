@@ -92,3 +92,11 @@ test('Équipe : la run se fige pendant les choix, reprend quand tous ont choisi 
   q!.state.connected=false;sim.experience.drop(40,40,xpToNextLevel(3));sim.update(1/30);sim.chooseBoon(p.id,0,p.state.choiceRevision);const running=state.time;
   advance(sim,1);assert.ok(state.time>running);assert.equal(q!.state.pendingLevels,1);
 });
+test('Échap : fige la run de toute l’équipe jusqu’à ce que chacun ferme son menu ; Tab ne fige qu’en solo',()=>{
+  const {sim,state,p,q}=setup(true);const start=state.time;
+  sim.setPaused(q!.id,true,'details');advance(sim,1);assert.equal(state.paused,false);assert.ok(state.time>start);
+  sim.setPaused(p.id,true,'menu');assert.equal(state.paused,true);assert.equal(state.pausedBy,'P');const frozen=state.time;advance(sim,1);assert.equal(state.time,frozen);
+  sim.setPaused(q!.id,true,'menu');sim.setPaused(p.id,false,'menu');assert.equal(state.paused,true);assert.equal(state.pausedBy,'Q');
+  q!.state.connected=false;sim.connectionChanged();assert.equal(state.paused,false);assert.equal(state.pausedBy,'');advance(sim,1);assert.ok(state.time>frozen);
+  const solo=setup();solo.sim.setPaused(solo.p.id,true,'details');assert.equal(solo.state.paused,true);assert.equal(solo.state.pausedBy,'');solo.sim.setPaused(solo.p.id,false,'details');assert.equal(solo.state.paused,false);
+});
