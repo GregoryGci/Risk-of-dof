@@ -45,7 +45,7 @@ export class RogueliteCombat {
   }
   sramTrap(p:PlayerRt,slot:number,x:number,y:number) {
     const build=createRunBuild(C,'sram'),base=slot>=0?this.ability(p,slot):effectiveRogueliteAbility(build.spells[0]!,build,p.stats,p.permanentRanks);
-    if(!base)return;const a={...base,stats:{...base.stats,durationMs:30000},parameters:{...base.parameters,arm:.6,maxActive:3}};
+    if(!base)return;const a={...base,stats:{...base.stats,durationMs:30000},parameters:{...base.parameters,arm:.6}};
     this.ground(p,a,Math.max(0,slot),x,y);
   }
   enemies(x:number,y:number,r=Infinity):MonsterRt[] {return [...this.sim.monsters.values()].filter(m=>!m.state.ally&&!m.state.carried&&m.state.hp>0&&Math.hypot(m.state.x-x,m.state.y-y)<=r+m.def.radius);}
@@ -261,10 +261,11 @@ export class RogueliteCombat {
   private ground(p:PlayerRt,a:Ability,slot:number,x:number,y:number,scale=1) {
     const v=a.parameters,spell=this.spell(p,a,slot,scale);
     spell.range=Math.max(a.stats.range,dist(p.state,{x,y})+.1);
-    spell.ground={kind:a.handler==='trap'?'trap':'glyph',radius:a.handler==='trap'?v.detection:a.stats.radius,blast:a.stats.radius,duration:a.stats.durationMs/1000,tick:a.stats.intervalMs/1000||.5,max:v.maxActive??6,arm:v.arm??0};
+    spell.ground={kind:a.handler==='trap'?'trap':'glyph',radius:a.handler==='trap'?v.detection:a.stats.radius,blast:a.stats.radius,duration:a.stats.durationMs/1000,tick:a.stats.intervalMs/1000||.5,max:a.handler==='trap'?0:v.maxActive??6,arm:v.arm??0};
     this.sim.cast(spell,p.state.x,p.state.y,x,y,p.id,true,1,.05+p.stats.crit,slot,undefined,1.5+p.stats.critDamage);
     const owned=[...this.sim.grounds.values()].filter(g=>g.owner===p.id&&g.pr.spell.roguelite&&g.state.kind===spell.ground!.kind&&!!g.state.length===!!v.line);
-    const cap=spell.ground.kind==='trap'?(v.mass?12:10):6;while(owned.length>cap)this.sim.removeGround(owned.shift()!.id);
+    // Pièges sans plafond (leur durée les borne) ; les glyphes restent limitées à 6.
+    if(spell.ground.kind!=='trap')while(owned.length>6)this.sim.removeGround(owned.shift()!.id);
   }
   updateGround(g:GroundRt):void {
     const snapshot=g.pr.spell.roguelite,p=this.sim.players.get(g.owner);if(!snapshot||!p)return;

@@ -52,7 +52,8 @@ export function effectiveRogueliteAbility(slot:SpellSlot,build:RunBuild,stats:Pa
   if(['aura','clock','blood_aura'].includes(handler))s.intervalMs/=1+.5*haste;
   if(p.rest)p.rest/=1+haste;
   if(handler==='summon'||handler==='royal')s.intervalMs/=signature?1+(stats.attackSpeed??0):1;
-  if(p.maxActive)p.maxActive=Math.min(handler==='trap'?(p.mass?12:10):handler==='glyph'?6:3,p.maxActive+(handler==='trap'?2*quantity:quantity));
+  // Les pièges n'ont pas de plafond : seule leur durée borne leur nombre.
+  if(p.maxActive)p.maxActive=Math.min(handler==='glyph'?6:3,p.maxActive+quantity);
   if(p.spread)p.spread=Math.min(100,p.spread+5*quantity);
   p.permanentPower=1+B.permanent.damage*permanent;p.runPower=passives.runPower??0;
   p.zonePower=ZONE_HANDLERS.includes(handler)?passives.zoneDamage??0:0;p.dotPower=passives.dotDamage??0;

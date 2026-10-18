@@ -68,8 +68,8 @@ const entries:Entry[] = [
   rows:[{d:[60,75],cd:3.5,q:1,range:2.5,throwRange:7,r:2,impactMin:30,impactMax:38,bossMin:50,bossMax:60,vulnerable:.1,effectDuration:3,knockback:.8,stun:1,flat:1.5},{d:[75,90],impactMin:36,impactMax:45,bossMin:60,bossMax:72},{range:3.2,r:2.4},{cd:3},{throwBounce:1},{d:[94,112],impactMin:45,impactMax:56,bossMin:75,bossMax:90},{q:2},{cd:2.4,vulnerable:.2}],
   evolved:{name:'Chamrak',row:{d:[140,170],cd:3,q:3,range:3.2,throwRange:8,r:2.6,impactMin:100,impactMax:120,bossMin:60,bossMax:72,vulnerable:.2,effectDuration:4,hold:1.5,flailMin:35,flailMax:42,stun:1,flat:1}}},
  {id:'piege_sournois',name:'Piège Sournois',origin:'sram',asset:'piege_sournois',color:0x9a5ad0,handler:'trap',target:'self',passive:'maitrise_invocations',evolution:'piege_de_masse',cap:10,description:'Mines sur votre trajet ; les niveaux avancés déclenchent des réactions en chaîne.',
-  rows:[{d:[35,43],cd:2,q:1,r:1.8,detection:.9,duration:20,maxActive:3,arm:.5,flat:1.5,creation:1},{d:[43,53]},{q:2,maxActive:4},{r:2.2},{cd:1.6},{d:[55,67],poison:6,effectDuration:3},{maxActive:6},{networkRange:3,chainPower:.2}],
-  evolved:{name:'Piège de Masse',asset:'piege_de_masse',row:{d:[70,85],cd:1.6,q:2,r:2.4,detection:.9,duration:25,maxActive:8,arm:.4,flat:1.5,creation:1,poison:8,effectDuration:3,networkRange:5,mass:1}}},
+  rows:[{d:[35,43],cd:2,q:1,r:1.8,detection:.9,duration:20,arm:.5,flat:1.5,creation:1},{d:[43,53]},{q:2},{r:2.2},{cd:1.6},{d:[55,67],poison:6,effectDuration:3},{duration:25},{networkRange:3,chainPower:.2}],
+  evolved:{name:'Piège de Masse',asset:'piege_de_masse',row:{d:[70,85],cd:1.6,q:2,r:2.4,detection:.9,duration:25,arm:.4,flat:1.5,creation:1,poison:8,effectDuration:3,networkRange:5,mass:1}}},
 ];
 
 const defaultStats:AbilityStats = {damage:0,cooldownMs:1000,range:0,radius:0,width:0,height:0,projectiles:1,durationMs:0,intervalMs:0,speed:0};

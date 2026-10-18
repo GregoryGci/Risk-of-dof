@@ -278,7 +278,9 @@ export class RogueliteEffects {
   const traps:{id:string;x:number;y:number;owner:string}[]=[];state.grounds.forEach((g,id)=>{if(g.spell==='ev.piege_de_masse')traps.push({id,x:g.x,y:g.y,owner:g.owner});});
   const wire=.3+.15*(1+Math.sin(now/180));
   // Fils actifs seulement à partir de 4 pièges du même joueur, comme sur le serveur.
-  const wires=new Set<string>();for(const trap of traps){if(traps.filter(o=>o.owner===trap.owner).length<4)continue;const neighbors=traps.filter(g=>g!==trap&&g.owner===trap.owner&&Math.hypot(g.x-trap.x,g.y-trap.y)<=5).sort((a,b)=>Math.hypot(a.x-trap.x,a.y-trap.y)-Math.hypot(b.x-trap.x,b.y-trap.y)).slice(0,2);
+  // Pièges sans plafond : le décompte par lanceur est fait une seule fois.
+  const perOwner=new Map<string,number>();for(const trap of traps)perOwner.set(trap.owner,(perOwner.get(trap.owner)??0)+1);
+  const wires=new Set<string>();for(const trap of traps){if((perOwner.get(trap.owner)??0)<4)continue;const neighbors=traps.filter(g=>g!==trap&&g.owner===trap.owner&&Math.hypot(g.x-trap.x,g.y-trap.y)<=5).sort((a,b)=>Math.hypot(a.x-trap.x,a.y-trap.y)-Math.hypot(b.x-trap.x,b.y-trap.y)).slice(0,2);
    for(const n of neighbors){const key=[trap.id,n.id].sort().join(':');if(wires.has(key))continue;wires.add(key);this.line(this.graphics,trap.x,trap.y,n.x,n.y,0xb04ad0,wire,2);}}
   this.monsterDecor(state,now);
   state.grounds.forEach(g=>{if(!g.length)return;const dx=Math.cos(g.angle??0)*g.length/2,dy=Math.sin(g.angle??0)*g.length/2;this.line(this.graphics,g.x-dx,g.y-dy,g.x+dx,g.y+dy,0xff7722,.45,(g.width??1)*20);});

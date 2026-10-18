@@ -31,10 +31,10 @@ test('Sacrieur : Souffrance plafonnée et réserve de dégâts expirant après t
  sim.mechanics.onSpellHit(p,sim.roguelite.ability(p,0)!,enemy,1);assert.equal(sim.mechanics.get(p).blood,8);assert.ok(p.state.hp>hp);
  advance(sim,3.1);const reserve=sim.mechanics.get(p).blood;sim.mechanics.onSpellHit(p,sim.roguelite.ability(p,0)!,enemy,1);assert.equal(sim.mechanics.get(p).blood,reserve);
 });
-test('Sram : morts autoritaires, pièges innés limités et aucun gain sur un mannequin',()=>{
+test('Sram : morts autoritaires, pièges innés sans plafond et aucun gain sur un mannequin',()=>{
  const {sim,p}=setupRoguelite('sram');p.readyAt[0]=Infinity;sim.random=()=>0;
  for(let i=0;i<8;i++){const m=sim.spawnMonster(getMonster('boufton'),45+i*.1,40,1,1,1);sim.damageMonster(m,1e6,p.id);}
- assert.ok(sim.grounds.size<=3);assert.ok(sim.grounds.size>0);const kills=p.state.kills,m=dummy(sim,46);sim.damageMonster(m,1e9,p.id);assert.equal(p.state.kills,kills);
+ assert.equal(sim.grounds.size,8);const kills=p.state.kills,m=dummy(sim,46);sim.damageMonster(m,1e9,p.id);assert.equal(p.state.kills,kills);
 });
 test('Sadida : infections indépendantes et vulnérabilité unique partagée par l’équipe',()=>{
  const {sim,p}=setupRoguelite('sadida',true);sim.addPlayer('s','Sadida','sadida');const second=sim.players.get('s')!,enemy=dummy(sim,42);
