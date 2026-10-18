@@ -3,13 +3,13 @@ import {buildWith,installBuild} from './fixtures/roguelite-simulation.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {performance} from 'node:perf_hooks';
-import {RUN_PROGRESSION,xpToNextLevel,enemyExperience,CLASSES,getSpell,getMonster,emptyStats,statCaps,makeRng,PHASE_PLAYING,PHASE_LOBBY,PHASE_FINISHED,runKamasReward} from '@rod/shared';
+import {RUN_PROGRESSION,xpToNextLevel,enemyExperience,CLASSES,getSpell,getMonster,emptyStats,statCaps,makeRng,PHASE_PLAYING,PHASE_LOBBY,PHASE_FINISHED,runKamasReward,getMode} from '@rod/shared';
 import {Simulation,type Projectile} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 
 function setup(multi=false,cls='cra'){
   const state=new GameState(),events:{type:string;data:any}[]=[],sim=new Simulation(state,(type,data)=>events.push({type,data}));
-  sim.addPlayer('p','P',cls);if(multi)sim.addPlayer('q','Q','iop');sim.start();sim.map.obstacles.fill(0);(sim as any).director.update=()=>{};for(const id of [...sim.monsters.keys()])sim.removeMonster(id);
+  state.mode=0;sim.addPlayer('p','P',cls);if(multi)sim.addPlayer('q','Q','iop');sim.start();sim.map.obstacles.fill(0);(sim as any).director.update=()=>{};for(const id of [...sim.monsters.keys()])sim.removeMonster(id);
   const p=sim.players.get('p')!;p.state.x=40;p.state.y=40;return{sim,state,events,p,q:sim.players.get('q')};
 }
 const advance=(sim:Simulation,seconds:number)=>{for(let i=0;i<Math.ceil(seconds*30);i++)sim.update(1/30);};
@@ -57,7 +57,7 @@ test('Charge : 10 000 morts dispersées, 320 objets maximum, toute la valeur ré
 });
 test('Fin de run : statistiques et sorts temporaires effacés, métaprogression indépendante et redémarrage propre',()=>{
   const {sim,state,p}=setup();installBuild(sim,buildWith('cra',['sp.pression'],8));p.permanentRanks={'sp.fleche_magique':5};state.time=120;state.waves=10;p.state.bossKills=2;
-  sim.damagePlayer(p,1e9);assert.equal(state.phase,PHASE_FINISHED);assert.equal(p.inventory.size,0);assert.equal(p.build.currentBuild.spells.filter(Boolean).length,1);assert.equal(p.build.currentBuild.spells[0]!.level,1);assert.equal(p.permanentRanks['sp.fleche_magique'],5);const reward=JSON.parse(p.state.rewards);assert.equal(reward.kamas,Math.round(runKamasReward(120,10,2,false)*1.5));
+  sim.damagePlayer(p,1e9);assert.equal(state.phase,PHASE_FINISHED);assert.equal(p.inventory.size,0);assert.equal(p.build.currentBuild.spells.filter(Boolean).length,1);assert.equal(p.build.currentBuild.spells[0]!.level,1);assert.equal(p.permanentRanks['sp.fleche_magique'],5);const reward=JSON.parse(p.state.rewards);assert.equal(reward.kamas,Math.round(runKamasReward(120,10,2,false)*getMode(state.mode).reward));
   sim.restart();assert.equal(state.phase,PHASE_LOBBY);assert.equal(state.runLevel,1);assert.equal(state.totalXp,0);assert.equal(state.xpOrbs.size,0);sim.start();assert.equal(p.state.pendingLevels,0);
 });
 test('Arrivée tardive : rattrapage des choix sans ajouter d’XP ni changer les builds existants',()=>{

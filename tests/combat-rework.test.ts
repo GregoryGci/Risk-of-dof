@@ -28,7 +28,8 @@ function hit(sim:Simulation,p:PlayerRt,attack:boolean,hp=1000){
  sim.cast({...getSpell('pression'),damage:[100,100],autoAttack:attack,effects:[]},p.state.x,p.state.y,m.state.x,m.state.y,p.id,true,1);
 }
 test('Vol de vie : aucun soin des sorts par la stat auto, aucun soin sur les dégâts excédentaires',()=>{
- const {sim,p}=setup();p.state.maxHp=1000;p.state.hp=100;p.stats.lifesteal=.1;p.stats.vampirism=0;
+ // Valeurs de référence calculées avec les PV de monstre du mode Normal.
+ const {sim,p}=setup();sim.state.mode=1;p.state.maxHp=1000;p.state.hp=100;p.stats.lifesteal=.1;p.stats.vampirism=0;
  hit(sim,p,false);assert.equal(p.state.hp,100);hit(sim,p,true,10);assert.equal(p.state.hp,101);
  p.stats.lifesteal=0;p.stats.vampirism=.5;hit(sim,p,true);assert.equal(p.state.hp,101);hit(sim,p,false);assert.ok(p.state.hp>101);
 });
@@ -49,8 +50,9 @@ test('Panoplies : 142 ensembles complets vérifiés, chaque pièce droppable dan
  for(let mode=0;mode<4;mode++)for(let stage=1;stage<=33;stage++){const pool=dropPool(stage,false,mode);assert.ok(pool.length>0);assert.deepEqual(pool,dropPool(1,false,mode),'la zone ne change pas le pool');}
 });
 
-test('Cauchemar : un ennemi de départ peut tuer un Iop nu en un coup, contrairement au mode Normal',()=>{
- const hp:number[]=[];
- for(const mode of[1,3]){const state=new GameState();state.mode=mode;const sim=new Simulation(state,()=>{});sim.addPlayer('p','Audit','iop');sim.start();const p=sim.players.get('p')!,m=sim.spawnMonster(getMonster('bouftou'),p.state.x+1,p.state.y,monsterHpMultiplier(state.difficulty),monsterDamageMultiplier(state.difficulty),1);sim.damagePlayer(p,m.def.melee.damage*m.damageMult,m.def.name);hp.push(p.state.hp);}
- assert.ok(hp[0]>0);assert.equal(hp[1],0);
+test('Cauchemar : un ennemi de départ frappe un Iop nu bien plus fort qu’en mode Normal',()=>{
+ const taken:number[]=[];
+ for(const mode of[1,3]){const state=new GameState();state.mode=mode;const sim=new Simulation(state,()=>{});sim.addPlayer('p','Audit','iop');sim.start();const p=sim.players.get('p')!,m=sim.spawnMonster(getMonster('bouftou'),p.state.x+1,p.state.y,monsterHpMultiplier(state.difficulty),monsterDamageMultiplier(state.difficulty),1);const before=p.state.hp;sim.damagePlayer(p,m.def.melee.damage*m.damageMult,m.def.name);taken.push((before-p.state.hp)/p.state.maxHp);}
+ // Normal : environ 3 % des PV par coup ; Cauchemar : plus de 40 %.
+ assert.ok(taken[0]<1);assert.ok(taken[1]>=4*taken[0]);
 });

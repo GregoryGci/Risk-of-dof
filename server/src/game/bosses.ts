@@ -1,4 +1,4 @@
-import { PLAYER_RADIUS, PHASE_PLAYING, ZAAP_READY, isBlocked } from '@rod/shared';
+import { PLAYER_RADIUS, PHASE_PLAYING, ZAAP_READY, isBlocked, runStageIndex } from '@rod/shared';
 import type { MonsterRt, Simulation } from './Simulation.ts';
 
 /**
@@ -22,7 +22,7 @@ export function updateBoss(sim: Simulation, boss: MonsterRt): boolean {
   const enraged = boss.state.hp <= boss.state.maxHp * .5;
   const pattern = boss.bossPattern ?? 0;
   const nova = pattern % 3 === 0;
-  const pace = bossPace(sim.state.mode, sim.state.stage);
+  const pace = bossPace(sim.state.mode, runStageIndex(sim.state.mode,sim.state.stage));
   // Annonce un peu plus courte qu'avant (×0,9), puis de plus en plus vive ; jamais sous 0,7 s pour rester esquivable.
   const duration = Math.max(0.7, (nova ? 1.1 : 1.3) * 0.9 * (0.6 + 0.4 * pace));
   // Les grosses attaques de plusieurs gardiens alternent : il reste une fenêtre d'esquive.
@@ -83,7 +83,7 @@ function bossLeap(sim: Simulation, boss: MonsterRt): boolean {
   // Bondit seulement si aucun joueur n'est déjà à portée.
   for (const p of sim.players.values()) if (p.state.alive && p.state.connected && Math.hypot(p.state.x - boss.state.x, p.state.y - boss.state.y) <= BOSS_LEAP_RANGE) return false;
   if (!target) return false;
-  const pace = bossPace(sim.state.mode, sim.state.stage);
+  const pace = bossPace(sim.state.mode, runStageIndex(sim.state.mode,sim.state.stage));
   // Atterrit un peu avant la cible, du côté d'où il vient : le joueur a le temps de s'écarter.
   const dx = boss.state.x - target.x, dy = boss.state.y - target.y, len = Math.hypot(dx, dy) || 1;
   const land = { x: target.x + dx / len * 1.6, y: target.y + dy / len * 1.6 };

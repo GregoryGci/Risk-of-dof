@@ -1811,6 +1811,50 @@ Les instances ajoutées par Multitude infligent **60 %** des dégâts (facteur `
 
 ---
 
+## 16. Campagne en quarts, pauses d'équipe et pièges (18 octobre 2026)
+
+Cette section **remplace** les règles correspondantes des sections précédentes, à la demande de l'utilisateur.
+
+### 16.1 Un quart de campagne par difficulté
+
+| Difficulté | Donjons | Dernier gardien |
+|---|---|---|
+| Facile | 1 à 8 | zone 8 |
+| Normal | 9 à 16 | zone 16 |
+| Difficile | 17 à 25 | zone 25 |
+| Cauchemar | 26 à 33 | Kralamoure (zone 33) |
+
+- La run commence à la première zone de son quart et se termine sur le gardien de sa dernière zone. Terminer une difficulté débloque la suivante.
+- **La menace suit le rang de la zone dans la run**, car le build repart du niveau 1. Elle concerne le coefficient de difficulté des monstres, les PV de run du joueur, le budget de PV des gardiens et la cadence de leurs attaques. Les règles de « première zone » (vagues d'introduction, crédits de départ) s'appliquent à la première zone de chaque difficulté.
+- **Ce qui suit la zone absolue** : monstres, gardien, décor et musique de la zone, ainsi que le butin (palier, rareté, fragments). Les tranches de niveau d'équipement par difficulté restent inchangées (1–50, 51–100, 101–150, 151–200).
+- **Menace d'entrée** ajoutée au coefficient de difficulté (plancher 1) : Facile 0, Normal 0, Difficile +6, Cauchemar −10. Le +12 du Cauchemar et les multiplicateurs de mode (PV, dégâts, apparitions) restent en place.
+
+Mesures du simulateur de runs (`artifacts/audit/runs.ts`, 6 classes × 3 graines, bots) :
+
+| Difficulté | Tenue à l'entrée (palier max de la difficulté précédente, rare) : zone atteinte · victoires | Tenue du haut de sa tranche (épique) : zone atteinte · victoires |
+|---|---|---|
+| Facile | 5,7 · 0/18 (palier 20) | 6,4 · 3/18 (palier 40) |
+| Normal | 11,2 · 0/18 (palier 40) | 16 · 17/18 (palier 100) |
+| Difficile | 19,8 · 3/18 (palier 100) | 23,2 · 9/18 (palier 140) |
+| Cauchemar | 28 · 0/18 (palier 140) | 32,6 · 15/18 (palier 200) |
+
+Entrer dans une difficulté est difficile ; la victoire vient après avoir farmé l'équipement de sa tranche. Valeurs **[H]** à confirmer en parties humaines.
+
+### 16.2 Pauses en équipe
+
+- **Choix de progression** : tant qu'un joueur connecté a un choix ouvert (niveau, coffre de gardien, élite), la run est figée pour tous. Les choix restent personnels. La fenêtre affiche « joueurs prêts n/n » ; ceux qui ont choisi voient un bandeau d'attente. Le délai de 25 s choisit pour un joueur inactif ; un joueur déconnecté ne bloque pas l'équipe.
+- **Menu Échap** : en équipe, il fige la run pour tous jusqu'à ce que chaque joueur qui l'a ouvert le referme ; les autres voient qui a mis en pause. Le panneau Tab ne fige la run qu'en solo.
+
+### 16.3 Pièges sans plafond
+
+Piège Sournois, Piège de Masse et pièges innés du Sram n'ont plus de nombre maximal : seule leur durée les borne. Le niveau 7 du Piège Sournois, qui ne faisait que relever le plafond, allonge la durée à 25 s.
+
+### 16.4 Équipement automatique
+
+Le bouton « Équipement auto » équipe la combinaison d'objets possédés au plus haut score global, bonus de panoplie compris. Chaque statistique est convertie en unités de budget (l'inverse de ce qu'un objet de niveau 20 donne pour une même part de son budget), puis additionnée. La recherche est vérifiée contre une recherche exhaustive.
+
+---
+
 ## Annexe A — Identifiants techniques
 
 ### A.1 Convention

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {EQUIPMENT_BASES,dropLevel,EQUIPMENT_RARITIES,ZONES,createEquipment,dropPool,dropSources,dropRarityWeights,equipmentDropChance,equippedStats,setProgress,monsterHpMultiplier,monsterDamageMultiplier,bossHpBudget,PHASE_LOST,compareRuns,sanitizeRunSummary,type EquippedGear} from '@rod/shared';
+import {getMode,EQUIPMENT_BASES,dropLevel,EQUIPMENT_RARITIES,ZONES,createEquipment,dropPool,dropSources,dropRarityWeights,equipmentDropChance,equippedStats,setProgress,monsterHpMultiplier,monsterDamageMultiplier,bossHpBudget,PHASE_LOST,compareRuns,sanitizeRunSummary,type EquippedGear} from '@rod/shared';
 import {Simulation} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 import {migrateAccount} from '../client/src/progression.ts';
@@ -47,8 +47,8 @@ test('gardien surprise : seulement tous les trois donjons, puissance et butin ×
     (sim as unknown as {activateZaap():void}).activateZaap();for(let i=0;i<61;i++)sim.update(1/30);
     const boss=[...sim.monsters.values()].find(m=>m.def.boss)!;
     assert.equal(boss.state.rogue,true);assert.equal(boss.lootMultiplier,3);
-    assert.notEqual(boss.def.id,ZONES[2].boss);assert.ok(boss.state.maxHp>=bossHpBudget(3)*monsterHpMultiplier(5)*1.75);
-    assert.ok(boss.damageMult>=monsterDamageMultiplier(5)*1.4);assert.ok(events.length);
+    assert.notEqual(boss.def.id,ZONES[2].boss);assert.ok(boss.state.maxHp>=bossHpBudget(3)*monsterHpMultiplier(5)*1.75*getMode(state.mode).hp);
+    assert.ok(boss.damageMult>=monsterDamageMultiplier(5)*1.4*getMode(state.mode).damage);assert.ok(events.length);
   }finally{Math.random=random;}
 });
 test('historique : données serveur, cause, compteurs et migration sans doublons',()=>{

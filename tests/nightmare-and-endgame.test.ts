@@ -69,7 +69,7 @@ test('Cauchemar : les grosses attaques alternent sans perdre de pattern quand un
 });
 
 test('Cauchemar : mode choisi par hôte, récompense dédiée et historique sans rabattement vers Difficile',()=>{
-  const state=new GameState(),sim=new Simulation(state,()=>{});sim.addPlayer('p','P','cra');sim.addPlayer('q','Q','cra');state.hostId='p';sim.setMode('q',3);assert.equal(state.mode,1);sim.setMode('p',3);assert.equal(state.mode,3);sim.setMode('p',4);assert.equal(state.mode,3);
+  const state=new GameState(),sim=new Simulation(state,()=>{});sim.addPlayer('p','P','cra');sim.addPlayer('q','Q','cra');state.hostId='p';sim.setMode('q',3);assert.equal(state.mode,0);sim.setMode('p',3);assert.equal(state.mode,3);sim.setMode('p',4);assert.equal(state.mode,3);
   sim.start();sim.setMode('p',1);assert.equal(state.mode,3);assert.equal(state.phase,PHASE_PLAYING);
   assert.ok(equipmentReward('r',123,1,3,100).kamas>equipmentReward('r',123,1,2,100).kamas);
   assert.equal(sanitizeRunSummary({runId:'x',classId:'cra',startedAt:new Date().toISOString(),mode:3})?.mode,3);

@@ -1,6 +1,6 @@
 import {classSpellShape,combatStatsView,innateLifesteal,clampCombatStats,isRangedAttack} from '@rod/shared';
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, XP, équipe, bandeaux.
-import { affinityProgress, getRoute, CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, FINAL_STAGE, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, zoneForStage, type GameStateView, type PlayerView } from '@rod/shared';
+import { affinityProgress, getRoute, CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, modeStages, bossForStage, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, zoneForStage, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import {ROGUELITE_CATALOG,abilitySummary,evolutionPairs,type EffectiveRogueliteAbility,type RunBuild} from '@rod/shared/roguelite';
@@ -453,7 +453,7 @@ export class Hud {
       if(state.intermission)objective='<b>Halte de l’équipe</b> — choisissez votre route puis confirmez « Prêt »';
       else {
       // Progression de la campagne : « Zone X/Y », en plus du nom de la zone.
-      const zone=`Zone ${state.stage}/${FINAL_STAGE}`;
+      const [firstStage,lastStage]=modeStages(state.mode),zone=`Zone ${state.stage-firstStage+1}/${lastStage-firstStage+1}`;
       if (state.zaapState === ZAAP_IDLE) objective = `${state.cursed?'ZONE MAUDITE · ':''}${zone} — trouvez et activez le <b>Zaap</b>`;
       else if (state.zaapState === ZAAP_CHARGING) objective = `${state.cursed?'ZONE MAUDITE · ':''}${zone} — <b>Zaap ${Math.floor(state.zaapCharge * 100)} %</b> — vainquez le gardien`;
       else objective = `${state.cursed?'ZONE MAUDITE · ':''}${zone} — <b>Zaap prêt</b> : retournez-y`;
@@ -549,7 +549,7 @@ export class Hud {
         `<div class="lobby-head">` +
         (state.singlePlayer ? `<span class="lobby-title">Préparez votre aventure</span>` : `<span class="lobby-title">Code <span class="big-code" data-action="copy-code" title="Cliquer pour copier le code">${escapeHtml(this.roomCode)}</span>${this.codeCopied ? '<span class="code-copied">Copié !</span>' : ''}</span>`) +
         `<span class="lobby-count">${state.players.size} joueur${state.players.size > 1 ? 's' : ''} · entraînez-vous</span>` +
-        `<div class="mode-picker">${GAME_MODES.map((m) => {const locked=m.id>(state.players.get(state.hostId)?.unlockedMode??0);return`<button class="btn mode-btn${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" ${host&&!locked ? '' : 'disabled'} title="${escapeHtml(locked?`L’hôte doit vaincre le Krala en ${GAME_MODES[m.id-1].name}.`:m.description)}">${m.name}${locked?' · Verrouillé':''}</button>`;}).join('')}</div>` +
+        `<div class="mode-picker">${GAME_MODES.map((m) => {const locked=m.id>(state.players.get(state.hostId)?.unlockedMode??0);return`<button class="btn mode-btn${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" ${host&&!locked ? '' : 'disabled'} title="${escapeHtml(locked?`L’hôte doit d’abord terminer le mode ${GAME_MODES[m.id-1].name}.`:m.description)}">${m.name}${locked?' · Verrouillé':''}</button>`;}).join('')}</div>` +
         `<button class="btn" data-action="equipment">Équipement</button><button class="btn" data-action="talents">Sorts & talents</button>` +
         (host ? `<button class="btn btn-primary" data-action="start">Lancer la partie</button>` : `<span class="lobby-wait">En attente de ${escapeHtml(hostName)}…</span>`) +
         `</div>` +
@@ -581,7 +581,7 @@ export class Hud {
           $('gameover-reward').innerHTML = `+${reward.kamas} kamas · ${reward.summary?.ogrines??0} Ogrines · ${reward.gear.reduce((n,e)=>n+e.quantity,0)} équipements conservés<br><small>Palier ${EQUIPMENT_TIERS[reward.tier].level} · ${mode.name} · Bourse ${account.bank} K</small>${won?`<span class="victory-unlock">${next?`Difficulté débloquée : ${escapeHtml(next.name)}`:'Cauchemar terminé · tous les modes sont débloqués'}</span>`:''}`;
           $('gameover-gear').innerHTML = reward.gear.map(e => equipmentCard(e)).join('');
         } else { $('gameover-reward').textContent = 'Récupération du butin…'; $('gameover-gear').innerHTML = ''; }
-        $('gameover-stats').textContent = `${won?'Kralamoure vaincu · 33 donjons terminés en':'Vous avez tenu'} ${formatTime(state.time)} — ${state.kills} monstres vaincus`;
+        $('gameover-stats').textContent = `${won?`${getMonster(bossForStage(modeStages(state.mode)[1])).name} vaincu · ${modeStages(state.mode)[1]-modeStages(state.mode)[0]+1} donjons terminés en`:'Vous avez tenu'} ${formatTime(state.time)} — ${state.kills} monstres vaincus`;
         let rows = '';
         state.players.forEach((p: PlayerView) => {
           rows += `<div class="go-row"><span>${escapeHtml(p.name)}</span><span>☠ ${p.kills} &nbsp; Niv. ${state.runLevel}</span></div>`;

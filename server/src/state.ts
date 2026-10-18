@@ -166,7 +166,8 @@ export const GameState = schema(
     paused: t.boolean().default(false),
     /** Joueurs dont le menu Échap fige la run d'équipe, séparés par des virgules. */
     pausedBy: t.string().default(''),
-    mode: t.uint8().default(1),
+    /** Facile par défaut : le client envoie la difficulté choisie dès l'arrivée dans le salon. */
+    mode: t.uint8().default(0),
     restX: t.float32().default(0),
     restY: t.float32().default(0),
     zaapX: t.float32().default(0),

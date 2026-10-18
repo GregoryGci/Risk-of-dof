@@ -1,13 +1,14 @@
 // Courbe de difficulté façon Risk of Rain : tout dépend du temps écoulé.
 import {ZONES,zoneForStage} from './data/zones.ts';
 import {zoneDifficulty} from './combat-balance.ts';
-export const FINAL_STAGE=ZONES.length;
+import {FINAL_STAGE,MODE_ENTRY_THREAT,modeFinalStage} from './campaign.ts';
+export {FINAL_STAGE,MODE_STAGES,MODE_ENTRY_THREAT,modeStages,modeFinalStage,runStageIndex} from './campaign.ts';
 export function nextMode(mode:number):number|undefined{return Number.isInteger(mode)&&mode>=0&&mode<GAME_MODES.length-1?mode+1:undefined;}
 /** Une ancienne run au-delà du dernier donjon atteste une boucle terminée. */
 export function unlockedModeFromProgression(raw:unknown):number{
   if(!raw||typeof raw!=='object'||Array.isArray(raw))return 0;
   const data=raw as Record<string,unknown>;let unlocked=typeof data.unlockedMode==='number'&&Number.isInteger(data.unlockedMode)?Math.max(0,Math.min(GAME_MODES.length-1,data.unlockedMode)):0;
-  for(const value of Array.isArray(data.history)?data.history:[]){if(!value||typeof value!=='object')continue;const run=value as Record<string,unknown>;if(typeof run.mode!=='number'||!Number.isInteger(run.mode)||run.mode<0||run.mode>=GAME_MODES.length)continue;if((run.outcome==='victory'&&typeof run.zone==='number'&&run.zone>=FINAL_STAGE)||(!run.outcome&&typeof run.zone==='number'&&run.zone>FINAL_STAGE))unlocked=Math.max(unlocked,nextMode(run.mode)??run.mode);}
+  for(const value of Array.isArray(data.history)?data.history:[]){if(!value||typeof value!=='object')continue;const run=value as Record<string,unknown>;if(typeof run.mode!=='number'||!Number.isInteger(run.mode)||run.mode<0||run.mode>=GAME_MODES.length)continue;if((run.outcome==='victory'&&typeof run.zone==='number'&&run.zone>=modeFinalStage(run.mode))||(!run.outcome&&typeof run.zone==='number'&&run.zone>modeFinalStage(run.mode)))unlocked=Math.max(unlocked,nextMode(run.mode)??run.mode);}
   return unlocked;
 }
 
@@ -28,7 +29,8 @@ export function monsterHpMultiplier(difficulty: number): number {
 /** Le Cauchemar commence au niveau de menace d'un groupe déjà avancé. */
 /** Le Cauchemar démarre comme une fin de partie : +12 au coefficient de difficulté (PV, dégâts, vitesse). */
 export const NIGHTMARE_DIFFICULTY_BONUS=12;
-export function modeDifficulty(difficulty:number,mode:number):number{return difficulty+(mode===3?NIGHTMARE_DIFFICULTY_BONUS:0);}
+// Jamais sous 1 : une menace d'entrée négative allège la run sans annuler les PV des monstres.
+export function modeDifficulty(difficulty:number,mode:number):number{return Math.max(1,difficulty+(mode===3?NIGHTMARE_DIFFICULTY_BONUS:0)+(MODE_ENTRY_THREAT[mode]??0));}
 export function monsterDamageMultiplier(difficulty: number): number {
   return 1.1*Math.pow(difficulty,.9);
 }
@@ -94,10 +96,10 @@ export interface GameMode {
 }
 
 export const GAME_MODES: GameMode[] = [
-  { id: 0, name: 'Facile', description: 'Moins de monstres, moins coriaces.', hp: 0.8, damage: 0.75, spawn: 0.85, reward: 1 },
-  { id: 1, name: 'Normal', description: 'Adapté à une première tenue. Plus de monstres à vaincre et ×1,5 kamas en fin de run.', hp: 1.25, damage: 1.15, spawn: 1.15, reward: 1.5 },
-  { id: 2, name: 'Difficile', description: 'Conseillé avec une tenue de palier 80 ou plus. Davantage de monstres, ×2,2 kamas en fin de run.', hp: 1.9, damage: 1.65, spawn: 1.5, reward: 2.2 },
-  { id: 3, name: 'Cauchemar', description: 'Fin de jeu : dégâts ennemis ×6 dès le départ, deux gardiens par zone, trois toutes les trois zones. Tenue 190–200 conseillée. Hordes renforcées, ×3,4 kamas en fin de run.', hp: 4.2, damage: 6, spawn: 2.25, reward: 3.4, nightmare:true },
+  { id: 0, name: 'Facile', description: 'Donjons 1 à 8. Moins de monstres, moins coriaces.', hp: 0.8, damage: 0.75, spawn: 0.85, reward: 1 },
+  { id: 1, name: 'Normal', description: 'Donjons 9 à 16. Adapté à une première tenue. Plus de monstres à vaincre et ×1,5 kamas en fin de run.', hp: 1.25, damage: 1.15, spawn: 1.15, reward: 1.5 },
+  { id: 2, name: 'Difficile', description: 'Donjons 17 à 25. Conseillé avec une tenue de palier 80 ou plus. Davantage de monstres, ×2,2 kamas en fin de run.', hp: 1.9, damage: 1.65, spawn: 1.5, reward: 2.2 },
+  { id: 3, name: 'Cauchemar', description: 'Donjons 26 à 33, jusqu’au Kralamoure. Fin de jeu : dégâts ennemis ×6 dès le départ, deux gardiens par zone, trois toutes les trois zones. Tenue 190–200 conseillée. Hordes renforcées, ×3,4 kamas en fin de run.', hp: 4.2, damage: 6, spawn: 2.25, reward: 3.4, nightmare:true },
 ];
 
 export function getMode(id: number): GameMode {

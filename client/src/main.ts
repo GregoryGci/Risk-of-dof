@@ -1,7 +1,7 @@
 // Point d'entrée du client : écran d'accueil (DOM), connexion Colyseus, puis lancement de Phaser.
 import Phaser from 'phaser';
 import { Client, type Room } from '@colyseus/sdk';
-import { CLASSES, GAME_PROTOCOL_VERSION, DEFAULT_CLASS, EQUIPMENT_TIERS, GAME_MODES, PHASE_PLAYING, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT, type GearDrop, type RunReward } from '@rod/shared';
+import { CLASSES, GAME_PROTOCOL_VERSION, DEFAULT_CLASS, EQUIPMENT_TIERS, GAME_MODES, modeStages, PHASE_PLAYING, NAME_MAX_LENGTH, ROOM_CODE_LENGTH, ROOM_NAME, SERVER_PORT, type GearDrop, type RunReward } from '@rod/shared';
 import { loadManifest } from './assets/manifest.ts';
 import { AssetStore } from './assets/store.ts';
 import { GameScene } from './game/GameScene.ts';
@@ -203,7 +203,7 @@ const homeSettings = mountSettings($('home-settings'));
 function renderSettings(): void { homeSettings.render(); }
 function renderModes(): void {
   setupMode=Math.min(setupMode,account.unlockedMode);
-  $('setup-modes').innerHTML = GAME_MODES.map((m,i) => {const locked=m.id>account.unlockedMode;return`<button class="setup-mode${setupMode === m.id ? ' active' : ''}${locked?' locked':''}" data-setup-mode="${m.id}" aria-pressed="${setupMode === m.id}" ${locked?'disabled':''} title="${escapeHtml(locked?`Terminez le Kralamoure en ${GAME_MODES[m.id-1].name} pour débloquer ce mode.`:m.description)}"><span>${['Facile','Normal','Difficile','Cauchemar'][i]}${locked?' · Verrouillé':''}</span><b>${m.name}</b><small>${locked?`Vaincre le Krala en ${GAME_MODES[m.id-1].name}`:['Découvrez les champs','Avec une première tenue','Tenue de palier 80 conseillée','2 boss / 3 boss toutes les 3 zones'][i]}</small></button>`;}).join('');
+  $('setup-modes').innerHTML = GAME_MODES.map((m,i) => {const locked=m.id>account.unlockedMode;return`<button class="setup-mode${setupMode === m.id ? ' active' : ''}${locked?' locked':''}" data-setup-mode="${m.id}" aria-pressed="${setupMode === m.id}" ${locked?'disabled':''} title="${escapeHtml(locked?`Terminez le mode ${GAME_MODES[m.id-1].name} pour débloquer ce mode.`:m.description)}"><span>${['Facile','Normal','Difficile','Cauchemar'][i]}${locked?' · Verrouillé':''}</span><b>${m.name}</b><small>${locked?`Terminer le mode ${GAME_MODES[m.id-1].name}`:`Donjons ${modeStages(m.id)[0]} à ${modeStages(m.id)[1]} · ${['Découvrez les champs','Avec une première tenue','Tenue de palier 80 conseillée','2 boss / 3 boss toutes les 3 zones'][i]}`}</small></button>`;}).join('');
 }
 $('setup-modes').addEventListener('click', e => {
   const button = (e.target as HTMLElement).closest<HTMLElement>('[data-setup-mode]');

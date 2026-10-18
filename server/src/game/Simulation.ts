@@ -4,7 +4,7 @@ import {skinFits,getPetAttack,lifestealCrowdFactor,LIFESTEAL_HEAL_PER_SECOND,inn
 import {
   CHALLENGE_COUNT,
   getBlessing,
-  FINAL_STAGE,GAME_MODES,nextMode,
+  modeStages,modeFinalStage,runStageIndex,GAME_MODES,nextMode,
   blessingPool,blessingPower,
   guardianCount,
   ROUTES, getRoute, resolveRoute, type RouteId,
@@ -479,7 +479,9 @@ export class Simulation {
     this.state.stageRoute='normal';
     this.state.time = 0;
     this.state.difficulty = modeDifficulty(1,this.state.mode);
-    this.state.stage = 1;
+    // La run commence à la première zone du quart de campagne de la difficulté.
+    this.state.stage = modeStages(this.state.mode)[0];
+    if(this.state.stage>1){this.map=generateMap(this.state.seed,undefined,this.state.stage);for(const p of this.players.values())this.placeAtSpawn(p);}
     this.state.waves=0;
     this.state.intermission=false;
     this.forgeMinute=0;
@@ -555,7 +557,7 @@ export class Simulation {
       
       revived.push(p.id);
     }
-    if(this.state.stage===FINAL_STAGE){this.finishRun('victory');this.broadcast('runVictory',{stage:this.state.stage});}
+    if(this.state.stage===modeFinalStage(this.state.mode)){this.finishRun('victory');this.broadcast('runVictory',{stage:this.state.stage});}
     else this.broadcast('zoneVictory',{stage:this.state.stage,revived});
   }
 
@@ -627,7 +629,7 @@ export class Simulation {
     // Le gardien apparaît à côté du Zaap ; il est plus résistant quand les joueurs sont nombreux.
     // Gardien différent à chaque zone : Bouftou Royal, Tournesol Affamé, Scarabosse Doré...
     const normal = getMonster(bossForStage(this.state.stage));
-    const rogue = this.state.stage!==FINAL_STAGE && this.state.stage%3===0 && Math.random()<0.15;
+    const rogue = this.state.stage!==modeFinalStage(this.state.mode) && this.state.stage%3===0 && Math.random()<0.15;
     const alternatives=ZONES.map(zone=>zone.boss).filter(id=>id!==normal.id);
     const selected=rogue?getMonster(alternatives[Math.floor(Math.random()*alternatives.length)]):normal;
     const first=rogue?{...selected,melee:{...selected.melee,damage:Math.max(selected.melee.damage,normal.melee.damage)}}:selected;
@@ -656,7 +658,7 @@ export class Simulation {
       this.pendingGuardians=0;
       planned.forEach(({def,x,y},i)=>{
         const surprise=rogue&&i===0,share=count===3?.56:count===2?.72:1;
-        const boss=this.spawnMonster({...def,hp:bossHpBudget(this.state.stage),radius:def.radius*(this.state.cursed?1.2:1)},x,y,hpMult*share*(surprise?1.75:1)*(this.state.cursed?2.5:1),monsterDamageMultiplier(diff)*(surprise?1.4:1)*(this.state.cursed?1.8:1),Math.round(diff));
+        const boss=this.spawnMonster({...def,hp:bossHpBudget(runStageIndex(this.state.mode,this.state.stage)),radius:def.radius*(this.state.cursed?1.2:1)},x,y,hpMult*share*(surprise?1.75:1)*(this.state.cursed?2.5:1),monsterDamageMultiplier(diff)*(surprise?1.4:1)*(this.state.cursed?1.8:1),Math.round(diff));
         boss.state.rogue=surprise;boss.state.cursed=this.state.cursed;boss.dofusMultiplier=this.state.cursed?3:1;boss.lootMultiplier=surprise?3:1;boss.speedMult*=(surprise?1.1:1)*(this.state.cursed?1.12:1);
         boss.bossReadyAt=this.now+2.5+i*1.65;boss.bossPattern=i;
         this.guardianIds.add(boss.id);
@@ -1007,7 +1009,7 @@ export class Simulation {
       this.state.stageTime+=dt;
       const minute=Math.floor(this.state.time/60);
       if(minute>this.forgeMinute){this.forgeMinute=minute;this.awardFragments(`minute:${minute}`,minuteFragments(this.state.stage));}
-      this.state.difficulty = modeDifficulty(difficultyAt(this.state.time, this.players.size,this.state.stage,this.state.stageTime),this.state.mode);
+      this.state.difficulty = modeDifficulty(difficultyAt(this.state.time, this.players.size,runStageIndex(this.state.mode,this.state.stage),this.state.stageTime),this.state.mode);
       // Le Zaap se charge tout seul une fois activé, et s'ouvre dès que ses gardiens sont vaincus
       // (sans attendre la fin de la charge : on enchaîne les zones en speedrun).
       if (this.state.zaapState === ZAAP_CHARGING) {

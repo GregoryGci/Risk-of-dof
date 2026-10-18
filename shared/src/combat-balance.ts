@@ -1,4 +1,5 @@
 import type {SpellDef,StatKey} from './types.ts';
+import {MODE_ENTRY_THREAT,modeStages,runStageIndex} from './campaign.ts';
 
 export const BASE_CRIT_CHANCE=.05;
 export const SPELL_COOLDOWN_MIN_MS=200,SPELL_COOLDOWN_MIN_FRACTION=.4;
@@ -47,6 +48,7 @@ export interface RunStatContext {stage?:number;zoneWave?:number;difficulty?:numb
 export function zoneDifficulty(stage:number):number{return 1+1.5*Math.pow(Math.max(0,stage-1),.72);}
 /** Les PV gagnés en run suivent la même puissance 0,9 que les dégâts des ennemis. */
 export function runVitalityScale(context:RunStatContext={}):number {
-  const difficulty=context.difficulty??zoneDifficulty(context.stage??1)+(context.mode===3?12:0);
+  // Même menace que les ennemis : rang de la zone dans la run, bonus du Cauchemar et menace d'entrée du quart.
+  const mode=context.mode??0,difficulty=context.difficulty??zoneDifficulty(runStageIndex(mode,context.stage??modeStages(mode)[0]))+(mode===3?12:0)+(MODE_ENTRY_THREAT[mode]??0);
   return Math.pow(Math.max(1,difficulty),.9)*(1+.008*Math.max(0,(context.zoneWave??1)-1));
 }
