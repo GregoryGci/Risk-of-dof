@@ -26,7 +26,7 @@ function previewVolume(key: VolumeKey): void {
 const isVolume = (name: string): name is VolumeKey => (VOLUMES as readonly string[]).includes(name);
 
 function settingsHtml(): string {
-  return `<label class="home-setting"><div><b>Direction artistique</b><span>Pacte des Douze : illustration infernale, rouge et ivoire. Ou le style parchemin.</span></div><select name="uiTheme" aria-label="Direction artistique"><option value="underworld" ${settings.uiTheme==='underworld'?'selected':''}>Pacte des Douze</option><option value="retro" ${settings.uiTheme==='retro'?'selected':''}>Parchemin</option></select></label><label class="home-setting"><div><b>Visée souris</b><span>Oriente les sorts sans cible vers le curseur. Sinon, ils suivent votre dernier déplacement.</span></div><input type="checkbox" name="mouseAim" ${settings.mouseAim ? 'checked' : ''}><i aria-hidden="true"></i></label>
+  return `<label class="home-setting"><div><b>Direction artistique</b><span>Encre des Douze : traits au pinceau, encre ivoire et panneaux sombres. Les animations respectent les préférences de votre appareil.</span></div><select name="uiTheme" aria-label="Direction artistique"><option value="legends" ${settings.uiTheme==='legends'?'selected':''}>Encre des Douze</option><option value="underworld" ${settings.uiTheme==='underworld'?'selected':''}>Pacte des Douze</option><option value="retro" ${settings.uiTheme==='retro'?'selected':''}>Parchemin classique</option></select></label><label class="home-setting"><div><b>Visée souris</b><span>Oriente les sorts sans cible vers le curseur. Sinon, ils suivent votre dernier déplacement.</span></div><input type="checkbox" name="mouseAim" ${settings.mouseAim ? 'checked' : ''}><i aria-hidden="true"></i></label>
     <label class="home-setting"><div><b>Rendu du jeu</b><span>Le changement s’applique à la prochaine partie.</span></div><select name="renderMode" aria-label="Rendu du jeu"><option value="standard" ${settings.renderMode==='standard'?'selected':''}>Standard</option><option value="compatible" ${settings.renderMode==='compatible'?'selected':''}>Compatibilité</option></select></label><label class="home-setting"><div><b>Performances en jeu</b><span>FPS, aller-retour réseau et nombre de créatures pour identifier les ralentissements.</span></div><input type="checkbox" name="showPerformance" ${settings.showPerformance?'checked':''}><i aria-hidden="true"></i></label><label class="home-setting"><div><b>Effets des alliés</b><span>Affiche les effets décoratifs des autres joueurs. Les avertissements de danger restent visibles.</span></div><input type="checkbox" name="allyEffects" ${settings.allyEffects ? 'checked' : ''}><i aria-hidden="true"></i></label>
     <label class="home-setting"><div><b>Compteur de DPS</b><span>Dégâts par seconde dans l’addon de dégâts : moyenne sur toute la run, ou sur les 5 dernières secondes (mise à jour chaque seconde). Un clic sur le compteur en jeu bascule aussi.</span></div><select name="dpsMode" aria-label="Compteur de DPS"><option value="total" ${settings.dpsMode==='total'?'selected':''}>DPS total</option><option value="recent" ${settings.dpsMode==='recent'?'selected':''}>DPS récent (5 s)</option></select></label>
     <label class="home-setting"><div><b>Tremblement d’écran</b><span>Secousse quand vous êtes touché ou près d’une grosse explosion. Jamais deux secousses à la fois.</span></div><select name="screenShake" aria-label="Tremblement d’écran"><option value="off" ${settings.screenShake==='off'?'selected':''}>Désactivé</option><option value="light" ${settings.screenShake==='light'?'selected':''}>Léger</option><option value="normal" ${settings.screenShake==='normal'?'selected':''}>Normal</option></select></label>
@@ -39,11 +39,28 @@ function settingsHtml(): string {
 
 /** Installe le formulaire dans `container` ; `render()` le redessine avec les valeurs actuelles. */
 export function mountSettings(container: HTMLElement): { render(): void } {
-  const render = () => { container.innerHTML = settingsHtml(); };
+  const render = () => {
+    const expanded = new Map([...container.querySelectorAll<HTMLDetailsElement>('.settings-group')].map(group=>[group.dataset.settingsGroup,group.open]));
+    container.innerHTML = settingsHtml();
+    const rows = [...container.children];
+    const groups = [
+      {id:'display',title:'Affichage',help:'Thème, rendu et performances',names:['uiTheme','renderMode','showPerformance']},
+      {id:'play',title:'Jeu et viseur',help:'Visée, effets, compteur de dégâts et curseur',names:['mouseAim','allyEffects','dpsMode','screenShake','crosshairShape']},
+      {id:'audio',title:'Audio',help:'Musique, ambiance et sons du combat',names:[...VOLUMES]},
+    ];
+    for (const group of groups) {
+      const section = document.createElement('details');
+      section.className = 'settings-group';section.dataset.settingsGroup = group.id;
+      section.open = expanded.get(group.id) ?? group.id === 'display';
+      section.innerHTML = `<summary><span><b>${group.title}</b><small>${group.help}</small></span></summary><div class="settings-group-body"></div>`;
+      for (const row of rows) if (group.names.includes(row.querySelector<HTMLInputElement>('[name]')?.name ?? '')) section.lastElementChild!.append(row);
+      container.append(section);
+    }
+  };
   container.addEventListener('change', e => {
     const input = e.target as HTMLInputElement;
     if (input.name === 'renderMode' && (input.value === 'standard' || input.value === 'compatible')) { settings.renderMode = input.value; saveSettings(); }
-    if (input.name === 'uiTheme' && (input.value === 'retro' || input.value === 'underworld')) { settings.uiTheme = input.value; saveSettings(); }
+    if (input.name === 'uiTheme' && (input.value === 'legends' || input.value === 'retro' || input.value === 'underworld')) { settings.uiTheme = input.value; saveSettings(); }
     if (input.name === 'dpsMode' && (input.value === 'total' || input.value === 'recent')) { settings.dpsMode = input.value; saveSettings(); }
     if (input.name === 'screenShake' && SCREEN_SHAKES.includes(input.value as ScreenShake)) { settings.screenShake = input.value as ScreenShake; saveSettings(); }
     if (input.name === 'mouseAim' || input.name === 'allyEffects' || input.name === 'showPerformance') { settings[input.name] = input.checked; saveSettings(); }

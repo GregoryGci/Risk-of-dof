@@ -12,6 +12,8 @@ import { EncyclopediaPage } from './ui/EncyclopediaPage.ts';
 import './skin-shop.css';
 import './roguelite.css';
 import './run-hud.css';
+import './legends.css';
+import {startThemeMotion} from './ui/themeMotion.ts';
 import {SkinShop} from './ui/SkinShop.ts';
 import {startHomeAmbience} from './ui/HomeAmbience.ts';
 import {HistoryPage} from './ui/HistoryPage.ts';
@@ -25,12 +27,18 @@ import { account } from './account.ts';
 import { settings, subscribeSettings } from './settings.ts';
 import { ambiance, music, MENU_TRACK } from './music.ts';
 import { applyCrosshair } from './crosshair.ts';
+import {ROGUELITE_CATALOG,ROGUELITE_SIGNATURES,ROGUELITE_INNATES} from '@rod/shared/roguelite';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 setupDialogNavigation();
-const applyTheme=()=>document.body.classList.toggle('underworld',settings.uiTheme==='underworld');
-startHomeAmbience(document.getElementById('menu')!);
+const applyTheme=()=>{
+  document.body.classList.toggle('underworld',settings.uiTheme==='underworld');
+  document.body.classList.toggle('legends',settings.uiTheme==='legends');
+};
 applyTheme();subscribeSettings(applyTheme);
+const stopHomeAmbience = startHomeAmbience(document.getElementById('menu')!);
+const stopThemeMotion = startThemeMotion();
+if (import.meta.hot) import.meta.hot.dispose(()=>{stopHomeAmbience();stopThemeMotion();});
 
 const menu = $('menu');
 const pseudoInput = $<HTMLInputElement>('pseudo');
@@ -76,23 +84,50 @@ let currentView = '';
 let classId = localStorage.getItem('rod.classe') ?? DEFAULT_CLASS;
 if (!CLASSES[classId]) classId = DEFAULT_CLASS;
 const classPicker = $('class-picker');
+const classIds = Object.keys(CLASSES);
+// Ordre stable des cellules de l'atlas illustré (indépendant de l'ordre du registre).
+const portraitCells:Record<string,number>={cra:0,iop:1,eniripsa:2,sacrieur:3,sram:4,sadida:5,ecaflip:6,feca:7,osamodas:8,enutrof:9,xelor:10,pandawa:11};
+let portraitMotion: Animation | undefined;
+let characterOrigin = '';
 function renderClassPicker(): void {
+  const focusedClass = classPicker.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.class : undefined;
   classPicker.innerHTML = Object.values(CLASSES).map(c => `<button class="home-class${c.id === classId ? ' active' : ''}" data-class="${c.id}" aria-pressed="${c.id === classId}" title="${escapeHtml(c.description)}"><img src="assets/dofus/portraits/${c.id}.png" alt=""><span>${escapeHtml(c.name)}</span></button>`).join('');
   $('class-desc').textContent = CLASSES[classId].description;
   $('character-name').textContent = CLASSES[classId].name;
   const portrait = $<HTMLImageElement>('character-portrait');
   portrait.src = `assets/dofus/portraits/${classId}.png`;
   portrait.alt = CLASSES[classId].name;
+  const position = classIds.indexOf(classId);
+  const cell=portraitCells[classId];
+  $('class-illustration').style.setProperty('--cell-x',`${cell%4/3*100}%`);
+  $('class-illustration').style.setProperty('--cell-y',`${Math.floor(cell/4)/2*100}%`);
+  $('class-position').textContent = `Classe ${position+1} / ${classIds.length}`;
+  const signature = ROGUELITE_CATALOG.spell(ROGUELITE_SIGNATURES[classId])!;
+  const innate = ROGUELITE_INNATES[classId];
+  $('class-desc').textContent = 'Votre signature ouvre la run. Les choix d’XP façonnent la suite de votre build.';
+  $('class-signature').innerHTML = `<span>Sort signature · acquis au départ</span><b>${escapeHtml(signature.name)}</b><small>${escapeHtml(signature.description)}</small>`;
+  $('class-innate').innerHTML = `<span>Passif inné · propre à la classe</span><b>${escapeHtml(innate.name)}</b><small>${escapeHtml(innate.description)}</small>`;
+  if (focusedClass) classPicker.querySelector<HTMLElement>(`[data-class="${focusedClass}"]`)?.focus({preventScroll:true});
   renderProfile();
+}
+function selectClass(id:string): void {
+  if(!CLASSES[id]||id===classId)return;
+  classId=id;localStorage.setItem('rod.classe',id);cloud.changed();renderClassPicker();
+  portraitMotion?.cancel();
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches)portraitMotion=document.querySelector('.carousel-art')!.animate([{opacity:0,transform:'translateX(18px)'},{opacity:1,transform:'translateX(0)'}],{duration:260,easing:'ease-out'});
 }
 classPicker.addEventListener('click', (e) => {
   const id = (e.target as HTMLElement).closest<HTMLElement>('[data-class]')?.dataset.class;
-  if (!id || !CLASSES[id]) return;
-  classId = id;
-  localStorage.setItem('rod.classe', id);
-  cloud.changed();
-  renderClassPicker();
+  if(id)selectClass(id);
 });
+function stepClass(step:number):void{selectClass(classIds[(classIds.indexOf(classId)+step+classIds.length)%classIds.length]);}
+$('class-carousel').addEventListener('click',e=>{const step=(e.target as HTMLElement).closest<HTMLElement>('[data-class-step]')?.dataset.classStep;if(step)stepClass(Number(step));});
+$('class-carousel').addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();stepClass(e.key==='ArrowRight'?1:-1);}});
+let swipeStart:{x:number;y:number}|undefined;
+const carouselArt=document.querySelector<HTMLElement>('.carousel-art')!;
+carouselArt.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')swipeStart={x:e.clientX,y:e.clientY};});
+carouselArt.addEventListener('pointerup',e=>{if(!swipeStart)return;const dx=e.clientX-swipeStart.x,dy=e.clientY-swipeStart.y;swipeStart=undefined;if(Math.abs(dx)>45&&Math.abs(dy)<35)stepClass(dx<0?1:-1);});
+carouselArt.addEventListener('pointercancel',()=>{swipeStart=undefined;});
 renderClassPicker();
 
 // Arbre de talents : depuis l'accueil, ou depuis le salon (les sorts équipés sont alors envoyés au serveur).
@@ -130,11 +165,14 @@ function renderProfile(): void {
   $('equipment-summary').textContent = `${count} emplacements équipés · ${account.inventory.length} objets`;
   $('collection-summary').textContent = `${account.discovered.length} / ${account.catalogSize} découverts`;
   $('talents-summary').textContent = `${account.bank.toLocaleString('fr')} kamas · cinq paliers permanents par sort`;
-  $('solo-character').innerHTML = `<img src="assets/dofus/portraits/${classId}.png" alt=""><div><b>${CLASSES[classId].name}</b><span>${CLASSES[classId].maxHp + account.bonuses.maxHp} PV de départ · ${count} équipements</span></div>`;
+  const characterPreview = `<img src="assets/dofus/portraits/${classId}.png" alt=""><div><small class="eyebrow">VOTRE PERSONNAGE</small><b>${CLASSES[classId].name}</b><span>${ROGUELITE_CATALOG.spell(ROGUELITE_SIGNATURES[classId])!.name} · ${count} équipements</span></div>`;
+  $('solo-character').innerHTML = characterPreview;
+  $('multi-character').innerHTML = characterPreview;
 }
 function showView(view: string): void {
+  if (view === 'character' && currentView !== 'character') characterOrigin = ['solo','multi'].includes(currentView) ? currentView : '';
   currentView = view;
-  const names: Record<string, [string,string]> = { solo: ['L’AVENTURE EN SOLITAIRE','Single player'], multi: ['PLUS FORTS ENSEMBLE','Multiplayer'], character: ['PRÊT POUR LA PROCHAINE RUN','Character'], settings: ['À VOTRE FAÇON','Settings'] };
+  const names: Record<string, [string,string]> = { solo: ['L’AVENTURE EN SOLITAIRE','Jouer en solo'], multi: ['PLUS FORTS ENSEMBLE','Jouer ensemble'], character: ['VOTRE PROCHAINE AVENTURE','Personnage'], settings: ['À VOTRE FAÇON','Réglages'] };
   $('home-view').classList.toggle('hidden', !view);
   $('home-welcome').classList.toggle('hidden', !!view);
   menu.classList.toggle('has-view', !!view);
@@ -142,11 +180,18 @@ function showView(view: string): void {
   document.querySelectorAll<HTMLElement>('.home-nav-button').forEach(b => { b.classList.toggle('active', b.dataset.view === view); b.setAttribute('aria-current', b.dataset.view === view ? 'page' : 'false'); });
   $('identity-row').classList.add('hidden');
   $('menu-error').textContent = '';
+  $('code-error').textContent = '';
+  codeInput.removeAttribute('aria-invalid');
+  $('character-return').hidden = !characterOrigin;
+  $('character-return').textContent = characterOrigin === 'multi' ? 'Revenir au multijoueur' : 'Revenir au départ en solo';
   if (names[view]) { $('view-eyebrow').textContent = names[view][0]; $('view-title').textContent = names[view][1]; }
   renderProfile();
   if (view === 'settings') renderSettings();
-  if (view) $('view-close').focus();
+  $('home-view').scrollTop = 0;
+  menu.scrollTop = 0;
+  if (view) $('view-close').focus({preventScroll:true});
 }
+$('character-return').addEventListener('click',()=>showView(characterOrigin || 'solo'));
 menu.addEventListener('click', e => {
   const button = (e.target as HTMLElement).closest<HTMLElement>('[data-view]');
   if (button?.dataset.view) showView(button.dataset.view);
@@ -224,12 +269,18 @@ btnSolo.addEventListener('click', () => connect(async () => {
 
 function joinWithCode(): void {
   const code = codeInput.value.trim().toUpperCase();
-  if (code.length !== ROOM_CODE_LENGTH) {
-    errorEl.textContent = `Le code fait ${ROOM_CODE_LENGTH} lettres.`;
+  if (btnJoin.disabled) return;
+  if (!new RegExp(`^[A-Z]{${ROOM_CODE_LENGTH}}$`).test(code)) {
+    $('code-error').textContent = `Saisissez les ${ROOM_CODE_LENGTH} lettres du code de votre salon.`;
+    codeInput.setAttribute('aria-invalid','true');
+    codeInput.focus();
     return;
   }
+  $('code-error').textContent = '';
+  codeInput.removeAttribute('aria-invalid');
   connect(() => client.joinById(code, joinOptions()));
 }
+codeInput.addEventListener('input',()=>{codeInput.value=codeInput.value.toUpperCase();codeInput.removeAttribute('aria-invalid');$('code-error').textContent='';});
 btnJoin.addEventListener('click', joinWithCode);
 codeInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') joinWithCode();

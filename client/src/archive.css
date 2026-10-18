@@ -75,3 +75,5 @@
 /* Classement : pendant le chargement d'une catégorie, l'ancien tableau reste en place, estompé. */
 #ladder-results { min-height: 120px; transition: opacity .15s; }
 #ladder-results.ladder-loading { opacity: .55; }
+.ladder-filter-group>div { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.ladder-filter-group { min-width:0; }

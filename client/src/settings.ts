@@ -1,7 +1,9 @@
 // Réglages du joueur, mémorisés dans le navigateur.
 
 export interface Settings {
-  uiTheme:'underworld'|'retro';
+  uiTheme:'legends'|'underworld'|'retro';
+  /** Une migration de préférence visuelle, sans toucher au compte ou à l'inventaire. */
+  uiThemeVersion: 1;
   showPerformance:boolean;
   renderMode:'standard'|'compatible';
   /** Direction souris utilisée lorsque le ciblage automatique n'a pas d'ennemi. */
@@ -26,14 +28,16 @@ export const SCREEN_SHAKES: readonly ScreenShake[] = ['off', 'light', 'normal'];
 const KEY = 'rod.reglages';
 export type VolumeKey = 'musicVolume' | 'ambianceVolume' | 'sfxVolume';
 export const VOLUMES: readonly VolumeKey[] = ['musicVolume', 'ambianceVolume', 'sfxVolume'];
-const DEFAULTS: Settings = { uiTheme:'underworld', showPerformance:false, renderMode:'standard', mouseAim: false, allyEffects: true, musicVolume: 0.4, ambianceVolume: 0.5, sfxVolume: 0.7, crosshairShape: 'classique', crosshairColor: 'or', dpsMode: 'total', screenShake: 'light' };
+const DEFAULTS: Settings = { uiTheme:'legends', uiThemeVersion:1, showPerformance:false, renderMode:'standard', mouseAim: false, allyEffects: true, musicVolume: 0.4, ambianceVolume: 0.5, sfxVolume: 0.7, crosshairShape: 'classique', crosshairColor: 'or', dpsMode: 'total', screenShake: 'light' };
 
 function load(): Settings {
   try {
-    const saved = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') };
+    const raw = JSON.parse(localStorage.getItem(KEY) ?? '{}');
+    const saved = { ...DEFAULTS, ...raw };
+    if(raw?.uiThemeVersion!==1){saved.uiTheme='legends';saved.uiThemeVersion=1;}
     // Réglage abîmé à la main ou par une ancienne version : on revient à la valeur par défaut.
     for (const key of VOLUMES) saved[key] = Number.isFinite(saved[key]) ? Math.min(1, Math.max(0, saved[key])) : DEFAULTS[key];
-    if(!['underworld','retro'].includes(saved.uiTheme))saved.uiTheme=DEFAULTS.uiTheme;
+    if(!['legends','underworld','retro'].includes(saved.uiTheme))saved.uiTheme=DEFAULTS.uiTheme;
     if(!['standard','compatible'].includes(saved.renderMode))saved.renderMode='standard';
     if(!['total','recent'].includes(saved.dpsMode))saved.dpsMode=DEFAULTS.dpsMode;
     if(!SCREEN_SHAKES.includes(saved.screenShake))saved.screenShake=DEFAULTS.screenShake;
@@ -50,7 +54,7 @@ export function replaceSettings(raw:unknown):void {
   Object.assign(settings,DEFAULTS);
   if(raw&&typeof raw==='object'){
     const r=raw as Record<string,unknown>;
-    if(r.uiTheme==='underworld'||r.uiTheme==='retro')settings.uiTheme=r.uiTheme;
+    if(r.uiThemeVersion===1&&(r.uiTheme==='legends'||r.uiTheme==='underworld'||r.uiTheme==='retro'))settings.uiTheme=r.uiTheme;
     if(r.renderMode==='standard'||r.renderMode==='compatible')settings.renderMode=r.renderMode;
     if(r.dpsMode==='total'||r.dpsMode==='recent')settings.dpsMode=r.dpsMode;
     if(SCREEN_SHAKES.includes(r.screenShake as ScreenShake))settings.screenShake=r.screenShake as ScreenShake;
