@@ -34,6 +34,7 @@ test('WebSocket : solo fermé aux invités, salon à deux, récompenses fiables 
     host.onMessage('runReward',(e:{player:string;reward:RunReward})=>{if(e.player===host.sessionId) rewards.push(e.reward);});
     host.send('start');await until(()=>host.state.phase===PHASE_PLAYING);
     const room=matchMaker.getLocalRoomById(host.roomId) as unknown as {sim:Simulation};
+    const resolveChoices=()=>{for(const pl of room.sim.players.values())for(let guard=0;pl.state.boonChoices!=='[]'&&guard<50;guard++)room.sim.chooseBoon(pl.id,0,pl.state.choiceRevision);};
     const p=room.sim.players.get(host.sessionId)!;simRunId=()=>host.state.runId;
     assert.equal(p.state.maxHp,getClass('cra').maxHp+equippedStats({coiffe:createEquipment('coiffe_bouftou','legendaire')}).maxHp); // Crâ + coiffe parfaite.
     host.send('equipment',{equipment:{}});
@@ -43,15 +44,14 @@ test('WebSocket : solo fermé aux invités, salon à deux, récompenses fiables 
     await until(()=>JSON.parse(host.state.players.get(host.sessionId)!.mechanic).status==='Visée active');
     assert.equal(JSON.parse(host.state.players.get(host.sessionId)!.mechanic).name,'Visée tendue');
     const elite=room.sim.spawnMonster((await import('@rod/shared')).getMonster('boufton'),p.state.x+2,p.state.y,1,1,1);elite.state.elite=true;room.sim.damageMonster(elite,1e6,p.id);await until(()=>JSON.parse(host.state.players.get(host.sessionId)!.boonChoices).length===3&&JSON.parse(guest.state.players.get(guest.sessionId)!.boonChoices).length===3);const guestChoices=guest.state.players.get(guest.sessionId)!.boonChoices;host.send('boon',{runId:simRunId(),choice:0,revision:host.state.players.get(host.sessionId)!.choiceRevision});await until(()=>host.state.players.get(host.sessionId)!.boonChoices==='[]');assert.equal(guest.state.players.get(guest.sessionId)!.boonChoices,guestChoices);guest.send('boon',{runId:simRunId(),choice:1,revision:guest.state.players.get(guest.sessionId)!.choiceRevision});await until(()=>guest.state.players.get(guest.sessionId)!.boonChoices==='[]');assert.equal(Object.keys(JSON.parse(host.state.players.get(host.sessionId)!.blessings)).length,1);assert.equal(Object.keys(JSON.parse(guest.state.players.get(guest.sessionId)!.blessings)).length,1);
-    // Les choix ouverts figent la run pour toute l'équipe : on les vide avant d'attendre le minuteur.
-    for(const c of [host,guest])while(c.state.players.get(c.sessionId)!.boonChoices!=='[]'){const revision=c.state.players.get(c.sessionId)!.choiceRevision;c.send('boon',{runId:simRunId(),choice:0,revision});await until(()=>c.state.players.get(c.sessionId)!.choiceRevision!==revision||c.state.players.get(c.sessionId)!.boonChoices==='[]');}
-    room.sim.state.time=59.99;await until(()=>JSON.parse(host.state.players.get(host.sessionId)!.forgeGrants).length===1);
+    // Les choix ouverts figent la run pour toute l'équipe : les niveaux gagnés pendant l'attente sont résolus côté serveur.
+    room.sim.state.time=59.99;await until(()=>{resolveChoices();return JSON.parse(host.state.players.get(host.sessionId)!.forgeGrants).length===1;});
     const boss=room.sim.spawnMonster((await import('@rod/shared')).getMonster('bouftou_royal'),p.state.x+2,p.state.y,1,1,1);
     room.sim.damageMonster(boss,1e6,p.id);
     await until(()=>JSON.parse(host.state.players.get(host.sessionId)!.boonChoices).length===3);
     while(host.state.players.get(host.sessionId)!.boonChoices!=='[]'){const revision=host.state.players.get(host.sessionId)!.choiceRevision;host.send('boon',{runId:simRunId(),choice:0,revision});await until(()=>host.state.players.get(host.sessionId)!.choiceRevision!==revision||host.state.players.get(host.sessionId)!.boonChoices==='[]');}
-    // Les choix ouverts figent la run pour toute l'équipe : le Zaap attend aussi le choix de l'invité.
-    for(const c of [host,guest])while(c.state.players.get(c.sessionId)!.boonChoices!=='[]'){const revision=c.state.players.get(c.sessionId)!.choiceRevision;c.send('boon',{runId:simRunId(),choice:0,revision});await until(()=>c.state.players.get(c.sessionId)!.choiceRevision!==revision||c.state.players.get(c.sessionId)!.boonChoices==='[]');}
+    // Les choix ouverts figent la run pour toute l'équipe : on les résout côté serveur, après l'aspiration de l'XP du gardien.
+    await until(()=>{resolveChoices();return !room.sim.experience.sweeping;});resolveChoices();
     room.sim.state.zaapState=ZAAP_READY;p.state.x=room.sim.state.zaapX;p.state.y=room.sim.state.zaapY;host.send('interact');
     await until(()=>host.state.intermission&&guest.state.intermission);
     assert.equal(host.state.monsters.size,0);assert.equal(host.state.challenges.size,0);assert.equal(host.state.xpOrbs.size,0);
