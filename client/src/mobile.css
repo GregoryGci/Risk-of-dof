@@ -1,0 +1,59 @@
+/*
+ * Téléphone en paysage : écran large mais très bas (300 à 430 px).
+ * Chargé après legends.css, mêmes sélecteurs : ces règles l'emportent sur celles du portrait (max-width:850px).
+ */
+@media (max-height:500px) and (orientation:landscape){
+  /* Accueil : menu à gauche, illustration entière à droite, sans défilement. */
+  body.legends .home-background{background-image:linear-gradient(90deg,#171717 28%,transparent 62%),linear-gradient(0deg,#171717,transparent 12%),url('/assets/menu/twelve-classes.png');background-size:100% 100%,100% 100%,auto 100%;background-position:center,center,right center}
+  body.legends .home-topline{padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
+  body.legends .home-topline>.home-profile{flex-wrap:nowrap;gap:12px}
+  body.legends .home-topline>.home-profile .profile-name{flex-basis:auto}
+  body.legends .home-layout{width:auto;margin:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px;min-height:calc(100dvh - 58px);padding:6px 0;align-items:center}
+  body.legends .home-navigation{width:100%;padding-top:0}
+  body.legends .home-brand p{display:none}
+  body.legends .home-wordmark{width:clamp(110px,30dvh,150px)}
+  body.legends .brand-rule{margin:6px 0 4px}
+  body.legends .home-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 6px}
+  body.legends .home-nav-button{min-height:0;padding:7px 8px}
+  body.legends .home-nav-button>span:first-child{font-size:14px}
+  body.legends .home-nav-button small{display:none}
+  body.legends .home-welcome{display:block;align-self:end;justify-self:end;width:min(240px,100%);margin:0}
+  body.legends .home-footer{padding:0 max(16px,env(safe-area-inset-right)) 6px max(16px,env(safe-area-inset-left))}
+
+  /* Fenêtres : marges, en-têtes et titres resserrés pour laisser la hauteur au contenu. */
+  body.legends .overlay{padding:6px max(6px,env(safe-area-inset-right)) 6px max(6px,env(safe-area-inset-left))}
+  #home-view-overlay{--home-modal-gap:6px}
+  body.legends :is(.overlay>.sheet,#equipment .equipment-sheet,#encyclopedia .encyclopedia-sheet){width:100%;max-height:calc(100dvh - 12px)}
+  /* Le pied de l'équipement collé en bas mangerait le tiers de l'écran : il suit le contenu. */
+  body.legends .gear-footer{position:static;padding:10px 16px}
+  /* Une seule zone de défilement (la fenêtre) : au doigt, les listes imbriquées piègent le glissé. */
+  body.legends :is(.gear-grid,.gear-bonuses,.gear-panoplies){max-height:none;min-height:0;overflow:visible}
+  body.legends :is(.sheet-head,.details-head,.home-view-head){padding:10px 16px;min-height:0}
+  body.legends :is(.sheet-head,.details-head,.home-view-head)::before{left:16px}
+  body.legends :is(.sheet-head,.details-head){font-size:22px}
+  body.legends :is(.sheet-head,.details-head) small{display:none}
+  body.legends .home-view-head{margin-bottom:0}
+  /* infernal.css impose sa taille en !important dans une media query. */
+  body.legends .home-view-head h2{font-size:24px!important;margin-top:2px}
+  body.legends .home-view-head .eyebrow{display:none}
+  body.legends :is(.home-view-content,.archive-body,#talents-body,#details-body,#rest-body){padding:12px 16px}
+  body.legends .home-view .identity-row{padding:6px 16px}
+  body.legends .home-view .view-intro{display:none}
+  body.legends .home-setting{padding:10px 0}
+
+  /* Départ : personnage en une ligne, bouton de départ toujours visible en bas. */
+  body.legends .setup-loadout{flex-wrap:nowrap;padding:8px 12px;margin-bottom:10px}
+  body.legends .setup-loadout>.btn{width:auto}
+  body.legends .setup-character{gap:12px}
+  body.legends .setup-character b{font-size:19px}
+  body.legends .preparation-note{display:none}
+  body.legends .preparation-footer{position:sticky;bottom:-12px;z-index:2;margin:10px -16px -12px;padding:8px 16px 10px;background:var(--ink-panel)}
+  body.legends .preparation-footer .setup-hint{display:none}
+
+  /* Personnage : illustration et présentation côte à côte. */
+  body.legends .class-carousel{grid-template-columns:minmax(0,.8fr) minmax(0,1fr);gap:16px;padding-bottom:8px}
+  body.legends .carousel-art{height:min(200px,52dvh)}
+  body.legends .class-illustration{width:min(200px,52dvh)}
+  body.legends .class-carousel .character-intro,body.legends .class-carousel .character-intro p{text-align:left}
+  body.legends .class-carousel .character-intro h3{font-size:26px;margin:4px 0}
+}

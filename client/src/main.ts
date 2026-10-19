@@ -13,6 +13,7 @@ import './skin-shop.css';
 import './roguelite.css';
 import './run-hud.css';
 import './legends.css';
+import './mobile.css';
 import {startThemeMotion} from './ui/themeMotion.ts';
 import {SkinShop} from './ui/SkinShop.ts';
 import {startHomeAmbience} from './ui/HomeAmbience.ts';
