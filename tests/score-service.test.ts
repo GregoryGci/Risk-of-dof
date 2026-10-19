@@ -1,8 +1,10 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
-import {recordScore,getScoreHealth,ScoreWriteError,scoreFailureCode} from '../server/src/cloud.ts';
 import type {RunSummary} from '@rod/shared';
 const run:RunSummary={runId:'00000000-0000-4000-8000-000000000001',classId:'cra',name:'Test',startedAt:'2026-10-19T00:00:00Z',duration:30,partySize:1,mode:0,zone:1,zoneName:'Incarnam',waves:1,kills:2,teamKills:2,bossKills:0,damageDealt:20,healing:0,damageTaken:100,deathCause:'Monstre',bonuses:{},loot:[],damageSources:[{id:'sp.fleche_magique',damage:20,hits:2}]};
 test('Classement : écriture idempotente et diagnostics de clé/migration sans contenu sensible',async()=>{
+  // Clé factice posée avant le chargement : le test ne dépend pas du .env local (absent en CI).
+  process.env.SUPABASE_SECRET_KEY='sb_secret_fixture';
+  const {recordScore,getScoreHealth,ScoreWriteError,scoreFailureCode}=await import('../server/src/cloud.ts');
   const original=globalThis.fetch;
   try{
     let calls=0;globalThis.fetch=async(input,init)=>{
