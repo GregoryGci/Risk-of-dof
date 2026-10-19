@@ -24,24 +24,30 @@ body.touch-mode{overscroll-behavior:none}
 
 /*
  * HUD à l'échelle de l'écran : --hud-scale vaut 1 sur ordinateur et descend jusqu'à 0,6 sur téléphone (hudScale.ts).
+ * Chrono, barre de sorts et mini-carte suivent --hud-core-scale, plus petit encore sur téléphone.
  * #game ~ #hud passe devant les règles des thèmes.
  */
 #game ~ #hud #hud-team{transform:scale(var(--hud-scale,1));transform-origin:top left}
-#game ~ #hud #hud-timer{transform:translateX(-50%) scale(var(--hud-scale,1));transform-origin:top center}
-#game ~ #hud #hud-right{transform:scale(var(--hud-scale,1));transform-origin:top right}
-#game ~ #hud #hud-bottom{transform:translateX(-50%) scale(var(--hud-scale,1));transform-origin:bottom center}
+#game ~ #hud #hud-timer{transform:translateX(-50%) scale(var(--hud-core-scale,1));transform-origin:top center}
+#game ~ #hud #hud-right{transform:scale(var(--hud-core-scale,1));transform-origin:top right}
+#game ~ #hud #hud-bottom{transform:translateX(-50%) scale(var(--hud-core-scale,1));transform-origin:bottom center}
 #game ~ #hud #boss{transform:translateX(-50%) scale(var(--hud-scale,1));transform-origin:top center}
-#game ~ #hud :is(#toast,#ranking-status,#choice-wait,#dofus-announcement){transform:translateX(-50%) scale(var(--hud-scale,1));transform-origin:top center}
-#game ~ #hud #prompt{transform:translateX(-50%) scale(var(--hud-scale,1));transform-origin:bottom center}
+#game ~ #hud :is(#toast,#choice-wait,#dofus-announcement){transform:translateX(-50%) scale(var(--hud-scale,1));transform-origin:top center}
+#game ~ #hud #ranking-status{transform:translateX(-50%) scale(var(--hud-core-scale,1));transform-origin:top center}
+#game ~ #hud #prompt{transform:translateX(-50%) scale(var(--hud-core-scale,1));transform-origin:bottom center}
 /* Écran réduit : on ne garde que l'essentiel, le détail reste dans le panneau ⓘ. */
 body.compact-hud #game ~ #hud :is(#hud-meter,#passive-slots,#class-mechanic>small,#run-xp small){display:none}
 body.compact-hud #game ~ #hud #hud-timer{max-width:460px}
 body.compact-hud #game ~ #hud #objective{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.compact-hud #game ~ #hud #minimap{width:220px;height:112px}
+/* Passif inné : rappelé dans le panneau ⓘ. Seuls l'Osamodas et le Pandawa gardent leur bouton d'action (touche F). */
+body.compact-hud #game ~ #hud #class-mechanic:not(:has(.mechanic-action)){display:none}
+body.compact-hud #game ~ #hud #class-mechanic{min-width:0;width:max-content;max-width:none;padding:4px 6px}
+body.compact-hud #game ~ #hud #class-mechanic .mechanic-caption>b{display:none}
 /* Salon : la fenêtre de préparation garde sa taille de texte et prend toute la hauteur, au-dessus de la barre. */
 body.compact-hud #game ~ #hud #banner{top:8px;width:min(560px,calc(100vw - 16px));max-width:none;max-height:calc(100dvh - 16px);z-index:12}
 body.compact-hud #touch-controls .touch-dash{width:66px;height:66px;font-size:15px}
 body.compact-hud #touch-controls .touch-interact{width:54px;height:54px;margin-bottom:34px;font-size:19px}
-body.compact-hud #touch-controls .touch-top{top:calc(max(8px,env(safe-area-inset-top)) + 70px * var(--hud-scale,1))}
 body.compact-hud #touch-controls .touch-top button{width:34px;height:34px;font-size:15px}
 
 /* Choix de niveau en paysage : trois cartes côte à côte, sans défilement. */

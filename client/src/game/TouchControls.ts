@@ -23,6 +23,8 @@ export class TouchControls {
   private origin = { x: 0, y: 0 };
   private enabled = false;
   private abort = new AbortController();
+  private top: HTMLElement;
+  private nextPlacement = 0;
 
   constructor(private controls: Controls, private actions: { menu(): void; details(): void }) {
     this.el = document.createElement('div');
@@ -36,6 +38,7 @@ export class TouchControls {
     this.knob = this.stick.querySelector('i')!;
     this.dash = this.el.querySelector('.touch-dash')!;
     this.interact = this.el.querySelector('.touch-interact')!;
+    this.top = this.el.querySelector('.touch-top')!;
     // Pas de plein écran sur iPhone : le bouton n'apparaît que là où il fonctionne.
     if (!document.fullscreenEnabled) this.el.querySelector('[data-touch="fullscreen"]')!.remove();
     const signal = this.abort.signal;
@@ -87,6 +90,16 @@ export class TouchControls {
     const ratio = dashReadyIn > 0 && dashTotal > 0 ? Math.min(1, dashReadyIn / dashTotal) : 0;
     this.dash.style.setProperty('--cooldown', String(ratio));
     this.dash.classList.toggle('cooling', ratio > 0);
+    this.placeTopButtons();
+  }
+
+  /** Menu et détails sous le panneau d'équipe, dont la hauteur varie (affichage des performances, équipe à quatre). */
+  private placeTopButtons(): void {
+    const now = performance.now();
+    if (now < this.nextPlacement) return;
+    this.nextPlacement = now + 500;
+    const team = document.getElementById('hud-team')?.getBoundingClientRect();
+    if (team?.height) this.top.style.top = `${Math.round(team.bottom + 8)}px`;
   }
 
   private startStick(e: PointerEvent): void {

@@ -406,8 +406,8 @@ export class Hud {
     this.setHtml('prompt', prompt);
     $('prompt').classList.toggle('hidden', prompt === '');
     if (prompt) {
-      // La barre du bas est réduite sur petit écran (--hud-scale) : l'aide se pose juste au-dessus.
-      const scale=Number(getComputedStyle(document.documentElement).getPropertyValue('--hud-scale'))||1;
+      // La barre du bas est réduite sur petit écran (--hud-core-scale) : l'aide se pose juste au-dessus.
+      const scale=Number(getComputedStyle(document.documentElement).getPropertyValue('--hud-core-scale'))||1;
       const bottom=`${Math.round(this.bottomHeight*scale)+18}px`;
       if(this.cache.promptBottom!==bottom) { this.cache.promptBottom=bottom;$('prompt').style.bottom=bottom; }
     }

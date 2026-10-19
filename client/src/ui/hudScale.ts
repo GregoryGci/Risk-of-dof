@@ -4,12 +4,15 @@
 /** Écran de référence du HUD : en deçà, tout est réduit dans la même proportion. */
 const REFERENCE = { width: 1150, height: 620 };
 const MIN_SCALE = 0.6;
+/** Sur téléphone, le chrono, la barre de sorts et la mini-carte sont réduits davantage : le jeu garde le centre de l'écran. */
+const COMPACT_CORE = 0.72;
 
 export function watchHudScale(): () => void {
   const apply = (): void => {
     const width = window.visualViewport?.width ?? innerWidth, height = window.visualViewport?.height ?? innerHeight;
     const scale = Math.min(1, Math.max(MIN_SCALE, Math.min(width / REFERENCE.width, height / REFERENCE.height)));
     document.documentElement.style.setProperty('--hud-scale', scale.toFixed(3));
+    document.documentElement.style.setProperty('--hud-core-scale', (scale < 0.8 ? scale * COMPACT_CORE : scale).toFixed(3));
     document.body.classList.toggle('compact-hud', scale < 0.8);
   };
   apply();
@@ -19,6 +22,7 @@ export function watchHudScale(): () => void {
     window.removeEventListener('resize', apply);
     window.visualViewport?.removeEventListener('resize', apply);
     document.documentElement.style.removeProperty('--hud-scale');
+    document.documentElement.style.removeProperty('--hud-core-scale');
     document.body.classList.remove('compact-hud');
   };
 }

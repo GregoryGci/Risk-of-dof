@@ -179,6 +179,10 @@ export class GameScene extends Phaser.Scene {
   private ping=-1;
   private nextPing=0;
 
+  /** Écran de lancement : création de la scène, et s'il a déjà été retiré. */
+  private createdAt=0;
+  private loadingDone=false;
+
   constructor(private ctx: GameContext) {
     super('game');
   }
@@ -222,8 +226,7 @@ export class GameScene extends Phaser.Scene {
     },(choice,revision)=>this.room.send('boon',{choice,revision,runId:this.state.runId}),(type,revision,choiceId)=>this.room.send(type,{revision,choiceId,runId:this.state.runId}));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.mechanicHud.destroy());
     this.store.finalize(this);
-    // Dévoile le jeu après la première image rendue, pas avant.
-    this.time.delayedCall(0,()=>this.ctx.loading?.done());
+    this.createdAt=this.time.now;
     this.cameras.main.setBackgroundColor(0x1a2611);
     this.controls = new Controls(this.game.canvas);
     this.unwatchHudScale = watchHudScale();
@@ -388,6 +391,12 @@ export class GameScene extends Phaser.Scene {
     if(state.intermission){const next=zoneForStage(state.stage+1);monsterIds.push(...next.monsters,next.boss);}
     this.store.loadMonsters(this,monsterIds);
     const skins:string[]=[],characters:string[]=[];state.players.forEach(p=>{skins.push(p.skin);characters.push(p.classId);});this.store.loadSkins(this,skins);this.store.loadCharacters(this,characters);
+    }
+    // L'écran de lancement reste tant que des apparats ou des monstres chargent et que la run n'a pas démarré
+    // (en multijoueur, le salon suffit). Au-delà de 15 s, on dévoile quand même le jeu.
+    if(this.ctx.loading&&!this.loadingDone){
+      const elapsed=time-this.createdAt;
+      if(elapsed>15000||(!this.load.isLoading()&&(state.phase===PHASE_PLAYING||elapsed>1500))){this.loadingDone=true;this.ctx.loading.done();}
     }
     if(state.intermission!==this.lastIntermission){this.lastIntermission=state.intermission;this.rest.toggle(state.intermission);this.controls.releaseAll();this.targeting=null;}
     if(myState&&myState.cooldowns!==this.lastCooldownState){this.lastCooldownState=myState.cooldowns;try{const cds:number[]=JSON.parse(myState.cooldowns);for(let i=0;i<4;i++)this.cdEnd[i]=time+(cds[i]??0)*1000;this.dashCdEnd=time+(cds[4]??0)*1000;}catch{/* Attend le patch. */}}
