@@ -74,6 +74,7 @@ import {ROGUELITE_CATALOG,passiveParameters,passiveStatLayers,sanitizePermanentS
 import {makeRng,emptyStats,runVitalityScale} from '@rod/shared';
 import {Blessings} from './Blessings.ts';
 import { randomUUID } from 'node:crypto';
+import {CombatLedger} from './CombatLedger.ts';
 
 /** Déplacement forcé (bond, recul) : vitesse appliquée pendant `time` secondes. */
 export interface Push {
@@ -84,6 +85,7 @@ export interface Push {
 
 /** Données serveur d'un joueur qui ne sont pas synchronisées. */
 export interface PlayerRt {
+  combat:CombatLedger;
   build:RunBuildController;
   permanentRanks:PermanentSpellRanks;
   facingAngle:number;
@@ -156,6 +158,7 @@ export interface MonsterRt {
   burnUntil: number;
   burnNextTick: number;
   burnOwner: string;
+  burnSource?:string;
   burnAttack?:boolean;
   /** Doses de poison cumulées (effet `poison`). */
   poisonStacks?:number;
@@ -176,10 +179,14 @@ export interface MonsterRt {
   specialReadyAt: number;
   attackHoldUntil?:number;
   bossReadyAt?:number;
+  enemyReadyAt?:number;
+  enemyHoldUntil?:number;
+  enemyPattern?:number;
   bossHoldUntil?:number;
   /** Prochain bond possible vers un joueur éloigné. */
   bossLeapAt?:number;
   bossPattern?:number;
+  finaleAnnounced?:boolean;
   aimX?:number;
   aimY?:number;
   phaseUntil: number;
@@ -351,7 +358,7 @@ export class Simulation {
     let slot = 0;
     while (used.has(slot)) slot++;
     state.slot = slot;
-    const rt: PlayerRt = { build:new RunBuildController(ROGUELITE_CATALOG,this.state.runId||'lobby',id,def.id,this.state.seed+slot*1039),permanentRanks:sanitizePermanentSpellRanks(levels),facingAngle:0,pendingBossRewards:[],blessingRanks:{}, id, state, def,choiceDeadline:0,momentumUntil:0, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], dashGlyphActive:false,push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, dodgeUntil:0, pendingInputSeq:0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, history: [], petAttack };
+    const rt: PlayerRt = { combat:new CombatLedger(),build:new RunBuildController(ROGUELITE_CATALOG,this.state.runId||'lobby',id,def.id,this.state.seed+slot*1039),permanentRanks:sanitizePermanentSpellRanks(levels),facingAngle:0,pendingBossRewards:[],blessingRanks:{}, id, state, def,choiceDeadline:0,momentumUntil:0, dx: 0, dy: 0, readyAt: [0, 0, 0, 0], dashGlyphActive:false,push: null, lastHitAt: -999, shieldUntil: 0, autoAttack: false, lastInputAt: 0, inventory: new Map(), stats: sumRunStats(new Map()), spells: [], buffs: [], dashReadyAt: 0, dodgeUntil:0, pendingInputSeq:0, meta: equippedStats(equipment), loot: [], reviveUsed: false, revivePending: false, history: [], petAttack };
     this.setSpells(rt, loadout);
     this.resetPlayer(rt);
     this.players.set(id, rt);
@@ -492,6 +499,7 @@ export class Simulation {
   }
 
   private resetMeters(p: PlayerRt): void {
+    p.combat.reset();
     p.state.bossKills=0;p.state.deathCause='';
     p.state.dmgDealt = 0;
     p.state.healDone = 0;
@@ -813,7 +821,7 @@ export class Simulation {
     }
     const id = this.nextProjectileId++;
     const pr: Projectile = { id, spell, owner, fromPlayer, x, y, dx, dy, remaining: 0, damageMult, critChance, critMult, hit: new Set(),slot,proc:slot===undefined };
-    const event: CastEvent = { ...(spell.roguelite?{visual:{assetKey:spell.icon,color:spell.color,handler:spell.roguelite.ability.handler,projectile:spell.projectile,duration:spell.roguelite.ability.stats.durationMs/1000,owner}}:{}),id, caster: visualCaster, spell: spell.id, x, y, tx: x + dx, ty: y + dy,dashStrike:spell.dashStrike };
+    const event: CastEvent = { ...(!fromPlayer&&spell.projectile?{enemyProjectile:{shape:{...spell.projectile},color:0xf08762}}:{}), ...(spell.roguelite?{visual:{assetKey:spell.icon,color:spell.color,handler:spell.roguelite.ability.handler,projectile:spell.projectile,duration:spell.roguelite.ability.stats.durationMs/1000,owner}}:{}),id, caster: visualCaster, spell: spell.id, x, y, tx: x + dx, ty: y + dy,dashStrike:spell.dashStrike };
     if (slot !== undefined) {
       event.slot = slot;
       event.cooldown = cooldown ?? spell.cooldown;
@@ -1234,7 +1242,7 @@ export class Simulation {
         m.burnDps=e.dps*pr.damageMult*m.poisonStacks;
         m.burnUntil=this.now+e.duration;
         if(!same)m.burnNextTick=this.now+.5;
-        m.burnOwner=pr.owner;m.burnAttack=!!pr.spell.autoAttack;
+        m.burnOwner=pr.owner;m.burnSource=pr.spell.id;m.burnAttack=!!pr.spell.autoAttack;
       } else if (e.type === 'weaken') {
         m.weakenFactor=Math.max(m.weakenUntil!>this.now?m.weakenFactor??0:0,e.factor);
         m.weakenUntil=Math.max(m.weakenUntil??0,this.now+e.duration);
@@ -1258,7 +1266,7 @@ export class Simulation {
     if(pr.slot===0&&!pr.proc&&['sournoiserie','fouet','attaque_mortelle'].includes(pr.spell.id))this.broadcast('spellImpact',{spell:pr.spell.id,x:m.state.x,y:m.state.y,dx:dirX,dy:dirY});
     if(this.monsters.has(m.id)){
       const actual=Math.min(Math.max(1,Math.round(amount)),Math.max(0,m.state.hp));
-      this.damageMonster(m,amount,pr.owner,crit);
+      this.damageMonster(m,amount,pr.owner,crit,{sourceId:pr.spell.id});
       this.leechDamage(pr.owner,actual,!!pr.spell.autoAttack,innateLifesteal(pr.spell));
     }
     if(owner)this.blessings.onHit(owner,pr,m);
@@ -1446,7 +1454,7 @@ export class Simulation {
     if(m.state.ally||this.now>=m.burnUntil||!(m.poisonStacks??0))return;
     const owner=this.creditOf(m.burnOwner);return owner?.def.id==='sadida'?owner:undefined;
   }
-  damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false,options:{resolvedVulnerability?:boolean;skipStore?:boolean}={}): void {
+  damageMonster(m: MonsterRt, amount: number, ownerId: string, crit = false,options:{resolvedVulnerability?:boolean;skipStore?:boolean;sourceId?:string}={}): void {
     if(this.state.phase===PHASE_LOST)return;
     if(!this.monsters.has(m.id)||m.state.hp<=0||m.state.carried)return;
     if(!options.resolvedVulnerability)amount*=1+this.roguelite.vulnerability(m);
@@ -1454,7 +1462,11 @@ export class Simulation {
     amount = Math.max(1, Math.round(amount));
     const dealer = m.state.ally ? undefined : this.creditOf(ownerId);
     if(dealer&&dealer.id!==ownerId)this.blessings.mark(dealer,m);
-    if (dealer) dealer.state.dmgDealt += Math.min(amount, Math.max(0, m.def.behavior.type === 'dummy' ? amount : m.state.hp));
+    if (dealer) {
+      const actual=Math.min(amount, Math.max(0, m.def.behavior.type === 'dummy' ? amount : m.state.hp));
+      dealer.state.dmgDealt+=actual;
+      if(this.state.phase===PHASE_PLAYING)dealer.combat.dealt(options.sourceId??this.monsters.get(ownerId)?.rogueliteSummon?.ability.id??'other',actual);
+    }
     m.state.hp -= amount;
     if (m.state.elite && this.players.has(ownerId)) m.hitBy.add(ownerId);
     if (m.def.behavior.type === 'dummy') m.phaseUntil = this.now;
@@ -1474,7 +1486,7 @@ export class Simulation {
     // Sève corrompue : le poison restant passe à l'ennemi le plus proche (4 cases).
     if(this.sadidaPoison(m)){
       const next=[...this.monsters.values()].filter(o=>o!==m&&!o.state.ally&&o.state.hp>0&&Math.hypot(o.state.x-m.state.x,o.state.y-m.state.y)<=4).sort((a,b)=>Math.hypot(a.state.x-m.state.x,a.state.y-m.state.y)-Math.hypot(b.state.x-m.state.x,b.state.y-m.state.y))[0];
-      if(next&&(next.poisonStacks??0)<m.poisonStacks!){next.poisonStacks=m.poisonStacks;next.burnDps=m.burnDps;next.burnUntil=m.burnUntil;next.burnNextTick=this.now+.5;next.burnOwner=m.burnOwner;next.burnAttack=m.burnAttack;}
+      if(next&&(next.poisonStacks??0)<m.poisonStacks!){next.poisonStacks=m.poisonStacks;next.burnDps=m.burnDps;next.burnUntil=m.burnUntil;next.burnNextTick=this.now+.5;next.burnOwner=m.burnOwner;next.burnSource=m.burnSource;next.burnAttack=m.burnAttack;}
     }
     if(this.state.phase===PHASE_PLAYING){const route=getRoute(this.state.stageRoute);this.experience.drop(m.state.x,m.state.y,Math.round(enemyExperience(m.def,this.state.stage,this.players.size,m.state.elite)*route.xp*(m.def.boss?route.bossXp:1)));if(m.def.boss)this.experience.sweep();}
     const killer = dealer;
@@ -1537,7 +1549,9 @@ export class Simulation {
     amount -= absorbed;
     if(amount+absorbed>0)this.mechanics.onDamaged(p,Math.min(amount,p.state.hp)+absorbed);
     p.state.dmgTaken += Math.min(amount, Math.max(0, Math.round(p.state.hp)));
+    const actualTaken=Math.min(amount,Math.max(0,p.state.hp));
     p.state.hp = Math.max(0, p.state.hp - amount);
+    if(this.state.phase===PHASE_PLAYING)p.combat.taken(this.now,source,actualTaken,absorbed,p.state.hp);
     p.lastHitAt = this.now;
     this.broadcast('dmg', { target: p.id, amount, absorbed, x: p.state.x, y: p.state.y, player: true });
     if(amount>0&&p.state.hp>0)this.blessings.onDamage(p);
@@ -1545,6 +1559,7 @@ export class Simulation {
     if (p.state.hp > 0) return;
     p.state.alive = false;
     p.state.deathCause=source;
+    p.combat.died(this.now);
     this.mechanics.reset(p.id);
     p.state.moving = false;
     p.state.shield = 0;
@@ -1608,7 +1623,8 @@ export class Simulation {
       const reward=equipmentReward(this.state.runId, seed >>> 0, this.state.stage, this.state.mode, runKamasReward(this.state.time,this.state.waves,p.state.bossKills,outcome==='victory'),p.loot);
       reward.ogrineGrants=JSON.parse(p.state.ogrineGrants);
       reward.forgeGrants=JSON.parse(p.state.forgeGrants);
-      reward.summary={ogrines:p.state.ogrinesEarned,outcome,runId:this.state.runId,classId:p.def.id,name:p.state.name,startedAt:this.startedAt,duration:Math.floor(this.state.time),partySize:this.partySize,mode:this.state.mode,zone:this.state.stage,zoneName:zoneForStage(this.state.stage).name,waves:this.state.waves,kills:p.state.kills,teamKills:this.state.kills,bossKills:p.state.bossKills,damageDealt:p.state.dmgDealt,healing:p.state.healDone,damageTaken:p.state.dmgTaken,deathCause:p.state.deathCause,bonuses:sumRunStats(p.inventory,{stage:this.state.stage,zoneWave:this.state.zoneWave,mode:this.state.mode}),blessing:getBlessing(p.state.blessing)?.id,blessings:{...p.blessingRanks},loot:[...p.loot.map(d=>d.gear),...reward.gear]};
+      const build=p.build.currentBuild;
+      reward.summary={...p.combat.summary(!p.state.alive),build:{level:this.state.runLevel,innatePassiveId:build.innatePassiveId,spells:structuredClone(build.spells),passives:structuredClone(build.passives)},ogrines:p.state.ogrinesEarned,outcome,runId:this.state.runId,classId:p.def.id,name:p.state.name,startedAt:this.startedAt,duration:Math.floor(this.state.time),partySize:this.partySize,mode:this.state.mode,zone:this.state.stage,zoneName:zoneForStage(this.state.stage).name,waves:this.state.waves,kills:p.state.kills,teamKills:this.state.kills,bossKills:p.state.bossKills,damageDealt:p.state.dmgDealt,healing:p.state.healDone,damageTaken:p.state.dmgTaken,deathCause:p.state.deathCause,bonuses:sumRunStats(p.inventory,{stage:this.state.stage,zoneWave:this.state.zoneWave,mode:this.state.mode}),blessing:getBlessing(p.state.blessing)?.id,blessings:{...p.blessingRanks},loot:[...p.loot.map(d=>d.gear),...reward.gear]};
       p.state.rewards = JSON.stringify(reward);
       this.broadcast('runReward',{player:p.id,reward});
     }
@@ -1792,6 +1808,7 @@ export class Simulation {
       slowUntil: 0,
       stunUntil: 0,
       specialReadyAt: this.now + 1 + Math.random() * 2,
+      enemyReadyAt:this.now+3+Math.random()*4,
       bossReadyAt: this.now + 2.5,
       bossPattern: 0,
       phaseUntil: 0,

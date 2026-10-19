@@ -1,0 +1,93 @@
+{
+  "reference": "client/public/assets/menu/class-portraits.png",
+  "transparentBackground": true,
+  "entries": [
+    {
+      "id": "iop",
+      "file": "iop/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-84af0a5e-37ff-4b9c-a5f6-83afbd5f72fc.png",
+      "brief": "Five isolated views of the approved orange spiky-haired male Iop head, fine ink outlines and warm cel shading. 3×2 transparent sheet: front three-quarter right, side right, front, back three-quarter left, back, empty final cell. No body or shoulders.",
+      "note": "Brief conservé ; le texte exact de cet appel initial ne figure pas dans ce fichier."
+    },
+    {
+      "id": "osamodas",
+      "file": "osamodas/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-6195e5e7-6b60-4ea5-8463-c6a4c72e066a.png",
+      "brief": "Five isolated views of the approved blue-haired female Osamodas, pointed ears and ivory horns, small blue neck collar and brass clasp. Same 3×2 transparent sheet layout and ink illustration style. No body.",
+      "note": "Brief conservé ; le texte exact de cet appel initial ne figure pas dans ce fichier."
+    },
+    {
+      "id": "xelor",
+      "file": "xelor/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-a128439e-34f1-4ab2-95df-3e0211616ffd.png",
+      "brief": "Five isolated views of the approved Xelor, ivory mummy bandages, dark face and luminous yellow eyes, navy hood with a brass clock. Same 3×2 transparent sheet layout. Back views show the hood without a face.",
+      "note": "Brief conservé ; le texte exact de cet appel initial ne figure pas dans ce fichier."
+    },
+    {
+      "id": "cra",
+      "file": "cra/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-ac814a8f-1871-4af4-bcd3-e0e73e42a98b.png",
+      "prompt": "Use case: stylized-concept. Create one transparent sprite asset sheet of FIVE separated HEADS of the SAME character for a 2D isometric game, matching the approved ink-and-cel-shaded illustration reference. Input image is STYLE AND CHARACTER IDENTITY REFERENCE only. Character cra: FIRST ROW FIRST COLUMN: female archer with fair skin, ash blond hair, large moss olive green hood, pointed ears, green eyes. Hood must remain part of the head silhouette. Match this specific reference character. Head cutoff at the base of the neck, no shoulders or torso, no weapons or props. Precise layout: landscape 1536x1024, three equal columns and two equal rows; each head centered with 12% clear padding, NO head touches another. TOP LEFT: three quarter FRONT facing RIGHT (both eyes visible); TOP MIDDLE: true SIDE PROFILE facing RIGHT (one eye); TOP RIGHT: straight FRONT; BOTTOM LEFT: three quarter BACK facing LEFT (mostly back of hair/hood, small side of face); BOTTOM MIDDLE: true BACK no face visible. BOTTOM RIGHT completely empty transparent. Same size, proportions, hairstyle, clothing, colors and light direction in all five views. Fine dark hand ink outlines, warm muted parchment highlights, clear cel shaded materials, detailed but game readable. Real transparent alpha background, absolutely NO colored backdrop, gradients, floor, shadows outside heads, labels, borders, watermark or additional characters. These are isolated modular head pieces, NOT full bodies."
+    },
+    {
+      "id": "eniripsa",
+      "file": "eniripsa/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-d0283ae8-9545-4eec-ad89-ddc791975302.png",
+      "prompt": "Use case: stylized-concept. Create one transparent sprite asset sheet of FIVE separated HEADS of the SAME character for a 2D isometric game, matching the approved ink-and-cel-shaded illustration reference. Input image is STYLE AND CHARACTER IDENTITY REFERENCE only. Character eniripsa: FIRST ROW THIRD COLUMN: cheerful young female fairy with auburn reddish brown hair in a high ponytail tied with ochre ribbon, pointed ears and warm amber eyes. Only head/hair/neck, NO wings. Match this specific reference character. Head cutoff at the base of the neck, no shoulders or torso, no weapons or props. Precise layout: landscape 1536x1024, three equal columns and two equal rows; each head centered with 12% clear padding, NO head touches another. TOP LEFT: three quarter FRONT facing RIGHT (both eyes visible); TOP MIDDLE: true SIDE PROFILE facing RIGHT (one eye); TOP RIGHT: straight FRONT; BOTTOM LEFT: three quarter BACK facing LEFT (mostly back of hair/hood, small side of face); BOTTOM MIDDLE: true BACK no face visible. BOTTOM RIGHT completely empty transparent. Same size, proportions, hairstyle, clothing, colors and light direction in all five views. Fine dark hand ink outlines, warm muted parchment highlights, clear cel shaded materials, detailed but game readable. Real transparent alpha background, absolutely NO colored backdrop, gradients, floor, shadows outside heads, labels, borders, watermark or additional characters. These are isolated modular head pieces, NOT full bodies."
+    },
+    {
+      "id": "sacrieur",
+      "file": "sacrieur/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-9dd9790a-8075-4cc1-abce-28052e38cf47.png",
+      "prompt": "Use case: stylized-concept. Create one transparent sprite asset sheet of FIVE separated HEADS of the SAME character for a 2D isometric game, matching the approved ink-and-cel-shaded illustration reference. Input image is STYLE AND CHARACTER IDENTITY REFERENCE only. Character sacrieur: FIRST ROW FOURTH COLUMN: athletic young male with spiky ivory white hair, dark crimson cloth headband tied behind with two short tails, tan skin, confident determined face, pointed ears. Match this specific reference character. Head cutoff at the base of the neck, no shoulders or torso, no weapons or props. Precise layout: landscape 1536x1024, three equal columns and two equal rows; each head centered with 12% clear padding, NO head touches another. TOP LEFT: three quarter FRONT facing RIGHT (both eyes visible); TOP MIDDLE: true SIDE PROFILE facing RIGHT (one eye); TOP RIGHT: straight FRONT; BOTTOM LEFT: three quarter BACK facing LEFT (mostly back of hair/hood, small side of face); BOTTOM MIDDLE: true BACK no face visible. BOTTOM RIGHT completely empty transparent. Same size, proportions, hairstyle, clothing, colors and light direction in all five views. Fine dark hand ink outlines, warm muted parchment highlights, clear cel shaded materials, detailed but game readable. Real transparent alpha background, absolutely NO colored backdrop, gradients, floor, shadows outside heads, labels, borders, watermark or additional characters. These are isolated modular head pieces, NOT full bodies."
+    },
+    {
+      "id": "sram",
+      "file": "sram/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-a5ae63b1-d26f-4d3b-8352-cae684f00011.png",
+      "prompt": "Use case: stylized-concept. Create one transparent sprite asset sheet of FIVE separated HEADS of the SAME character for a 2D isometric game, matching the approved ink-and-cel-shaded illustration reference. Input image is STYLE AND CHARACTER IDENTITY REFERENCE only. Character sram: SECOND ROW FIRST COLUMN: skeletal rogue, IVORY SKULL face with a sharp toothy grin, empty dark eye sockets with subtle small amber eyes, worn deep muted purple hood. Skull and hood only, no fleshy human face. Hood is part of head silhouette. Match this specific reference character. Head cutoff at the base of the neck, no shoulders or torso, no weapons or props. Precise layout: landscape 1536x1024, three equal columns and two equal rows; each head centered with 12% clear padding, NO head touches another. TOP LEFT: three quarter FRONT facing RIGHT (both eyes visible); TOP MIDDLE: true SIDE PROFILE facing RIGHT (one eye); TOP RIGHT: straight FRONT; BOTTOM LEFT: three quarter BACK facing LEFT (mostly back of hair/hood, only small side of face); BOTTOM MIDDLE: true BACK no face visible. BOTTOM RIGHT completely empty transparent. Same size, proportions, hairstyle, clothing, colors and light direction in all five views. Fine dark hand ink outlines, warm muted parchment highlights, clear cel shaded materials, detailed but game readable. Genuine transparent alpha background, absolutely NO colored backdrop, gradients outside heads, floor, labels, borders, watermark or additional characters. Modular head pieces, NOT full bodies."
+    },
+    {
+      "id": "sadida",
+      "file": "sadida/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-ed7229e3-e654-462e-8849-ff31713b2de5.png",
+      "prompt": "Use case: stylized-concept. Create one transparent sprite asset sheet of FIVE separated HEADS of the SAME character for a 2D isometric game, matching the approved ink-and-cel-shaded illustration reference. Input image is STYLE AND CHARACTER IDENTITY REFERENCE only. Character sadida: SECOND ROW SECOND COLUMN: very broad masculine forest guardian with wild huge dark brown hair and thick dark beard, tan skin, a few olive leaves in the hair, bushy eyebrows, stern warm amber eyes. Head includes his full voluminous hair and beard, not the shoulders. Match this specific reference character. Head cutoff at the base of the neck, no shoulders or torso, no weapons or props. Precise layout: landscape 1536x1024, three equal columns and two equal rows; each head centered with 12% clear padding, NO head touches another. TOP LEFT: three quarter FRONT facing RIGHT (both eyes visible); TOP MIDDLE: true SIDE PROFILE facing RIGHT (one eye); TOP RIGHT: straight FRONT; BOTTOM LEFT: three quarter BACK facing LEFT (mostly back of hair/hood, only small side of face); BOTTOM MIDDLE: true BACK no face visible. BOTTOM RIGHT completely empty transparent. Same size, proportions, hairstyle, clothing, colors and light direction in all five views. Fine dark hand ink outlines, warm muted parchment highlights, clear cel shaded materials, detailed but game readable. Genuine transparent alpha background, absolutely NO colored backdrop, gradients outside heads, floor, labels, borders, watermark or additional characters. Modular head pieces, NOT full bodies."
+    },
+    {
+      "id": "ecaflip",
+      "file": "ecaflip/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-11eac1d6-ad47-47eb-bb05-5201b4c1dec0.png",
+      "prompt": "Use case: stylized-concept. Create one transparent sprite asset sheet of FIVE separated HEADS of the SAME character for a 2D isometric game, matching the approved ink-and-cel-shaded illustration reference. Input image is STYLE AND CHARACTER IDENTITY REFERENCE only. Character ecaflip: SECOND ROW THIRD COLUMN: young feminine anthropomorphic cream-furred CAT with short tousled pale blond hair, large triangular CAT EARS with pink inner ears, expressive amber feline eyes, short feline nose and soft light muzzle. Match the reference cat heroine, not a human with cat-ear accessory. Match this specific reference character. Head cutoff at the base of the neck, no shoulders or torso, no weapons or props. Precise layout: landscape 1536x1024, three equal columns and two equal rows; each head centered with 12% clear padding, NO head touches another. TOP LEFT: three quarter FRONT facing RIGHT (both eyes visible); TOP MIDDLE: true SIDE PROFILE facing RIGHT (one eye); TOP RIGHT: straight FRONT; BOTTOM LEFT: three quarter BACK facing LEFT (mostly back of hair/hood, only small side of face); BOTTOM MIDDLE: true BACK no face visible. BOTTOM RIGHT completely empty transparent. Same size, proportions, hairstyle, clothing, colors and light direction in all five views. Fine dark hand ink outlines, warm muted parchment highlights, clear cel shaded materials, detailed but game readable. Genuine transparent alpha background, absolutely NO colored backdrop, gradients outside heads, floor, labels, borders, watermark or additional characters. Modular head pieces, NOT full bodies."
+    },
+    {
+      "id": "feca",
+      "file": "feca/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-3784f0c4-16ef-41b8-b455-9ed969c78165.png",
+      "prompt": "Use case: stylized-concept. Create one transparent sprite asset sheet of FIVE separated HEADS of the SAME character for a 2D isometric game, matching the approved ink-and-cel-shaded illustration reference. Input image is STYLE AND CHARACTER IDENTITY REFERENCE only. Character feca: SECOND ROW FOURTH COLUMN: young male guardian with tousled medium short chestnut brown hair, warm fair skin, pointed ears, amber brown eyes. Small olive green cloth collar at base of neck, NO shield or staff. Match this specific reference character. Head cutoff at the base of the neck, no shoulders or torso, no weapons or props. Precise layout: landscape 1536x1024, three equal columns and two equal rows; each head centered with 12% clear padding, NO head touches another. TOP LEFT: three quarter FRONT facing RIGHT (both eyes visible); TOP MIDDLE: true SIDE PROFILE facing RIGHT (one eye); TOP RIGHT: straight FRONT; BOTTOM LEFT: three quarter BACK facing LEFT (mostly back of hair/hood, only small side of face); BOTTOM MIDDLE: true BACK no face visible. BOTTOM RIGHT completely empty transparent. Same size, proportions, hairstyle, clothing, colors and light direction in all five views. Fine dark hand ink outlines, warm muted parchment highlights, clear cel shaded materials, detailed but game readable. Genuine transparent alpha background, absolutely NO colored backdrop, gradients outside heads, floor, labels, borders, watermark or additional characters. Modular head pieces, NOT full bodies."
+    },
+    {
+      "id": "enutrof",
+      "file": "enutrof/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-abc63724-b27d-4c0e-95f9-3e53e7d3e297.png",
+      "prompt": "Use case: stylized-concept. Create one transparent sprite asset sheet of FIVE separated HEADS of the SAME character for a 2D isometric game, matching the approved ink-and-cel-shaded illustration reference. Input image is STYLE AND CHARACTER IDENTITY REFERENCE only. Character enutrof: THIRD ROW SECOND COLUMN: elderly stocky male treasure hunter, mostly bald sun-tanned head with tufts of white hair at the sides, extremely large thick ivory white beard and mustache, thick white eyebrows, strong large nose and small determined eyes. NO goggles, as the approved reference has none. Full beard contained in head piece. Match this specific reference character. Head cutoff at the base of the neck, no shoulders or torso, no weapons or props. Precise layout: landscape 1536x1024, three equal columns and two equal rows; each head centered with 12% clear padding, NO head touches another. TOP LEFT: three quarter FRONT facing RIGHT (both eyes visible); TOP MIDDLE: true SIDE PROFILE facing RIGHT (one eye); TOP RIGHT: straight FRONT; BOTTOM LEFT: three quarter BACK facing LEFT (mostly back of hair/hood, only small side of face); BOTTOM MIDDLE: true BACK no face visible. BOTTOM RIGHT completely empty transparent. Same size, proportions, hairstyle, clothing, colors and light direction in all five views. Fine dark hand ink outlines, warm muted parchment highlights, clear cel shaded materials, detailed but game readable. Genuine transparent alpha background, absolutely NO colored backdrop, gradients outside heads, floor, labels, borders, watermark or additional characters. Modular head pieces, NOT full bodies."
+    },
+    {
+      "id": "pandawa",
+      "file": "pandawa/heads-v2.png",
+      "generator": "Built-in image_gen.imagegen",
+      "source": "C:\\Users\\grego\\.codex\\generated_images\\01a14957-46a0-7332-86f2-3294ff2fddf7\\exec-6df8aeeb-08d9-4cf4-a9d4-11bac1080235.png",
+      "prompt": "Use case: stylized-concept. Create one transparent sprite asset sheet of FIVE separated HEADS of the SAME character for a 2D isometric game, matching the approved ink-and-cel-shaded illustration reference. Input image is STYLE AND CHARACTER IDENTITY REFERENCE only. Character pandawa: THIRD ROW FOURTH COLUMN: stout masculine anthropomorphic PANDA, round black ears, ivory white face fur, distinctive black fur around eyes, black short nose, short light muzzle and cheek tufts, determined friendly expression. Panda animal head, NOT human face, small crimson scarf at base of neck allowed. Match this specific reference character. Head cutoff at the base of the neck, no shoulders or torso, no weapons or props. Precise layout: landscape 1536x1024, three equal columns and two equal rows; each head centered with 12% clear padding, NO head touches another. TOP LEFT: three quarter FRONT facing RIGHT (both eyes visible); TOP MIDDLE: true SIDE PROFILE facing RIGHT (one eye); TOP RIGHT: straight FRONT; BOTTOM LEFT: three quarter BACK facing LEFT (mostly back of hair/hood, only small side of face); BOTTOM MIDDLE: true BACK no face visible. BOTTOM RIGHT completely empty transparent. Same size, proportions, hairstyle, clothing, colors and light direction in all five views. Fine dark hand ink outlines, warm muted parchment highlights, clear cel shaded materials, detailed but game readable. Genuine transparent alpha background, absolutely NO colored backdrop, gradients outside heads, floor, labels, borders, watermark or additional characters. Modular head pieces, NOT full bodies."
+    }
+  ]
+}

@@ -29,7 +29,13 @@ function inspect(selector){
   if(el.matches('button')&&!s.fontFamily.includes('Segoe UI')&&!el.matches('.carousel-arrow'))wrongButtonFont.push({class:el.className,font:s.fontFamily});
   const text=[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent.trim()).join('').trim();if(!text)continue;
   const chain=[];let ancestor=el,opacity=1;
-  while(ancestor){const style=getComputedStyle(ancestor);opacity*=Number(style.opacity);chain.push(rgba(style.backgroundColor));ancestor=ancestor.parentElement;}
+  while(ancestor){
+   const style=getComputedStyle(ancestor);opacity*=Number(style.opacity);chain.push(rgba(style.backgroundColor));
+   // Le fond du bouton principal est maintenant un lavis masque sur ::before, derrière son libellé.
+   // Sa partie centrale est opaque ; la lisibilité des bords irréguliers reste inspectée sur les captures.
+   if(ancestor.matches('.btn-primary')){const wash=getComputedStyle(ancestor,'::before');if(wash.content!=='none'&&wash.display!=='none')chain.push(rgba(wash.backgroundColor));}
+   ancestor=ancestor.parentElement;
+  }
   if(opacity<.99)continue;
   const bg=chain.reverse().reduce((b,a)=>blend(a,b),[23,23,23]);
   const fg=blend(rgba(s.color),bg),a=luminance(fg),b=luminance(bg),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);

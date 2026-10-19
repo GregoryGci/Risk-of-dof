@@ -7,6 +7,8 @@ import {ROGUELITE_CATALOG,abilitySummary,evolutionPairs,type EffectiveRogueliteA
 import { spellIconSvg } from './icons.ts';
 import { spellDetailsHtml } from './spellInfo.ts';
 import { account } from '../account.ts';
+import {inviteUrl} from './invite.ts';
+import {runSummaryHtml} from './runSummary.ts';
 import { equipmentCard } from './equipmentHtml.ts';
 import { EQUIPMENT_BASES, EQUIPMENT_RARITY_NAMES, type GearDrop } from '@rod/shared';
 import {assaultPlan,blessingSpell,parseBlessings} from '@rod/shared';
@@ -151,6 +153,7 @@ export class Hud {
         if (data.action === 'equipment') this.callbacks.onEquipment();
         if (data.action === 'talents') this.callbacks.onTalents();
         if (data.action === 'copy-code') this.copyCode();
+        if (data.action === 'copy-invite') this.copyInvite();
         if (data.class) this.callbacks.onClass(data.class);
         if (data.mode !== undefined) this.callbacks.onMode(Number(data.mode));
       },
@@ -200,18 +203,15 @@ export class Hud {
   }
 
   private inviteUrl(): string {
-    return `${location.origin}${location.pathname}?code=${this.roomCode}`;
+    return inviteUrl(location.href,this.roomCode);
   }
 
   private copyInvite(): void {
     if(this.solo) return;
-    navigator.clipboard?.writeText(this.inviteUrl()).then(
-      () => {
-        $('room-code').innerHTML = `Lien copié ! <b>${escapeHtml(this.roomCode)}</b>`;
-        setTimeout(() => ($('room-code').innerHTML = `Partie <b>${escapeHtml(this.roomCode)}</b>`), 1500);
-      },
-      () => {},
-    );
+    const url=this.inviteUrl();
+    const fallback=()=>window.prompt('Copiez ce lien pour inviter votre équipe :',url);
+    if(!navigator.clipboard){fallback();return;}
+    void navigator.clipboard.writeText(url).then(()=>this.toast('Lien d’invitation copié !'),fallback);
   }
 
   /** Code seul, à saisir dans « Rejoindre » ; la confirmation apparaît au prochain rendu du bandeau. */
@@ -377,6 +377,8 @@ export class Hud {
     if(!routeEl){routeEl=document.createElement('div');routeEl.id='hud-route';$('hud-timer').append(routeEl);}
     if(this.cache.route!==routeKey){this.cache.route=routeKey;routeEl.classList.toggle('hidden',routeKey==='normal');routeEl.textContent=`${route.icon} ${route.name}`;routeEl.title=`${route.risk} · ${route.reward}`;}
     const ranking=$('ranking-status');
+    const scoreLabels:Record<string,string>={ready:'',pending:'Enregistrement au classement…',saved:'Run enregistrée au classement.',failed:'Score non enregistré · historique personnel conservé.',disabled:'Classement indisponible sur ce serveur · historique personnel conservé.'};
+    if(state.phase===PHASE_LOST)$('gameover-ranking').textContent=scoreLabels[me?.rankStatus??'disabled']??'';
     if(this.cache.rankStatus!==me?.rankStatus){
       this.cache.rankStatus=me?.rankStatus??'';
       ranking.classList.toggle('hidden',!['disabled','failed'].includes(me?.rankStatus??''));
@@ -550,6 +552,7 @@ export class Hud {
       banner =
         `<div class="lobby-head">` +
         (state.singlePlayer ? `<span class="lobby-title">Préparez votre aventure</span>` : `<span class="lobby-title">Code <span class="big-code" data-action="copy-code" title="Cliquer pour copier le code">${escapeHtml(this.roomCode)}</span>${this.codeCopied ? '<span class="code-copied">Copié !</span>' : ''}</span>`) +
+        (state.singlePlayer?'':'<button class="btn lobby-invite" data-action="copy-invite">Copier le lien d’invitation</button>') +
         `<span class="lobby-count">${state.players.size} joueur${state.players.size > 1 ? 's' : ''} · entraînez-vous</span>` +
         `<div class="mode-picker">${GAME_MODES.map((m) => {const locked=m.id>(state.players.get(state.hostId)?.unlockedMode??0);return`<button class="btn mode-btn${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" ${host&&!locked ? '' : 'disabled'} title="${escapeHtml(locked?`L’hôte doit d’abord terminer le mode ${GAME_MODES[m.id-1].name}.`:m.description)}">${m.name}${locked?' · Verrouillé':''}</button>`;}).join('')}</div>` +
         `<button class="btn" data-action="equipment">Équipement</button><button class="btn" data-action="talents">Sorts & talents</button>` +
@@ -581,8 +584,9 @@ export class Hud {
           account.creditRun(reward);
           const next=won?GAME_MODES[state.mode+1]:undefined;
           $('gameover-reward').innerHTML = `+${reward.kamas} kamas · ${reward.summary?.ogrines??0} Ogrines · ${reward.gear.reduce((n,e)=>n+e.quantity,0)} équipements conservés<br><small>Palier ${EQUIPMENT_TIERS[reward.tier].level} · ${mode.name} · Bourse ${account.bank} K</small>${won?`<span class="victory-unlock">${next?`Difficulté débloquée : ${escapeHtml(next.name)}`:'Cauchemar terminé · tous les modes sont débloqués'}</span>`:''}`;
+          $('gameover-recap').innerHTML=reward.summary?runSummaryHtml(reward.summary):'';
           $('gameover-gear').innerHTML = reward.gear.map(e => equipmentCard(e)).join('');
-        } else { $('gameover-reward').textContent = 'Récupération du butin…'; $('gameover-gear').innerHTML = ''; }
+        } else { $('gameover-reward').textContent = 'Récupération du butin…'; $('gameover-gear').innerHTML = ''; $('gameover-recap').innerHTML=''; }
         $('gameover-stats').textContent = `${won?`${getMonster(bossForStage(modeStages(state.mode)[1])).name} vaincu · ${modeStages(state.mode)[1]-modeStages(state.mode)[0]+1} donjons terminés en`:'Vous avez tenu'} ${formatTime(state.time)} — ${state.kills} monstres vaincus`;
         let rows = '';
         state.players.forEach((p: PlayerView) => {

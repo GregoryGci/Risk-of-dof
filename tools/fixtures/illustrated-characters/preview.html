@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Les Douze · personnages animés</title>
+<style>
+*{box-sizing:border-box}html{color-scheme:dark}body{margin:0;background:#141513;color:#e8e1d0;font:14px/1.5 system-ui,sans-serif}main{max-width:1380px;margin:auto;padding:28px}header{display:flex;align-items:end;justify-content:space-between;gap:24px;border-bottom:1px solid #b0a17c35;padding-bottom:20px}.eyebrow{color:#aaa18b;text-transform:uppercase;font-size:10px;letter-spacing:3px}h1,h2{font-family:Georgia,serif;font-style:italic;font-weight:400}h1{font-size:42px;margin:7px 0}header p{color:#ada99d;max-width:590px;margin:5px 0}button,select{font:inherit;color:inherit;background:#24251e;border:1px solid #a89a7240;border-radius:3px;padding:8px 12px;cursor:pointer}button:hover,select:hover{background:#36372b}button,select{transition:background .18s,border-color .18s,transform .18s}button:active{transform:translateY(1px)}:focus-visible{outline:2px solid #e9d8b0;outline-offset:3px}.classes{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px;padding:20px 0}.class-button{padding:8px 2px;min-width:0;background:transparent;border-color:transparent;font-size:11px;color:#ada99d}.class-button img{display:block;width:64px;height:70px;max-width:100%;object-fit:contain;margin:0 auto 5px;transition:transform .22s,filter .22s;filter:saturate(.65)}.class-button:hover img{transform:translateY(-4px);filter:saturate(1)}.class-button[aria-pressed=true]{color:#fff0cc;background:#bdaa7514;border-color:#cbb68090}.class-button[aria-pressed=true] img{filter:saturate(1)}.layout{display:grid;grid-template-columns:minmax(0,1fr) 245px;gap:18px}.stage{background:#1b1d18;border:1px solid #ab9d7230;min-width:0}.labels{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #ab9d7230}.labels>div{padding:13px 20px}.labels>div+div{border-left:1px solid #ab9d7230}.labels b{display:block;font:italic 24px Georgia,serif}.labels small{display:block;color:#a7a293;font-size:11px;margin-top:5px}canvas{display:block;width:100%;height:460px}.status{border-top:1px solid #ab9d7230;padding:11px 18px;font-size:12px;color:#b7b09e;min-height:41px}.reference{padding:20px;background:#20211b;border:1px solid #ab9d7230}.reference h2{margin:0 0 12px;font-size:25px}.reference-art{width:100%;aspect-ratio:1;background-image:url(reference.png);background-size:400% 300%;background-repeat:no-repeat}.reference p{color:#b3ad9b;font-size:12px}.toolbar{display:flex;flex-wrap:wrap;gap:10px;padding:16px 0;align-items:center}.toolbar label{display:flex;align-items:center;gap:6px;font-size:12px;color:#c1bba9}.notes{display:grid;grid-template-columns:1fr 1fr;gap:28px;padding:12px 0}.notes h2{font-size:23px;margin:6px 0}.notes p{color:#aaa695;font-size:12px}.note{border-left:2px solid #ad9970;padding-left:16px}#metrics{font-variant-numeric:tabular-nums}.loading canvas{opacity:.25}@media(max-width:1050px){.classes{grid-template-columns:repeat(6,minmax(0,1fr))}.layout{grid-template-columns:minmax(0,1fr) 200px}main{padding:20px}}@media(max-width:720px){main{padding:18px 10px}header{display:block}h1{font-size:34px}.classes{gap:3px}.class-button{font-size:10px}.class-button img{height:56px}.layout{grid-template-columns:minmax(0,1fr)}.reference{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;padding:12px}.reference-art{grid-row:1/3;grid-column:1}.reference h2{grid-column:2;align-self:end;margin:0}.reference p{grid-column:2;margin:0}canvas{height:370px}.labels>div{padding:12px}.labels b{font-size:21px}.notes{grid-template-columns:1fr;gap:12px}.toolbar{gap:8px}select{max-width:210px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<main>
+ <header><div><span class="eyebrow">Encre des Douze · atelier d’animation</span><h1 id="title">Les personnages prennent vie.</h1></div><p>Les illustrations du menu guident les nouvelles têtes et les couleurs. Les personnages conservent leurs mouvements et leurs articulations Retro.</p></header>
+ <nav class="classes" aria-label="Classe à prévisualiser" id="classes"></nav>
+ <div class="toolbar">
+  <button id="play" type="button">Pause</button><button id="previous" type="button" aria-label="Image précédente">←</button><button id="next" type="button" aria-label="Image suivante">→</button>
+  <label>Animation <select id="motion"><option value="run">Course</option><option value="walk">Marche</option><option value="static">Repos</option><option value="anim0">Attaque</option><option value="anim1">Sort 1</option><option value="anim2">Sort 2</option><option value="die">Mort</option></select></label>
+  <label>Vue <select id="direction"><option value="0">Est</option><option value="1" selected>Sud-est</option><option value="2">Sud</option><option value="3">Sud-ouest</option><option value="4">Ouest</option><option value="5">Nord-ouest</option><option value="6">Nord</option><option value="7">Nord-est</option></select></label>
+  <label>Zoom <select id="zoom"><option value="1">× 1 · taille du jeu</option><option value="2">× 2</option><option value="3" selected>× 3 · détail</option></select></label>
+  <label>Vitesse <select id="speed"><option value="0.5">× 0,5</option><option value="1" selected>× 1</option><option value="1.5">× 1,5</option></select></label>
+ </div>
+ <div class="layout"><section class="stage" aria-label="Comparatif animé"><div class="labels"><div><b>Original Retro</b><small>Mouvements et dessin d’origine</small></div><div><b>Version illustrée</b><small>Cinq vues de tête et corps repeint</small></div></div><canvas id="preview" aria-label="Personnage original et illustré animés côte à côte"></canvas><div id="status" class="status" role="status">Chargement…</div></section><aside class="reference"><h2>Illustration du menu</h2><div class="reference-art" role="img" id="reference" aria-label="Illustration de référence"></div><p>Les bras, jambes et tenues gardent leurs formes d’origine. Cet atelier montre la greffe animée des nouveaux dessins.</p></aside></div>
+ <div class="notes"><section><h2>Une animation réelle</h2><p id="metrics"></p><p>Les deux versions jouent les mêmes images, avec la même origine aux pieds. Les directions opposées utilisent un miroir, comme dans le jeu. Certaines animations ne sont pas disponibles dans toutes les directions du fichier source.</p></section><section class="note"><h2>Aperçu local</h2><p>Ces fichiers ne remplacent pas encore les personnages en partie. Les coiffes, capes et apparats doivent être ajustés et vérifiés sur les nouvelles têtes avant l’intégration. Le gameplay, les comptes et les sauvegardes restent inchangés.</p></section></div>
+</main>
+<script>
+const classes=/*__CLASSES__*/;
+const integrated=/*__INTEGRATED__*/;
+if(integrated){document.querySelector('.notes .note h2').textContent='Personnages intégrés';document.querySelector('.notes .note p').textContent='Les versions illustrées sont maintenant utilisées dans le jeu, avec leurs équipements et apparats. Cette galerie conserve la comparaison avec les corps Retro. Les costumes gardent leur apparence propre.';}
+const names={iop:'Iop',osamodas:'Osamodas',xelor:'Xélor',cra:'Crâ',eniripsa:'Eniripsa',sacrieur:'Sacrieur',sram:'Sram',sadida:'Sadida',ecaflip:'Écaflip',feca:'Féca',enutrof:'Enutrof',pandawa:'Pandawa'};
+const positions=['cra','iop','eniripsa','sacrieur','sram','sadida','ecaflip','feca','osamodas','enutrof','xelor','pandawa'];
+const directions=[['S',false],['R',false],['F',false],['R',true],['S',true],['L',false],['B',false],['L',true]];
+const $=id=>document.getElementById(id),canvas=$('preview'),ctx=canvas.getContext('2d');
+const state={ready:false,id:null,playing:!matchMedia('(prefers-reduced-motion: reduce)').matches,motion:'run',direction:1,frame:0,zoom:3,speed:1,ticks:0,request:0};
+let data,images={},width=900,height=460,raf=0,last=0,elapsed=0;
+function key(){return state.motion+directions[state.direction][0];}
+function animation(){return data?.variants.original.animations[key()];}
+function count(){return animation()?.frames.length??0;}
+function paint(){
+ if(!state.ready)return;
+ ctx.clearRect(0,0,width,height);ctx.fillStyle='#1b1d18';ctx.fillRect(0,0,width,height);
+ const ground=height*.81;ctx.strokeStyle='#d3c3990e';ctx.lineWidth=1;
+ for(let x=-height;x<width+height;x+=45){ctx.beginPath();ctx.moveTo(x,ground-55);ctx.lineTo(x+230,ground+55);ctx.stroke();ctx.beginPath();ctx.moveTo(x,ground+55);ctx.lineTo(x+230,ground-55);ctx.stroke();}
+ ctx.strokeStyle='#c8b58e33';ctx.beginPath();ctx.moveTo(width/2,0);ctx.lineTo(width/2,height);ctx.stroke();
+ if(count())for(const [i,name]of ['original','illustrated'].entries()){
+  const v=data.variants[name],a=v.animations[key()],f=v.atlas.frames[a.frames[state.frame%a.frames.length]],p=f.frame;
+  const scale=64/53*1.4/data.zoom*state.zoom*a.clipScale,x=width*(i===0?.25:.75),y=ground,flip=directions[state.direction][1];
+  ctx.fillStyle='#0005';ctx.beginPath();ctx.ellipse(x,y,14*state.zoom,4*state.zoom,0,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.translate(x,y);if(flip)ctx.scale(-1,1);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.drawImage(images[name],p.x,p.y,p.w,p.h,(f.spriteSourceSize.x-v.origin[0]*f.sourceSize.w)*scale,(f.spriteSourceSize.y-v.origin[1]*f.sourceSize.h)*scale,p.w*scale,p.h*scale);ctx.restore();
+ }
+ const text=count()?`${names[state.id]} · ${$('motion').selectedOptions[0].text} · ${$('direction').selectedOptions[0].text} · image ${state.frame+1}/${count()} · ${state.playing?'lecture':'pause'}`:'Cette animation n’existe pas dans cette direction du fichier source.';
+ if($('status').textContent!==text)$('status').textContent=text;$('play').textContent=state.playing?'Pause':'Lire';
+}
+function resize(){const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio,2);width=r.width;height=r.height;canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);paint();}
+function tick(now){raf=0;if(last&&state.playing&&count()){elapsed+=Math.min(now-last,150)*state.speed;const step=1000/animation().fps;while(elapsed>=step){elapsed-=step;state.frame=(state.frame+1)%count();state.ticks++;}}last=now;paint();schedule();}
+function schedule(){if(!raf&&state.ready&&state.playing&&!document.hidden){raf=requestAnimationFrame(tick);}}
+function reset(){state.frame=0;last=0;elapsed=0;paint();schedule();}
+async function select(id){
+ const request=++state.request;state.ready=false;state.id=id;cancelAnimationFrame(raf);raf=0;images={};document.querySelector('.stage').classList.add('loading');$('status').textContent='Chargement de '+names[id]+'…';
+ for(const button of $('classes').children)button.setAttribute('aria-pressed',String(button.dataset.id===id));
+ try{
+  if(!window.characterPreviews?.[id])await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=id+'/preview-data.js';script.onload=resolve;script.onerror=reject;document.head.append(script);});
+  const nextData=window.characterPreviews[id],nextImages={};
+  await Promise.all(Object.entries(nextData.variants).map(([name,v])=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{nextImages[name]=img;resolve();};img.onerror=reject;img.src=v.image;})));
+  if(request!==state.request)return;data=nextData;images=nextImages;state.ready=true;
+  const index=positions.indexOf(id);$('reference').style.backgroundPosition=`${index%4/3*100}% ${Math.floor(index/4)/2*100}%`;
+  $('reference').setAttribute('aria-label','Illustration du '+names[id]);$('title').textContent=names[id]+', en mouvement.';
+  $('metrics').textContent=`${data.report.heads.length} vues de tête · ${data.report.bodyPieces} pièces de corps repeintes · ${data.report.exportedAnimations} animations exportées · ${data.report.exportedFrames} images. Timelines d’origine conservées.`;
+  for(const option of $('motion').options)option.disabled=!Object.keys(data.variants.original.animations).some(k=>k===option.value+directions[state.direction][0]);
+  document.querySelector('.stage').classList.remove('loading');reset();resize();
+ }catch(error){if(request===state.request){$('status').textContent='Impossible de charger '+names[id]+'. Conserver le fichier HTML et les dossiers des classes ensemble.';console.error(error);}}
+}
+for(const id of classes){const button=document.createElement('button');button.className='class-button';button.type='button';button.dataset.id=id;button.setAttribute('aria-pressed','false');button.innerHTML=`<img src="${id}/heads-v2/head-F.png" alt="" loading="lazy"><span>${names[id]}</span>`;button.onclick=()=>select(id);$('classes').append(button);}
+$('play').onclick=()=>{state.playing=!state.playing;last=0;if(!state.playing){cancelAnimationFrame(raf);raf=0;}paint();schedule();};
+for(const [id,step]of [['previous',-1],['next',1]])$(id).onclick=()=>{state.playing=false;cancelAnimationFrame(raf);raf=0;if(count())state.frame=(state.frame+step+count())%count();elapsed=0;paint();};
+$('motion').onchange=()=>{state.motion=$('motion').value;reset();};
+$('direction').onchange=()=>{state.direction=Number($('direction').value);for(const option of $('motion').options)option.disabled=!data?.variants.original.animations[option.value+directions[state.direction][0]];reset();};
+$('zoom').onchange=()=>{state.zoom=Number($('zoom').value);paint();};$('speed').onchange=()=>{state.speed=Number($('speed').value);elapsed=0;};
+addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{cancelAnimationFrame(raf);raf=0;last=0;if(!document.hidden)schedule();});
+window.__illustratedCharacters={state,select,draw:paint,get data(){return data},get count(){return count()}};
+select(classes.includes(location.hash.slice(1))?location.hash.slice(1):classes[0]);
+</script>
+</html>

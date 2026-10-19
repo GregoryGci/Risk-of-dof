@@ -45,3 +45,17 @@ Les résultats détaillés et captures sont dans `artifacts/` (non versionnés) 
 Le calcul de contraste est un contrôle ciblé : seuil 4,5:1 pour le texte courant, 3:1 pour le grand texte ; contrôles désactivés exclus. Les dégradés et les images nécessitent une inspection visuelle, réalisée sur les captures, et ne sont pas certifiés par ce calcul. Ces essais ne constituent pas une certification d’accessibilité ni une validation sur Safari, Firefox ou appareils physiques.
 
 La refonte porte sur la présentation. Elle ne modifie ni les règles de combat, ni la synchronisation, ni les sauvegardes des joueurs.
+
+## Fenêtres centrales du menu — 18 octobre 2026
+
+Solo, Multijoueur, Personnage et Réglages s'ouvrent désormais dans une fenêtre centrée sur les deux axes, sur un fond assombri. Leur largeur est limitée à 840 px ; la marge extérieure est de 24 px sur ordinateur et 12 px sur petit écran. Le contenu long défile à l'intérieur de la fenêtre. Le conteneur reprend la navigation commune des modals : clic extérieur, Échap, parcours au clavier et priorité des fenêtres d'équipement ouvertes par-dessus.
+
+Le parcours `tools/home-ui-smoke.mjs` vérifie le centrage et l'absence de débordement des quatre fenêtres à 1440×900, 1024×768, 768×1024, 390×844 et 320×844, ainsi que le retour du focus après Échap.
+
+## Illustrations et finition au pinceau — 18 octobre 2026
+
+Les douze vignettes et les aperçus Solo/Multijoueur reprennent désormais l'atlas original du grand carrousel, avec une correspondance centralisée dans `ui/classPortrait.ts`. Un léger retrait du haut des cellules des deux dernières rangées masque les quelques pixels de bottes venant de la rangée précédente ; il utilise le cadrage du fond CSS, sans modifier le PNG. Les portraits historiques restent disponibles dans les autres thèmes.
+
+Les fenêtres ont reçu des lavis, une texture vectorielle discrète, une marque XII cerclée au pinceau et des boutons aux bords irréguliers. Le fond de la fenêtre de préparation compose une illustration assombrie sur une surface opaque : les calques animés du menu ne produisent plus de défauts de fusion aux coins de l'écran. Le premier essai de recadrage des portraits par `clip-path` a provoqué un ralentissement du rendu logiciel lors des captures ; il a été remplacé par un cadrage du fond dans la boîte de contenu avant validation.
+
+Vérifications après ces changements : TypeScript et build réussis ; parcours des douze classes, clavier et cinq formats réussi ; audit CSS de 38 états réussi ; parcours des modals et du vrai Phaser réussi ; application compilée sous `/Risk-of-dof/` réussie. Les parcours terminés ne relèvent aucune exception JavaScript ni erreur HTTP. Les captures dans `artifacts/theme-character-desktop.png` et `artifacts/theme-multi-desktop.png` montrent le résultat final. Ce contrôle du menu ne constitue pas une mesure des performances de personnages illustrés animés en combat, qui ne sont pas implémentés.

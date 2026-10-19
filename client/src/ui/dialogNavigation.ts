@@ -1,6 +1,6 @@
 // Les fenêtres gardent le clavier : Tab parcourt leurs commandes, Échap ferme la plus haute.
 export function setupDialogNavigation(): void {
-  const closes:Record<string,string>={equipment:'equipment-close',encyclopedia:'encyclopedia-close',talents:'talents-close',details:'details-close',rest:'rest-close',history:'history-close','account-panel':'account-close',ladder:'ladder-close','game-settings':'game-settings-close',atlas:'atlas-close'};
+  const closes:Record<string,string>={equipment:'equipment-close',encyclopedia:'encyclopedia-close',talents:'talents-close',details:'details-close',rest:'rest-close',history:'history-close','account-panel':'account-close',ladder:'ladder-close','game-settings':'game-settings-close',atlas:'atlas-close','home-view-overlay':'view-close'};
   const topDialog=()=>[...document.querySelectorAll<HTMLElement>('#boon-choices:not(.hidden),.overlay:not(.hidden)')]
     .filter(el=>el.getBoundingClientRect().width>0).reverse()
     .sort((a,b)=>Number(getComputedStyle(b).zIndex)-Number(getComputedStyle(a).zIndex))[0];
@@ -9,17 +9,11 @@ export function setupDialogNavigation(): void {
     :document.getElementById(closes[dialog.id]) as HTMLButtonElement|null;
   // Une pression commencée dans la fenêtre puis relâchée dehors n'est pas un clic de fermeture.
   let backdropPress:HTMLElement|undefined;
-  const outsideHomeView=(target:Element)=>{
-    const menu=document.getElementById('menu'),view=document.getElementById('home-view');
-    return menu&&!menu.classList.contains('hidden')&&view&&!view.classList.contains('hidden')&&menu.contains(target)
-      &&!target.closest('#home-view,button,a,input,select,textarea,summary,label')?view:undefined;
-  };
   document.addEventListener('pointerdown',event=>{
     backdropPress=undefined;
     if(event.button!==0||!(event.target instanceof Element))return;
     const dialog=topDialog();
     if(dialog){if(event.target===dialog&&closeButton(dialog))backdropPress=dialog;}
-    else backdropPress=outsideHomeView(event.target);
   },{capture:true});
   document.addEventListener('pointercancel',()=>{backdropPress=undefined;},{capture:true});
   document.addEventListener('click',event=>{
@@ -28,8 +22,6 @@ export function setupDialogNavigation(): void {
     const dialog=topDialog();
     if(dialog===pressed&&event.target===dialog){
       event.preventDefault();event.stopPropagation();closeButton(dialog)?.click();
-    }else if(!dialog&&pressed.id==='home-view'&&outsideHomeView(event.target)===pressed){
-      event.preventDefault();event.stopPropagation();document.getElementById('view-close')?.click();
     }
   },{capture:true});
   document.addEventListener('keydown',event=>{

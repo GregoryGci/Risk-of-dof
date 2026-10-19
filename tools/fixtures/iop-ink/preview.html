@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Iop · test de remplacement des pièces Flash</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#151513;color:#eee8d7;font:14px/1.6 system-ui,sans-serif}main{width:min(1160px,100%);margin:auto;padding:28px 24px}header{border-bottom:1px solid #b9ac8055;padding-bottom:20px}.eyebrow{font-size:10px;letter-spacing:3px;color:#b8b3a6;text-transform:uppercase}h1{font:italic 38px Georgia,serif;margin:8px 0}p{color:#bbb6a9;margin:8px 0}.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:20px 0}button,select{font:inherit;color:inherit;background:#292821;border:1px solid #b7ad8855;padding:9px 13px;border-radius:3px;cursor:pointer}button:hover{background:#39362c}button:focus-visible,select:focus-visible{outline:2px solid #eee8d7;outline-offset:3px}label{display:flex;gap:8px;align-items:center;font-size:12px}select{padding:9px;max-width:100%}.layout{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:20px}.comparison{min-width:0;border:1px solid #a99d7533;background:#1c1d18}.labels{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #a99d7533}.labels>div{padding:16px 20px}.labels>div+div{border-left:1px solid #a99d7533}.labels b{display:block;font:italic 23px Georgia,serif}.labels small{display:block;color:#bbb6a9;margin-top:5px;font-size:11px}canvas{display:block;width:100%;height:460px}.reference{padding:20px;background:#202019;border:1px solid #a99d7533}.reference h2{font:italic 24px Georgia,serif;margin:0 0 16px}.reference-art{width:100%;aspect-ratio:1;background-size:400% 300%;background-position:33.333333% 0;background-repeat:no-repeat}.reference p{font-size:12px}.status{padding:12px 20px;border-top:1px solid #a99d7533;font-size:12px;color:#d1cabb}.notes{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:20px 0}.notes h2{font:italic 24px Georgia,serif;margin:10px 0}.notes p{font-size:13px}.warning{border-left:2px solid #c0aa74;padding-left:16px}a{color:#e4d5ac}input{max-width:100%}@media(max-width:750px){main{padding:20px 12px}h1{font-size:30px}.layout{grid-template-columns:minmax(0,1fr)}.reference{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px}.reference-art{grid-row:1/3;grid-column:1}.reference h2{grid-column:2;margin:0;align-self:end}.reference p{grid-column:2}.notes{grid-template-columns:1fr;gap:0}canvas{height:460px}.toolbar{gap:8px}.labels>div{padding:12px}.labels b{font-size:21px}}
+</style>
+<main>
+ <header><span class="eyebrow">Encre des Douze · prototype local · méthode 2</span><h1>Un nouveau dessin. Les mêmes mouvements.</h1><p>Comparaison synchronisée : tête remplacée, bas de tunique redessiné et palette adaptée, sur les animations Flash existantes.</p></header>
+ <div class="toolbar">
+  <button id="play" type="button">Pause</button>
+  <button id="previous" type="button" aria-label="Image précédente">← Image</button>
+  <button id="next" type="button" aria-label="Image suivante">Image →</button>
+  <label>Mouvement <select id="motion"><option value="walkR">Marche</option><option value="runR" selected>Course</option></select></label>
+  <label>Vitesse <select id="speed"><option value="0.5">× 0,5</option><option value="1" selected>× 1</option><option value="1.5">× 1,5</option></select></label>
+  <label>Zoom <select id="zoom"><option value="1">× 1 · taille de référence du jeu</option><option value="2">× 2</option><option value="4" selected>× 4 · inspection</option></select></label>
+ </div>
+ <div class="layout">
+  <section class="comparison" aria-label="Original et prototype animés">
+   <div class="labels"><div><b>Original Retro</b><small>Pièces et couleurs d'origine</small></div><div><b>Prototype hybride</b><small>Nouvelle tête + tunique + palette</small></div></div>
+   <canvas id="preview" aria-label="Marche et course du Iop original et modifié, côte à côte"></canvas>
+   <div class="status" id="status" role="status" aria-live="off">Chargement des images…</div>
+  </section>
+  <aside class="reference"><h2>Direction souhaitée</h2><div class="reference-art" role="img" aria-label="Illustration du Iop qui sert de référence"></div><p>L'illustration du menu reste la cible. Les bras, jambes et épaules du prototype conservent encore leurs formes Retro.</p></aside>
+ </div>
+ <div class="notes"><section><h2>Ce que ce test démontre</h2><p id="proof"></p><p>Les pieds utilisent l'origine de chaque atlas exporté. L'image n'est pas déplacée d'un bloc pour simuler une marche : les éléments sont animés par le SWF d'origine avant l'export.</p></section><section class="warning"><h2>Ce qu'il reste à produire</h2><p>Les autres orientations, les bras et jambes redessinés, les attaques, ainsi que les coiffes, capes et apparats adaptés. Cet aperçu est autonome et ne remplace aucun personnage dans le jeu.</p></section></div>
+</main>
+<script>
+const data=/*__PROTOTYPE_DATA__*/;
+const $=id=>document.getElementById(id),canvas=$('preview'),ctx=canvas.getContext('2d');
+const images={},state={ready:false,playing:!matchMedia('(prefers-reduced-motion: reduce)').matches,motion:'runR',frame:0,zoom:4,speed:1,ticks:0};
+let width=800,height=360,last=0,elapsed=0,raf=0;
+document.querySelector('.reference-art').style.backgroundImage=`url("${data.reference}")`;
+$('proof').textContent=data.report.timelines.map(t=>`${t.name==='walkR'?'Marche':'Course'} : ${t.frames} images, timeline inchangée`).join(' · ')+`. Cadence source : ${data.report.fps} images/s. Ressources de production inchangées.`;
+const count=()=>data.variants.original.animations[state.motion].frames.length;
+function paint(){
+ if(!state.ready)return;
+ ctx.clearRect(0,0,width,height);ctx.fillStyle='#1c1d18';ctx.fillRect(0,0,width,height);
+ const ground=height*.79;
+ ctx.strokeStyle='#c9b78c12';ctx.lineWidth=1;
+ for(let x=-height;x<width+height;x+=40){ctx.beginPath();ctx.moveTo(x,ground-65);ctx.lineTo(x+260,ground+65);ctx.stroke();ctx.beginPath();ctx.moveTo(x,ground+65);ctx.lineTo(x+260,ground-65);ctx.stroke();}
+ ctx.strokeStyle='#d6c28b33';ctx.beginPath();ctx.moveTo(width/2,0);ctx.lineTo(width/2,height);ctx.stroke();
+ const scale=64/53*1.4/data.report.zoom*state.zoom;
+ for(const [i,name]of ['original','illustrated'].entries()){
+  const v=data.variants[name],key=v.animations[state.motion].frames[state.frame],f=v.atlas.frames[key],p=f.frame;
+  const x=width*(i===0?.25:.75),y=ground;
+  ctx.fillStyle='#0005';ctx.beginPath();ctx.ellipse(x,y,14*state.zoom,4*state.zoom,0,0,Math.PI*2);ctx.fill();
+  const dx=(f.spriteSourceSize.x-v.origin[0]*f.sourceSize.w)*scale,dy=(f.spriteSourceSize.y-v.origin[1]*f.sourceSize.h)*scale;
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.drawImage(images[name],p.x,p.y,p.w,p.h,x+dx,y+dy,p.w*scale,p.h*scale);
+  ctx.strokeStyle='#d8c79655';ctx.beginPath();ctx.moveTo(x-5,y);ctx.lineTo(x+5,y);ctx.moveTo(x,y-5);ctx.lineTo(x,y+5);ctx.stroke();
+ }
+ const text=`${state.motion==='runR'?'Course':'Marche'} · image ${state.frame+1}/${count()} · ${state.playing?'lecture':'pause'} · zoom ×${state.zoom}`;
+ if($('status').textContent!==text)$('status').textContent=text;
+ $('play').textContent=state.playing?'Pause':'Lire';
+}
+function resize(){const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio,2);width=r.width;height=r.height;canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);paint();}
+function tick(now){raf=0;if(last&&state.playing){elapsed+=Math.min(now-last,150)*state.speed;const step=1000/data.report.fps;while(elapsed>=step){elapsed-=step;state.frame=(state.frame+1)%count();state.ticks++;}}last=now;paint();if(!document.hidden&&state.playing)raf=requestAnimationFrame(tick);}
+function schedule(){if(!raf&&!document.hidden&&state.playing){last=0;raf=requestAnimationFrame(tick);}}
+function toggle(){state.playing=!state.playing;if(!state.playing){cancelAnimationFrame(raf);raf=0;}schedule();paint();}
+$('play').onclick=toggle;
+for(const [id,step]of [['previous',-1],['next',1]])$(id).onclick=()=>{state.playing=false;cancelAnimationFrame(raf);raf=0;state.frame=(state.frame+step+count())%count();elapsed=0;paint();};
+$('motion').onchange=()=>{state.motion=$('motion').value;state.frame=0;elapsed=0;paint();};
+$('speed').onchange=()=>{state.speed=Number($('speed').value);elapsed=0;};
+$('zoom').onchange=()=>{state.zoom=Number($('zoom').value);paint();};
+addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;}else schedule();});
+window.__iopPrototype={state,report:data.report,draw:paint};
+Promise.all(Object.entries(data.variants).map(([name,v])=>new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{images[name]=img;resolve();};img.onerror=reject;img.src=v.image;}))).then(()=>{state.ready=true;resize();schedule();}).catch(()=>{$('status').textContent='Impossible de lire les images du prototype.';});
+</script>
+</html>

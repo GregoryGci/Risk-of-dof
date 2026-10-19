@@ -1,5 +1,7 @@
 # Préparation à la V1 — 18 octobre 2026
 
+Mise à jour du 19 octobre : [bilan, combat et contrôle réel du classement](BILAN_COMBAT_ET_CLASSEMENT.md). La suite compte désormais 293 tests réussis. L’écriture/relecture Supabase avec le serveur local est vérifiée ; Railway renvoie `INVALID_SERVER_KEY_FORMAT`, et la base refuse encore les scores Cauchemar avant sa migration. La clé Railway et les migrations SQL restent des opérations de publication à terminer. Les constats datés du 18 octobre ci-dessous sont conservés comme historique de validation.
+
 ## Verdict
 
 La version locale convient pour une **bêta privée de validation**. Je ne la déclare pas encore prête pour une V1 publique. La refonte de l’interface est intégrée et les contrôles locaux passent ; des validations de jeu humain et de services publiés restent nécessaires. Aucun déploiement, push ou changement de compte de production n’a été réalisé.

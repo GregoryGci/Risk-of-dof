@@ -24,8 +24,8 @@ export function dofusOnHit(sim:Simulation,p:PlayerRt,pr:Projectile,m:MonsterRt,a
   if(crit&&has(p,'glaces')&&(now>=m.slowUntil||m.slowFactor>=.75)){m.slowFactor=.75;m.slowUntil=Math.max(m.slowUntil,now+1);}
   if(!roguelite){if(has(p,'dolmanax')&&(m.def.boss||m.state.elite))amount*=1.15;
   if(has(p,'domakuro'))amount*=1+.3*Math.min(1,Math.max(0,(1-p.state.hp/p.state.maxHp)/.8));}
-  if(has(p,'ebene')&&now>=m.burnUntil){m.poisonStacks=0;m.burnDps=amount*.15/3;m.burnUntil=now+3;m.burnNextTick=now+.5;m.burnOwner=p.id;m.burnAttack=false;}
-  else if(has(p,'forgelave')&&(roguelite?['lob','delayed','glyph','trap'].includes(roguelite.ability.handler):pr.spell.zone||pr.spell.area)&&now>=m.burnUntil){m.poisonStacks=0;m.burnDps=amount*.1/2;m.burnUntil=now+2;m.burnNextTick=now+.5;m.burnOwner=p.id;m.burnAttack=false;}
+  if(has(p,'ebene')&&now>=m.burnUntil){m.poisonStacks=0;m.burnDps=amount*.15/3;m.burnUntil=now+3;m.burnNextTick=now+.5;m.burnOwner=p.id;m.burnSource='dofus';m.burnAttack=false;}
+  else if(has(p,'forgelave')&&(roguelite?['lob','delayed','glyph','trap'].includes(roguelite.ability.handler):pr.spell.zone||pr.spell.area)&&now>=m.burnUntil){m.poisonStacks=0;m.burnDps=amount*.1/2;m.burnUntil=now+2;m.burnNextTick=now+.5;m.burnOwner=p.id;m.burnSource='dofus';m.burnAttack=false;}
   if(has(p,'givrefoux')&&now>=(timer.givrefouxAt??0)&&(!roguelite||['projectile','sky_volley','lob','delayed','cone','sweep','chain','branch_chain','throw'].includes(roguelite.ability.handler))){timer.givrefouxAt=now+15;if(m.def.boss){m.slowFactor=.5;m.slowUntil=Math.max(m.slowUntil,now+1.5);}else sim.roguelite.control(m,'stun',1.5);sim.broadcast('buff',{target:p.id,label:'Givrefoux',duration:1});}
   return amount;
 }
@@ -60,7 +60,7 @@ export function dofusOnKill(sim:Simulation,p:PlayerRt,m:MonsterRt,crit:boolean):
   if(crit&&has(p,'dokille')&&sim.now>=(t(p).dokilleAt??0)){
     t(p).dokilleAt=sim.now+.2;
     const damage=m.state.maxHp*.2;
-    for(const o of [...sim.monsters.values()])if(o!==m&&!o.state.ally&&Math.hypot(o.state.x-m.state.x,o.state.y-m.state.y)<=2+o.def.radius)sim.damageMonster(o,damage,p.id);
+    for(const o of [...sim.monsters.values()])if(o!==m&&!o.state.ally&&Math.hypot(o.state.x-m.state.x,o.state.y-m.state.y)<=2+o.def.radius)sim.damageMonster(o,damage,p.id,false,{sourceId:'dofus'});
     sim.broadcast('bossImpact',{x:m.state.x,y:m.state.y,radius:2,color:0xb05cff,kind:'dokille'});
   }
   if(has(p,'argente')&&sim.random()<.08)sim.healPlayer(p,p.state.maxHp*.02,p,false);

@@ -1,6 +1,7 @@
 // IA des monstres : chaque monstre cible le joueur visible le plus proche (ou une invocation alliée,
 // en priorité celles qui provoquent). Les invocations alliées ont leur propre IA (updateAlly).
 import { BOSS_MIN_SPEED, MONSTER_MAX_SPEED, MAX_MONSTERS, MSTATE_CHARGE, MSTATE_NORMAL, MSTATE_WINDUP, PLAYER_RADIUS, dirFromVector, getMonster, getSpell, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, resolveCollisions, stepMovement } from '@rod/shared';
+import {updateEnemyAttack} from './enemy-attacks.ts';
 import { updateBoss } from './bosses.ts';
 import {summonPower,trySummonSkill} from './summons.ts';
 import {enemyPopulationLimit} from './spawn-pressure.ts';
@@ -38,7 +39,7 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
   if (sim.now < m.burnUntil && sim.now >= m.burnNextTick) {
     m.burnNextTick += 0.5;
     const actual=Math.min(Math.max(1,Math.round(m.burnDps*.5)),Math.max(0,s.hp));
-    sim.damageMonster(m, m.burnDps * 0.5, m.burnOwner);
+    sim.damageMonster(m, m.burnDps * 0.5, m.burnOwner,false,{sourceId:m.burnSource??'other'});
     sim.leechDamage(m.burnOwner,actual,!!m.burnAttack);
     if (!sim.monsters.has(m.id)) return;
   }
@@ -87,7 +88,7 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
     return;
   }
 
-  if (updateBoss(sim, m)) return;
+  if (updateBoss(sim, m)||updateEnemyAttack(sim,m)) return;
 
   const target = chooseTarget(sim, m, allies);
   if (!target) {
@@ -161,7 +162,7 @@ function updateMonster(sim: Simulation, m: MonsterRt, dt: number, allies:Monster
       s.state = MSTATE_WINDUP;
       m.phaseUntil = sim.now + RANGED_WINDUP;
       m.aimX=target.x;m.aimY=target.y;
-      if(m.def.boss||s.elite||spell.area)sim.broadcast('attackWarning',{x:s.x,y:s.y,tx:target.x,ty:target.y,width:.45,duration:RANGED_WINDUP,color:0xe78558,priority:!!m.def.boss||s.elite});
+      sim.broadcast('attackWarning',{x:s.x,y:s.y,tx:target.x,ty:target.y,width:.45,duration:RANGED_WINDUP,color:0xe78558,priority:!!m.def.boss||s.elite});
       return;
     }
     // Garde ses distances : approche si trop loin, recule si trop près. Un gardien reste au contact et ne recule pas.

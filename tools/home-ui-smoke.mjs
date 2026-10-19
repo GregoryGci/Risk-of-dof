@@ -37,6 +37,13 @@ try{
  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
  assert.deepEqual(await evaluate(`({focus:document.activeElement.outerHTML.slice(0,400),selected:document.querySelector('.home-class.active').dataset.class})`).then(s=>({focused:s.focus.includes('data-class="iop"'),selected:s.selected,details:s.focus.includes('data-class="iop"')?'':s.focus})),{focused:true,selected:'iop',details:''});
  checks.push('Class selection keeps keyboard focus after re-render');
+ const originalClass=await evaluate(`document.querySelector('.home-class.active').dataset.class`);
+ for(const id of await evaluate(`[...document.querySelectorAll('.home-class')].map(e=>e.dataset.class)`)){
+  await click('.home-class[data-class="'+id+'"]');
+  assert.ok(await evaluate(`(()=>{const card=document.querySelector('.home-class.active'),small=card.querySelector('.class-portrait-art'),large=document.getElementById('class-illustration'),a=getComputedStyle(small),b=getComputedStyle(large);return a.display!=='none'&&a.backgroundImage===b.backgroundImage&&a.backgroundPosition===b.backgroundPosition&&getComputedStyle(card.querySelector('.portrait-retro')).display==='none'&&small.getBoundingClientRect().height>0&&[...document.querySelectorAll('#solo-character .class-portrait-art,#multi-character .class-portrait-art')].every(e=>getComputedStyle(e).backgroundPosition===a.backgroundPosition);})()`),'Illustrated portrait matches carousel and preparation for '+id);
+ }
+ await click('.home-class[data-class="'+originalClass+'"]');
+ checks.push('All twelve class cards and both preparation previews use the matching carousel illustration instead of the Retro portrait');
  await viewport();await click('[data-view="multi"]');
  await evaluate(`document.getElementById('code').value='ABCD'`);
  await click('#view-multi [data-view="character"]');
@@ -65,6 +72,18 @@ try{
  assert.equal(await evaluate(`document.querySelector('#home-settings input[name="mouseAim"]').checked`),before);
  await evaluate(`document.querySelectorAll('#home-settings details').forEach(d=>d.open=false)`);await settled();await screenshot('ui-settings-desktop');
  checks.push('Settings groups expand, input changes persist between pages, crosshair re-render keeps expanded group and focus');
+ for(const [w,h] of [[1440,900],[1024,768],[768,1024],[390,844],[320,844]]){
+  await viewport(w,h);
+  for(const view of ['solo','multi','character','settings']){
+   await click('[data-view="'+view+'"]');await settled();
+   assert.ok(await evaluate(`(()=>{const el=document.getElementById('home-view'),r=el.getBoundingClientRect();return Math.abs(r.left+r.width/2-innerWidth/2)<2&&Math.abs(r.top+r.height/2-innerHeight/2)<2&&r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1&&el.scrollWidth<=el.clientWidth+2;})()`),'Centered, bounded '+view+' dialog at '+w+'x'+h);
+  }
+ }
+ checks.push('Solo, multiplayer, character and settings dialogs centered on both axes at five viewport sizes, with internal scrolling');
+ await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
+ await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
+ assert.ok(await evaluate(`document.getElementById('home-view-overlay').classList.contains('hidden')&&document.activeElement.matches('.home-nav-button[data-view="settings"]')`));
+ checks.push('Escape closes the centered dialog and restores focus to its menu button');
  for(const view of ['solo','multi','settings']){
   await viewport(390,844);await click('[data-view="'+view+'"]');await settled();await screenshot('ui-'+view+'-mobile');
   assert.ok(await evaluate(`(()=>{const el=document.getElementById('home-view');return el.scrollWidth<=el.clientWidth+2;})()`));

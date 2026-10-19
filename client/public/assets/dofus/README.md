@@ -58,7 +58,7 @@ Deux formats sont acceptés :
 
 Les animations sont rangées par **nom** puis par **direction**.
 
-- Noms utilisés par le jeu : `idle`, `run`, `attack`, `hit`, `death`.
+- Noms utilisés par le jeu : `idle`, `run`, `attack`, `cast1`, `cast2`, `hit`, `death`.
   Seul `idle` est indispensable ; une animation absente retombe sur `idle`.
 - Directions façon Dofus, en tournant dans le sens horaire à l'écran :
 
@@ -71,12 +71,23 @@ Les animations sont rangées par **nom** puis par **direction**.
   ```
 
 - Comme dans Dofus, les directions Ouest peuvent être le **miroir** des directions Est :
-  par défaut `"mirror": { "3": 1, "4": 0, "5": 7 }`. Il suffit donc de fournir 0, 1, 2, 6, 7.
+  par défaut `"mirror": { "3": 1, "4": 0, "7": 5 }`. Il suffit donc de fournir 0, 1, 2, 5, 6.
 - Une feuille « 4 directions » (diagonales 1, 3, 5, 7 uniquement) fonctionne aussi :
   les directions manquantes prennent la diagonale voisine.
 
 `origin` est le point d'ancrage du sprite, en proportion de la frame : il doit tomber
 **aux pieds** du personnage (défaut `[0.5, 0.9]`). `scale` permet d'ajuster la taille.
+
+Les corps illustrés utilisent `illustrated/<classe>.png` et `.json`. `pixelsPerUnit`
+indique leur résolution source pour placer les équipements ; sa valeur implicite
+est 2 pour les anciens assets. `revision` identifie le contenu du rendu pour
+invalider le cache navigateur lors d’une modification graphique.
+
+`classOutfits` associe les identifiants d’apparats sauvegardés à une classe et à
+deux objets cosmétiques de `gear.items` (`head`, `back`). Ils réutilisent les
+textures de classe. `skins` conserve les costumes possédant un corps distinct.
+La génération et les vérifications sont décrites dans
+[`docs/PERSONNAGES_ILLUSTRES.md`](../../../../docs/PERSONNAGES_ILLUSTRES.md).
 
 ## Remarque sur les fichiers d'origine
 

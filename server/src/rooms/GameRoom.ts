@@ -5,7 +5,7 @@ import { MAX_PLAYERS, NAME_MAX_LENGTH, PATCH_MS, ROOM_CODE_LENGTH, TICK_RATE, pa
 import { Simulation } from '../game/Simulation.ts';
 import type {PermanentSpellRanks} from '@rod/shared/roguelite';
 import { GameState } from '../state.ts';
-import {authenticate,recordScore,cloudScoresEnabled,ScoreWriteError,scoreFailureCode} from '../cloud.ts';
+import {authenticate,recordScore,cloudScoresEnabled,getScoreHealth,ScoreWriteError,scoreFailureCode} from '../cloud.ts';
 import {PHASE_LOBBY,type RunReward} from '@rod/shared';
 
 /** Codes des parties en cours, pour éviter les doublons. */
@@ -110,6 +110,10 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.equipment, undefined,levels,unlockedMode);
     this.sim.setSkins(client.sessionId,auth&&typeof auth==='object'?auth.skinBook:{});
     this.sim.players.get(client.sessionId)!.state.rankStatus=this.accounts.has(client.sessionId)&&cloudScoresEnabled?'ready':'disabled';
+    if(this.accounts.has(client.sessionId))void getScoreHealth().then(health=>{
+      const player=this.sim.players.get(client.sessionId);
+      if(player&&player.state.rankStatus==='ready'&&!health.ready){player.state.rankStatus='disabled';client.send('cloudStatus',{ranked:false});}
+    });
     if (!this.state.hostId){this.state.hostId = client.sessionId;this.state.mode=Math.min(this.state.mode,unlockedMode);}
     console.log(`[salle ${this.roomId}] ${name} a rejoint (${this.state.players.size}/${this.maxClients})`);
   }
@@ -119,7 +123,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     let error:unknown;
     for(let attempt=0;attempt<3;attempt++){
       try{await recordScore(userId,run);if(p)p.state.rankStatus='saved';this.clients.find(c=>c.sessionId===playerId)?.send('scoreSaved',{runId:run.runId});return;}
-      catch(e){error=e;if(!cloudScoresEnabled)break;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,500*(attempt+1)));}
+      catch(e){error=e;if(!cloudScoresEnabled||e instanceof ScoreWriteError&&e.status>=400&&e.status<500&&e.status!==429||scoreFailureCode(e)==='DATABASE_MIGRATION')break;if(attempt<2)await new Promise(resolve=>setTimeout(resolve,500*(attempt+1)));}
     }
     if(p)p.state.rankStatus='failed';
     console.error('[classement]',error instanceof Error?error.message:'Enregistrement impossible');

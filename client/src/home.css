@@ -3,6 +3,9 @@
 .home-ambience { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
 .home-wordmark { display: none; }
 .class-illustration { display: none; }
+.class-portrait { display: inline-grid; place-items: center; flex: none; width: 48px; height: 58px; vertical-align: middle; }
+.class-portrait-art { display: none; }
+.class-portrait .portrait-retro { max-width: 100%; max-height: 100%; object-fit: contain; }
 .class-carousel { display: grid; grid-template-columns: minmax(180px,.85fr) minmax(0,1fr); align-items: center; gap: 24px; }
 .carousel-stage { min-width: 0; }
 .carousel-controls { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 12px; }
@@ -84,7 +87,11 @@
 .welcome-caption .eyebrow { color: #ead0a1; }
 .welcome-caption h2 { font-size: 29px; color: #fff2d8; margin: 10px 0; font-weight: normal; }
 .welcome-caption p { margin: 0; font-size: 12px; color: #ece4c9; }
-.home-view { padding: 26px; background: linear-gradient(140deg, #f5edcefa, #dcd1aefa); border: 1px solid #b39661; border-radius: 6px; box-shadow: 0 14px 60px #06170eb0, inset 0 0 0 4px #fdf3d035, inset 0 0 0 5px #9e804328; max-height: min(740px, calc(100dvh - 145px)); overflow-y: auto; animation: view-enter .22s ease-out; }
+/* This dialog stays in the menu's layer, below equipment and other nested windows. */
+#home-view-overlay { --home-modal-gap: 24px; padding: var(--home-modal-gap); overflow: hidden; z-index: 40; }
+#home-view-overlay > .home-view { width: min(840px, 100%); max-width: 100%; max-height: calc(100dvh - 2 * var(--home-modal-gap)); min-height: 0; margin: 0; justify-self: center; overflow: auto; overscroll-behavior: contain; }
+@media (max-width: 850px) { #home-view-overlay { --home-modal-gap: 12px; } }
+.home-view { padding: 26px; background: linear-gradient(140deg, #f5edcefa, #dcd1aefa); border: 1px solid #b39661; border-radius: 6px; box-shadow: 0 14px 60px #06170eb0, inset 0 0 0 4px #fdf3d035, inset 0 0 0 5px #9e804328; overflow-y: auto; animation: view-enter .22s ease-out; }
 .home-view-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid #9e804343; }
 .home-view h2 { margin-top: 7px; font-size: 32px; font-weight: normal; }
 .home-view .sheet-close { background: #5c4325; border: 0; border-radius: 50%; width: 28px; height: 28px; font-size: 12px; }

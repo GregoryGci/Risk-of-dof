@@ -575,7 +575,7 @@ export class RogueliteCombat {
       }else if(!critical&&!rg.proc)amount=dofusOnHit(this.sim,p,pr,m,amount,false);
     }
     const actual=Math.min(Math.max(0,Math.round(amount)),Math.max(0,m.state.hp));
-    if(amount>0)this.sim.damageMonster(m,amount,p.id,critical,{resolvedVulnerability:true});
+    if(amount>0)this.sim.damageMonster(m,amount,p.id,critical,{resolvedVulnerability:true,sourceId:v.resolvedPeriodic?p.build.currentBuild.innatePassiveId:a.id});
     if(rg.slot===0&&v.bounce&&!rg.proc&&['projectile','boomerang'].includes(a.handler)&&a.id.startsWith('sp.')&&pr.rogueliteMotion) {
       pr.hit.add(m.id);let from=m;
       while(pr.rogueliteMotion.bounces<v.bounce){
@@ -697,7 +697,7 @@ export class RogueliteCombat {
         }
       }
       if(a.handler==='clock'&&now>=rt.next){rt.next=now+v.bellInterval/(1+.5*p.stats.haste);const bell=this.area(p,a,slot,p.state.x,p.state.y,a.stats.radius,1,false,{min:v.bellMin,max:v.bellMax});
-        for(const m of this.enemies(p.state.x,p.state.y,a.stats.radius)){let duration=this.control(m,'stun',v.freeze);if(m.def.boss){m.slowFactor=.4;m.slowUntil=now+v.freeze;duration=v.freeze;}if(duration>0)this.storage.set(`${p.id}:${m.id}`,{owner:p.id,target:m.id,until:now+duration,amount:0,cap:5*(bell.get(m.id)??0),fraction:v.storage});}}
+        for(const m of this.enemies(p.state.x,p.state.y,a.stats.radius)){let duration=this.control(m,'stun',v.freeze);if(m.def.boss){m.slowFactor=.4;m.slowUntil=now+v.freeze;duration=v.freeze;}if(duration>0)this.storage.set(`${p.id}:${m.id}`,{sourceId:a.id,owner:p.id,target:m.id,until:now+duration,amount:0,cap:5*(bell.get(m.id)??0),fraction:v.storage});}}
       return;
     }
     if(now<rt.next)return;
@@ -717,10 +717,10 @@ export class RogueliteCombat {
     if(frenzy)p.state.speed=p.def.speed*(1+Math.min(.5,p.stats.speed+.15));
   }
   private bloodOrbs:{x:number;y:number;until:number;owner:string}[]=[];
-  private storage=new Map<string,{owner:string;target:string;until:number;amount:number;cap:number;fraction:number}>();
+  private storage=new Map<string,{sourceId:string;owner:string;target:string;until:number;amount:number;cap:number;fraction:number}>();
   recordDamage(m:MonsterRt,amount:number) {for(const value of this.storage.values())if(value.target===m.id&&this.sim.now<value.until)value.amount=Math.min(value.cap,value.amount+amount*value.fraction);}
   updateRewards() {
-    for(const[key,value]of this.storage)if(this.sim.now>=value.until){this.storage.delete(key);const target=this.sim.monsters.get(value.target);if(target&&value.amount>0)this.sim.damageMonster(target,value.amount,value.owner,false,{skipStore:true,resolvedVulnerability:true});}
+    for(const[key,value]of this.storage)if(this.sim.now>=value.until){this.storage.delete(key);const target=this.sim.monsters.get(value.target);if(target&&value.amount>0)this.sim.damageMonster(target,value.amount,value.owner,false,{skipStore:true,resolvedVulnerability:true,sourceId:value.sourceId});}
     this.bloodOrbs=this.bloodOrbs.filter(orb=>{if(this.sim.now>=orb.until)return false;for(const p of this.sim.players.values())if(p.state.alive&&dist(p.state,orb)<.6){this.leech(p,p.state.maxHp*.005,1);return false;}return true;});
   }
 }

@@ -226,6 +226,7 @@ export interface InputMessage {
 
 /** Serveur -> clients : un sort est lancé (le client affiche le projectile). */
 export interface CastEvent {
+  enemyProjectile?:{shape:NonNullable<SpellDef['projectile']>;color:number};
   visual?: {assetKey:string;color:number;handler:string;projectile?:SpellDef['projectile'];duration?:number;owner:string};
   level?:number;
   dashStrike?:boolean;

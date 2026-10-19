@@ -44,6 +44,11 @@ export interface SpriteDef {
   mirror?: Record<string, number>;
   /** Réduction appliquée par tools/shrink-atlases.mjs (1 = atlas à la taille d'extraction). */
   shrunk?: number;
+  /** Résolution du rendu source avant une éventuelle réduction de l’atlas. */
+  pixelsPerUnit?: number;
+  artStyle?: 'ink';
+  /** Empreinte du rendu : invalide le cache même si les dimensions sont inchangées. */
+  revision?: string;
   /** Points d'accroche de la coiffe et de la cape, image par image (tools/extract-gear.mjs). */
   gear?: string;
 }
@@ -73,6 +78,8 @@ export interface ImageDef {
 
 export interface Manifest {
   skins?:Record<string,SpriteDef>;
+  /** Apparats sur le corps de classe ; les costumes gardent leurs atlas propres. */
+  classOutfits?:Record<string,{classId:string;head?:string;back?:string}>;
   /** Personnages par id de classe (ex. "cra"). */
   characters?: Record<string, SpriteDef>;
   /** Monstres par id (ex. "bouftou"). */

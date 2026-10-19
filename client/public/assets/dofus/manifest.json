@@ -1,44 +1,53 @@
 {
   "characters": {
     "cra": {
-      "image": "sprites/cra.png",
-      "atlas": "sprites/cra.json",
+      "image": "illustrated/cra.png",
+      "atlas": "illustrated/cra.json",
       "origin": [
-        0.544,
-        0.7818
+        0.493,
+        0.8116
       ],
-      "scale": 1.0225,
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 90,
+      "artStyle": "ink",
+      "revision": "509ddabbff5f7a88",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -46,31 +55,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -85,6 +99,38 @@
             "prefix": "attack_5_",
             "start": 0,
             "end": 23,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 29,
             "frameRate": 30,
             "repeat": 0
           }
@@ -106,49 +152,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/cra.gear.json"
     },
     "iop": {
-      "image": "sprites/iop.png",
-      "atlas": "sprites/iop.json",
+      "image": "illustrated/iop.png",
+      "atlas": "illustrated/iop.json",
       "origin": [
         0.45,
         0.913
       ],
-      "scale": 1.1271,
+      "scale": 0.84528,
+      "pixelsPerUnit": 2,
       "sourceSprite": 80,
+      "artStyle": "ink",
+      "revision": "fa595ffff404b3f8",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -156,31 +209,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -248,48 +306,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/iop.gear.json"
     },
     "eniripsa": {
-      "image": "sprites/eniripsa.png",
-      "atlas": "sprites/eniripsa.json",
+      "image": "illustrated/eniripsa.png",
+      "atlas": "illustrated/eniripsa.json",
       "origin": [
-        0.5414,
-        0.8594
+        0.512,
+        0.8803
       ],
-      "scale": 0.9016,
+      "scale": 0.67622,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 70,
+      "artStyle": "ink",
+      "revision": "9262bb03fefb7d32",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -297,31 +363,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 17,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 17,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 17,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -336,6 +407,38 @@
             "prefix": "attack_5_",
             "start": 0,
             "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 25,
             "frameRate": 30,
             "repeat": 0
           }
@@ -357,48 +460,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/eniripsa.gear.json"
     },
     "sacrieur": {
-      "image": "sprites/sacrieur.png",
-      "atlas": "sprites/sacrieur.json",
+      "image": "illustrated/sacrieur.png",
+      "atlas": "illustrated/sacrieur.json",
       "origin": [
-        0.5664,
-        0.9053
+        0.4802,
+        0.8958
       ],
-      "scale": 1.0143,
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 110,
+      "artStyle": "ink",
+      "revision": "1f385284a821981c",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -406,31 +517,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -446,6 +562,38 @@
             "start": 0,
             "end": 21,
             "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
             "repeat": 0
           }
         },
@@ -466,48 +614,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/sacrieur.gear.json"
     },
     "sram": {
-      "image": "sprites/sram.png",
-      "atlas": "sprites/sram.json",
+      "image": "illustrated/sram.png",
+      "atlas": "illustrated/sram.json",
       "origin": [
-        0.5403,
-        0.8173
+        0.4755,
+        0.8915
       ],
-      "scale": 1.0216,
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 40,
+      "artStyle": "ink",
+      "revision": "26c38c92d8157c5a",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -515,31 +671,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -554,6 +715,38 @@
             "prefix": "attack_5_",
             "start": 0,
             "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 28,
             "frameRate": 30,
             "repeat": 0
           }
@@ -575,48 +768,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/sram.gear.json"
     },
     "sadida": {
-      "image": "sprites/sadida.png",
-      "atlas": "sprites/sadida.json",
+      "image": "illustrated/sadida.png",
+      "atlas": "illustrated/sadida.json",
       "origin": [
-        0.4959,
-        0.8189
+        0.4583,
+        0.8491
       ],
-      "scale": 1.1271,
+      "scale": 0.84528,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 100,
+      "artStyle": "ink",
+      "revision": "889f016b15b35f0a",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -624,31 +825,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 17,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 17,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 17,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -661,6 +867,38 @@
           },
           "5": {
             "prefix": "attack_5_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
             "start": 0,
             "end": 27,
             "frameRate": 20,
@@ -684,48 +922,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/sadida.gear.json"
     },
     "ecaflip": {
-      "image": "sprites/ecaflip.png",
-      "atlas": "sprites/ecaflip.json",
+      "image": "illustrated/ecaflip.png",
+      "atlas": "illustrated/ecaflip.json",
       "origin": [
         0.5033,
-        0.9091
+        0.9409
       ],
-      "scale": 1.1271,
+      "scale": 0.84528,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 60,
+      "artStyle": "ink",
+      "revision": "241d7f3a1c12dcd2",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 20,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -733,31 +979,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -772,6 +1023,38 @@
             "prefix": "attack_5_",
             "start": 0,
             "end": 22,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 28,
             "frameRate": 30,
             "repeat": 0
           }
@@ -793,48 +1076,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/ecaflip.gear.json"
     },
     "feca": {
-      "image": "sprites/feca.png",
-      "atlas": "sprites/feca.json",
+      "image": "illustrated/feca.png",
+      "atlas": "illustrated/feca.json",
       "origin": [
         0.4277,
-        0.7818
+        0.8837
       ],
-      "scale": 1.0143,
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 10,
+      "artStyle": "ink",
+      "revision": "e08d1d6f285552c5",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -842,31 +1133,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -882,6 +1178,38 @@
             "start": 0,
             "end": 20,
             "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 20,
             "repeat": 0
           }
         },
@@ -902,48 +1230,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/feca.gear.json"
     },
     "osamodas": {
-      "image": "sprites/osamodas.png",
-      "atlas": "sprites/osamodas.json",
+      "image": "illustrated/osamodas.png",
+      "atlas": "illustrated/osamodas.json",
       "origin": [
         0.425,
         0.8584
       ],
-      "scale": 1.0143,
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 20,
+      "artStyle": "ink",
+      "revision": "a0c0a9f2848b77d5",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 10,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -951,31 +1287,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -1043,48 +1384,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/osamodas.gear.json"
     },
     "enutrof": {
-      "image": "sprites/enutrof.png",
-      "atlas": "sprites/enutrof.json",
+      "image": "illustrated/enutrof.png",
+      "atlas": "illustrated/enutrof.json",
       "origin": [
-        0.4881,
-        0.8106
+        0.4796,
+        0.7714
       ],
-      "scale": 1.0143,
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 30,
+      "artStyle": "ink",
+      "revision": "85f2efbbe8fcefb3",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -1092,31 +1441,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 16,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 27,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 16,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 16,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -1131,6 +1485,38 @@
             "prefix": "attack_5_",
             "start": 0,
             "end": 23,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 28,
             "frameRate": 30,
             "repeat": 0
           }
@@ -1152,48 +1538,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/enutrof.gear.json"
     },
     "xelor": {
-      "image": "sprites/xelor.png",
-      "atlas": "sprites/xelor.json",
+      "image": "illustrated/xelor.png",
+      "atlas": "illustrated/xelor.json",
       "origin": [
-        0.4908,
-        0.8372
+        0.4796,
+        0.8151
       ],
-      "scale": 0.9016,
+      "scale": 0.67622,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 50,
+      "artStyle": "ink",
+      "revision": "9b37a7737c995f41",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -1201,31 +1595,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 17,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 17,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 17,
-            "frameRate": 30
+            "frameRate": 30,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -1241,6 +1640,38 @@
             "start": 0,
             "end": 26,
             "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 15,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 15,
             "repeat": 0
           }
         },
@@ -1261,48 +1692,56 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/xelor.gear.json"
     },
     "pandawa": {
-      "image": "sprites/pandawa.png",
-      "atlas": "sprites/pandawa.json",
+      "image": "illustrated/pandawa.png",
+      "atlas": "illustrated/pandawa.json",
       "origin": [
-        0.5603,
-        0.8964
+        0.5154,
+        0.911
       ],
-      "scale": 1.1271,
+      "scale": 0.84528,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 120,
+      "artStyle": "ink",
+      "revision": "6e834279750f2cce",
       "anims": {
         "idle": {
           "0": {
             "prefix": "idle_0_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "idle_1_",
             "start": 0,
             "end": 7,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "idle_2_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "idle_5_",
             "start": 0,
             "end": 8,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "idle_6_",
             "start": 0,
             "end": 0,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "run": {
@@ -1310,31 +1749,36 @@
             "prefix": "run_0_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "1": {
             "prefix": "run_1_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "2": {
             "prefix": "run_2_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "5": {
             "prefix": "run_5_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           },
           "6": {
             "prefix": "run_6_",
             "start": 0,
             "end": 29,
-            "frameRate": 60
+            "frameRate": 60,
+            "repeat": -1
           }
         },
         "attack": {
@@ -1353,6 +1797,38 @@
             "repeat": 0
           }
         },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
         "death": {
           "1": {
             "prefix": "death_1_",
@@ -1370,7 +1846,6 @@
           }
         }
       },
-      "shrunk": 0.75,
       "gear": "sprites/pandawa.gear.json"
     }
   },
@@ -12980,8 +13455,8 @@
     "bworks": "sounds/otomai_background_forest.mp3"
   },
   "gear": {
-    "image": "sprites/gear.png",
-    "atlas": "sprites/gear.json",
+    "image": "illustrated/gear.png",
+    "atlas": "illustrated/gear.json",
     "pixelsPerUnit": 2,
     "items": {
       "chapeau_aventurier": {
@@ -13652,5086 +14127,148 @@
             5.1
           ]
         }
+      },
+      "ink_solomonk": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            30,
+            16.1
+          ],
+          "L": [
+            26.5,
+            18
+          ],
+          "F": [
+            28.5,
+            14.6
+          ],
+          "B": [
+            27.3,
+            14.7
+          ],
+          "S": [
+            27.7,
+            13.3
+          ]
+        }
+      },
+      "ink_voile": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.7,
+            1.4
+          ],
+          "R": [
+            36.5,
+            4.6
+          ],
+          "RR": [
+            45.8,
+            37.5
+          ],
+          "RL": [
+            16.2,
+            5.1
+          ]
+        }
+      },
+      "ink_obvijevan_head": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            28.7,
+            5.1
+          ],
+          "L": [
+            23.1,
+            3.9
+          ],
+          "F": [
+            20.4,
+            2.9
+          ],
+          "B": [
+            12.4,
+            4.3
+          ],
+          "S": [
+            23.5,
+            2.2
+          ]
+        }
+      },
+      "ink_obvijevan_back": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            8.5,
+            3.4
+          ],
+          "R": [
+            20.5,
+            3.1
+          ],
+          "RR": [
+            37.1,
+            17.8
+          ],
+          "RL": [
+            10,
+            4.5
+          ]
+        }
+      },
+      "ink_shushu_head": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            18.4,
+            38.4
+          ],
+          "L": [
+            14.6,
+            40.9
+          ],
+          "F": [
+            20.8,
+            31.4
+          ],
+          "B": [
+            22.6,
+            36.9
+          ],
+          "S": [
+            8.3,
+            34
+          ]
+        }
+      },
+      "ink_shushu_back": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            5.6,
+            4.5
+          ],
+          "R": [
+            18.7,
+            2.9
+          ],
+          "RR": [
+            49.1,
+            35.3
+          ],
+          "RL": [
+            12.600000000000001,
+            7.600000000000001
+          ]
+        }
       }
     }
   },
   "skins": {
-    "cra__solomonk": {
-      "image": "apparats/cra__solomonk.png",
-      "atlas": "apparats/cra__solomonk.json",
-      "origin": [
-        0.4516,
-        0.7619
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 90,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "cra__obvijevan": {
-      "image": "apparats/cra__obvijevan.png",
-      "atlas": "apparats/cra__obvijevan.json",
-      "origin": [
-        0.493,
-        0.8235
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 90,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "cra__shushu": {
-      "image": "apparats/cra__shushu.png",
-      "atlas": "apparats/cra__shushu.json",
-      "origin": [
-        0.5333,
-        0.7905
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 90,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "ecaflip__solomonk": {
-      "image": "apparats/ecaflip__solomonk.png",
-      "atlas": "apparats/ecaflip__solomonk.json",
-      "origin": [
-        0.5,
-        0.9358
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 60,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 31,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 12,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 30,
-            "frameRate": 15,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "ecaflip__obvijevan": {
-      "image": "apparats/ecaflip__obvijevan.png",
-      "atlas": "apparats/ecaflip__obvijevan.json",
-      "origin": [
-        0.5033,
-        0.9358
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 60,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 31,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 12,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 30,
-            "frameRate": 15,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "ecaflip__shushu": {
-      "image": "apparats/ecaflip__shushu.png",
-      "atlas": "apparats/ecaflip__shushu.json",
-      "origin": [
-        0.4841,
-        0.9358
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 60,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 31,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 12,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 30,
-            "frameRate": 15,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "iop__solomonk": {
-      "image": "apparats/iop__solomonk.png",
-      "atlas": "apparats/iop__solomonk.json",
-      "origin": [
-        0.45,
-        0.913
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 80,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "iop__obvijevan": {
-      "image": "apparats/iop__obvijevan.png",
-      "atlas": "apparats/iop__obvijevan.json",
-      "origin": [
-        0.45,
-        0.913
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 80,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "iop__shushu": {
-      "image": "apparats/iop__shushu.png",
-      "atlas": "apparats/iop__shushu.json",
-      "origin": [
-        0.45,
-        0.9
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 80,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "feca__solomonk": {
-      "image": "apparats/feca__solomonk.png",
-      "atlas": "apparats/feca__solomonk.json",
-      "origin": [
-        0.4417,
-        0.8444
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 10,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 15,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "feca__obvijevan": {
-      "image": "apparats/feca__obvijevan.png",
-      "atlas": "apparats/feca__obvijevan.json",
-      "origin": [
-        0.4277,
-        0.8879
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 10,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 15,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "feca__shushu": {
-      "image": "apparats/feca__shushu.png",
-      "atlas": "apparats/feca__shushu.json",
-      "origin": [
-        0.4916,
-        0.8597
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 10,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 15,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "eniripsa__solomonk": {
-      "image": "apparats/eniripsa__solomonk.png",
-      "atlas": "apparats/eniripsa__solomonk.json",
-      "origin": [
-        0.5207,
-        0.8803
-      ],
-      "scale": 0.6762,
-      "sourceSprite": 70,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "eniripsa__obvijevan": {
-      "image": "apparats/eniripsa__obvijevan.png",
-      "atlas": "apparats/eniripsa__obvijevan.json",
-      "origin": [
-        0.512,
-        0.8841
-      ],
-      "scale": 0.6762,
-      "sourceSprite": 70,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "eniripsa__shushu": {
-      "image": "apparats/eniripsa__shushu.png",
-      "atlas": "apparats/eniripsa__shushu.json",
-      "origin": [
-        0.512,
-        0.8841
-      ],
-      "scale": 0.6762,
-      "sourceSprite": 70,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "osamodas__solomonk": {
-      "image": "apparats/osamodas__solomonk.png",
-      "atlas": "apparats/osamodas__solomonk.json",
-      "origin": [
-        0.4294,
-        0.8584
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 20,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 10,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 15,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "osamodas__obvijevan": {
-      "image": "apparats/osamodas__obvijevan.png",
-      "atlas": "apparats/osamodas__obvijevan.json",
-      "origin": [
-        0.4224,
-        0.8584
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 20,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 10,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 15,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "osamodas__shushu": {
-      "image": "apparats/osamodas__shushu.png",
-      "atlas": "apparats/osamodas__shushu.json",
-      "origin": [
-        0.486,
-        0.8584
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 20,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 10,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 15,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "sacrieur__solomonk": {
-      "image": "apparats/sacrieur__solomonk.png",
-      "atlas": "apparats/sacrieur__solomonk.json",
-      "origin": [
-        0.4802,
-        0.8643
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 110,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "sacrieur__obvijevan": {
-      "image": "apparats/sacrieur__obvijevan.png",
-      "atlas": "apparats/sacrieur__obvijevan.json",
-      "origin": [
-        0.4802,
-        0.8866
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 110,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "sacrieur__shushu": {
-      "image": "apparats/sacrieur__shushu.png",
-      "atlas": "apparats/sacrieur__shushu.json",
-      "origin": [
-        0.4802,
-        0.865
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 110,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "enutrof__solomonk": {
-      "image": "apparats/enutrof__solomonk.png",
-      "atlas": "apparats/enutrof__solomonk.json",
-      "origin": [
-        0.4848,
-        0.7589
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 30,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 16,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 16,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 16,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "enutrof__obvijevan": {
-      "image": "apparats/enutrof__obvijevan.png",
-      "atlas": "apparats/enutrof__obvijevan.json",
-      "origin": [
-        0.4796,
-        0.7985
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 30,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 16,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 16,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 16,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "enutrof__shushu": {
-      "image": "apparats/enutrof__shushu.png",
-      "atlas": "apparats/enutrof__shushu.json",
-      "origin": [
-        0.4796,
-        0.8235
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 30,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 16,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 16,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 16,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "xelor__solomonk": {
-      "image": "apparats/xelor__solomonk.png",
-      "atlas": "apparats/xelor__solomonk.json",
-      "origin": [
-        0.4796,
-        0.8151
-      ],
-      "scale": 0.6762,
-      "sourceSprite": 50,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 15,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 15,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "xelor__obvijevan": {
-      "image": "apparats/xelor__obvijevan.png",
-      "atlas": "apparats/xelor__obvijevan.json",
-      "origin": [
-        0.4796,
-        0.8151
-      ],
-      "scale": 0.6762,
-      "sourceSprite": 50,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 15,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 15,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "xelor__shushu": {
-      "image": "apparats/xelor__shushu.png",
-      "atlas": "apparats/xelor__shushu.json",
-      "origin": [
-        0.4796,
-        0.82
-      ],
-      "scale": 0.6762,
-      "sourceSprite": 50,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 26,
-            "frameRate": 15,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 15,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 23,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "sram__solomonk": {
-      "image": "apparats/sram__solomonk.png",
-      "atlas": "apparats/sram__solomonk.json",
-      "origin": [
-        0.4967,
-        0.8514
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 40,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "sram__obvijevan": {
-      "image": "apparats/sram__obvijevan.png",
-      "atlas": "apparats/sram__obvijevan.json",
-      "origin": [
-        0.4718,
-        0.8915
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 40,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "sram__shushu": {
-      "image": "apparats/sram__shushu.png",
-      "atlas": "apparats/sram__shushu.json",
-      "origin": [
-        0.5337,
-        0.863
-      ],
-      "scale": 0.7607,
-      "sourceSprite": 40,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "pandawa__solomonk": {
-      "image": "apparats/pandawa__solomonk.png",
-      "atlas": "apparats/pandawa__solomonk.json",
-      "origin": [
-        0.4887,
-        0.865
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 120,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "pandawa__obvijevan": {
-      "image": "apparats/pandawa__obvijevan.png",
-      "atlas": "apparats/pandawa__obvijevan.json",
-      "origin": [
-        0.5039,
-        0.8872
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 120,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "pandawa__shushu": {
-      "image": "apparats/pandawa__shushu.png",
-      "atlas": "apparats/pandawa__shushu.json",
-      "origin": [
-        0.5,
-        0.865
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 120,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 7,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 21,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 28,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 25,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 24,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
-    "sadida__solomonk": {
-      "image": "apparats/sadida__solomonk.png",
-      "atlas": "apparats/sadida__solomonk.json",
-      "origin": [
-        0.4841,
-        0.8133
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 100,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 30,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Solomonk & Voile d’encre"
-    },
-    "sadida__obvijevan": {
-      "image": "apparats/sadida__obvijevan.png",
-      "atlas": "apparats/sadida__obvijevan.json",
-      "origin": [
-        0.4841,
-        0.8491
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 100,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 30,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Obvijevan (forme 1)"
-    },
-    "sadida__shushu": {
-      "image": "apparats/sadida__shushu.png",
-      "atlas": "apparats/sadida__shushu.json",
-      "origin": [
-        0.4841,
-        0.7759
-      ],
-      "scale": 0.8453,
-      "sourceSprite": 100,
-      "anims": {
-        "idle": {
-          "0": {
-            "prefix": "idle_0_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "1": {
-            "prefix": "idle_1_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "idle_2_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          },
-          "5": {
-            "prefix": "idle_5_",
-            "start": 0,
-            "end": 8,
-            "frameRate": 60
-          },
-          "6": {
-            "prefix": "idle_6_",
-            "start": 0,
-            "end": 0,
-            "frameRate": 60
-          }
-        },
-        "run": {
-          "0": {
-            "prefix": "run_0_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "1": {
-            "prefix": "run_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          },
-          "2": {
-            "prefix": "run_2_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "5": {
-            "prefix": "run_5_",
-            "start": 0,
-            "end": 17,
-            "frameRate": 30
-          },
-          "6": {
-            "prefix": "run_6_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 60
-          }
-        },
-        "attack": {
-          "1": {
-            "prefix": "attack_1_",
-            "start": 0,
-            "end": 30,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "attack_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast1": {
-          "1": {
-            "prefix": "cast1_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast1_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "cast2": {
-          "1": {
-            "prefix": "cast2_1_",
-            "start": 0,
-            "end": 29,
-            "frameRate": 20,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "cast2_5_",
-            "start": 0,
-            "end": 27,
-            "frameRate": 20,
-            "repeat": 0
-          }
-        },
-        "death": {
-          "1": {
-            "prefix": "death_1_",
-            "start": 0,
-            "end": 20,
-            "frameRate": 30,
-            "repeat": 0
-          },
-          "5": {
-            "prefix": "death_5_",
-            "start": 0,
-            "end": 22,
-            "frameRate": 30,
-            "repeat": 0
-          }
-        }
-      },
-      "name": "Shushuté"
-    },
     "costume_bouftou": {
       "image": "sprites/bouftou.png",
       "atlas": "sprites/bouftou.json",
@@ -19637,6 +15174,188 @@
         }
       },
       "shrunk": 0.75
+    }
+  },
+  "classOutfits": {
+    "iop__solomonk": {
+      "classId": "iop",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "iop__obvijevan": {
+      "classId": "iop",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "iop__shushu": {
+      "classId": "iop",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "osamodas__solomonk": {
+      "classId": "osamodas",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "osamodas__obvijevan": {
+      "classId": "osamodas",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "osamodas__shushu": {
+      "classId": "osamodas",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "xelor__solomonk": {
+      "classId": "xelor",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "xelor__obvijevan": {
+      "classId": "xelor",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "xelor__shushu": {
+      "classId": "xelor",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "cra__solomonk": {
+      "classId": "cra",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "cra__obvijevan": {
+      "classId": "cra",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "cra__shushu": {
+      "classId": "cra",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "eniripsa__solomonk": {
+      "classId": "eniripsa",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "eniripsa__obvijevan": {
+      "classId": "eniripsa",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "eniripsa__shushu": {
+      "classId": "eniripsa",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "sacrieur__solomonk": {
+      "classId": "sacrieur",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "sacrieur__obvijevan": {
+      "classId": "sacrieur",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "sacrieur__shushu": {
+      "classId": "sacrieur",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "sram__solomonk": {
+      "classId": "sram",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "sram__obvijevan": {
+      "classId": "sram",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "sram__shushu": {
+      "classId": "sram",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "sadida__solomonk": {
+      "classId": "sadida",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "sadida__obvijevan": {
+      "classId": "sadida",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "sadida__shushu": {
+      "classId": "sadida",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "ecaflip__solomonk": {
+      "classId": "ecaflip",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "ecaflip__obvijevan": {
+      "classId": "ecaflip",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "ecaflip__shushu": {
+      "classId": "ecaflip",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "feca__solomonk": {
+      "classId": "feca",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "feca__obvijevan": {
+      "classId": "feca",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "feca__shushu": {
+      "classId": "feca",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "enutrof__solomonk": {
+      "classId": "enutrof",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "enutrof__obvijevan": {
+      "classId": "enutrof",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "enutrof__shushu": {
+      "classId": "enutrof",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
+    },
+    "pandawa__solomonk": {
+      "classId": "pandawa",
+      "head": "ink_solomonk",
+      "back": "ink_voile"
+    },
+    "pandawa__obvijevan": {
+      "classId": "pandawa",
+      "head": "ink_obvijevan_head",
+      "back": "ink_obvijevan_back"
+    },
+    "pandawa__shushu": {
+      "classId": "pandawa",
+      "head": "ink_shushu_head",
+      "back": "ink_shushu_back"
     }
   }
 }

@@ -28,7 +28,7 @@ test('Apparats : achat à 5, propriété permanente, aucun débit répété et c
 
 test('Apparats originaux : 36 offres, prix uniforme, atlas et aperçu réellement livrés',()=>{
  const manifest=JSON.parse(fs.readFileSync('client/public/assets/dofus/manifest.json','utf8'));assert.equal(SKINS.length,36);
- for(const skin of SKINS){assert.equal(skin.price,SKIN_PRICE);const def=manifest.skins[skin.id];assert.ok(def);for(const file of[def.image,def.atlas,`apparats/${skin.id}__preview.png`])assert.ok(fs.statSync('client/public/assets/dofus/'+file).size>100,file);assert.ok(def.anims.idle&&def.anims.run&&def.anims.attack);}
+ for(const skin of SKINS){assert.equal(skin.price,SKIN_PRICE);const outfit=manifest.classOutfits[skin.id];assert.equal(outfit.classId,skin.classId);const def=manifest.characters[outfit.classId];assert.ok(manifest.gear.items[outfit.head]&&manifest.gear.items[outfit.back]);for(const file of[def.image,def.atlas,`apparats/${skin.id}__preview.png`])assert.ok(fs.statSync('client/public/assets/dofus/'+file).size>100,file);assert.ok(def.anims.idle&&def.anims.run&&def.anims.attack);}
 });
 
 test('Migration des paliers : conserve le palier 200 et la tenue, relecture idempotente',()=>{

@@ -120,3 +120,61 @@ Le document `docs/ROGUELITE_GAME_DESIGN.md` est désormais validé. Les points d
 **Décision : une seule carte Potion**, jamais trois Potions identiques (la règle « pas de doublons identiques » prime sur « trois cartes »). Le générateur actuel se comporte déjà ainsi.
 
 Cas limite corrigé par Claude dans `RunBuildController` : si plus rien n'est proposable (Potion bannie, élite sans bénédiction ni évolution), le niveau ou le bonus est **consommé sans carte** au lieu d'ouvrir une offre vide (qui bloquait la pause solo et faisait planter la sélection automatique multijoueur sur `choices[0]`). Une relance ou un bannissement qui ne trouve rien conserve les cartes précédentes. Test : « Build saturé » dans `tests/roguelite-authority.test.ts`.
+
+## Reprise et revue des changements de Claude — 18 octobre 2026
+
+**Mise à jour après instruction de l'utilisateur : les trois écarts ci-dessous ont été traités.** Le reset saisonnier a été entièrement retiré ; le chargement local et cloud utilise de nouveau la migration qui conserve la progression. Aucune donnée de compte réel n'a été modifiée pendant cette intervention. La rampe du Cauchemar reçoit maintenant le rang relatif de la zone (26 → 1) et un test du vrai directeur couvre les zones 26, 29, 32 et 33. Les textes de victoire de l'historique et de l'atlas suivent les fins de difficulté. Vérifications après correction : TypeScript réussi, **275/275 tests réussis**, dont les deux achats précédemment en échec, sans modifier leurs assertions ni leurs fixtures. Les constats suivants décrivent l'état trouvé lors de la revue, avant ces corrections.
+
+Périmètre : arbre local à `c83db006`, changements depuis `de64ca6b`, plus les modifications non commitées de `client/src/account.ts`, `cloud.ts` et `progression.ts`. Le document de design n'a pas été modifié pendant cette revue. Sa section 16 remplace explicitement les anciennes règles de campagne, pauses et pièges : ces changements sont conservés.
+
+### Éléments déjà intégrés
+
+- Le thème Encre des Douze et la reprise des interfaces sont dans `de64ca6b` : carrousel avec flèches SVG, présentation signature/inné, parcours solo/multi, réglages regroupés et classement mobile. Ne pas refaire ces modifications.
+- Claude a ajouté la copie du code de salon, la correction du déplacement à l'arrêt, les pauses collectives de choix et d'Échap, la stabilisation des cartes, les pièges sans plafond et l'équipement automatique.
+- La campagne suit maintenant les plages 1–8, 9–16, 17–25 et 26–33 ; le serveur termine la run au dernier gardien de chaque plage. Le HUD principal et la sélection de difficulté ont été adaptés.
+
+### Priorité 1 — Saison de compte incomplète entre client et serveur
+
+**Mécanique :** les modifications non commitées introduisent `ACCOUNT_SEASON = 2`. Tout compte d'une autre saison perd sa progression active et conserve seulement son profil ; une copie locale est tentée dans `<clé>.saison<n>`.
+
+**Difficulté reproduite :** `account.replace` remet à zéro un compte sans saison contenant un sort au rang 5 et le mode 3 débloqué. `server/src/cloud.ts:authenticate` lit cependant directement les anciens rangs et déblocages du cloud, sans vérifier la saison. De plus, `hydrate` ignore les notifications pendant le chargement : la remise à zéro ne marque pas à elle seule le compte comme à synchroniser. Un `flush()` sans modification ultérieure n'envoie donc pas la migration.
+
+**Impact :** le menu peut afficher rang 0 / mode 0 pendant que le serveur accorde encore rang 5 / mode 3. Reproduction exécutée avec stockage en mémoire et réponses cloud simulées ; aucun compte réel lu ou modifié.
+
+**Sauvegarde :** la copie locale fonctionne dans ce scénario. Elle n'est toutefois pas garantie : l'échec de `localStorage.setItem` est explicitement ignoré et une copie locale existante n'est pas remplacée par une sauvegarde cloud éventuellement plus récente.
+
+**Solutions :** centraliser la politique de saison dans le code partagé, l'appliquer aussi à l'authentification serveur, synchroniser explicitement la migration avec contrôle de révision et archiver les données avant une écriture destructive. Autre option : conserver la migration non destructive si le reset de saison n'est pas retenu.
+
+**Recommandation :** terminer ce chantier séparément avant publication ; conserver les changements en cours de Claude sans leur appliquer un correctif partiel. Ajouter des tests de saison actuelle/ancienne, sauvegarde impossible, données cloud plus récentes et cohérence client/serveur. Les fixtures d'achat existantes sans saison doivent être distinguées des véritables anciennes sauvegardes.
+
+### Priorité 2 — Rampe d'apparition du Cauchemar contournée
+
+**Mécanique :** `nightmareSpawnRamp` prévoit une pression de 0,6 au début, croissante jusqu'à 1 sur sept zones.
+
+**Difficulté :** `Director.update` lui passe toujours `sim.state.stage`, alors que le Cauchemar commence désormais en zone 26. La rampe vaut donc 1 dès le départ. Les tests directs avec les zones 1 à 7 passent et ne couvrent pas ce changement de point d'entrée.
+
+**Impact :** la réduction initiale de 40 % ne s'applique plus. Vérification exécutée : `nightmareSpawnRamp(3,26) === 1`, contre `nightmareSpawnRamp(3,runStageIndex(3,26)) === 0.6`.
+
+**Solutions / recommandation :** si la rampe doit suivre la progression de la run comme les autres paramètres de menace, transmettre le rang relatif et tester le directeur à l'entrée réelle du mode. Refaire ensuite les mesures d'équilibrage affectées ; ne pas changer silencieusement les résultats du simulateur consignés par Claude.
+
+### Priorité 3 — Textes restés sur l'ancienne campagne
+
+**Mécanique :** victoire à la fin de chaque difficulté.
+
+**Difficulté :** `HistoryPage.ts` affiche toujours « Kralamoure vaincu » pour toute victoire. Le pied de page de `AtlasPage.ts` indique encore que vaincre le Kralamoure débloque le mode suivant, alors qu'il termine désormais le dernier mode.
+
+**Impact :** informations contradictoires avec le nouveau HUD et le choix de difficulté.
+
+**Recommandation :** baser le texte d'historique sur la run enregistrée et expliquer dans l'atlas que le dernier gardien de chaque difficulté ouvre la suivante, sauf en Cauchemar. Correction éditoriale à reprendre lors de la finition UI.
+
+### Vérifications exécutées sur cet arbre
+
+- `npm.cmd run typecheck` : réussi.
+- `npm.cmd run build` : réussi.
+- `npm.cmd test` : 274 tests, 272 réussis, 2 échecs. Les achats d'apparats et les cinq achats permanents de sorts échouent car leurs fixtures sans saison voient leurs monnaies remises à zéro. Les assertions n'ont pas été neutralisées.
+- `node tools/home-ui-smoke.mjs` : réussi ; flèches de 44 px et navigation réelle à cinq tailles, focus clavier, retour contextuel multijoueur, validation de code et réglages. Aucune erreur JavaScript ou HTTP relevée par ce parcours.
+- `node tools/theme-browser-smoke.mjs` : réussi après correction de la cible de clic du test ; accueil, douze classes, clic extérieur, modals sombres, mobile, réduction des animations et vrai Phaser (salon, combat, cartes XP, détails, réglages, halte et défaite). Aucune erreur JavaScript ou HTTP relevée. Ce scénario utilise une simulation locale, pas deux navigateurs connectés à un serveur distant.
+- La revue de l'équipement automatique confirme une recherche heuristique avec plusieurs départs et échanges de deux pièces. Les trois tests passent, dont une comparaison exhaustive sur les inventaires du test ; cela ne prouve pas l'optimalité globale pour tout inventaire.
+- La correction du déplacement à l'arrêt et la charge avec quatre Sram sans plafond ne sont pas validées ici par une partie humaine avec latence. Les mesures du simulateur de Claude n'ont pas été réexécutées pendant cette revue.
+
+La remise à zéro en cours, les règles de gameplay et les paramètres d'équilibrage n'ont pas été modifiés par cette revue. Le test navigateur général a été ajusté pour cliquer au milieu du fond extérieur au panneau plutôt que dans le coin de défilement de Chromium, où aucun événement `click` n'était émis.

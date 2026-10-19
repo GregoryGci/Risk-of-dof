@@ -14,6 +14,20 @@ const url=(process.env.SUPABASE_URL??'https://gwhorrgwaefsvayctqig.supabase.co')
 const publicKey=process.env.SUPABASE_PUBLISHABLE_KEY??'sb_publishable_aUJ7d827aJ7JAXoEuHjSyg_Hlw9uVJX';
 const secret=process.env.SUPABASE_SECRET_KEY?.trim()||process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()||'';
 export const cloudScoresEnabled=!!secret;
+export interface ScoreHealth {configured:boolean;ready:boolean;code?:string}
+let scoreHealth:{until:number;value:ScoreHealth}|undefined;
+const scoreHeaders=()=>({apikey:secret,...(secret.startsWith('sb_secret_')?{}:{Authorization:`Bearer ${secret}`})});
+/** Read-only probe. A configured key is not proof that the database accepts it. */
+export async function getScoreHealth():Promise<ScoreHealth>{
+  if(!secret)return {configured:false,ready:false,code:'MISSING_SERVER_KEY'};
+  if(scoreHealth&&scoreHealth.until>Date.now())return scoreHealth.value;
+  let value:ScoreHealth;
+  try{
+    const response=await fetch(`${url}/rest/v1/rod_runs?select=run_id&limit=0`,{headers:scoreHeaders(),signal:AbortSignal.timeout(5000)});
+    value={configured:true,ready:response.ok,...(!response.ok?{code:`HTTP_${response.status}`}:{})};
+  }catch(error){value={configured:true,ready:false,code:scoreFailureCode(error)};}
+  scoreHealth={until:Date.now()+30000,value};return value;
+}
 /** Diagnostic limité à un code HTTP : aucune réponse fournisseur ni clé n'est exposée. */
 export class ScoreWriteError extends Error{constructor(readonly status:number){super(`Enregistrement du score indisponible (${status}).`);}}
 export function scoreFailureCode(error:unknown):string{
@@ -41,12 +55,14 @@ export async function authenticate(token:unknown):Promise<{userId:string;name:st
 export async function recordScore(userId:string,run:RunSummary):Promise<void>{
   if(!secret)throw new Error('Classement non configuré sur ce serveur.');
   const row={run_id:run.runId,user_id:userId,player_name:run.name,class_id:run.classId,party_size:run.partySize,difficulty:run.mode,zone:run.zone,waves:run.waves,kills:run.teamKills,duration:run.duration,started_at:run.startedAt,summary:run};
-  const response=await fetch(`${url}/rest/v1/rod_runs?on_conflict=run_id,user_id`,{method:'POST',headers:{apikey:secret,...(secret.startsWith('sb_secret_')?{}:{Authorization:`Bearer ${secret}`}),'Content-Type':'application/json',Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(row),signal:AbortSignal.timeout(10000)});
+  const response=await fetch(`${url}/rest/v1/rod_runs?on_conflict=run_id,user_id`,{method:'POST',headers:{...scoreHeaders(),'Content-Type':'application/json',Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(row),signal:AbortSignal.timeout(10000)});
   if(!response.ok){
+    scoreHealth={until:Date.now()+30000,value:{configured:true,ready:false,code:`HTTP_${response.status}`}};
     if(run.mode===3&&response.status===400){
       const failure=await response.json().catch(()=>({})) as {code?:string;message?:string};
       if(failure.code==='23514'&&failure.message?.includes('rod_runs_difficulty_check'))throw new Error('CAUCHEMAR_MIGRATION_REQUIRED');
     }
     throw new ScoreWriteError(response.status);
   }
+  scoreHealth={until:Date.now()+30000,value:{configured:true,ready:true}};
 }

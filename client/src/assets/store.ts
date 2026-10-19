@@ -23,6 +23,8 @@ const SOUND_GAP_MS = 70;
 /** Ce qu'il faut pour afficher un personnage ou un monstre. */
 export interface EntityVisual {
   key: string;
+  appearanceKey?: string;
+  cosmeticGear?: {head?:string;back?:string};
   origin: [number, number];
   scale: number;
   /** Définition d'animations si c'est un vrai asset, null pour un placeholder. */
@@ -174,10 +176,13 @@ export class AssetStore {
   }
 
   character(scene: Phaser.Scene, classId: string, slot: number,skin=''): EntityVisual {
-    if(skin&&this.manifest.skins?.[skin]&&scene.textures.exists(`skin_${skin}`)){const def=this.manifest.skins[skin];return{key:`skin_${skin}`,origin:def.origin??[.5,.9],scale:def.scale??1,sprite:def};}
+    if(skin&&this.manifest.skins?.[skin]&&!this.pendingSkins.has(skin)&&scene.textures.exists(`skin_${skin}`)){const def=this.manifest.skins[skin];return{key:`skin_${skin}`,origin:def.origin??[.5,.9],scale:def.scale??1,sprite:def};}
     const key = `char_${classId}`;
     const def = this.manifest.characters?.[classId];
-    if (def && scene.textures.exists(key)) return { key, origin: def.origin ?? [0.5, 0.9], scale: def.scale ?? 1, sprite: def };
+    if (def && !this.pendingCharacters.has(classId) && scene.textures.exists(key)) {
+      const outfit=this.manifest.classOutfits?.[skin];
+      return {key,origin:def.origin??[0.5,0.9],scale:def.scale??1,sprite:def,...(outfit?.classId===classId?{appearanceKey:`${key}:${skin}`,cosmeticGear:outfit}:{})};
+    }
     const ph = scene.textures.exists(characterPlaceholderKey(classId, slot)) ? characterPlaceholderKey(classId, slot) : characterPlaceholderKey('cra', slot);
     return { key: ph, origin: ENTITY_PLACEHOLDER_ORIGIN, scale: 1, sprite: null };
   }

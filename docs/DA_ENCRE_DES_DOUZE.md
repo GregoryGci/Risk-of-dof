@@ -9,6 +9,7 @@ Finition du 18 octobre : la palette est désormais centralisée dans les variabl
 - `client/public/assets/menu/twelve-classes.png` : illustration de groupe validée, sans Zaap.
 - `client/public/assets/menu/ink-wordmark.png` : lettrage au pinceau « RISK OF DOF », transparent.
 - `client/public/assets/menu/class-portraits.png` : atlas transparent des douze portraits du carrousel.
+- `client/public/assets/menu/ink-sweep.svg`, `ink-enso.svg` et `ink-fibers.svg` : tracés vectoriels originaux réalisés dans le code pour les lavis, cercles au pinceau et fibres des fenêtres. Aucun téléchargement ni nouvel asset bitmap.
 - `client/public/favicon.svg` : monogramme vectoriel créé dans le code, monochrome.
 - `client/src/legends.css` : thème complet, encre et lavis sombres, états des composants, responsive et réduction des animations. Identifiant de préférence : `legends`, nom présenté au joueur : **Encre des Douze**.
 - `client/src/ui/themeMotion.ts` : feedback des clics partagé par les pages, avec nettoyage et plafond d’animations.
@@ -18,7 +19,7 @@ Les couleurs d’alerte, de PV, d’XP et de rareté restent utiles en combat. L
 
 ## Carrousel
 
-L’atlas possède quatre colonnes et trois lignes. La correspondance est explicite par identifiant de classe dans `main.ts`, indépendante de l’ordre du catalogue :
+L’atlas possède quatre colonnes et trois lignes. La correspondance est explicite par identifiant de classe dans `ui/classPortrait.ts`, indépendante de l’ordre du catalogue :
 
 | Ligne | Colonne 1 | Colonne 2 | Colonne 3 | Colonne 4 |
 |---|---|---|---|---|
@@ -26,7 +27,15 @@ L’atlas possède quatre colonnes et trois lignes. La correspondance est explic
 | 2 | Sram | Sadida | Ecaflip | Féca |
 | 3 | Osamodas | Enutrof | Xélor | Pandawa |
 
-Le grand portrait est une vue CSS de l’atlas, sans découpe destructive du fichier ni nouvelle requête par classe. Les petites icônes et sprites du jeu restent les assets Retro existants. Flèches, clavier, accès direct et balayage touchent la même sélection mémorisée ; la présentation du sort signature et du passif inné est issue du registre validé.
+Le grand portrait, les douze vignettes de sélection et les aperçus Solo/Multijoueur sont des vues CSS du même atlas, sans découpe destructive du fichier ni nouvelle requête par classe. Les thèmes historiques gardent leurs portraits Retro. Les sprites de combat restent les assets Retro existants. Flèches, clavier, accès direct et balayage touchent la même sélection mémorisée ; la présentation du sort signature et du passif inné est issue du registre validé.
+
+## Finition à l'encre de Chine
+
+Les fenêtres conservent leurs fonds charbon et leur centrage. Leurs surfaces reçoivent de fines fibres, un lavis asymétrique et des en-têtes ornés d'un cercle au pinceau marqué XII. Les actions principales reposent sur un trait de pinceau ivoire aux bords irréguliers ; les commandes secondaires ont un soulignement sec. Les classes, difficultés, préparatifs et réglages utilisent des séparations légères plutôt qu'une répétition de cartes arrondies. Les textes et contours de focus restent lisibles ; les ornements ne capturent pas les interactions.
+
+Les effets utilisent des SVG statiques et des transitions courtes. Le fond extérieur aux fenêtres est assombri sans filtre de flou, pour éviter les artefacts du compositeur observés pendant les captures. L'évaluation des contrastes tient compte du fond de pinceau du bouton principal, porté par son pseudo-élément ; les bords sont inspectés visuellement.
+
+Pour utiliser ces personnages pendant les combats, voir [le périmètre des personnages illustrés](PERSONNAGES_ILLUSTRES.md).
 
 ## Animations et budget
 

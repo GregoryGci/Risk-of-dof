@@ -44,7 +44,8 @@
         <section class="home-welcome" id="home-welcome">
           <div class="welcome-caption"><span class="eyebrow">LE MONDE DES DOUZE</span><h2>Douze classes.<br>Une seule vie.</h2><p>Forgez votre build. Affrontez les gardiens.<br>Chaque défaite écrit la suite.</p><button id="btn-atlas" class="welcome-link">Explorer les 33 donjons</button></div>
         </section>
-        <section id="home-view" class="home-view panel hidden" aria-label="Préparation de l’aventure">
+        <div id="home-view-overlay" class="overlay home-view-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="view-title">
+        <section id="home-view" class="home-view panel hidden">
           <div class="home-view-head"><div><span class="eyebrow" id="view-eyebrow"></span><h2 id="view-title"></h2></div><button id="view-close" class="sheet-close" aria-label="Retour à l’accueil">✕</button></div>
           <div id="identity-row" class="identity-row"><label for="pseudo">Votre nom</label><input id="pseudo" type="text" maxlength="16" placeholder="Aventurier" autocomplete="off" /></div>
           <div id="view-solo" class="home-view-content hidden">
@@ -78,6 +79,7 @@
           <div id="view-settings" class="home-view-content hidden"><p class="view-intro">Vos préférences vous suivent dans chaque aventure.</p><div id="home-settings"></div><h3 class="setup-label">À portée de main</h3><div class="home-controls"><div><kbd>ZQSD</kbd><span>Se déplacer · WASD / flèches</span></div><div><kbd>Souris</kbd><span>Visée facultative · sorts automatiques</span></div><div><kbd>F</kbd><span>Cri de l’Osamodas · Ivresse du Pandawa</span></div><div><kbd>Maj</kbd><span>Dash</span></div><div><kbd>E</kbd><span>Défis · Zaap · halte</span></div><div><kbd>Tab</kbd><span>Détails · pause en solo · options</span></div></div></div>
           <p id="menu-error" class="error" role="status" aria-live="polite"></p>
         </section>
+        </div>
       </main>
       <footer class="home-footer"><span>UN FAN GAME · DOFUS RETRO × RISK OF RAIN</span><span id="home-progress"></span></footer>
     </div>
@@ -218,6 +220,8 @@
           <p class="subtitle" id="gameover-stats"></p>
           <div id="gameover-players"></div>
           <p id="gameover-reward" class="subtitle"></p>
+          <p id="gameover-ranking" class="subtitle" role="status" aria-live="polite"></p>
+          <div id="gameover-recap"></div>
           <div id="gameover-gear" class="reward-gear"></div>
           <button id="btn-go-equipment" class="btn">Gérer mon équipement</button>
           <button id="btn-restart" class="btn btn-primary">Retour au salon</button>

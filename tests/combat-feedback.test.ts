@@ -66,7 +66,7 @@ test('Météores multi : chaque joueur est ciblé, dégâts une fois par salve m
   p.state.x=q.state.x=20;p.state.y=q.state.y=20;
   const boss=sim.spawnMonster({...getMonster('bouftou_royal'),speed:0,behavior:{type:'melee'}},27,20,1,1,1);
   boss.meleeReadyAt=boss.summonAt=Infinity;boss.bossReadyAt=0;boss.bossPattern=2;
-  updateBoss(sim,boss);assert.equal(events.filter(e=>e.type==='bossWarning').length,4);advance(sim,1.4);
+  updateBoss(sim,boss);assert.equal(events.filter(e=>e.type==='bossWarning').length,6);advance(sim,2);
   for(const player of[p,q])assert.equal(events.filter(e=>e.type==='dmg'&&e.data.target===player.id).length,1);
 });
 

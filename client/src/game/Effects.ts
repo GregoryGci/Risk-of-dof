@@ -8,6 +8,7 @@ import type { AssetStore } from '../assets/store.ts';
 
 const DEPTH_GROUND_FX = -1000;
 const DEPTH_TEXT = 1_000_000;
+const DEPTH_DANGER=950_000;
 /** Hauteur de vol des projectiles au-dessus du sol (px). */
 const FLY_HEIGHT = 18;
 /** Textures d'éventail : taille (px) et rayon de référence (cases). */
@@ -15,6 +16,7 @@ const SLASH_TEX = 256;
 const SLASH_REF = 2.5;
 
 interface ProjectileView {
+  hostile?:boolean;
   id: number;
   spell: SpellDef;
   shape: ProjectileShape;
@@ -95,7 +97,8 @@ export class Effects {
   }
 
   spawnProjectile(e: CastEvent): void {
-    const spell = getSpell(e.spell);
+    const base = getSpell(e.spell);
+    const spell=e.enemyProjectile?{...base,color:e.enemyProjectile.color,projectile:e.enemyProjectile.shape,area:undefined}:base;
     const shape = spell.projectile;
     if (!shape) {
       // Pas de projectile : seul un coup de mêlée a un effet visuel propre (les zones passent par « explode »).
@@ -131,6 +134,7 @@ export class Effects {
     sprite.setRotation(Math.atan2(s.y, s.x));
 
     const pv: ProjectileView = { id: e.id, spell, shape, x: e.x, y: e.y, dx, dy, total, travelled: 0, sprite, glow, trailTimer: 0 };
+    if(e.enemyProjectile){pv.hostile=true;sprite.setTint(spell.color);glow.setAlpha(.85);}
     if (shape.toTarget && spell.area) {
       const c = worldToScreen(e.tx, e.ty);
       pv.marker = this.groundCircle(c.x, c.y, spell.area.radius, spell.color, 0.18, 0.9);
@@ -163,8 +167,8 @@ export class Effects {
     const height = 30 + pv.total * 6;
     const arc = pv.shape.toTarget ? Math.sin(k * Math.PI) * height : 0;
     const y = p.y - FLY_HEIGHT - arc;
-    pv.sprite.setPosition(p.x, y).setDepth(p.y + 20);
-    pv.glow.setPosition(p.x, y).setDepth(p.y + 19);
+    pv.sprite.setPosition(p.x, y).setDepth(pv.hostile?DEPTH_DANGER+2:p.y + 20);
+    pv.glow.setPosition(p.x, y).setDepth(pv.hostile?DEPTH_DANGER+1:p.y + 19);
     if (pv.shape.toTarget) {
       // La flèche suit la tangente de la parabole : elle monte puis pique du nez.
       const s = worldToScreen(pv.dx, pv.dy);
@@ -328,14 +332,28 @@ export class Effects {
   }
 
   /** Zone à retardement : un disque se remplit au sol jusqu'à l'impact. */
-  telegraph(x: number, y: number, radius: number, duration: number, color: number): void {
+  telegraph(x: number, y: number, radius: number, duration: number, color: number,danger=false): void {
     const p = worldToScreen(x, y);
     const outline = this.groundCircle(p.x, p.y, radius, color, 0.12, 0.95);
     const fill = this.groundEllipse(p.x, p.y, radius, color, 0.35).setScale(0.05);
+    const edge=danger?this.scene.add.graphics().setDepth(DEPTH_DANGER).lineStyle(5,0x17151a,.85).strokeEllipse(p.x,p.y,radius*TILE_W*Math.SQRT2,radius*TILE_H*Math.SQRT2).lineStyle(2,color,1).strokeEllipse(p.x,p.y,radius*TILE_W*Math.SQRT2,radius*TILE_H*Math.SQRT2):undefined;
+    if(danger)fill.setDepth(DEPTH_DANGER-1).setAlpha(.45);
     this.scene.tweens.add({ targets: fill, scale: 1, duration: duration * 1000, ease: 'Linear', onComplete: () => {
       fill.destroy();
       outline.destroy();
+      edge?.destroy();
     } });
+  }
+
+  /** Active hostile ground, different from a warning which has not struck yet. */
+  enemyZone(x:number,y:number,radius:number,duration:number,color:number):{destroy():void} {
+    const p=worldToScreen(x,y),g=this.scene.add.graphics().setDepth(DEPTH_DANGER-1);
+    const w=radius*TILE_W*Math.SQRT2,h=radius*TILE_H*Math.SQRT2;
+    g.fillStyle(color,.16).fillEllipse(p.x,p.y,w,h).lineStyle(5,0x17151a,.9).strokeEllipse(p.x,p.y,w,h).lineStyle(2,color,1).strokeEllipse(p.x,p.y,w,h);
+    // Cross marks distinguish a damaging pool from an allied ground effect.
+    for(const k of [-.45,0,.45]){const px=p.x+k*w*.5;g.lineBetween(px-3,p.y-3,px+3,p.y+3).lineBetween(px-3,p.y+3,px+3,p.y-3);}
+    const timer=this.scene.time.delayedCall(duration*1000,()=>g.destroy());
+    return{destroy:()=>{timer.remove(false);g.destroy();}};
   }
 
   /** Météore : chute calée sur la fin du télégraphe serveur. */

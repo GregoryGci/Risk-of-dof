@@ -48,7 +48,7 @@ export function monsterSpeedMultiplier(difficulty:number,mode=0):number {
  */
 export const MONSTER_MAX_SPEED=4.2;
 /**
- * Apparition des monstres en Cauchemar : ×0,6 en zone 1, puis montée jusqu'à ×1 en zone 7. La pression
+ * Apparition des monstres en Cauchemar : ×0,6 à la première zone de la run, puis montée jusqu'à ×1 à la septième. La pression
  * reste forte ensuite, mais le début n'est plus injouable.
  */
 export function nightmareSpawnRamp(mode:number,stage:number):number {return mode===3?Math.min(1,.6+.4*Math.max(0,stage-1)/6):1;}

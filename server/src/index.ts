@@ -8,7 +8,7 @@ import { WebSocketTransport } from '@colyseus/ws-transport';
 import express from 'express';
 import { GAME_PROTOCOL_VERSION, ROOM_NAME, SERVER_PORT } from '@rod/shared';
 import { GameRoom } from './rooms/GameRoom.ts';
-import {cloudScoresEnabled} from './cloud.ts';
+import {getScoreHealth} from './cloud.ts';
 
 const port = Number(process.env.PORT) || SERVER_PORT;
 const clientDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../client/dist');
@@ -17,8 +17,9 @@ const server = new Server({
   transport: new WebSocketTransport(),
   greet: false,
   express: (app) => {
-    app.get('/sante', (_req, res) => {
-      res.json({ ok: true, ranking:cloudScoresEnabled, protocol:GAME_PROTOCOL_VERSION });
+    app.get('/sante', async (_req, res) => {
+      const scores=await getScoreHealth();
+      res.json({ ok: true, ranking:scores.ready, rankingConfigured:scores.configured,rankingCode:scores.code,protocol:GAME_PROTOCOL_VERSION });
     });
     if (existsSync(clientDist)) app.use(express.static(clientDist));
   },

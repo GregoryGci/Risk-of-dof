@@ -6,6 +6,7 @@ import { loadManifest } from './assets/manifest.ts';
 import { AssetStore } from './assets/store.ts';
 import { GameScene } from './game/GameScene.ts';
 import { Hud, escapeHtml } from './ui/Hud.ts';
+import {classPortrait,classPortraitStyle} from './ui/classPortrait.ts';
 import { TalentsPage } from './ui/Talents.ts';
 import { EquipmentPage } from './ui/EquipmentPage.ts';
 import { EncyclopediaPage } from './ui/EncyclopediaPage.ts';
@@ -14,6 +15,8 @@ import './roguelite.css';
 import './run-hud.css';
 import './legends.css';
 import './mobile.css';
+import './run-recap.css';
+import {inviteCode} from './ui/invite.ts';
 import {startThemeMotion} from './ui/themeMotion.ts';
 import {SkinShop} from './ui/SkinShop.ts';
 import {startHomeAmbience} from './ui/HomeAmbience.ts';
@@ -77,7 +80,7 @@ applyCrosshair();
 
 // Pseudo mémorisé et code pré-rempli par un lien d'invitation (?code=ABCD).
 pseudoInput.value = localStorage.getItem('rod.pseudo') ?? '';
-const invited = new URLSearchParams(location.search).get('code');
+const invited = inviteCode(location.search);
 if (invited) codeInput.value = invited.toUpperCase().slice(0, ROOM_CODE_LENGTH);
 let setupMode = 1;
 let currentView = '';
@@ -86,22 +89,17 @@ let classId = localStorage.getItem('rod.classe') ?? DEFAULT_CLASS;
 if (!CLASSES[classId]) classId = DEFAULT_CLASS;
 const classPicker = $('class-picker');
 const classIds = Object.keys(CLASSES);
-// Ordre stable des cellules de l'atlas illustré (indépendant de l'ordre du registre).
-const portraitCells:Record<string,number>={cra:0,iop:1,eniripsa:2,sacrieur:3,sram:4,sadida:5,ecaflip:6,feca:7,osamodas:8,enutrof:9,xelor:10,pandawa:11};
 let portraitMotion: Animation | undefined;
 let characterOrigin = '';
 function renderClassPicker(): void {
   const focusedClass = classPicker.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.class : undefined;
-  classPicker.innerHTML = Object.values(CLASSES).map(c => `<button class="home-class${c.id === classId ? ' active' : ''}" data-class="${c.id}" aria-pressed="${c.id === classId}" title="${escapeHtml(c.description)}"><img src="assets/dofus/portraits/${c.id}.png" alt=""><span>${escapeHtml(c.name)}</span></button>`).join('');
-  $('class-desc').textContent = CLASSES[classId].description;
+  classPicker.innerHTML = Object.values(CLASSES).map(c => `<button class="home-class${c.id === classId ? ' active' : ''}" data-class="${c.id}" aria-pressed="${c.id === classId}" title="${escapeHtml(c.description)}">${classPortrait(c.id)}<span class="class-name">${escapeHtml(c.name)}</span></button>`).join('');
   $('character-name').textContent = CLASSES[classId].name;
   const portrait = $<HTMLImageElement>('character-portrait');
   portrait.src = `assets/dofus/portraits/${classId}.png`;
   portrait.alt = CLASSES[classId].name;
   const position = classIds.indexOf(classId);
-  const cell=portraitCells[classId];
-  $('class-illustration').style.setProperty('--cell-x',`${cell%4/3*100}%`);
-  $('class-illustration').style.setProperty('--cell-y',`${Math.floor(cell/4)/2*100}%`);
+  $('class-illustration').style.cssText=classPortraitStyle(classId);
   $('class-position').textContent = `Classe ${position+1} / ${classIds.length}`;
   const signature = ROGUELITE_CATALOG.spell(ROGUELITE_SIGNATURES[classId])!;
   const innate = ROGUELITE_INNATES[classId];
@@ -144,7 +142,7 @@ const equipmentPage = new EquipmentPage(() => {
 const encyclopedia = new EncyclopediaPage();
 const history=new HistoryPage(),atlas=new AtlasPage();
 $('btn-atlas').onclick=()=>atlas.open();
-const accountPage=new AccountPage(),ladder=new LadderPage();
+const accountPage=new AccountPage(),ladder=new LadderPage(serverUrl());
 // Le pseudo en haut à gauche ouvre le compte (le profil est redessiné : écouteur délégué).
 $('home-profile').addEventListener('click',e=>{if((e.target as HTMLElement).closest('#btn-account'))accountPage.open();});
 cloud.subscribe(()=>{if(!cloud.busy)renderProfile();});
@@ -166,7 +164,7 @@ function renderProfile(): void {
   $('equipment-summary').textContent = `${count} emplacements équipés · ${account.inventory.length} objets`;
   $('collection-summary').textContent = `${account.discovered.length} / ${account.catalogSize} découverts`;
   $('talents-summary').textContent = `${account.bank.toLocaleString('fr')} kamas · cinq paliers permanents par sort`;
-  const characterPreview = `<img src="assets/dofus/portraits/${classId}.png" alt=""><div><small class="eyebrow">VOTRE PERSONNAGE</small><b>${CLASSES[classId].name}</b><span>${ROGUELITE_CATALOG.spell(ROGUELITE_SIGNATURES[classId])!.name} · ${count} équipements</span></div>`;
+  const characterPreview = `${classPortrait(classId)}<div><small class="eyebrow">VOTRE PERSONNAGE</small><b>${CLASSES[classId].name}</b><span>${ROGUELITE_CATALOG.spell(ROGUELITE_SIGNATURES[classId])!.name} · ${count} équipements</span></div>`;
   $('solo-character').innerHTML = characterPreview;
   $('multi-character').innerHTML = characterPreview;
 }
@@ -175,6 +173,7 @@ function showView(view: string): void {
   currentView = view;
   const names: Record<string, [string,string]> = { solo: ['L’AVENTURE EN SOLITAIRE','Jouer en solo'], multi: ['PLUS FORTS ENSEMBLE','Jouer ensemble'], character: ['VOTRE PROCHAINE AVENTURE','Personnage'], settings: ['À VOTRE FAÇON','Réglages'] };
   $('home-view').classList.toggle('hidden', !view);
+  $('home-view-overlay').classList.toggle('hidden', !view);
   $('home-welcome').classList.toggle('hidden', !!view);
   menu.classList.toggle('has-view', !!view);
   for (const name of Object.keys(names)) $(`view-${name}`).classList.toggle('hidden', view !== name);
@@ -302,6 +301,7 @@ async function startGame(room: Room): Promise<void> {
   }
   if(room.state.protocolVersion!==GAME_PROTOCOL_VERSION)throw new Error('Le serveur de jeu utilise encore une ancienne version. Attendez la mise à jour du serveur Railway puis réessayez.');
   currentRoom = room;
+  if(invited){const url=new URL(location.href);url.searchParams.delete('code');window.history.replaceState(null,'',url);}
   const sessionKey=`rod.partie.${cloud.session!.user.id}`;
   const remember=()=>sessionStorage.setItem(sessionKey,JSON.stringify({token:room.reconnectionToken,roomId:room.roomId,at:Date.now()}));
   remember();room.onReconnect(remember);
@@ -391,13 +391,14 @@ async function startGame(room: Room): Promise<void> {
 
 // sessionStorage conserve la partie de cet onglet et ne fusionne pas deux onglets multijoueur.
 void cloud.ready.then(async()=>{
+  if(invited){showView('multi');$('code-help').textContent=`Invitation au salon ${invited} · choisissez votre personnage puis rejoignez votre équipe.`;if(cloud.session&&account.profile.complete)codeInput.focus();}
   if(!cloud.session||!account.profile.complete||currentRoom)return;
   const key=`rod.partie.${cloud.session.user.id}`;
-  let saved:{token?:string;at?:number}|undefined;
+  let saved:{token?:string;roomId?:string;at?:number}|undefined;
   try{saved=JSON.parse(sessionStorage.getItem(key)??'null');}catch{sessionStorage.removeItem(key);return;}
-  if(!saved?.token)return;
+  if(!saved?.token||(invited&&saved.roomId!==invited))return;
   setBusy(true);
   try{await startGame(await client.reconnect(saved.token));}
-  catch{sessionStorage.removeItem(key);showView('solo');errorEl.textContent='La précédente partie n’est plus disponible. Vous pouvez en lancer une nouvelle.';}
+  catch{sessionStorage.removeItem(key);showView(invited?'multi':'solo');errorEl.textContent='La précédente partie n’est plus disponible. Vous pouvez en lancer une nouvelle.';}
   finally{setBusy(false);}
 });

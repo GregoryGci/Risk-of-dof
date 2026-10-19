@@ -67,7 +67,7 @@ export class Director {
     const pressure=bossIntroduction?Math.min(this.pressure,1.25):this.pressure;
     const rush = sim.state.zaapState === ZAAP_CHARGING ? (bossIntroduction?.8:1.8) : 1;
     const ramp=easyRamp(sim.state),cap=introduction?18:sim.state.mode===0&&!sim.state.cursed?40+20*ramp:300;
-    this.credits = Math.min(cap,this.credits+spawnCreditsPerSecond(diff, sim.players.size,runStageIndex(sim.state.mode,sim.state.stage)) * rush * pressure * getMode(sim.state.mode).spawn * nightmareSpawnRamp(sim.state.mode,sim.state.stage) * (sim.state.mode===0?.55+.45*ramp:1) * getRoute(sim.state.stageRoute).spawn * dt);
+    this.credits = Math.min(cap,this.credits+spawnCreditsPerSecond(diff, sim.players.size,runStageIndex(sim.state.mode,sim.state.stage)) * rush * pressure * getMode(sim.state.mode).spawn * nightmareSpawnRamp(sim.state.mode,runStageIndex(sim.state.mode,sim.state.stage)) * (sim.state.mode===0?.55+.45*ramp:1) * getRoute(sim.state.stageRoute).spawn * dt);
 
     this.nextWaveIn -= dt;
     if (this.nextWaveIn <= 0) {

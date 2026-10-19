@@ -1,4 +1,5 @@
-import { PLAYER_RADIUS, PHASE_PLAYING, ZAAP_READY, isBlocked, runStageIndex } from '@rod/shared';
+import { PLAYER_RADIUS, PHASE_PLAYING, ZAAP_READY, isBlocked, runStageIndex,modeFinalStage,bossForStage,BOSS_ATTACK_PROFILES,BOSS_ATTACK_TUNING as T,ENEMY_PATTERN_NAMES,type EnemyAttack } from '@rod/shared';
+import {executeEnemyAttack} from './enemy-attacks.ts';
 import type { MonsterRt, Simulation } from './Simulation.ts';
 
 /**
@@ -19,47 +20,21 @@ export function updateBoss(sim: Simulation, boss: MonsterRt): boolean {
   if (sim.now < (boss.bossReadyAt ?? Infinity)) return false;
   const targets = [...sim.players.values()].filter(p => p.state.alive && p.state.connected);
   if (!targets.length) return false;
-  const enraged = boss.state.hp <= boss.state.maxHp * .5;
-  const pattern = boss.bossPattern ?? 0;
-  const nova = pattern % 3 === 0;
-  const pace = bossPace(sim.state.mode, runStageIndex(sim.state.mode,sim.state.stage));
-  // Annonce un peu plus courte qu'avant (×0,9), puis de plus en plus vive ; jamais sous 0,7 s pour rester esquivable.
-  const duration = Math.max(0.7, (nova ? 1.1 : 1.3) * 0.9 * (0.6 + 0.4 * pace));
-  // Les grosses attaques de plusieurs gardiens alternent : il reste une fenêtre d'esquive.
-  if(!sim.tryBossTelegraph(duration))return false;
-  boss.bossPattern = pattern + 1;
-  // Zones d'impact agrandies d'un quart.
-  const radius = (nova ? (enraged ? 3.8 : 3.2) : (enraged ? 1.7 : 1.4)) * 1.25;
-  const color = nova ? 0xe96045 : 0xeeb248;
-  boss.bossHoldUntil = sim.now + duration;
-  boss.bossReadyAt = sim.now + (enraged ? 4.4 : 6.2) * pace;
-  sim.broadcast('atk', { id: boss.id });
-  const points = nova ? [{x: boss.state.x, y: boss.state.y}] : targets.map(p => ({x: p.state.x, y: p.state.y}));
-  // La salve dessine deux impacts de plus de part et d'autre de la cible.
-  if (!nova && pattern % 3 === 2) {
-    const target = targets[pattern % targets.length].state;
-    const dx = target.x - boss.state.x, dy = target.y - boss.state.y, len = Math.hypot(dx, dy) || 1;
-    for (const sign of [-1, 1]) points.push({x: target.x - dy / len * 2.8 * sign, y: target.y + dx / len * 2.8 * sign});
-  }
-  const damage = Math.max(8, boss.def.melee.damage) * sim.monsterPower(boss) * (nova ? 1.35 : 1.7);
-  const hit = new Set<string>();
-  for (const point of points) {
-    sim.broadcast('bossWarning', {...point, radius, duration, color, kind: nova ? 'nova' : 'meteor'});
-    sim.after(duration, () => {
-      // Un gardien mort ou une zone terminée ne laisse pas d'attaque fantôme.
-      if (!sim.monsters.has(boss.id) || sim.state.intermission || sim.state.zaapState === ZAAP_READY) return;
-      sim.broadcast('bossImpact', {...point, radius, color, kind: nova ? 'nova' : 'meteor'});
-      for (const p of sim.players.values()) {
-        if (!p.state.alive || hit.has(p.id) || Math.hypot(p.state.x-point.x, p.state.y-point.y) > radius + PLAYER_RADIUS) continue;
-        hit.add(p.id);
-        sim.damagePlayer(p, damage, `${boss.def.name} · ${nova ? 'Onde de choc' : 'Météore'}`);
-      }
-      for (const ally of [...sim.monsters.values()]) {
-        if (!ally.state.ally || hit.has(ally.id) || Math.hypot(ally.state.x-point.x, ally.state.y-point.y) > radius + ally.def.radius) continue;
-        hit.add(ally.id); sim.damageMonster(ally, damage, '');
-      }
-    });
-  }
+  const enraged=boss.state.hp<=boss.state.maxHp*T.enrageHp;
+  const pattern=boss.bossPattern??0,profile=BOSS_ATTACK_PROFILES[boss.def.id]??BOSS_ATTACK_PROFILES.default;
+  const finalGuardian=sim.state.stage===modeFinalStage(sim.state.mode)&&boss.def.id===bossForStage(sim.state.stage);
+  const lastPhase=finalGuardian&&boss.state.hp<=boss.state.maxHp*T.finaleHp;
+  const sequence=lastPhase&&profile.finale?profile.finale:enraged?profile.enraged:profile.normal;
+  const kind=sequence[pattern%sequence.length];
+  const pace=bossPace(sim.state.mode,runStageIndex(sim.state.mode,sim.state.stage));
+  const warning=Math.max(T.warning.min,(lastPhase?T.warning.finale:T.warning.normal)*(.7+.3*pace));
+  if(!sim.tryBossTelegraph(warning+(kind==='cascade'?.6:0)))return false;
+  boss.bossPattern=pattern+1;
+  boss.bossHoldUntil=sim.now+warning+(kind==='cascade'?.6:0);
+  boss.bossReadyAt=sim.now+(lastPhase?T.cooldown.finale:enraged?T.cooldown.enraged:T.cooldown.normal)*pace;
+  const attack:EnemyAttack={name:ENEMY_PATTERN_NAMES[kind],pattern:kind,cooldown:6,warning,range:kind==='volley'?T.range.volley:T.range.line,radius:kind==='burst'&&enraged?T.radii.enragedBurst:T.radii[kind],damage:kind==='pools'?T.damage.pools:kind==='volley'?T.damage.volley:T.damage.default,color:profile.color,count:kind==='volley'?(lastPhase?T.volleyCount.finale:T.volleyCount.normal):T.cascadeCount};
+  if(lastPhase&&!boss.finaleAnnounced){boss.finaleAnnounced=true;sim.broadcast('bossPhase',{id:boss.id,name:boss.def.name,phase:3});}
+  executeEnemyAttack(sim,boss,attack,targets.map(p=>({x:p.state.x,y:p.state.y})),true);
   return true;
 }
 

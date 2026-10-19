@@ -11,6 +11,7 @@ const INTERP_S = (PATCH_MS * 1.3) / 1000;
 const SNAP_DIST = 5;
 
 export interface EntityViewOptions {
+  localPlayer?:boolean;
   label?: string;
   labelColor?: string;
   /** Largeur de la barre de vie (px). */
@@ -36,7 +37,7 @@ interface Part {
  * en cours de partie. Chaque élément est donc placé individuellement.
  */
 export class EntityView {
-  get assetKey():string{return this.visual.key;}
+  get assetKey():string{return this.visual.appearanceKey??this.visual.key;}
   private parts: Part[] = [];
   /** Position écran des pieds. */
   private sx = 0;
@@ -75,12 +76,13 @@ export class EntityView {
 
   /** Objets d'apparence portés (coiffe, cape) ; sans effet sur un placeholder ou un monstre. */
   setGear(head?: string, back?: string): void {
+    if(this.visual.cosmeticGear){head=this.visual.cosmeticGear.head;back=this.visual.cosmeticGear.back;}
     const key = `${head ?? ''}|${back ?? ''}`;
     if (key === this.gearKey) return;
-    this.gearKey = key;
     for (const w of this.gear?.worn ?? []) { w.img.destroy(); this.parts = this.parts.filter(p => p !== w.part); }
     const found = this.visual.sprite ? this.store.gearFor(this.scene, this.visual.key) : null;
-    if (!found) { this.gear = undefined; return; }
+    if (!found) { this.gear = undefined; this.gearKey=''; return; }
+    this.gearKey = key;
     const worn = [];
     for (const [base, isHead] of [[head, true], [back, false]] as const) {
       if (!base || !found.gear.items[base]) continue;
@@ -100,7 +102,7 @@ export class EntityView {
     const frame = this.gear.tracks[anim]?.[dir]?.[Number(index)];
     const flip = this.body.flipX;
     // Pixels écran par pixel de clip Dofus : échelle du sprite × pixels d'atlas par pixel de clip.
-    const perUnit = this.visual.scale * 2 * (this.visual.sprite?.shrunk ?? 1);
+    const perUnit = this.visual.scale * (this.visual.sprite?.pixelsPerUnit??2) * (this.visual.sprite?.shrunk ?? 1);
     const imageScale = perUnit / this.gear.manifest.pixelsPerUnit;
     for (const w of this.gear.worn) {
       const anchor = (w.head ? frame?.h : frame?.c)?.[0];
@@ -173,6 +175,12 @@ export class EntityView {
 
     this.shadow = scene.add.image(0, 0, 'ph_shadow').setScale(visual.sprite ? 1 : visual.scale);
     this.body = scene.add.sprite(0, 0, visual.key).setOrigin(visual.origin[0], visual.origin[1]).setScale(visual.scale);
+    if(opts.localPlayer){
+      const ring=scene.add.ellipse(0,0,40,20).setStrokeStyle(3,0xeee7d8,.95);
+      this.parts.push({obj:ring,ox:0,oy:0,dz:-.05});
+      // A single local silhouette glow; Canvas still gets the contrasting foot marker.
+      if(scene.game.renderer.type===Phaser.WEBGL)this.body.postFX.addGlow(0xeee7d8,1.6,0,false,.05,6);
+    }
     this.playAnim('idle');
     // Mesurer la silhouette de repos rognée : le cadre commun contient aussi
     // les gestes de lancer, beaucoup plus grands que le personnage immobile.

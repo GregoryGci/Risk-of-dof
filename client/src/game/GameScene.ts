@@ -49,7 +49,7 @@ import {
 import type { AssetStore } from '../assets/store.ts';
 import { ambiance, music, MENU_TRACK, zoneTrack } from '../music.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
-import type { Hud } from '../ui/Hud.ts';
+import {escapeHtml,type Hud} from '../ui/Hud.ts';
 import { Minimap } from '../ui/Minimap.ts';
 import { Details } from '../ui/Details.ts';
 import { gameSettings } from '../ui/GameSettings.ts';
@@ -261,12 +261,24 @@ export class GameScene extends Phaser.Scene {
     this.room.onMessage('runVictory',()=>{this.store.playSound(this,'stage');this.controls.releaseAll();});
     this.room.onMessage('bossWarning',(e:{x:number;y:number;radius:number;duration:number;color:number;kind:string})=>{
       if(document.hidden)return;
-      this.effects.telegraph(e.x,e.y,e.radius,e.duration,e.color);
+      this.effects.telegraph(e.x,e.y,e.radius,e.duration,e.color,true);
       if(e.kind==='meteor')this.effects.meteor(e.x,e.y,e.duration,e.color);
     });
     this.room.onMessage('bossImpact',(e:{x:number;y:number;radius:number;color:number})=>{
       if(!document.hidden)this.effects.explosion(e.x,e.y,e.radius,e.color);
     });
+    const enemyZones=new Set<{owner:string;zone:{destroy():void}}>();
+    this.room.onMessage('enemyZone',(e:{owner:string;x:number;y:number;radius:number;duration:number;color:number})=>{
+      if(document.hidden)return;
+      const entry={owner:e.owner,zone:this.effects.enemyZone(e.x,e.y,e.radius,e.duration,e.color)};enemyZones.add(entry);
+      this.time.delayedCall(e.duration*1000,()=>enemyZones.delete(entry));
+    });
+    const clearEnemyZones=()=>{for(const entry of enemyZones)entry.zone.destroy();enemyZones.clear();};
+    this.room.onMessage('death',(e:DeathEvent)=>{for(const entry of enemyZones)if(entry.owner===e.id){entry.zone.destroy();enemyZones.delete(entry);}});
+    this.room.onMessage('stage',clearEnemyZones);this.room.onMessage('rest',clearEnemyZones);this.room.onMessage('runVictory',clearEnemyZones);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN,clearEnemyZones);
+    this.room.onMessage('enemyLineImpact',(e:{x:number;y:number;tx:number;ty:number;color:number})=>{if(!document.hidden)this.effects.dashTrail(e.x,e.y,e.tx,e.ty,e.color);});
+    this.room.onMessage('bossPhase',(e:{name:string;phase:number})=>this.hud.toast('<b>'+escapeHtml(e.name)+'</b> · Dernière phase !'));
     this.room.onMessage('rest',()=>this.hud.toast('<b>Halte de l’équipe</b> — choisissez la route de la prochaine zone'));
     this.room.onMessage('dmgBatch', (rows: PackedDamage[]) => {for(const e of unpackDamage(rows))this.onDamage(e);});
     this.room.onMessage('death', (e: DeathEvent) => this.onDeath(e));
@@ -314,12 +326,12 @@ export class GameScene extends Phaser.Scene {
     });
     this.room.onMessage('attackWarning',(e:{x:number;y:number;tx:number;ty:number;width:number;duration:number;color:number;priority?:boolean})=>{
       if(document.hidden)return;
-      if(this.dangerWarnings.size>=8){const ordinary=[...this.dangerWarnings].find(m=>!this.warningPriority.has(m));if(!ordinary&&!e.priority)return;const oldest=ordinary??this.dangerWarnings.values().next().value!;oldest.destroy();this.dangerWarnings.delete(oldest);}
+      if(this.dangerWarnings.size>=32&&!e.priority){const ordinary=[...this.dangerWarnings].find(m=>!this.warningPriority.has(m));if(!ordinary&&!e.priority)return;const oldest=ordinary??this.dangerWarnings.values().next().value!;oldest.destroy();this.dangerWarnings.delete(oldest);}
       const d=Math.hypot(e.tx-e.x,e.ty-e.y)||1,nx=-(e.ty-e.y)/d*(e.width+.2),ny=(e.tx-e.x)/d*(e.width+.2);
       const band=(k:number)=>[[e.x+nx,e.y+ny],[e.x+(e.tx-e.x)*k+nx,e.y+(e.ty-e.y)*k+ny],[e.x+(e.tx-e.x)*k-nx,e.y+(e.ty-e.y)*k-ny],[e.x-nx,e.y-ny]].map(([x,y])=>worldToScreen(x,y));
-      const points=band(1),marker=this.add.graphics().setDepth(-900000);
+      const points=band(1),marker=this.add.graphics().setDepth(950000);
       // La bande se remplit depuis le monstre jusqu'au déclenchement de l'attaque.
-      const draw=(k:number)=>{if(!marker.active)return;marker.clear().fillStyle(e.color,.15).lineStyle(2,e.color,.75).fillPoints(points,true).strokePoints(points,true);if(k>0)marker.fillStyle(e.color,.35).fillPoints(band(k),true);};
+      const draw=(k:number)=>{if(!marker.active)return;marker.clear().fillStyle(e.color,.12).fillPoints(points,true).lineStyle(5,0x17151a,.9).strokePoints(points,true).lineStyle(2,e.color,1).strokePoints(points,true);if(k>0)marker.fillStyle(e.color,.35).fillPoints(band(k),true);};
       draw(0);this.tweens.addCounter({from:0,to:1,duration:e.duration*1000,onUpdate:(t)=>draw(t.getValue()??0)});
       this.dangerWarnings.add(marker);this.time.delayedCall(e.duration*1000,()=>{this.dangerWarnings.delete(marker);marker.destroy();});
       if(e.priority)this.warningPriority.add(marker);
@@ -547,14 +559,16 @@ export class GameScene extends Phaser.Scene {
     const myId = this.room.sessionId;
     state.players.forEach((p: PlayerView, id: string) => {
       let view = this.players.get(id);
-      if (view && (this.playerClass.get(id) !== p.classId||view.assetKey!==this.store.character(this,p.classId,p.slot,p.skin).key)) {
+      const visual=this.store.character(this,p.classId,p.slot,p.skin);
+      if (view && (this.playerClass.get(id) !== p.classId||view.assetKey!==(visual.appearanceKey??visual.key))) {
         view.destroy();
         view = undefined;
       }
       if (!view) {
         this.playerClass.set(id, p.classId);
         const color = PLAYER_COLORS[p.slot % PLAYER_COLORS.length];
-        view = new EntityView(this, this.store, this.store.character(this, p.classId, p.slot,p.skin), p.x, p.y, {
+        view = new EntityView(this, this.store, visual, p.x, p.y, {
+          localPlayer:id===myId,
           label: p.name,
           labelColor: id === myId ? '#ffe9a8' : '#ffffff',
           barWidth: 34,

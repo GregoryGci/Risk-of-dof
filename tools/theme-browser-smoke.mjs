@@ -39,7 +39,10 @@ try {
  await send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,x:start.x+40,y:start.y+20});
  await until(()=>visible('view-solo'));await shot('solo-desktop');await framed('#home-view');
  await dark('#home-view');
- await clickAt(1440-3,900-3);await until(async()=>!await visible('home-view'));
+ // Stay inside the backdrop: Chromium may consume clicks at the viewport's scrollbar corner.
+ const backdrop=await evaluate(`(()=>{const r=document.getElementById('home-view').getBoundingClientRect();return {x:(r.right+innerWidth)/2,y:r.top+r.height/2};})()`);
+ assert.ok(await evaluate(`document.elementFromPoint(${backdrop.x},${backdrop.y})?.closest('#menu')!==null&&!document.elementFromPoint(${backdrop.x},${backdrop.y})?.closest('#home-view')`));
+ await clickAt(backdrop.x,backdrop.y);await until(async()=>!await visible('home-view'));
  assert.ok(await evaluate(`document.activeElement.matches('[data-view="solo"]')`));
  await evaluate(`document.querySelector('.home-nav-button[data-view="solo"]').click()`);
  checks.push('Click outside home panels closes them and restores focus to the menu');

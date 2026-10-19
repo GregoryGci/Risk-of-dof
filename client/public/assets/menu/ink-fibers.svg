@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <g fill="none" stroke="#ded8c8" stroke-width=".6" opacity=".05">
+    <path d="m9 17 16-2m51 9 6 1m72-7 28-1m-143 38 8-2m54-9 23 1m58 17 11-2M12 98l24 1m42-17 8-3m55 17 34-2m28-12 16 2M22 141l8-1m47-13 26 2m48 5 11-3m47 17 22-2M5 178l32 2m49-9 9 1m42 16 20-3m41-11 15 1M31 218l15-2m41 12 25 1m45-16 7 2m35 13 24-3"/>
+  </g>
+  <g fill="#000" opacity=".09"><ellipse cx="36" cy="63" rx="17" ry=".7"/><ellipse cx="171" cy="104" rx="28" ry=".8"/><ellipse cx="75" cy="201" rx="21" ry=".6"/></g>
+</svg>

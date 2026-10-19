@@ -32,7 +32,7 @@ export class InnateMechanics {
   const s=this.get(p),now=this.sim.now;
   if(p.def.id==='eniripsa') {const second=Math.floor(now);if(s.hitSecond!==second){s.hitSecond=second;s.hits=0;}if(s.hits<8){s.hits++;s.charge++;}
    if(s.charge>=12&&now>=s.next){s.charge-=12;s.next=now+1.5;for(const ally of this.sim.players.values())if(ally.state.alive&&Math.hypot(ally.state.x-p.state.x,ally.state.y-p.state.y)<=6)this.sim.healPlayer(ally,ally.state.maxHp*.03,p,false);
-    for(const enemy of this.sim.roguelite.enemies(p.state.x,p.state.y,3))this.sim.damageMonster(enemy,this.sim.roguelite.referencePower(p),p.id);
+    for(const enemy of this.sim.roguelite.enemies(p.state.x,p.state.y,3))this.sim.damageMonster(enemy,this.sim.roguelite.referencePower(p),p.id,false,{sourceId:p.build.currentBuild.innatePassiveId});
     this.sim.broadcast('abilityFx',{owner:p.id,kind:'impulse',x:p.state.x,y:p.state.y,radius:3,color:0xffaadd,at:now});}}
   if(p.def.id==='sadida'&&now>=(s.lastInfection.get(m.id)??0)&&this.sim.monsters.has(m.id)){s.lastInfection.set(m.id,now+1);this.sim.roguelite.addDot(p,a,0,m,'infection',2*this.sim.roguelite.referencePower(p)/14,5,5);}
   if(p.def.id==='ecaflip'&&now>=s.next){s.next=now+.2;if(this.sim.random()<.04)this.drawCard(p);}
@@ -45,14 +45,14 @@ export class InnateMechanics {
    if(card==='♥')this.sim.healPlayer(p,p.state.maxHp*.04*mult,p,false);
    if(card==='♣')this.sim.applyBuff(p,{stats:{crit:.08*mult},duration:6,label:'Trèfle'});
    if(card==='♦')for(let i=0;i<4;i++)p.readyAt[i]=this.sim.now+Math.max(0,p.readyAt[i]-this.sim.now)*Math.max(0,1-.1*mult);
-   if(card==='♠'){const target=this.sim.roguelite.enemies(p.state.x,p.state.y,12)[0];if(target)for(const enemy of this.sim.roguelite.enemies(target.state.x,target.state.y,2.5))this.sim.damageMonster(enemy,this.sim.roguelite.referencePower(p)*1.5*mult,p.id);}}
+   if(card==='♠'){const target=this.sim.roguelite.enemies(p.state.x,p.state.y,12)[0];if(target)for(const enemy of this.sim.roguelite.enemies(target.state.x,target.state.y,2.5))this.sim.damageMonster(enemy,this.sim.roguelite.referencePower(p)*1.5*mult,p.id,false,{sourceId:p.build.currentBuild.innatePassiveId});}}
   if(triple)this.sim.applyBuff(p,{stats:{crit:1},duration:3,label:'Brelan'});
  }
  onKill(p:PlayerRt,m:MonsterRt):void {const s=this.get(p);
   if(p.def.id==='enutrof'&&p.state.kills%15===0)s.nuggets.push({x:m.state.x,y:m.state.y});
   if(p.def.id==='sram'&&this.sim.random()<.1){const index=p.build.currentBuild.spells.findIndex(row=>row&&(row.spellId==='sp.piege_sournois'||row.spellId==='ev.piege_de_masse'));this.sim.roguelite.sramTrap(p,index,m.state.x,m.state.y);}}
  onDamaged(p:PlayerRt,amount:number):void {const s=this.get(p);if(p.def.id==='sacrieur'){s.blood=Math.max(0,s.bloodUntil>this.sim.now?s.blood:0)+amount*.25;s.bloodUntil=this.sim.now+3;}if(p.def.id==='enutrof'&&s.carried>0){s.carried--;s.nuggets.push({x:p.state.x,y:p.state.y});}}
- onDisplaced(p:PlayerRt,m:MonsterRt):void {if(p.def.id!=='pandawa')return;const s=this.get(p);if(this.sim.now<(s.lastDisplaced.get(m.id)??0))return;const other=this.sim.roguelite.enemies(m.state.x,m.state.y,m.def.radius+.8).find(o=>o!==m);if(!other)return;s.lastDisplaced.set(m.id,this.sim.now+.5);const amount=this.sim.roguelite.referencePower(p)*.8;this.sim.damageMonster(m,amount,p.id,false);this.sim.damageMonster(other,amount,p.id,false);}
+ onDisplaced(p:PlayerRt,m:MonsterRt):void {if(p.def.id!=='pandawa')return;const s=this.get(p);if(this.sim.now<(s.lastDisplaced.get(m.id)??0))return;const other=this.sim.roguelite.enemies(m.state.x,m.state.y,m.def.radius+.8).find(o=>o!==m);if(!other)return;s.lastDisplaced.set(m.id,this.sim.now+.5);const amount=this.sim.roguelite.referencePower(p)*.8;this.sim.damageMonster(m,amount,p.id,false,{sourceId:p.build.currentBuild.innatePassiveId});this.sim.damageMonster(other,amount,p.id,false,{sourceId:p.build.currentBuild.innatePassiveId});}
  beginDash(_p:PlayerRt):void{}
  dashStep(p:PlayerRt,x:number,y:number,tx:number,ty:number):void {
   if(p.def.id!=='feca'||this.sim.now<this.get(p).next)return;const dx=tx-x,dy=ty-y,length=dx*dx+dy*dy;

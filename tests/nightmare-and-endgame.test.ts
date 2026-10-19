@@ -6,6 +6,24 @@ import {migrateAccount} from '../client/src/progression.ts';
 import {Simulation} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 import {updateBoss} from '../server/src/game/bosses.ts';
+import {Director} from '../server/src/game/director.ts';
+import {modeStages,runStageIndex,spawnCreditsPerSecond,getMode,getRoute} from '@rod/shared';
+
+test('Cauchemar : pression progressive du directeur dès la vraie zone de départ 26',()=>{
+  const state=new GameState();state.mode=3;
+  const sim=new Simulation(state,()=>{});sim.addPlayer('p','Audit','cra');sim.start();
+  assert.equal(state.stage,26);
+  const director=new Director(sim),dt=.1;
+  for(const [offset,factor] of [[0,.6],[3,.8],[6,1],[7,1]]){
+    state.stage=modeStages(3)[0]+offset;
+    director.reset();
+    const rt=director as unknown as {credits:number};
+    const initial=rt.credits;
+    director.update(dt);
+    const full=spawnCreditsPerSecond(state.difficulty,1,runStageIndex(3,state.stage))*getMode(3).spawn*getRoute(state.stageRoute).spawn*dt;
+    assert.ok(Math.abs(rt.credits-initial-full*factor)<1e-9,`zone ${state.stage} : cadence ×${factor}`);
+  }
+});
 
 test('Fin de jeu : quatre paliers supplémentaires, chacun avec au moins dix objets et leurs vraies icônes livrées',()=>{
   const manifest=JSON.parse(fs.readFileSync('client/public/assets/dofus/manifest.json','utf8'));
@@ -64,8 +82,9 @@ test('Cauchemar : double/triple gardiens réels, annonce, positions distinctes e
 test('Cauchemar : les grosses attaques alternent sans perdre de pattern quand un gardien attend',()=>{
   const{sim,bosses,events}=encounter(3);sim.now=10;for(const b of bosses){b.bossReadyAt=0;b.bossHoldUntil=0;}
   assert.equal(updateBoss(sim,bosses[0]),true);const pattern=bosses[1].bossPattern;assert.equal(updateBoss(sim,bosses[1]),false);assert.equal(bosses[1].bossPattern,pattern);
-  assert.equal(events.filter(e=>e.type==='bossWarning'&&e.data.kind!=='spawn').length,1);sim.now+=2;
-  assert.equal(updateBoss(sim,bosses[1]),true);assert.equal(events.filter(e=>e.type==='bossWarning'&&e.data.kind!=='spawn').length,2);
+  const warnings=()=>events.filter(e=>e.type==='attackWarning'||e.type==='bossWarning'&&e.data.kind!=='spawn').length;
+  assert.ok(warnings()>0);const before=warnings();sim.now+=2;
+  assert.equal(updateBoss(sim,bosses[1]),true);assert.ok(warnings()>before);
 });
 
 test('Cauchemar : mode choisi par hôte, récompense dédiée et historique sans rabattement vers Difficile',()=>{
