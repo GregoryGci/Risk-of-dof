@@ -20,6 +20,7 @@ import {inviteCode} from './ui/invite.ts';
 import {startThemeMotion} from './ui/themeMotion.ts';
 import {SkinShop} from './ui/SkinShop.ts';
 import {startHomeAmbience} from './ui/HomeAmbience.ts';
+import {finishHomeLoader,RunLoader} from './ui/loaders.ts';
 import {HistoryPage} from './ui/HistoryPage.ts';
 import {AccountPage} from './ui/AccountPage.ts';
 import {AtlasPage} from './ui/AtlasPage.ts';
@@ -238,6 +239,8 @@ function explain(e: unknown): string {
   return `Connexion impossible : ${msg}`;
 }
 
+const runLoader = new RunLoader();
+
 async function connect(join: () => Promise<Room>): Promise<void> {
   errorEl.textContent = '';
   setBusy(true);
@@ -245,11 +248,13 @@ async function connect(join: () => Promise<Room>): Promise<void> {
   try {
     await cloud.ready;
     if(!cloud.session||!account.profile.complete){accountPage.open();return;}
+    runLoader.show(classId);
     await cloud.flush();
     const room = await join();
     joined=room;
     await startGame(room);
   } catch (e) {
+    runLoader.hide();
     if(joined){joined.reconnection.enabled=false;void joined.leave().catch(()=>{});}
     console.error(e);
     errorEl.textContent = explain(e);
@@ -290,6 +295,7 @@ pseudoInput.addEventListener('keydown', (e) => {
 });
 
 async function startGame(room: Room): Promise<void> {
+  if(!document.querySelector('.run-loader'))runLoader.show(classId);
   // La réservation WebSocket peut précéder le premier snapshot Colyseus.
   // Attendre ses données avant de choisir les assets et de lancer la scène.
   if(!Number.isFinite(room.state?.stage)||!Number.isFinite(room.state?.seed)){
@@ -299,6 +305,7 @@ async function startGame(room: Room): Promise<void> {
       room.onStateChange(receive);
     });
   }
+  runLoader.zone(room.state.stage,room.state.mode??0);
   if(room.state.protocolVersion!==GAME_PROTOCOL_VERSION)throw new Error('Le serveur de jeu utilise encore une ancienne version. Attendez la mise à jour du serveur Railway puis réessayez.');
   currentRoom = room;
   if(invited){const url=new URL(location.href);url.searchParams.delete('code');window.history.replaceState(null,'',url);}
@@ -317,6 +324,7 @@ async function startGame(room: Room): Promise<void> {
   const backToMenu = (error = ''): void => {
     if (closed) return;
     closed = true;
+    runLoader.hide();
     sessionStorage.removeItem(sessionKey);
     if (currentRoom === room) currentRoom = null;
     // Plus aucun message du serveur ne doit atteindre la scène détruite.
@@ -381,7 +389,7 @@ async function startGame(room: Room): Promise<void> {
     fps: { target: 60, limit: 60, smoothStep: false },
     audio: { context: audioContext },
     // La scène reçoit la salle, les assets et le HUD par son constructeur.
-    scene: new GameScene({ room, store, hud }),
+    scene: new GameScene({ room, store, hud, loading: { progress: (ratio) => runLoader.progress(ratio), done: () => void runLoader.done() } }),
   });
 
   // Retour à l'accueil quand le serveur ferme la partie ou que la connexion tombe pour de bon.
@@ -399,6 +407,8 @@ void cloud.ready.then(async()=>{
   if(!saved?.token||(invited&&saved.roomId!==invited))return;
   setBusy(true);
   try{await startGame(await client.reconnect(saved.token));}
-  catch{sessionStorage.removeItem(key);showView(invited?'multi':'solo');errorEl.textContent='La précédente partie n’est plus disponible. Vous pouvez en lancer une nouvelle.';}
+  catch{runLoader.hide();sessionStorage.removeItem(key);showView(invited?'multi':'solo');errorEl.textContent='La précédente partie n’est plus disponible. Vous pouvez en lancer une nouvelle.';}
   finally{setBusy(false);}
 });
+
+void finishHomeLoader();

@@ -18,8 +18,31 @@
     <link rel="stylesheet" href="/src/archive.css" />
     <link rel="stylesheet" href="/src/underworld.css" />
     <link rel="stylesheet" href="/src/infernal.css" />
+    <!-- Écran de chargement de l'accueil : en ligne pour couvrir la page avant le chargement du code (retiré par ui/loaders.ts). -->
+    <style>
+      #home-loader{position:fixed;inset:0;z-index:1000;display:grid;place-content:center;justify-items:center;gap:22px;background:url('/assets/menu/ink-fibers.svg') 0 0/240px 240px,radial-gradient(ellipse at 50% 45%,#262523,#171717 55%,#0d0d0d);color:#bcb9b2;font:600 10px 'Segoe UI','Trebuchet MS',sans-serif;letter-spacing:3px;transition:opacity .6s ease,visibility .6s;--progress:0}
+      #home-loader.done{opacity:0;visibility:hidden}
+      .home-loader-mark{position:relative;display:grid;place-items:center;width:min(320px,64vw,54dvh);aspect-ratio:1}
+      .home-loader-enso{position:absolute;inset:0;width:100%;height:100%;opacity:.5;animation:home-loader-spin 10s linear infinite}
+      .home-loader-wordmark{width:64%;height:auto;animation:home-loader-breathe 2.4s ease-in-out infinite alternate}
+      .home-loader-caption{margin:0}
+      .home-loader-bar{width:min(260px,56vw);height:8px;background:#ded8c824;-webkit-mask:url('/assets/menu/ink-sweep.svg') center/100% 100% no-repeat;mask:url('/assets/menu/ink-sweep.svg') center/100% 100% no-repeat}
+      .home-loader-bar i{display:block;height:100%;background:#ded8c8;transform-origin:left;transform:scaleX(var(--progress));transition:transform .35s ease}
+      @keyframes home-loader-spin{to{transform:rotate(360deg)}}
+      @keyframes home-loader-breathe{from{opacity:.75;transform:scale(.98)}to{opacity:1;transform:scale(1.02)}}
+      @media (prefers-reduced-motion:reduce){.home-loader-enso,.home-loader-wordmark{animation:none}}
+    </style>
   </head>
   <body class="legends">
+    <div id="home-loader" role="status" aria-live="polite" aria-label="Chargement de Risk of Dof">
+      <div class="home-loader-mark"><img class="home-loader-enso" src="/assets/menu/ink-enso.svg" alt=""><img class="home-loader-wordmark" src="/assets/menu/ink-wordmark.png" alt=""></div>
+      <p class="home-loader-caption">LES DOUZE S’ÉVEILLENT</p>
+      <div class="home-loader-bar"><i></i></div>
+    </div>
+    <script>
+      // Progression d'attente jusqu'à 90 % ; ui/loaders.ts la termine. Filet de sécurité si le code ne démarre pas.
+      (function(){var el=document.getElementById('home-loader');function tick(){if(!el.isConnected||el.dataset.final)return;el.style.setProperty('--progress',Math.min(.9,performance.now()/2400).toFixed(3));requestAnimationFrame(tick);}tick();setTimeout(function(){el.remove();},12000);})();
+    </script>
     <!-- Canvas Phaser -->
     <div id="game"></div>
 

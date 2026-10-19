@@ -1,0 +1,35 @@
+/* Écran de lancement d'une partie, dans l'esprit Encre des Douze (l'écran d'accueil est stylé en ligne dans index.html). */
+/* .run-loader-art en plus dans les sélecteurs du portrait : legends.css fixe sa taille à 72 px. */
+.run-loader{position:fixed;inset:0;z-index:1000;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1fr);align-items:center;gap:clamp(16px,5vw,64px);padding:max(24px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));
+  background:url('/assets/menu/ink-fibers.svg') 0 0/240px 240px,radial-gradient(ellipse at 30% 50%,#262523,#171717 55%,#0d0d0d);color:#eeeae1;font-family:'Segoe UI','Trebuchet MS',sans-serif;transition:opacity .6s ease,visibility .6s;--progress:0}
+.run-loader.done{opacity:0;visibility:hidden}
+.run-loader-art{position:relative;justify-self:end;display:grid;place-items:center;width:min(360px,40vw,70dvh);aspect-ratio:1}
+.run-loader-enso{position:absolute;inset:0;width:100%;height:100%;opacity:.35;animation:run-loader-spin 14s linear infinite}
+.run-loader .run-loader-art .class-portrait{display:grid;width:78%;height:auto;aspect-ratio:1;max-width:none;filter:drop-shadow(0 14px 10px #0007);animation:run-loader-float 3.2s ease-in-out infinite alternate}
+.run-loader .run-loader-art .portrait-retro{width:60%;height:auto}
+.run-loader-text{max-width:420px;display:grid;gap:12px;animation:run-loader-arrive .7s ease-out backwards}
+.run-loader-eyebrow{font-size:9px;font-weight:600;letter-spacing:3px;color:#bcb9b2}
+.run-loader h2{margin:0;font:italic 400 clamp(28px,4.4vw,46px)/1.05 Georgia,'Times New Roman',serif;color:#eeeae1;letter-spacing:-.5px}
+.run-loader-tip{margin:4px 0 6px;padding-left:12px;border-left:2px solid #ded8c855;font-size:13px;line-height:1.6;color:#bcb9b2}
+.run-loader-tip b{display:block;margin-bottom:2px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#ded8c8}
+/* Barre au pinceau : la trace se remplit de gauche à droite. */
+.run-loader-bar{width:min(320px,100%);height:9px;background:#ded8c824;-webkit-mask:url('/assets/menu/ink-sweep.svg') center/100% 100% no-repeat;mask:url('/assets/menu/ink-sweep.svg') center/100% 100% no-repeat}
+.run-loader-bar i{display:block;height:100%;background:#ded8c8;transform-origin:left;transform:scaleX(var(--progress));transition:transform .35s ease}
+.run-loader-status{font-size:11px;color:#bcb9b2;letter-spacing:.3px}
+@keyframes run-loader-spin{to{transform:rotate(360deg)}}
+@keyframes run-loader-float{from{transform:translateY(4px)}to{transform:translateY(-6px)}}
+@keyframes run-loader-arrive{from{opacity:0;transform:translateX(16px)}}
+/* Portrait : l'illustration au-dessus du texte. */
+@media (max-width:700px) and (orientation:portrait){
+  .run-loader{grid-template-columns:1fr;align-content:center;justify-items:center;text-align:center}
+  .run-loader-art{justify-self:center;width:min(260px,70vw)}
+  .run-loader-text{justify-items:center}
+  .run-loader-tip{border-left:0;padding-left:0}
+}
+@media (max-height:500px) and (orientation:landscape){
+  .run-loader-text{gap:8px}
+  .run-loader-tip{font-size:12px;margin:0 0 4px}
+}
+@media (prefers-reduced-motion:reduce){
+  .run-loader-enso,.run-loader .run-loader-art .class-portrait,.run-loader-text{animation:none}
+}

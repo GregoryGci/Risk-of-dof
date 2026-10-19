@@ -74,6 +74,8 @@ export interface GameContext {
   room: Room;
   store: AssetStore;
   hud: Hud;
+  /** Écran de lancement (ui/loaders.ts) : remplace le texte de chargement dans le canvas. */
+  loading?: { progress(ratio: number): void; done(): void };
 }
 
 /** Surface de monde visible maximale (px) : au-delà on zoome, pour que les monstres apparaissent hors écran. */
@@ -195,14 +197,21 @@ export class GameScene extends Phaser.Scene {
     this.store.preload(this,[...zone.monsters,zone.boss,'epouvantail','marchand','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable'],characters);
 
     // Écran de chargement : les spritesheets Dofus pèsent quelques Mo.
-    const { width, height } = this.scale;
-    const label = this.add
-      .text(width / 2, height / 2, 'Chargement… 0 %', { fontFamily: 'Georgia, serif', fontSize: '22px', color: '#ffb04a', stroke: '#000000', strokeThickness: 4 })
-      .setOrigin(0.5)
-      .setScrollFactor(0);
-    const progress=(p:number)=>label.setText(`Chargement… ${Math.round(p*100)} %`);
-    this.load.on(Phaser.Loader.Events.PROGRESS,progress);
-    this.load.once(Phaser.Loader.Events.COMPLETE,()=>{this.load.off(Phaser.Loader.Events.PROGRESS,progress);label.destroy();});
+    const loading=this.ctx.loading;
+    if(loading){
+      const progress=(p:number)=>loading.progress(p);
+      this.load.on(Phaser.Loader.Events.PROGRESS,progress);
+      this.load.once(Phaser.Loader.Events.COMPLETE,()=>this.load.off(Phaser.Loader.Events.PROGRESS,progress));
+    }else{
+      const { width, height } = this.scale;
+      const label = this.add
+        .text(width / 2, height / 2, 'Chargement… 0 %', { fontFamily: 'Georgia, serif', fontSize: '22px', color: '#ffb04a', stroke: '#000000', strokeThickness: 4 })
+        .setOrigin(0.5)
+        .setScrollFactor(0);
+      const progress=(p:number)=>label.setText(`Chargement… ${Math.round(p*100)} %`);
+      this.load.on(Phaser.Loader.Events.PROGRESS,progress);
+      this.load.once(Phaser.Loader.Events.COMPLETE,()=>{this.load.off(Phaser.Loader.Events.PROGRESS,progress);label.destroy();});
+    }
   }
 
   create(): void {
@@ -213,6 +222,8 @@ export class GameScene extends Phaser.Scene {
     },(choice,revision)=>this.room.send('boon',{choice,revision,runId:this.state.runId}),(type,revision,choiceId)=>this.room.send(type,{revision,choiceId,runId:this.state.runId}));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.mechanicHud.destroy());
     this.store.finalize(this);
+    // Dévoile le jeu après la première image rendue, pas avant.
+    this.time.delayedCall(0,()=>this.ctx.loading?.done());
     this.cameras.main.setBackgroundColor(0x1a2611);
     this.controls = new Controls(this.game.canvas);
     this.unwatchHudScale = watchHudScale();
