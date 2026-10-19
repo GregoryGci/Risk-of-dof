@@ -15,6 +15,8 @@ export class Director {
   private nextWaveIn = 0;
   private leashTimer = 0;
   private wave=0;
+  /** Joueur dont c'est le tour de voir naître le prochain monstre de vague. */
+  private spawnTurn=0;
   private sampleIn=0;
   private lastKills=0;
   private lastDamage=0;
@@ -101,17 +103,27 @@ export class Director {
     const count = Math.min(Math.floor(this.credits / def.cost), maxPack, enemyPopulationLimit(sim.state,sim.players.size) - enemies);
     if (count <= 0) return;
     const alive=[...sim.players.values()].filter(p=>p.state.alive);if(!alive.length)return;
-    const anchor=alive[Math.floor(Math.random()*alive.length)].state,angle=Math.random()*Math.PI*2;
     // Les premières attaques restent lisibles, puis les renforts encerclent par 3–4 accès.
     const groups=this.wave<3?plan.groups:Math.min(4,Math.max(3,plan.groups+Math.floor(this.pressure)));
-    const centers=Array.from({length:groups},(_,i)=>this.pickSpawnPoint(def.radius,angle+i*Math.PI*2/groups,alive[i%alive.length]?.state??anchor));
-    if(centers.every(c=>!c))return;
+    // Chaque joueur vivant reçoit ses propres accès, autour de lui.
+    const perPlayer=Math.max(1,Math.round(groups/alive.length));
+    const centers=alive.map(p=>{
+      const angle=Math.random()*Math.PI*2;
+      const own=Array.from({length:perPlayer},(_,i)=>this.pickSpawnPoint(def.radius,angle+i*Math.PI*2/perPlayer,p.state)).filter(c=>!!c);
+      if(!own.length){const retry=this.pickSpawnPoint(def.radius,undefined,p.state);if(retry)own.push(retry);}
+      return own;
+    });
+    const fallback=centers.flat();
+    if(!fallback.length)return;
+    const used=alive.map(()=>0);
     let spawned=0;
 
     for (let i = 0; i < count; i++) {
       const member=plan.ranged&&i>=count-plan.groups&&ranged&&ranged.cost<=this.credits?ranged:def;
       if(member.cost>this.credits)break;
-      const center=centers[i%centers.length];if(!center)continue;
+      // Tour de rôle conservé d'une vague à l'autre : à n joueurs, chacun voit naître 1/n des monstres.
+      const owner=this.spawnTurn%alive.length,own=centers[owner];
+      const center=own.length?own[used[owner]%own.length]:fallback[i%fallback.length];
       // Chaque membre du groupe est légèrement décalé.
       for (let attempt = 0; attempt < 8; attempt++) {
         const x = center.x + (Math.random() - 0.5) * 3;
@@ -120,7 +132,7 @@ export class Director {
         if(alive.some(p=>Math.hypot(p.state.x-x,p.state.y-y)<10.5))continue;
         sim.spawnMonster(member, x, y, monsterHpMultiplier(diff), monsterDamageMultiplier(diff), Math.round(diff));
         this.credits -= member.cost;
-        spawned++;
+        spawned++;used[owner]++;this.spawnTurn++;
         break;
       }
     }
