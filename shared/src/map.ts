@@ -4,7 +4,7 @@
 import { MAP_BASE_SIZE, MAP_SIZE } from './constants.ts';
 import { clamp, type Vec2 } from './iso.ts';
 import { makeRng } from './rng.ts';
-import { zoneForStage } from './data/zones.ts';
+import { zoneForStage, type ZoneDef } from './data/zones.ts';
 
 /** Types de sol (index utilisé pour choisir la tile). */
 export const GROUND_HERBE = 0;
@@ -45,9 +45,9 @@ function obstacleIndex(id: string): number {
   return OBSTACLES.findIndex((o) => o.id === id) + 1;
 }
 
-/** Reconstruit le terrain de la région liée au gardien, à partir de sa graine. */
-export function generateMap(seed: number, size = MAP_SIZE, stage = 1): GameMap {
-  const zone = zoneForStage(stage);
+/** Reconstruit le terrain de la région liée au gardien, à partir de sa graine. `place` : zone de la run ou index de donjon. */
+export function generateMap(seed: number, size = MAP_SIZE, place: number|ZoneDef = 1): GameMap {
+  const zone = typeof place === 'number' ? zoneForStage(place) : place;
   const rng = makeRng(seed);
   const ground = new Uint8Array(size * size);
   const obstacles = new Uint8Array(size * size);

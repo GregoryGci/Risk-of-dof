@@ -1,13 +1,12 @@
-import { PLAYER_RADIUS, PHASE_PLAYING, ZAAP_READY, isBlocked, runStageIndex,modeFinalStage,bossForStage,BOSS_ATTACK_PROFILES,BOSS_ATTACK_TUNING as T,ENEMY_PATTERN_NAMES,type EnemyAttack } from '@rod/shared';
+import { PLAYER_RADIUS, PHASE_PLAYING, ZAAP_READY, isBlocked, runStageIndex,getMode,modeFinalStage,bossForRun,BOSS_ATTACK_PROFILES,BOSS_ATTACK_TUNING as T,ENEMY_PATTERN_NAMES,type EnemyAttack } from '@rod/shared';
 import {executeEnemyAttack} from './enemy-attacks.ts';
 import type { MonsterRt, Simulation } from './Simulation.ts';
 
 /**
- * Cadence des gardiens selon la difficulté choisie et la zone : 1 en Facile zone 1, jusqu'à ~0,57 en
- * Cauchemar zone 33. Elle raccourcit le délai entre deux grosses attaques et, plus doucement, leur annonce.
+ * Cadence des gardiens selon le Stasis et la zone, de 1 au départ à environ 0,40 en fin de Stasis 10. Elle raccourcit le délai entre deux grosses attaques et, plus doucement, leur annonce.
  */
 export function bossPace(mode: number, stage: number): number {
-  const byMode = [1, 0.92, 0.84, 0.76][Math.max(0, Math.min(3, mode))] ?? 1;
+  const byMode=getMode(mode).bossPace;
   const byStage = 1 - Math.min(0.25, Math.max(0, stage - 1) * 0.008);
   return byMode * byStage;
 }
@@ -22,7 +21,7 @@ export function updateBoss(sim: Simulation, boss: MonsterRt): boolean {
   if (!targets.length) return false;
   const enraged=boss.state.hp<=boss.state.maxHp*T.enrageHp;
   const pattern=boss.bossPattern??0,profile=BOSS_ATTACK_PROFILES[boss.def.id]??BOSS_ATTACK_PROFILES.default;
-  const finalGuardian=sim.state.stage===modeFinalStage(sim.state.mode)&&boss.def.id===bossForStage(sim.state.stage);
+  const finalGuardian=sim.state.stage===modeFinalStage(sim.state.mode)&&boss.def.id===bossForRun(sim.state.zoneOrder,sim.state.stage);
   const lastPhase=finalGuardian&&boss.state.hp<=boss.state.maxHp*T.finaleHp;
   const sequence=lastPhase&&profile.finale?profile.finale:enraged?profile.enraged:profile.normal;
   const kind=sequence[pattern%sequence.length];

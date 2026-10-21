@@ -4,13 +4,18 @@ import {sanitizeEquipment} from './equipment.ts';
 import {CLASSES} from './classes.ts';
 import {emptyStats} from './items.ts';
 import {getBlessing,parseBlessings} from './blessings.ts';
-import {GAME_MODES,FINAL_STAGE} from '../difficulty.ts';
+import {CAMPAIGN_LENGTH} from '../difficulty.ts';
+import {RUN_ZONES} from './zones.ts';
+import {DIFFICULTY_VERSION,difficultyMode} from '../stasis.ts';
 import {ROGUELITE_CATALOG} from '../roguelite/content.ts';
 import type {SpellSlot,PassiveSlot} from '../roguelite/types.ts';
 export interface RunDamageSource {id:string;damage:number;hits:number}
 export interface RunDamageEvent {at:number;source:string;damage:number;absorbed:number;hp:number}
-export interface RunBuildSummary {level:number;innatePassiveId:string;spells:(SpellSlot|null)[];passives:(PassiveSlot|null)[]}
+export interface RunBuildSummary {level:number;innatePassiveId:string;spells:(SpellSlot|null)[];passives:(PassiveSlot|null)[];variants?:string[]}
 export interface RunSummary {
+  difficultyVersion?:2;
+  /** Run à douze zones aléatoires ; absent pour les runs de l'ancienne campagne linéaire. */
+  runZones?:12;
   ogrines?:number;
   outcome?:'victory'|'defeat';
   runId:string;classId:string;name:string;startedAt:string;duration:number;
@@ -31,7 +36,7 @@ function sanitizeCombatSummary(r:Record<string,unknown>):Pick<RunSummary,'build'
     const b=r.build as RunBuildSummary,cls=ROGUELITE_CATALOG.classDefinition(String(r.classId));
     const spells=Array.from({length:4},(_,i)=>{const s=Array.isArray(b.spells)?b.spells[i]:null,d=s&&ROGUELITE_CATALOG.spell(s.spellId);if(!s||!d)return null;const evolution=s.evolutionId&&ROGUELITE_CATALOG.evolution(s.evolutionId);if(!d.acquire&&(!evolution||evolution.targetSpellId!==d.id))return null;return {spellId:d.id,level:Math.max(1,count(s.level,d.maxLevel)),...(evolution&&evolution.targetSpellId===d.id?{evolutionId:evolution.id}:{})};});
     const passives=Array.from({length:4},(_,i)=>{const s=Array.isArray(b.passives)?b.passives[i]:null,d=s&&ROGUELITE_CATALOG.passive(s.passiveId);return s&&d&&!d.innate?{passiveId:d.id,level:Math.max(1,count(s.level,d.ranks.length))}:null;});
-    if(cls)build={level:Math.max(1,count(b.level,10000)),innatePassiveId:cls.innatePassiveId,spells,passives};
+    if(cls)build={level:Math.max(1,count(b.level,10000)),innatePassiveId:cls.innatePassiveId,spells,passives,...(Array.isArray(b.variants)?{variants:[...new Set(b.variants.filter(id=>ROGUELITE_CATALOG.spell(id)?.acquire))]}:{})};
   }
   const damageSources=(Array.isArray(r.damageSources)?r.damageSources:[]).slice(0,100).flatMap(s=>s&&typeof s==='object'&&typeof s.id==='string'?[{id:text(s.id,100),damage:count(s.damage),hits:count(s.hits)}]:[]);
   let deathRecap:RunSummary['deathRecap'];
@@ -49,6 +54,6 @@ export function sanitizeRunSummary(raw:unknown):RunSummary|undefined {
   const bonuses:Partial<Record<StatKey,number>>={};
   const extra=sanitizeCombatSummary(r);
   if(r.bonuses&&typeof r.bonuses==='object')for(const [key,value]of Object.entries(r.bonuses))if(Object.hasOwn(emptyStats(),key)&&typeof value==='number'&&Number.isFinite(value))bonuses[key as StatKey]=Math.max(-1e6,Math.min(1e9,value));
-  return {...extra,ogrines:count(r.ogrines),outcome:r.outcome==='victory'||(!r.outcome&&typeof r.zone==='number'&&r.zone>FINAL_STAGE)?'victory':'defeat',runId:r.runId,classId:r.classId,name:text(r.name,16),startedAt:new Date(r.startedAt).toISOString(),duration:count(r.duration),partySize:Math.max(1,count(r.partySize,4)),mode:count(r.mode,GAME_MODES.length-1),zone:Math.max(1,count(r.zone,255)),zoneName:text(r.zoneName,100),waves:count(r.waves),kills:count(r.kills),teamKills:count(r.teamKills),bossKills:count(r.bossKills),damageDealt:count(r.damageDealt),healing:count(r.healing),damageTaken:count(r.damageTaken),deathCause:text(r.deathCause,160),bonuses,blessing:getBlessing(r.blessing)?.id,blessings:parseBlessings(r.blessings),loot:(Array.isArray(r.loot)?r.loot:[]).slice(0,2000).map(sanitizeEquipment).filter((e):e is Equipment=>!!e)};
+  return {...extra,difficultyVersion:DIFFICULTY_VERSION,ogrines:count(r.ogrines),outcome:r.outcome==='victory'||(!r.outcome&&typeof r.zone==='number'&&r.zone>CAMPAIGN_LENGTH)?'victory':'defeat',runId:r.runId,classId:r.classId,name:text(r.name,16),startedAt:new Date(r.startedAt).toISOString(),duration:count(r.duration),partySize:Math.max(1,count(r.partySize,4)),mode:difficultyMode(r.mode,r.difficultyVersion),zone:Math.max(1,count(r.zone,255)),zoneName:text(r.zoneName,100),waves:count(r.waves),kills:count(r.kills),teamKills:count(r.teamKills),bossKills:count(r.bossKills),...(r.runZones===RUN_ZONES?{runZones:RUN_ZONES}:{}),damageDealt:count(r.damageDealt),healing:count(r.healing),damageTaken:count(r.damageTaken),deathCause:text(r.deathCause,160),bonuses,blessing:getBlessing(r.blessing)?.id,blessings:parseBlessings(r.blessings),loot:(Array.isArray(r.loot)?r.loot:[]).slice(0,2000).map(sanitizeEquipment).filter((e):e is Equipment=>!!e)};
 }
 export function compareRuns(a:RunSummary,b:RunSummary):number {return b.zone-a.zone||Number(b.outcome==='victory')-Number(a.outcome==='victory')||b.mode-a.mode||b.waves-a.waves||b.teamKills-a.teamKills||a.duration-b.duration;}

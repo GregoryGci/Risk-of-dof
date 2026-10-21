@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createEquipment,forgeCost,recycleValue,equipmentReward,getMonster,getSpell,generateMap,isBlocked,evaluateHand,monsterEquipmentDrops,makeRng,RUN_BONUSES,ZAAP_READY} from '@rod/shared';
 import {GameState} from '../server/src/state.ts';
-import {Simulation,type PlayerRt} from '../server/src/game/Simulation.ts';
+import {Simulation} from '../server/src/game/Simulation.ts';
 import {MovementPrediction} from '../client/src/game/Prediction.ts';
 const setup=(classId:string)=>{
   const events:{type:string;message:any}[]=[],state=new GameState(),sim=new Simulation(state,(type,message)=>events.push({type,message}));
@@ -12,7 +12,6 @@ const setup=(classId:string)=>{
   return{sim,p,target,state,events};
 };
 const advance=(sim:Simulation,seconds:number)=>{for(let i=0;i<Math.ceil(seconds*30);i++)sim.update(1/30);};
-const action=(sim:Simulation,p:PlayerRt,choice=0)=>sim.classAction(p.id,{tx:p.state.x+3,ty:p.state.y,choice});
 
 test('forge : migration, amélioration d’une copie, recyclage protégé et crédits idempotents',async()=>{
   const storage=new Map<string,string>();
@@ -58,9 +57,4 @@ test('dash : fenêtre de 120 ms, dégâts ensuite, aucune esquive pendant la pau
   const {sim,p,state}=setup('cra'),hp=p.state.hp;sim.playerDash(p.id,{dx:1,dy:0});sim.damagePlayer(p,20);assert.equal(p.state.hp,hp);
   advance(sim,.14);sim.damagePlayer(p,20);assert.ok(p.state.hp<hp);
   state.paused=true;p.dashReadyAt=0;const previous=p.dodgeUntil;sim.playerDash(p.id,{dx:1,dy:0});assert.equal(p.dodgeUntil,previous);
-});
-test('actions : coordonnées et choix invalides ignorés, pause interdit les effets',()=>{
-  const {sim,p,state}=setup('ecaflip'),m=sim.mechanics.get(p),hand=[...m.hand];
-  sim.classAction(p.id,{tx:NaN,ty:0});sim.classAction(p.id,{tx:0,ty:0,choice:99});state.paused=true;action(sim,p);
-  assert.deepEqual(m.hand,hand);assert.equal(m.hand.length,0);
 });

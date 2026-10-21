@@ -19,6 +19,7 @@ export function validateRunBuild(catalog: RogueliteCatalog, build: RunBuild): vo
   insist(cls && build.innatePassiveId === cls.innatePassiveId, 'invalid class/innate');
   insist(Array.isArray(build.spells) && build.spells.length === catalog.config.spellSlots, 'spell capacity');
   insist(Array.isArray(build.passives) && build.passives.length === catalog.config.passiveSlots, 'passive capacity');
+  if(build.variants!==undefined)insist(Array.isArray(build.variants)&&new Set(build.variants).size===build.variants.length&&build.variants.every(id=>catalog.spell(id)?.acquire),'invalid variants');
   const seen = new Set<string>();
   for (const slot of build.spells) {
     if (slot === null) continue;

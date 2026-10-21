@@ -3,6 +3,8 @@ import type {StatKey,SpellDef} from '../types.ts';
 import {ROGUELITE_BALANCE as B,ROGUELITE_CATALOG as C,passiveParameters} from './content.ts';
 import {resolveAbility} from './build.ts';
 import type {RunBuild,SpellSlot} from './types.ts';
+import {spellVariant,variantAbility} from './variants.ts';
+import {invocateurPack} from './invocateur.ts';
 
 export type PermanentSpellRanks=Record<string,number>;
 /** Formes dont les dégâts profitent du bonus de zone d'Expansion. */
@@ -17,7 +19,10 @@ export function permanentSpellCost(id:string,nextRank:number):number {
 export function baseAbilityId(id:string):string {return C.evolution(id)?.sourceSpellId??id;}
 export function effectiveRogueliteAbility(slot:SpellSlot,build:RunBuild,stats:Partial<Record<StatKey,number>>={},ranks:PermanentSpellRanks={},
   context:{innateRadius?:number;blessingRadius?:number;innateRange?:number}={}) {
-  const ability=resolveAbility(C,slot),p={...ability.parameters},s={...ability.stats},passives=passiveParameters(build);
+  const resolved=resolveAbility(C,slot),variant=!slot.evolutionId&&build.variants?.includes(slot.spellId)?spellVariant(slot.spellId):undefined;
+  const adjusted=variant?variantAbility(slot.spellId,resolved.stats,{...resolved.parameters}):resolved;
+  const definition=C.spell(slot.spellId)!;
+  const ability={...resolved,...adjusted,name:variant?.name??definition.name,description:variant?`${definition.description} Variante : ${variant.description}`:definition.description},p={...ability.parameters},s={...ability.stats},passives=passiveParameters(build);
   const source=baseAbilityId(slot.spellId),base=C.spell(source)!,handler=ability.behavior.kind==='custom'?ability.behavior.handlerId:ability.behavior.kind;
   const permanent=Math.max(0,Math.min(5,ranks[source]??0)),signature=build.spells[0]?.spellId===slot.spellId;
   const haste=Math.min(1,Math.max(0,stats.haste??0));
@@ -29,7 +34,8 @@ export function effectiveRogueliteAbility(slot:SpellSlot,build:RunBuild,stats:Pa
   // Les instances ajoutées par Multitude comptent pour 60 % : le facteur s'applique à toutes les touches du sort.
   const added=p.baseQuantity-own;p.multitudeScale=added>0?(own+.6*added)/(own+added):1;
   s.projectiles=Math.min(p.quantityCap,p.baseQuantity+echoes);p.echoShare=echoes?Math.min(1,(stats.multishot??0)/echoes):0;
-  if(handler==='summon'||handler==='royal')s.projectiles=Math.min(6,s.projectiles+(passives.extraSummon??0)+(build.classId==='osamodas'?1:0));
+  // Invocateur : Maîtrise des invocations double la meute (Multitude et les échos n'y ajoutent rien), Ilyzaelle reste seule.
+  if(handler==='summon'||handler==='royal'){const pack=invocateurPack(passives.summonDoubling??0,handler==='royal');s.projectiles=pack.count;p.packScale=pack.scale;p.multitudeScale=1;p.echoShare=0;}
   const radiusBonus=(passives.expansion??0)+(context.innateRadius??0),scale=1+radiusBonus;
   const maximum=resolveAbility(C,{spellId:slot.spellId,level:C.spell(slot.spellId)!.maxLevel});
   const cap=handler==='aura'?4.5:handler==='glyph'?6:Infinity;

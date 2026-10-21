@@ -98,7 +98,7 @@ export class Details {
     html += `<h3>Sorts <small>(survolez pour voir la zone en jeu)</small></h3><div class="details-spells">`;
     for(const [slot,row]of build.spells.entries()){
       if(!row)continue;const def=C.spell(row.spellId)!,url=this.store.spellIconUrl(def.assetKey!);
-      html+=`<div class="spell-card" data-slot="${slot}"><div class="spell-card-icon">${url?'<img src="'+url+'" alt="">':''}</div><div><div class="spell-card-name">${escapeHtml(def.name)} <small>${row.evolutionId?'ÉVOLUTION':row.level+'/8'}</small></div><p>${escapeHtml(def.description)}</p><p>${abilities[slot]?escapeHtml(abilitySummary(abilities[slot])):''}</p></div></div>`;
+      html+=`<div class="spell-card" data-slot="${slot}"><div class="spell-card-icon">${url?'<img src="'+url+'" alt="">':''}</div><div><div class="spell-card-name">${escapeHtml(abilities[slot]?.name??def.name)} <small>${row.evolutionId?'ÉVOLUTION':row.level+'/8'}</small></div><p>${escapeHtml(abilities[slot]?.description??def.description)}</p><p>${abilities[slot]?escapeHtml(abilitySummary(abilities[slot])):''}</p></div></div>`;
     }
     const innate=ROGUELITE_INNATES[me.classId];
     html+=`</div><h3>${escapeHtml(innate.name)} · passif inné</h3><p>${escapeHtml(innate.description)}</p><h3>Passifs temporaires</h3><div class="run-stats-recap">`;

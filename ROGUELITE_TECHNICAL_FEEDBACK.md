@@ -1,5 +1,23 @@
 # Retour technique pour le game design roguelite
 
+## Familiers — demande du joueur du 20 octobre
+
+Le joueur demande un familier équipé visible, suiveur et attaquant, puis précise que tous doivent frapper à distance en restant près du maître. L’ancienne icône attachée au héros est remplacée par un acteur cosmétique suivi ; les actions sont annoncées par le serveur et n’animent plus le héros à sa place. Les anciennes attaques de contact deviennent des projectiles avec les mêmes dégâts/effets et de petits impacts, tandis que Grondement/Onde visent désormais l’ennemi. Identifiants, attaques attribuées et ressources des comptes sont conservés. Le document de design validé reste intact. Voir [Compagnons](docs/COMPAGNONS.md) pour les géométries, la synchronisation, les assets réutilisés et les validations.
+
+## Mise à jour du 20 octobre — Stasis et descriptions
+
+**Demandes validées par le joueur :** dix Stasis avec l’ancien Cauchemar au Stasis 5, difficulté fortement renforcée ensuite, Piège Sournois à −40 % de dégâts de base ; descriptions des sorts et passifs à confronter au fonctionnement réel, notamment Eniripsa.
+
+**Intégration :** configuration partagée unique des dix Stasis, migration non destructive des comptes/historiques et des scores, protocole 10. Le Piège Sournois reçoit le coefficient 0,6 aux huit niveaux avant ses rangs permanents ; poison et évolution restent inchangés. L’ancien surplus de menace du mode Difficile est corrigé pour supprimer une inversion de puissance à l’entrée des modes.
+
+**Écart conception/code :** les anciens textes annonçaient une relance par zone Ecaflip et des propriétés de familier Osamodas absentes des gestionnaires actuels. Les descriptions ont été corrigées pour exposer les effets réellement implémentés, sans ajouter ces mécaniques. Le bonus de soins Eniripsa déjà actif (+10 % à six cases, non cumulable) est maintenant indiqué avec les conditions de Résonance. Les évolutions disposent chacune de leur propre texte. Le document de game design validé reste intact.
+
+**Impact / recommandation :** les Stasis 6–10 ciblent des builds optimisés ; les douze simulations Sram/Iop ne suffisent pas à confirmer leur jouabilité humaine. Les multiplicateurs de PV et de dégâts, les cadences et les quantités restent centralisés pour ajustement. Le classement distant exige la migration SQL du 20 octobre avant le déploiement synchronisé du client et du serveur. Aucun reset ni retrait de ressources.
+
+**Détail et preuves :** voir [Stasis et descriptions](docs/STASIS_ET_DESCRIPTIONS.md) pour les paramètres, les migrations et les limites des validations ; suite complète de 304 tests, vérification TypeScript et build réussis.
+
+Les sections suivantes conservent les constats historiques des étapes précédentes.
+
 Phase A, 17 octobre 2026. `ROGUELITE_GAME_DESIGN.md` n'est pas présent. Ce fichier décrit des contraintes de la version locale et les décisions à préciser dans le document validé ; il ne remplace pas les décisions du game designer. Aucune de ces propositions n'est activée en partie.
 
 ## 1. Attaque de base, sorts acquis et innés

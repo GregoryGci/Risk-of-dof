@@ -1,9 +1,11 @@
 // Affichage d'un personnage ou d'un monstre : sprite animé si l'asset existe,
 // placeholder sinon. Gère l'interpolation des positions reçues du serveur.
 import Phaser from 'phaser';
-import { PATCH_MS, worldToScreen } from '@rod/shared';
+import { PATCH_MS, worldToScreen,type CompanionActionEvent } from '@rod/shared';
 import type { AssetStore, EntityVisual } from '../assets/store.ts';
 import type { GearManifest, GearTracks } from '../assets/manifest.ts';
+import {CompanionView} from './CompanionView.ts';
+import {MasteryAura} from './MasteryAura.ts';
 
 /** Durée d'interpolation entre deux positions serveur (un peu plus qu'un patch pour absorber la gigue). */
 const INTERP_S = (PATCH_MS * 1.3) / 1000;
@@ -60,23 +62,27 @@ export class EntityView {
   /** Coiffe et cape portées, posées image par image sur les points d'accroche du corps. */
   private gear?: { tracks: GearTracks; manifest: GearManifest; worn: { base: string; head: boolean; img: Phaser.GameObjects.Image; part: Part }[] };
   private gearKey = '';
-
-  private pet?: { key: string; img: Phaser.GameObjects.Image; part: Part };
-  /** Compagnon : icône du familier qui flotte et suit le joueur, un peu derrière lui. */
-  setPet(key?: string): void {
-    if (this.pet?.key === key) return;
-    if (this.pet) { this.pet.img.destroy(); this.parts = this.parts.filter(p => p !== this.pet!.part); this.pet = undefined; }
-    if (!key) return;
-    const img = this.scene.add.image(0, 0, key).setOrigin(.5, 1);
-    img.setScale(Math.min(1, 26 / Math.max(img.width, img.height)));
-    const part: Part = { obj: img, ox: 0, oy: 0, dz: -0.05 };
-    this.parts.push(part);
-    this.pet = { key, img, part };
+  private masteryAura?:MasteryAura;
+  /** Aura cosmétique déverrouillée ; ne modifie aucune statistique. */
+  setMasteryAura(classId?:string):void{
+    if(this.masteryAura?.classId===classId)return;
+    this.masteryAura?.destroy();this.masteryAura=classId?new MasteryAura(this.scene,classId):undefined;
   }
+
+  private pet?:CompanionView;
+  /** One cosmetic companion per equipped familiar; independent from the player's body. */
+  setPet(key?:string):void {
+    if(this.pet?.key===key)return;
+    this.pet?.destroy();this.pet=key?new CompanionView(this.scene,key,this.wx,this.wy):undefined;
+  }
+  get petPosition():{x:number;y:number}|undefined{return this.pet?.position;}
+  petAction(e:CompanionActionEvent):void{this.pet?.action(e);}
+  resetPet():void{this.pet?.reset(this.wx,this.wy);}
 
   /** Objets d'apparence portés (coiffe, cape) ; sans effet sur un placeholder ou un monstre. */
   setGear(head?: string, back?: string): void {
-    if(this.visual.cosmeticGear){head=this.visual.cosmeticGear.head;back=this.visual.cosmeticGear.back;}
+    // Le stuff porté est prioritaire ; l'apparat habille seulement les emplacements vides.
+    head??=this.visual.cosmeticGear?.head;back??=this.visual.cosmeticGear?.back;
     const key = `${head ?? ''}|${back ?? ''}`;
     if (key === this.gearKey) return;
     for (const w of this.gear?.worn ?? []) { w.img.destroy(); this.parts = this.parts.filter(p => p !== w.part); }
@@ -127,7 +133,7 @@ export class EntityView {
   }
 
   private cursed=false;
-  /** Teinte d'état posée par les effets d'évolution (Tofu Royal, infection, gel), sous l'éclair de dégât et le télégraphe. */
+  /** Teinte d'état posée par les effets d'évolution (Ilyzaelle, infection, gel), sous l'éclair de dégât et le télégraphe. */
   private lookTint?:number;
   setLook(tint?:number):void {this.lookTint=tint;}
   setRogue(rogue:boolean,cursed=false):void {
@@ -353,15 +359,8 @@ export class EntityView {
     }
   }
 
-  update(dt: number): void {
+  update(dt: number, frozen=false): void {
     this.clock += dt;
-    if (this.pet) {
-      // Flotte à côté, du côté opposé au regard, avec un léger balancement.
-      const side = this.body.flipX ? 1 : -1;
-      this.pet.part.ox = side * 22;
-      this.pet.part.oy = -8 + Math.sin(this.clock * 3) * 3;
-      this.pet.img.setFlipX(side > 0).setAlpha(this.body.alpha).setVisible(!this.dead);
-    }
     if (this.t < 1) {
       this.t = Math.min(1, this.t + dt / INTERP_S);
       this.wx = this.fromX + (this.toX - this.fromX) * this.t;
@@ -390,6 +389,8 @@ export class EntityView {
       this.bodyX = (this.body.flipX ? -1 : 1) * bump + (this.warn ? Math.sin(this.clock * 60) * 1.5 : 0);
       this.place();
     }
+    this.pet?.update(dt,{x:this.wx,y:this.wy,alive:!this.dead,invisible:this.invisible},frozen);
+    this.masteryAura?.update(frozen?0:dt,this.body,!this.dead&&!this.invisible);
   }
 
   private place(): void {
@@ -417,6 +418,8 @@ export class EntityView {
   }
 
   destroy(): void {
+    this.masteryAura?.destroy();this.masteryAura=undefined;
+    this.pet?.destroy();this.pet=undefined;
     for (const part of this.parts) part.obj.destroy();
     this.parts = [];
   }

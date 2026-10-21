@@ -410,7 +410,7 @@ export const SPELLS: Record<string, SpellDef> = define({
     element: 'feu',
     cooldown: 2500,
     range: 7,
-    damage: [30, 40],
+    damage: [18, 24],
     ground: { kind: 'trap', radius: 0.9, blast: 2, duration: 30, max: 3, arm: 0.6 },
   },
   invisibilite: {

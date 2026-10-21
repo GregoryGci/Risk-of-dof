@@ -1,5 +1,6 @@
 // Coiffes et capes portées en jeu : l'apparence suit l'équipement, sans un atlas par combinaison.
-// Usage : node tools/extract-gear.mjs [--items] [--anchors] [classe...]   (sans option : les deux)
+// Usage : node tools/extract-gear.mjs [--items] [--missing] [--anchors] [classe...]   (sans option : les deux)
+// --items --missing complète le catalogue sans remplacer les apparats ou les visuels déjà présents.
 //
 // 1. --items : chaque coiffe et cape du catalogue (retrouvée par son nom Dofus, type 16 ou 17) est rendue
 //    pour chaque direction de son clip d'accessoire (R, L, F, B, S ; L, R, RR, RL pour les capes).
@@ -18,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { ANIMS, DIRS, ENTITIES, MAX_FRAMES, ZOOM, parseSwfXml, resolveClip } from './extract-dofus.mjs';
 import { ID_RE, NO_ID, accessoryXml, anchorsOf, defId, ffdec, frameAt, loadXml, place, topItems } from './extract-skins.mjs';
 import { readDofusItems } from './dofus-items.mjs';
-import { MANIFEST_FILE, updateManifest } from './manifest.mjs';
+import { MANIFEST_FILE, readManifest, updateManifest } from './manifest.mjs';
 import { blit, crop, decodePng, encodePng, opaqueBounds } from './png.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -36,13 +37,18 @@ const GEAR_KINDS = { coiffe: { type: 16, prefix: '16', anchor: 1 }, cape: { type
 function catalog() {
   const src = fs.readFileSync(path.join(ROOT, 'shared/src/data/equipment.ts'), 'utf8');
   const dofus = readDofusItems();
+  const entries = new Map();
+  for (const m of src.matchAll(/^ {2}(\w+): \{ name: (['"])(.+?)\2, kind: '(\w+)'/gm))entries.set(m[1],{name:m[3].replace(/\\'/g,"'"),kind:m[4]});
+  // Le catalogue Retro complète/remplace les premières pièces écrites à la main.
+  const sets=JSON.parse(fs.readFileSync(path.join(ROOT,'shared/src/data/retro-catalogue.json'),'utf8'));
+  for(const set of sets)for(const item of set.items)entries.set(item.id,item);
   const out = [];
-  for (const m of src.matchAll(/^ {2}(\w+): \{ name: (['"])(.+?)\2, kind: '(\w+)'/gm)) {
-    const kind = GEAR_KINDS[m[4]];
+  for (const [base,item] of entries) {
+    const kind = GEAR_KINDS[item.kind];
     if (!kind) continue;
-    const variant = dofus.get(m[3].replace(/\\'/g, "'"))?.variants.find((v) => v.type === kind.type);
-    if (!variant) { console.warn(`  introuvable dans Dofus : ${m[3]}`); continue; }
-    out.push({ base: m[1], kind: m[4], exportName: `${kind.prefix}_${variant.gfx}` });
+    const variant = dofus.get(item.name)?.variants.find((v) => v.type === kind.type || item.kind==='cape'&&v.type===81);
+    if (!variant) throw new Error(`Introuvable dans Dofus : ${base} (${item.name})`);
+    out.push({ base, kind: item.kind, exportName: `${variant.type}_${variant.gfx}` });
   }
   return out;
 }
@@ -52,15 +58,23 @@ function catalog() {
 // ---------------------------------------------------------------------------
 
 function extractItems() {
-  const items = catalog();
+  const current=readManifest().gear;
+  const items = catalog().filter(item=>!process.argv.includes('--missing')||!current?.items[item.base]);
+  if(!items.length){console.log('Tous les équipements ont déjà leurs visuels.');return;}
   const byFile = new Map();
   for (const item of items) {
     const acc = accessoryXml(item.exportName);
     if (!byFile.has(acc)) byFile.set(acc, []);
     byFile.get(acc).push(item);
   }
+  // Conserve aussi les apparats et les équipements déjà extraits.
+  const replaced=new Set(items.map(item=>item.base)),origins={},preserved={};
   const frames = [];
-  const origins = {};
+  if(current){
+    const atlas=JSON.parse(fs.readFileSync(path.join(OUT,current.atlas),'utf8')),image=decodePng(fs.readFileSync(path.join(OUT,current.image)));
+    for(const [base,item]of Object.entries(current.items))if(!replaced.has(base)){origins[base]=item.origins;preserved[base]=item;}
+    for(const [name,f]of Object.entries(atlas.frames))if(!replaced.has(name.split(':')[0]))frames.push({name,img:crop(image,f.frame)});
+  }
   let file = 0;
   for (const [acc, list] of byFile) {
     // Mini SWF : définitions utiles de ce fichier d'accessoires + un clip par direction.
@@ -87,9 +101,8 @@ function extractItems() {
         wanted.push({ id, base: item.base, label: label.replace(/0$/, '') });
       }
     }
-    const work = path.join(WORK, `items_${file++}`);
-    fs.rmSync(work, { recursive: true, force: true });
-    fs.mkdirSync(work, { recursive: true });
+    fs.mkdirSync(WORK, { recursive: true });
+    const work = fs.mkdtempSync(path.join(WORK, `items_${file++}_`));
     const tags = [...acc.items.filter((t) => keep.has(defId(t))), ...added, '<item type="ShowFrameTag" forceWriteAsLong="false"/>'];
     fs.writeFileSync(path.join(work, 'gear.xml'), `${acc.xml.slice(0, acc.tagsStart)}\n${tags.join('\n')}\n${acc.xml.slice(acc.tagsEnd)}`);
     ffdec(['-xml2swf', path.join(work, 'gear.xml'), path.join(work, 'gear.swf')]);
@@ -111,7 +124,7 @@ function extractItems() {
     console.log(`  ${list.length} objets, ${wanted.length} directions`);
   }
   // Atlas en étagères.
-  const atlasW = 1024;
+  const atlasW = 2048;
   let x = 0, y = 0, shelf = 0;
   for (const f of [...frames].sort((a, b) => b.img.height - a.img.height)) {
     if (x + f.img.width > atlasW) { x = 0; y += shelf + 1; shelf = 0; }
@@ -123,11 +136,13 @@ function extractItems() {
     blit(f.img, atlas, f.x, f.y);
     json.frames[f.name] = { frame: { x: f.x, y: f.y, w: f.img.width, h: f.img.height }, rotated: false, trimmed: false, spriteSourceSize: { x: 0, y: 0, w: f.img.width, h: f.img.height }, sourceSize: { w: f.img.width, h: f.img.height } };
   }
-  fs.writeFileSync(path.join(OUT, 'sprites', 'gear.png'), encodePng(atlas));
-  fs.writeFileSync(path.join(OUT, 'sprites', 'gear.json'), JSON.stringify(json));
+  if(atlas.height>4096)throw new Error('Atlas des équipements trop grand');
+  const imagePath=current?.image??'sprites/gear.png',atlasPath=current?.atlas??'sprites/gear.json';
+  fs.writeFileSync(path.join(OUT,imagePath), encodePng(atlas));
+  fs.writeFileSync(path.join(OUT,atlasPath), JSON.stringify(json));
   const kinds = Object.fromEntries(items.map((i) => [i.base, i.kind]));
   updateManifest((m) => {
-    m.gear = { ...m.gear, image: 'sprites/gear.png', atlas: 'sprites/gear.json', pixelsPerUnit: ZOOM, items: Object.fromEntries(Object.entries(origins).map(([base, labels]) => [base, { kind: kinds[base], origins: labels }])) };
+    m.gear = { ...m.gear, image: imagePath, atlas: atlasPath, pixelsPerUnit: ZOOM, items: Object.fromEntries(Object.entries(origins).map(([base, labels]) => [base, { kind: kinds[base]??preserved[base].kind, origins: labels }])) };
   });
   console.log(`gear.png : ${frames.length} images, ${atlasW}x${atlas.height}`);
 }

@@ -119,6 +119,8 @@ export interface RunBuild {
   rerolls:number;
   banishes:number;
   banned:string[];
+  /** Choix permanents figés au départ de la run ; les sorts gardent leur identité et leurs niveaux. */
+  variants?:string[];
 }
 export interface RogueliteConfig {
   spellSlots: number;

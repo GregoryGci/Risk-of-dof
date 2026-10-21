@@ -53,11 +53,10 @@ test('Féca : armure innée et rayon persistant calculés une fois, sans modifie
  sim.applyStats(p);const radius=sim.roguelite.ability(p,0)!.stats.radius;assert.equal(radius,original*1.25);assert.equal(p.stats.armor,2);
  sim.applyStats(p);assert.equal(sim.roguelite.ability(p,0)!.stats.radius,radius);assert.equal(C.spell('sp.glyphe_agressif')!.stats.radius,original);
 });
-test('Osamodas : seule l’action F commande le cri, invocations présentes et apparition valide au bord',()=>{
+test('Osamodas : l’Invocateur appelle un seul Tofu au niveau 1, à un endroit valide au bord',()=>{
  const {sim,p}=setupRoguelite('osamodas');p.state.x=p.state.y=1.5;p.readyAt[0]=0;assert.ok(sim.roguelite.castSlot(p,0));
- // Tofus N1 : 3 de base + 1 du Lien bestial.
- const summons=[...sim.monsters.values()].filter(m=>m.allyOwner===p.id);assert.equal(summons.length,4);for(const m of summons)assert.ok(!isBlocked(sim.map,m.state.x,m.state.y,m.def.radius));
- sim.classAction(p.id,{tx:2,ty:2});assert.equal(p.summonRoarUntil,sim.now+5);const until=p.summonRoarUntil;sim.classAction(p.id,{});assert.equal(p.summonRoarUntil,until);
+ const summons=[...sim.monsters.values()].filter(m=>m.allyOwner===p.id);assert.equal(summons.length,1);assert.equal(summons[0].def.id,'inv_tofu');
+ for(const m of summons)assert.ok(!isBlocked(sim.map,m.state.x,m.state.y,m.def.radius));
 });
 test('Enutrof : pépite toutes les quinze victimes, perte au coup et récupération, maximum six',()=>{
  const {sim,p}=setupRoguelite('enutrof');p.readyAt[0]=Infinity;sim.random=()=>.99;
@@ -71,8 +70,9 @@ test('Xélor : quatrième lancer immédiat rejoué à 50 %, sans nouvel écho ni
  advance(sim,.7);const shots=events.filter(e=>e.type==='cast'&&e.data.spell==='sp.fleche_magique');// Flèche Magique N1 tire 2 flèches par lancer : 4 lancers + 1 écho = 10 flèches.
  assert.equal(shots.length,10);assert.equal(sim.mechanics.get(p).charge,0);advance(sim,1);assert.equal(events.filter(e=>e.type==='cast'&&e.data.spell==='sp.fleche_magique').length,10);
 });
-test('Pandawa : bascule sobre/ivre avec délai, sans changer définitivement les sorts',()=>{
- const {sim,p}=setupRoguelite('pandawa');const radius=sim.roguelite.ability(p,0)!.stats.radius,armor=p.stats.armor;
- sim.classAction(p.id,{tx:40,ty:40});assert.equal(sim.mechanics.get(p).drunk,true);assert.equal(sim.mechanics.innatePower(p),.15);assert.equal(p.stats.armor,Math.max(0,armor-3));assert.equal(sim.roguelite.ability(p,0)!.stats.radius,radius*1.15);
- sim.classAction(p.id,{tx:40,ty:40});assert.equal(sim.mechanics.get(p).drunk,true);advance(sim,1.1);sim.classAction(p.id,{tx:40,ty:40});assert.equal(sim.mechanics.get(p).drunk,false);assert.equal(sim.roguelite.ability(p,0)!.stats.radius,radius);
+test('Pandawa : alterne seul entre sobre et ivre toutes les 8 s, sans changer définitivement les sorts',()=>{
+ const {sim,p}=setupRoguelite('pandawa');p.readyAt[0]=Infinity;advance(sim,.1);const radius=sim.roguelite.ability(p,0)!.stats.radius,armor=p.stats.armor;
+ assert.equal(sim.mechanics.get(p).drunk,false);advance(sim,8.1);
+ assert.equal(sim.mechanics.get(p).drunk,true);assert.equal(sim.mechanics.innatePower(p),.15);assert.equal(p.stats.armor,Math.max(0,armor-3));assert.equal(sim.roguelite.ability(p,0)!.stats.radius,radius*1.15);
+ advance(sim,8);assert.equal(sim.mechanics.get(p).drunk,false);assert.equal(sim.roguelite.ability(p,0)!.stats.radius,radius);
 });

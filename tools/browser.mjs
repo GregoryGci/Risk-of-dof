@@ -14,7 +14,13 @@ export async function openBrowser() {
  ],{windowsHide:true,stdio:'ignore'});
  let ws,next=0;const pending=new Map(),errors=[],httpErrors=[];
  const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++next;pending.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}));});
- async function close(){ws?.close();process.kill();await delay(500);const target=fs.realpathSync(profile);assert.equal(path.dirname(target),root);assert.ok(path.basename(target).startsWith('rod-theme-browser-'));fs.rmSync(target,{recursive:true,force:true,maxRetries:8,retryDelay:250});}
+ async function close(){
+  // Let Edge release the renderer/GPU profile handles before removing our disposable directory.
+  if(ws?.readyState===WebSocket.OPEN){try{await Promise.race([send('Browser.close'),delay(1000)]);}catch{}}
+  ws?.close();
+  if(process.exitCode===null){await Promise.race([new Promise(resolve=>process.once('exit',resolve)),delay(1500)]);if(process.exitCode===null)process.kill();}
+  await delay(500);const target=fs.realpathSync(profile);assert.equal(path.dirname(target),root);assert.ok(path.basename(target).startsWith('rod-theme-browser-'));fs.rmSync(target,{recursive:true,force:true,maxRetries:8,retryDelay:250});
+ }
  try {
   await until(()=>fs.existsSync(path.join(profile,'DevToolsActivePort')));
   const port=fs.readFileSync(path.join(profile,'DevToolsActivePort'),'utf8').split('\n')[0];

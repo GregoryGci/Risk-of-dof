@@ -35,7 +35,7 @@ const ENEMY_GROUPS:readonly (readonly [string,readonly string[]])[]=[
 export const ENEMY_PROFILES:Readonly<Record<string,readonly string[]>>=Object.fromEntries(ENEMY_GROUPS.flatMap(([profile,ids])=>ids.map(id=>[id,[profile]])));
 export interface BossAttackProfile {normal:readonly EnemyPattern[];enraged:readonly EnemyPattern[];finale?:readonly EnemyPattern[];color:number}
 const profile=(normal:EnemyPattern[],enraged:EnemyPattern[],color=0xf19b58):BossAttackProfile=>({normal,enraged,color});
-export const BOSS_ATTACK_PROFILES:Readonly<Record<string,BossAttackProfile>>={
+const PROFILES:Record<string,BossAttackProfile>={
   default:profile(['burst','cascade','cascade','line','ring','cross','volley'],['ring','cross','cascade']),
   shin_larve:{...profile(['burst','volley','pools'],['pools','ring','volley'],0xe5b25f),finale:['pools','volley','ring','cross']},
   bworkette:{...profile(['cascade','volley','cross'],['pools','cross','cascade'],0xe79b72),finale:['cascade','cross','pools','ring']},
@@ -54,3 +54,9 @@ export const BOSS_ATTACK_PROFILES:Readonly<Record<string,BossAttackProfile>>={
   minotot:profile(['cross','ring','cascade'],['pools','cross','volley']),
   kimbo:profile(['pools','cross','ring'],['cross','pools','cascade']),
 };
+/**
+ * Tout donjon peut terminer une run : un gardien sans phase finale dédiée enchaîne son répertoire de rage,
+ * puis le reste de ses attaques, complété par la couronne et les météores (quatre attaques au moins).
+ */
+const finale=(p:BossAttackProfile):readonly EnemyPattern[]=>p.finale??[...new Set<EnemyPattern>([...p.enraged,...p.normal,'ring','cascade'])].slice(0,5);
+export const BOSS_ATTACK_PROFILES:Readonly<Record<string,BossAttackProfile>>=Object.fromEntries(Object.entries(PROFILES).map(([id,p])=>[id,{...p,finale:finale(p)}]));

@@ -1,0 +1,24 @@
+/* Compact selection shared by solo preparation, lobby and ranking. */
+.stasis-selector{display:flex;align-items:center;gap:12px;min-width:0}
+.stasis-label{flex:none;font-weight:700;color:var(--ink-text,inherit);white-space:nowrap}
+.stasis-help{position:relative;display:inline-flex;flex:none}
+.stasis-help>.stasis-label{border:0;border-radius:0;background:transparent;padding:8px 0;font:inherit;font-weight:700;color:inherit;text-decoration:underline dotted;text-underline-offset:5px;cursor:help}
+.stasis-help>.stasis-label:focus-visible{outline:2px solid var(--ink-accent,#81755d);outline-offset:4px}
+.stasis-tooltip{position:absolute;top:100%;left:0;z-index:100;display:none;width:min(300px,calc(100vw - 64px));box-sizing:border-box;padding:13px 15px;border:1px solid var(--ink-line-strong,#81755d66);border-radius:3px;background:var(--ink-panel,#191919);color:var(--ink-text,#ded8c8);box-shadow:0 8px 24px #0006;font:400 12px/1.65 'Segoe UI',sans-serif;white-space:normal;text-align:left;letter-spacing:normal}
+.stasis-help:hover>.stasis-tooltip,.stasis-help:focus-within>.stasis-tooltip{display:block}
+.stasis-selector>.stasis-options{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:5px;flex:1;min-width:0;margin:0}
+.stasis-selector .stasis-options button.stasis-number{display:inline-flex;align-items:center;justify-content:center;min-width:0;min-height:42px;margin:0;padding:6px 0;border:1px solid var(--ink-line-strong,#81755d66);border-radius:3px;background:transparent;color:inherit;font:600 16px Georgia,serif;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.stasis-selector .stasis-options button.stasis-number::before{display:none}
+.stasis-selector .stasis-options button.stasis-number:hover:not(:disabled){background:var(--ink-hover,#81755d20);transform:translateY(-2px)}
+.stasis-selector .stasis-options button.stasis-number.active{border-color:var(--ink-accent,#81755d);background:var(--ink-hover,#81755d28);box-shadow:inset 0 -2px var(--ink-accent,#81755d)}
+.stasis-selector .stasis-options button.stasis-number:focus-visible{outline:2px solid var(--ink-accent,#81755d);outline-offset:3px}
+.stasis-selector .stasis-options button.stasis-number:disabled{cursor:default}
+.stasis-selector .stasis-options button.stasis-number.locked{opacity:.4;border-style:dashed;cursor:not-allowed}
+.stasis-details{margin:10px 0 0;color:var(--ink-muted,#918776);font-size:12px;line-height:1.6}
+.lobby-head .stasis-selector{width:min(650px,100%)}
+.lobby-footer{display:flex;justify-content:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--ink-line-strong,#81755d44)}
+.lobby-footer>.btn{width:min(360px,100%);min-height:44px}
+#banner .stasis-number{font-size:16px}
+.ladder-filter-group.stasis-selector{flex-direction:row;align-items:center;width:100%}
+@media(max-width:600px){.stasis-selector{gap:10px}.stasis-selector>.stasis-options{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.stasis-selector .stasis-options button.stasis-number{transition:none}.stasis-selector .stasis-options button.stasis-number:hover:not(:disabled){transform:none}}

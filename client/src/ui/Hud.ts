@@ -1,6 +1,7 @@
+import '../stasis.css';
 import {classSpellShape,combatStatsView,innateLifesteal,clampCombatStats,isRangedAttack} from '@rod/shared';
 // HUD en DOM par-dessus le canvas : PV, barre de sorts, timer, XP, équipe, bandeaux.
-import { affinityProgress, getRoute, CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, modeStages, bossForStage, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, zoneForStage, type GameStateView, type PlayerView } from '@rod/shared';
+import { affinityProgress, getRoute, CLASSES, GAME_MODES, EQUIPMENT_TIERS, getMode, playerItemStats, sumRunStats, statText, type RunReward, type StatKey, modeStages, bossForRun, PHASE_LOBBY, PHASE_LOST, PHASE_PLAYING, ZAAP_CHARGING, ZAAP_IDLE, difficultyTier, getMonster, getSpell, parseRunBonuses, runZone, type GameStateView, type PlayerView } from '@rod/shared';
 import type { AssetStore } from '../assets/store.ts';
 import { PLAYER_COLORS } from '../assets/placeholders.ts';
 import {ROGUELITE_CATALOG,abilitySummary,evolutionPairs,type EffectiveRogueliteAbility,type RunBuild} from '@rod/shared/roguelite';
@@ -8,6 +9,7 @@ import { spellIconSvg } from './icons.ts';
 import { spellDetailsHtml } from './spellInfo.ts';
 import { account } from '../account.ts';
 import {inviteUrl} from './invite.ts';
+import {stasisLabel} from './stasis.ts';
 import {runSummaryHtml} from './runSummary.ts';
 import { equipmentCard } from './equipmentHtml.ts';
 import { EQUIPMENT_BASES, EQUIPMENT_RARITY_NAMES, type GearDrop } from '@rod/shared';
@@ -285,7 +287,7 @@ export class Hud {
   /** Ligne de paire d'évolution : passif associé et état, pour savoir quoi chercher dans les cartes. */
   private pairTip(spellId:string):string {
     const pair=this.build?evolutionPairs(this.build).find(row=>row.spellId===spellId):undefined;if(!pair)return '';
-    const state=pair.state==='evolved'?'Évolution obtenue':pair.state==='ready'?'Prêt : le prochain coffre ou élite propose l’évolution':pair.state==='owned'?`Passif possédé (niv. ${pair.passiveLevel}) · montez le sort au niveau 8`:'Passif manquant : cherchez-le dans les cartes';
+    const state=pair.state==='evolved'?'Évolution obtenue':pair.state==='ready'?'Évolution immédiate dès les conditions remplies':pair.state==='owned'?`Passif possédé (niv. ${pair.passiveLevel}) · montez le sort au niveau 8`:'Passif manquant : cherchez-le dans les cartes';
     return `<div class="tip-pair ${pair.state}"><b>✦ ${escapeHtml(pair.evolutionName)}</b> avec <b>${escapeHtml(pair.passiveName)}</b><small>${state}</small></div>`;
   }
   /** Infobulle détaillée d'un sort + aperçu de sa zone en jeu. */
@@ -296,7 +298,7 @@ export class Hud {
       tip.classList.add('hidden');
       return;
     }
-    if(ROGUELITE_CATALOG.spell(this.spellIds[slot])){const a=this.runAbilities[slot],def=ROGUELITE_CATALOG.spell(this.spellIds[slot])!;tip.innerHTML=`<div class="tip-name">${escapeHtml(def.name)} · ${this.spellIds[slot].startsWith('ev.')?'ÉVOLUTION':(this.spellLevels[this.spellIds[slot]]??1)+'/8'}</div><div class="tip-desc">${escapeHtml(def.description)}</div><p>${a?escapeHtml(abilitySummary(a)):''}</p>${this.pairTip(this.spellIds[slot])}`;tip.style.bottom=`${$('hud-bottom').offsetHeight+18}px`;tip.classList.remove('hidden');return;}
+    if(ROGUELITE_CATALOG.spell(this.spellIds[slot])){const a=this.runAbilities[slot],def=ROGUELITE_CATALOG.spell(this.spellIds[slot])!;tip.innerHTML=`<div class="tip-name">${escapeHtml(a?.name??def.name)} · ${this.spellIds[slot].startsWith('ev.')?'ÉVOLUTION':(this.spellLevels[this.spellIds[slot]]??1)+'/8'}</div><div class="tip-desc">${escapeHtml(a?.description??def.description)}</div><p>${a?escapeHtml(abilitySummary(a)):''}</p>${this.pairTip(this.spellIds[slot])}`;tip.style.bottom=`${$('hud-bottom').offsetHeight+18}px`;tip.classList.remove('hidden');return;}
     const spell=getSpell(this.spellIds[slot]);
     tip.innerHTML=`<div class="tip-name">${escapeHtml(spell.name)}</div>${spellDetailsHtml(spell,this.stats,slot)}`;
     // Toujours juste au-dessus de la barre du bas, quelle que soit sa hauteur (objets sur plusieurs lignes).
@@ -456,13 +458,13 @@ export class Hud {
     if (state.phase === PHASE_PLAYING) {
       if(state.intermission)objective='<b>Halte de l’équipe</b> — choisissez votre route puis confirmez « Prêt »';
       else {
-      // Progression de la campagne : « Zone X/Y », en plus du nom de la zone.
+      // Progression de la run : « Zone X/Y », en plus du nom du donjon tiré.
       const [firstStage,lastStage]=modeStages(state.mode),zone=`Zone ${state.stage-firstStage+1}/${lastStage-firstStage+1}`;
       if (state.zaapState === ZAAP_IDLE) objective = `${state.cursed?'ZONE MAUDITE · ':''}${zone} — trouvez et activez le <b>Zaap</b>`;
       else if (state.zaapState === ZAAP_CHARGING) objective = `${state.cursed?'ZONE MAUDITE · ':''}${zone} — <b>Zaap ${Math.floor(state.zaapCharge * 100)} %</b> — vainquez le gardien`;
       else objective = `${state.cursed?'ZONE MAUDITE · ':''}${zone} — <b>Zaap prêt</b> : retournez-y`;
       }
-      objective += ` <span class="zone-name">· ${zoneForStage(state.stage).name}${state.intermission?'':` · Assaut ${state.zoneWave}${state.zoneWave>0?' · '+assaultPlan(state.zoneWave,state.stage).name:''} · ${state.waves} au total`}</span>`;
+      objective += ` <span class="zone-name">· ${runZone(state.zoneOrder,state.stage).name}${state.intermission?'':` · Assaut ${state.zoneWave}${state.zoneWave>0?' · '+assaultPlan(state.zoneWave,state.stage).name:''} · ${state.waves} au total`}</span>`;
       if(me&&!state.intermission&&state.zaapState===ZAAP_IDLE&&state.stageTime>=45) {
         const dx=state.zaapX-me.x,dy=state.zaapY-me.y;
         const direction=Math.round(Math.atan2((dx+dy)*.5,dx-dy)/(Math.PI/4));
@@ -554,11 +556,11 @@ export class Hud {
         (state.singlePlayer ? `<span class="lobby-title">Préparez votre aventure</span>` : `<span class="lobby-title">Code <span class="big-code" data-action="copy-code" title="Cliquer pour copier le code">${escapeHtml(this.roomCode)}</span>${this.codeCopied ? '<span class="code-copied">Copié !</span>' : ''}</span>`) +
         (state.singlePlayer?'':'<button class="btn lobby-invite" data-action="copy-invite">Copier le lien d’invitation</button>') +
         `<span class="lobby-count">${state.players.size} joueur${state.players.size > 1 ? 's' : ''} · entraînez-vous</span>` +
-        `<div class="mode-picker">${GAME_MODES.map((m) => {const locked=m.id>(state.players.get(state.hostId)?.unlockedMode??0);return`<button class="btn mode-btn${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" ${host&&!locked ? '' : 'disabled'} title="${escapeHtml(locked?`L’hôte doit d’abord terminer le mode ${GAME_MODES[m.id-1].name}.`:m.description)}">${m.name}${locked?' · Verrouillé':''}</button>`;}).join('')}</div>` +
+        `<div class="stasis-selector" role="group" aria-label="Choisir le Stasis">${stasisLabel('lobby-stasis-tooltip')}<div class="stasis-options">${GAME_MODES.map((m) => {const locked=m.id>(state.players.get(state.hostId)?.unlockedMode??0);return`<button class="btn mode-btn stasis-number${locked?' locked':''}${m.id === state.mode ? ' active' : ''}" data-mode="${m.id}" aria-label="${m.name}${locked?' · Verrouillé':''}" aria-pressed="${m.id === state.mode}" ${host&&!locked ? '' : 'disabled'} title="${escapeHtml(locked?`L’hôte doit d’abord terminer le mode ${GAME_MODES[m.id-1].name}.`:m.description)}">${m.stasis}</button>`;}).join('')}</div></div>` +
         `<button class="btn" data-action="equipment">Équipement</button><button class="btn" data-action="talents">Sorts & talents</button>` +
-        (host ? `<button class="btn btn-primary" data-action="start">Lancer la partie</button>` : `<span class="lobby-wait">En attente de ${escapeHtml(hostName)}…</span>`) +
         `</div>` +
-        classButtonsHtml(me?.classId ?? '')+'<p class="lobby-pact-hint">Vainquez les élites : chacun choisit une bénédiction parmi trois propositions, issues de 30 pouvoirs.</p>';
+        classButtonsHtml(me?.classId ?? '')+'<p class="lobby-pact-hint">Vainquez les élites : chacun choisit une bénédiction parmi trois propositions, issues de 30 pouvoirs.</p>' +
+        `<div class="lobby-footer">${host ? '<button class="btn btn-primary" data-action="start">Lancer la partie</button>' : `<span class="lobby-wait">En attente de ${escapeHtml(hostName)}…</span>`}</div>`;
     } else if (me && !me.alive && state.phase !== PHASE_LOST) {
       const target = spectating ? state.players.get(spectating) : undefined;
       banner = `<b>Vous êtes mort.</b><br>` + (target ? `Spectateur de ${escapeHtml(target.name)} — cliquez pour changer.` : '');
@@ -583,11 +585,11 @@ export class Hud {
         if (reward) {
           account.creditRun(reward);
           const next=won?GAME_MODES[state.mode+1]:undefined;
-          $('gameover-reward').innerHTML = `+${reward.kamas} kamas · ${reward.summary?.ogrines??0} Ogrines · ${reward.gear.reduce((n,e)=>n+e.quantity,0)} équipements conservés<br><small>Palier ${EQUIPMENT_TIERS[reward.tier].level} · ${mode.name} · Bourse ${account.bank} K</small>${won?`<span class="victory-unlock">${next?`Difficulté débloquée : ${escapeHtml(next.name)}`:'Cauchemar terminé · tous les modes sont débloqués'}</span>`:''}`;
+          $('gameover-reward').innerHTML = `+${reward.kamas} kamas${reward.mastery?.xp?` · +${reward.mastery.xp} XP de maîtrise`:''} · ${reward.summary?.ogrines??0} Ogrines · ${reward.gear.reduce((n,e)=>n+e.quantity,0)} équipements conservés<br><small>Palier ${EQUIPMENT_TIERS[reward.tier].level} · ${mode.name} · Bourse ${account.bank} K</small>${won?`<span class="victory-unlock">${next?`Difficulté débloquée : ${escapeHtml(next.name)}`:'Stasis 10 terminé · tous les paliers sont débloqués'}</span>`:''}`;
           $('gameover-recap').innerHTML=reward.summary?runSummaryHtml(reward.summary):'';
           $('gameover-gear').innerHTML = reward.gear.map(e => equipmentCard(e)).join('');
         } else { $('gameover-reward').textContent = 'Récupération du butin…'; $('gameover-gear').innerHTML = ''; $('gameover-recap').innerHTML=''; }
-        $('gameover-stats').textContent = `${won?`${getMonster(bossForStage(modeStages(state.mode)[1])).name} vaincu · ${modeStages(state.mode)[1]-modeStages(state.mode)[0]+1} donjons terminés en`:'Vous avez tenu'} ${formatTime(state.time)} — ${state.kills} monstres vaincus`;
+        $('gameover-stats').textContent = `${won?`${getMonster(bossForRun(state.zoneOrder,modeStages(state.mode)[1])).name} vaincu · ${modeStages(state.mode)[1]-modeStages(state.mode)[0]+1} donjons terminés en`:'Vous avez tenu'} ${formatTime(state.time)} — ${state.kills} monstres vaincus`;
         let rows = '';
         state.players.forEach((p: PlayerView) => {
           rows += `<div class="go-row"><span>${escapeHtml(p.name)}</span><span>☠ ${p.kills} &nbsp; Niv. ${state.runLevel}</span></div>`;

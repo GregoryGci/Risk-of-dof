@@ -58,14 +58,13 @@ export class InnateMechanics {
   if(p.def.id!=='feca'||this.sim.now<this.get(p).next)return;const dx=tx-x,dy=ty-y,length=dx*dx+dy*dy;
   for(const g of [...this.sim.grounds.values()])if(g.owner===p.id&&!g.state.length){const t=Math.max(0,Math.min(1,((g.state.x-x)*dx+(g.state.y-y)*dy)/(length||1)));if(Math.hypot(g.state.x-x-dx*t,g.state.y-y-dy*t)>g.state.radius)continue;this.get(p).next=this.sim.now+3;if(g.state.kind==='trap')this.sim.roguelite.detonate(g);else this.sim.roguelite.triggerGround(g);break;}
  }
- action(p:PlayerRt,_x:number,_y:number,_choice:number):void {const s=this.get(p);if(this.sim.now<s.actionAt)return;
-  if(p.def.id==='pandawa'){s.drunk=!s.drunk;s.actionAt=this.sim.now+1;this.sim.applyStats(p);}
-  if(p.def.id==='osamodas'){s.actionAt=this.sim.now+20;p.summonRoarUntil=this.sim.now+5;this.sim.after(5,()=>{for(const m of this.sim.monsters.values())if(m.allyOwner===p.id)m.state.hp=Math.min(m.state.maxHp,m.state.hp+m.state.maxHp*.1);});}}
  update(_dt:number):void {for(const p of this.sim.players.values()){const s=this.get(p),now=this.sim.now;
+  // Ivresse : le Pandawa alterne seul entre Sobre et Ivre toutes les 8 s.
+  if(p.def.id==='pandawa'&&p.state.alive){if(!s.actionAt)s.actionAt=now+8;else if(now>=s.actionAt){s.drunk=!s.drunk;s.actionAt=now+8;this.sim.applyStats(p);}}
   if(p.def.id==='cra'){if(p.dx||p.dy)s.stationarySince=now;else if(now-s.stationarySince>=.4){if(now>=s.aimUntil)s.aimed.clear();s.aimUntil=now+.75;}}
   if(p.def.id==='enutrof')for(let i=s.nuggets.length-1;i>=0;i--)if(s.carried<6&&Math.hypot(s.nuggets[i].x-p.state.x,s.nuggets[i].y-p.state.y)<=3*1.2){s.carried++;s.nuggets.splice(i,1);}
   if(p.state.alive&&now>=(this.statAt.get(p.id)??0)){this.statAt.set(p.id,now+.25);this.sim.applyStats(p,false);}
-  const def=ROGUELITE_INNATES[p.def.id];p.state.mechanic=JSON.stringify({name:def.name,value:p.def.id==='enutrof'?s.carried:s.charge,max:p.def.id==='eniripsa'?12:6,readyIn:Math.max(0,s.actionAt-now),status:p.def.id==='pandawa'?(s.drunk?'Ivre':'Sobre'):p.def.id==='cra'?(now<s.aimUntil?'Visée active':'En mouvement'):def.description,choices:s.hand});}}
+  const def=ROGUELITE_INNATES[p.def.id];p.state.mechanic=JSON.stringify({name:def.name,value:p.def.id==='enutrof'?s.carried:s.charge,max:p.def.id==='eniripsa'?12:6,status:p.def.id==='eniripsa'?`Résonance : ${s.charge} / 12 impacts`:p.def.id==='enutrof'?`Pépites portées : ${s.carried} / 6`:p.def.id==='ecaflip'?`Cartes en main : ${s.hand.length} / 3`:p.def.id==='pandawa'?`${s.drunk?'Ivre':'Sobre'} · change dans ${Math.max(1,Math.ceil(s.actionAt-now))} s`:p.def.id==='cra'?(now<s.aimUntil?'Visée active':'En mouvement'):def.name+' · passif actif',choices:s.hand});}}
  allyTarget(_m:MonsterRt):MonsterRt|undefined{return;}
  prepareProjectile(_p:PlayerRt,_pr:Projectile):void{}
  beforeCast(_p:PlayerRt,spell:SpellDef,_slot:number,_x:number,_y:number){return{spell,mult:1,handled:false,cooldown:undefined as number|undefined};}

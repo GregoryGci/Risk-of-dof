@@ -10776,6 +10776,738 @@
         }
       },
       "shrunk": 0.75
+    },
+    "ilyzaelle": {
+      "image": "sprites/ilyzaelle.png",
+      "atlas": "sprites/ilyzaelle.json",
+      "origin": [
+        0.4692,
+        0.9004
+      ],
+      "scale": 0.8453,
+      "sourceSprite": 8036,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 20
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 13
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 13
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      }
+    },
+    "inv_tofu": {
+      "image": "sprites/tofu.png",
+      "atlas": "sprites/tofu.json",
+      "origin": [
+        0.5,
+        0.8108
+      ],
+      "scale": 0.7907,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 60
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 60
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 15,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 15,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75,
+      "aliasOf": "tofu"
+    },
+    "inv_bouftou": {
+      "image": "sprites/bouftou.png",
+      "atlas": "sprites/bouftou.json",
+      "origin": [
+        0.4706,
+        0.6667
+      ],
+      "scale": 1.1271,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 40
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75,
+      "aliasOf": "bouftou"
+    },
+    "inv_bwork_mage": {
+      "image": "sprites/bwork_mage.png",
+      "atlas": "sprites/bwork_mage.json",
+      "origin": [
+        0.3797,
+        0.9108
+      ],
+      "scale": 0.7333,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 19,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75,
+      "aliasOf": "bwork_mage"
+    },
+    "inv_chafer": {
+      "image": "sprites/chafer.png",
+      "atlas": "sprites/chafer.json",
+      "origin": [
+        0.5276,
+        0.9107
+      ],
+      "scale": 1.1271,
+      "sourceSprite": 1014,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 8
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 13
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 13
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 13
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 4,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 4,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 5,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 6,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75,
+      "aliasOf": "chafer"
+    },
+    "inv_scarafeuille": {
+      "image": "sprites/scarafeuille_vert.png",
+      "atlas": "sprites/scarafeuille_vert.json",
+      "origin": [
+        0.5364,
+        0.7782
+      ],
+      "scale": 1.1271,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 40,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 40,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75,
+      "aliasOf": "scarafeuille_vert"
+    },
+    "inv_craqueleur": {
+      "image": "sprites/craqueleur.png",
+      "atlas": "sprites/craqueleur.json",
+      "origin": [
+        0.4467,
+        0.7675
+      ],
+      "scale": 0.9016,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 30,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 7,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 8,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75,
+      "aliasOf": "craqueleur"
+    },
+    "inv_bitouf": {
+      "image": "sprites/bitouf_aerien.png",
+      "atlas": "sprites/bitouf_aerien.json",
+      "origin": [
+        0.5167,
+        0.859
+      ],
+      "scale": 0.9808,
+      "sourceSprite": 1631,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 8
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 8
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 3,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 3,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 4,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 4,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75,
+      "aliasOf": "bitouf_aerien"
+    },
+    "inv_cybwork": {
+      "image": "sprites/cybwork.png",
+      "atlas": "sprites/cybwork.json",
+      "origin": [
+        0.5322,
+        0.7403
+      ],
+      "scale": 1.1271,
+      "sourceSprite": 1243,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 40
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 13
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 9,
+            "frameRate": 13
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 6,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 5,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 11,
+            "frameRate": 7,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 6,
+            "repeat": 0
+          }
+        }
+      },
+      "shrunk": 0.75,
+      "aliasOf": "cybwork"
+    },
+    "inv_ilyzaelle": {
+      "image": "sprites/ilyzaelle.png",
+      "atlas": "sprites/ilyzaelle.json",
+      "origin": [
+        0.4692,
+        0.9004
+      ],
+      "scale": 0.8453,
+      "sourceSprite": 8036,
+      "anims": {
+        "idle": {
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 20
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 20
+          }
+        },
+        "run": {
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 13
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 13
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 10,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 10,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 13,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 13,
+            "repeat": 0
+          }
+        }
+      },
+      "aliasOf": "ilyzaelle"
     }
   },
   "tiles": {
@@ -14265,6 +14997,4513 @@
             7.600000000000001
           ]
         }
+      },
+      "retro_8231": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13.4,
+            7
+          ],
+          "R": [
+            24.8,
+            8.6
+          ],
+          "RR": [
+            39.6,
+            32
+          ],
+          "RL": [
+            -0.3,
+            2.1
+          ]
+        }
+      },
+      "retro_8534": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.3,
+            4.4
+          ],
+          "R": [
+            19.7,
+            4.2
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10,
+            5.2
+          ]
+        }
+      },
+      "retro_8235": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13.4,
+            7
+          ],
+          "R": [
+            24.8,
+            8.6
+          ],
+          "RR": [
+            39.6,
+            32
+          ],
+          "RL": [
+            -0.3,
+            2
+          ]
+        }
+      },
+      "retro_8232": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13.4,
+            7
+          ],
+          "R": [
+            24.8,
+            8.6
+          ],
+          "RR": [
+            39.6,
+            32
+          ],
+          "RL": [
+            -0.3,
+            2
+          ]
+        }
+      },
+      "retro_8233": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13.4,
+            7
+          ],
+          "R": [
+            24.8,
+            8.6
+          ],
+          "RR": [
+            39.6,
+            32
+          ],
+          "RL": [
+            -0.3,
+            2
+          ]
+        }
+      },
+      "retro_6795": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.7,
+            -1.8
+          ],
+          "R": [
+            20.4,
+            3.6
+          ],
+          "RR": [
+            50.2,
+            38.5
+          ],
+          "RL": [
+            9.6,
+            3.3
+          ]
+        }
+      },
+      "retro_8234": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13.4,
+            7
+          ],
+          "R": [
+            24.8,
+            8.6
+          ],
+          "RR": [
+            39.6,
+            32
+          ],
+          "RL": [
+            -0.3,
+            2
+          ]
+        }
+      },
+      "retro_8236": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13.4,
+            7
+          ],
+          "R": [
+            24.8,
+            8.6
+          ],
+          "RR": [
+            39.6,
+            32
+          ],
+          "RL": [
+            -0.3,
+            2
+          ]
+        }
+      },
+      "retro_6720": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.7,
+            4.6
+          ],
+          "R": [
+            21.2,
+            2.8
+          ],
+          "RR": [
+            44.9,
+            28.5
+          ],
+          "RL": [
+            9.8,
+            1.9
+          ]
+        }
+      },
+      "retro_8258": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            15.7,
+            3.5
+          ],
+          "R": [
+            19.5,
+            6.8
+          ],
+          "RR": [
+            37.2,
+            32
+          ],
+          "RL": [
+            9.1,
+            6.7
+          ]
+        }
+      },
+      "retro_7999": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            17.3,
+            9
+          ],
+          "R": [
+            17.2,
+            11.5
+          ],
+          "RR": [
+            40.4,
+            27.6
+          ],
+          "RL": [
+            17.1,
+            12.8
+          ]
+        }
+      },
+      "retro_6922": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.9,
+            4.6
+          ],
+          "R": [
+            22.2,
+            1
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10,
+            4.5
+          ]
+        }
+      },
+      "retro_9411": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            8.7,
+            3.3
+          ],
+          "R": [
+            21.3,
+            3.3
+          ],
+          "RR": [
+            52.4,
+            30.4
+          ],
+          "RL": [
+            8.5,
+            4.2
+          ]
+        }
+      },
+      "retro_971": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            17,
+            6.9
+          ],
+          "R": [
+            26.1,
+            3
+          ],
+          "RR": [
+            51.1,
+            32.3
+          ],
+          "RL": [
+            14.8,
+            7.7
+          ]
+        }
+      },
+      "retro_9415": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            6.5,
+            1.6
+          ],
+          "R": [
+            16.7,
+            3
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            9.6,
+            5.2
+          ]
+        }
+      },
+      "retro_9456": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            15.8,
+            7.7
+          ],
+          "R": [
+            27.8,
+            6.2
+          ],
+          "RR": [
+            50.9,
+            31.4
+          ],
+          "RL": [
+            14,
+            11
+          ]
+        }
+      },
+      "retro_6763": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.6,
+            5.9
+          ],
+          "R": [
+            24.8,
+            5.2
+          ],
+          "RR": [
+            49.4,
+            38.5
+          ],
+          "RL": [
+            11,
+            5.9
+          ]
+        }
+      },
+      "retro_8112": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            3.5,
+            7.3
+          ],
+          "R": [
+            40.7,
+            7
+          ],
+          "RR": [
+            57.2,
+            52
+          ],
+          "RL": [
+            3.6,
+            21.5
+          ]
+        }
+      },
+      "retro_9485": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.1,
+            4.5
+          ],
+          "R": [
+            22.2,
+            2
+          ],
+          "RR": [
+            49,
+            27.6
+          ],
+          "RL": [
+            10.1,
+            3.2
+          ]
+        }
+      },
+      "retro_9407": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            8.2,
+            3.1
+          ],
+          "R": [
+            23.5,
+            2.4
+          ],
+          "RR": [
+            28.6,
+            40.2
+          ],
+          "RL": [
+            10.5,
+            7
+          ]
+        }
+      },
+      "retro_2517": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.9,
+            4.6
+          ],
+          "R": [
+            22.2,
+            1
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10,
+            4.5
+          ]
+        }
+      },
+      "retro_9660": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            15.4,
+            6.7
+          ],
+          "R": [
+            54.6,
+            4.3
+          ],
+          "RR": [
+            67.6,
+            65.3
+          ],
+          "RL": [
+            8.5,
+            11.1
+          ]
+        }
+      },
+      "retro_2446": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.5,
+            2.8
+          ],
+          "R": [
+            21.9,
+            0.9
+          ],
+          "RR": [
+            45.3,
+            27.3
+          ],
+          "RL": [
+            7.9,
+            3
+          ]
+        }
+      },
+      "retro_6449": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.1,
+            3.3
+          ],
+          "R": [
+            22.6,
+            1.9
+          ],
+          "RR": [
+            47.1,
+            29.1
+          ],
+          "RL": [
+            15.1,
+            3.6
+          ]
+        }
+      },
+      "retro_2534": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13.1,
+            3.8
+          ],
+          "R": [
+            26.8,
+            3.2
+          ],
+          "RR": [
+            59.6,
+            40.8
+          ],
+          "RL": [
+            22.4,
+            4.5
+          ]
+        }
+      },
+      "retro_6942": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13,
+            5.3
+          ],
+          "R": [
+            33,
+            0.9
+          ],
+          "RR": [
+            50.4,
+            27.1
+          ],
+          "RL": [
+            18.2,
+            5.5
+          ]
+        }
+      },
+      "retro_6943": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13,
+            5.3
+          ],
+          "R": [
+            33,
+            0.9
+          ],
+          "RR": [
+            50.4,
+            27.1
+          ],
+          "RL": [
+            18.2,
+            5.5
+          ]
+        }
+      },
+      "retro_6941": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13.1,
+            5.3
+          ],
+          "R": [
+            33,
+            0.9
+          ],
+          "RR": [
+            50.3,
+            27.2
+          ],
+          "RL": [
+            18.2,
+            5.5
+          ]
+        }
+      },
+      "retro_9451": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            7.2,
+            3
+          ],
+          "R": [
+            24.6,
+            2.7
+          ],
+          "RR": [
+            40.9,
+            35.1
+          ],
+          "RL": [
+            7.5,
+            4.8
+          ]
+        }
+      },
+      "retro_9654": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.1,
+            4.8
+          ],
+          "R": [
+            22.4,
+            1.2
+          ],
+          "RR": [
+            49.4,
+            29.3
+          ],
+          "RL": [
+            10,
+            4.7
+          ]
+        }
+      },
+      "retro_8134": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13,
+            5.3
+          ],
+          "R": [
+            33,
+            0.9
+          ],
+          "RR": [
+            50.4,
+            27.1
+          ],
+          "RL": [
+            18.2,
+            5.5
+          ]
+        }
+      },
+      "retro_8117": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            17.5,
+            1.7
+          ],
+          "R": [
+            24.7,
+            1.3
+          ],
+          "RR": [
+            40.8,
+            33.9
+          ],
+          "RL": [
+            8.1,
+            2.1
+          ]
+        }
+      },
+      "retro_2532": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.5,
+            4
+          ],
+          "R": [
+            22.2,
+            1
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10,
+            4.5
+          ]
+        }
+      },
+      "retro_8068": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.5,
+            6.1
+          ],
+          "R": [
+            21.2,
+            11.7
+          ],
+          "RR": [
+            46.5,
+            31
+          ],
+          "RL": [
+            8.5,
+            6.3
+          ]
+        }
+      },
+      "retro_2412": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.1,
+            3.3
+          ],
+          "R": [
+            22.6,
+            1.9
+          ],
+          "RR": [
+            47.1,
+            29.1
+          ],
+          "RL": [
+            15.1,
+            3.6
+          ]
+        }
+      },
+      "retro_6756": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.6,
+            2.9
+          ],
+          "R": [
+            21.9,
+            1.8
+          ],
+          "RR": [
+            46.6,
+            29.3
+          ],
+          "RL": [
+            14.7,
+            3.4
+          ]
+        }
+      },
+      "retro_7230": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.2,
+            2.4
+          ],
+          "R": [
+            28.3,
+            4.3
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10.6,
+            4.3
+          ]
+        }
+      },
+      "retro_9195": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.8,
+            2.5
+          ],
+          "R": [
+            17.7,
+            2
+          ],
+          "RR": [
+            32.9,
+            30.2
+          ],
+          "RL": [
+            11.4,
+            6.9
+          ]
+        }
+      },
+      "retro_10058": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.8,
+            7.7
+          ],
+          "R": [
+            40.2,
+            5
+          ],
+          "RR": [
+            46.4,
+            30.6
+          ],
+          "RL": [
+            18.5,
+            8.3
+          ]
+        }
+      },
+      "retro_6931": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.9,
+            4.2
+          ],
+          "R": [
+            22,
+            1.6
+          ],
+          "RR": [
+            51.3,
+            29.3
+          ],
+          "RL": [
+            11.7,
+            4.3
+          ]
+        }
+      },
+      "retro_7552": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            15.3,
+            3.6
+          ],
+          "R": [
+            34.2,
+            2.7
+          ],
+          "RR": [
+            53,
+            37.4
+          ],
+          "RL": [
+            10.1,
+            3.4
+          ]
+        }
+      },
+      "retro_2489": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.5,
+            -1.9
+          ],
+          "R": [
+            20.4,
+            3.6
+          ],
+          "RR": [
+            50.2,
+            38.5
+          ],
+          "RL": [
+            9.6,
+            3.3
+          ]
+        }
+      },
+      "retro_6757": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.6,
+            2.9
+          ],
+          "R": [
+            21.9,
+            1.8
+          ],
+          "RR": [
+            46.6,
+            29.3
+          ],
+          "RL": [
+            14.7,
+            3.4
+          ]
+        }
+      },
+      "retro_9933": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            17.3,
+            8.9
+          ],
+          "R": [
+            33.9,
+            6
+          ],
+          "RR": [
+            46.4,
+            30.6
+          ],
+          "RL": [
+            17.5,
+            12.4
+          ]
+        }
+      },
+      "retro_2413": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.1,
+            3.3
+          ],
+          "R": [
+            22.6,
+            1.9
+          ],
+          "RR": [
+            47.1,
+            29.1
+          ],
+          "RL": [
+            15.1,
+            3.6
+          ]
+        }
+      },
+      "retro_9196": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13,
+            4.3
+          ],
+          "R": [
+            22.7,
+            2
+          ],
+          "RR": [
+            29.2,
+            33.5
+          ],
+          "RL": [
+            6.6,
+            6.2
+          ]
+        }
+      },
+      "retro_9480": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.1,
+            6.1
+          ],
+          "R": [
+            18.4,
+            4.6
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            12.2,
+            3
+          ]
+        }
+      },
+      "retro_2518": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.9,
+            4.6
+          ],
+          "R": [
+            22.2,
+            1
+          ],
+          "RR": [
+            49.4,
+            29.3
+          ],
+          "RL": [
+            10,
+            4.5
+          ]
+        }
+      },
+      "retro_9569": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.6,
+            4.9
+          ],
+          "R": [
+            28.4,
+            3.8
+          ],
+          "RR": [
+            45.5,
+            28.2
+          ],
+          "RL": [
+            8.8,
+            2.9
+          ]
+        }
+      },
+      "retro_7884": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.2,
+            4.7
+          ],
+          "R": [
+            21.3,
+            3.4
+          ],
+          "RR": [
+            35.3,
+            28.1
+          ],
+          "RL": [
+            -6.9,
+            0.4
+          ]
+        }
+      },
+      "retro_8007": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.8,
+            8.7
+          ],
+          "R": [
+            22.5,
+            6.2
+          ],
+          "RR": [
+            45.1,
+            38.4
+          ],
+          "RL": [
+            11.2,
+            8.3
+          ]
+        }
+      },
+      "retro_2445": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            17,
+            6.9
+          ],
+          "R": [
+            26.1,
+            3
+          ],
+          "RR": [
+            51.1,
+            32.3
+          ],
+          "RL": [
+            14.8,
+            7.7
+          ]
+        }
+      },
+      "retro_7340": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.7,
+            -1.8
+          ],
+          "R": [
+            29.9,
+            3.6
+          ],
+          "RR": [
+            60.5,
+            49.3
+          ],
+          "RL": [
+            9.6,
+            3.3
+          ]
+        }
+      },
+      "retro_6954": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.2,
+            6.3
+          ],
+          "R": [
+            50,
+            8.1
+          ],
+          "RR": [
+            59.3,
+            55.9
+          ],
+          "RL": [
+            8.5,
+            11.1
+          ]
+        }
+      },
+      "retro_7233": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.2,
+            2.4
+          ],
+          "R": [
+            28.1,
+            4.8
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10.6,
+            4.3
+          ]
+        }
+      },
+      "retro_7011": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.5,
+            3.9
+          ],
+          "R": [
+            21.9,
+            4.9
+          ],
+          "RR": [
+            46.3,
+            27.3
+          ],
+          "RL": [
+            7.9,
+            5
+          ]
+        }
+      },
+      "retro_6775": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.9,
+            5.5
+          ],
+          "R": [
+            22.2,
+            1
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10,
+            4.5
+          ]
+        }
+      },
+      "retro_8302": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            14.8,
+            5.5
+          ],
+          "R": [
+            31.7,
+            4.4
+          ],
+          "RR": [
+            48.6,
+            31.6
+          ],
+          "RL": [
+            13.8,
+            7.8
+          ]
+        }
+      },
+      "retro_7231": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.2,
+            2.4
+          ],
+          "R": [
+            28.2,
+            4.4
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10.6,
+            4.3
+          ]
+        }
+      },
+      "retro_6811": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.7,
+            4.2
+          ],
+          "R": [
+            21.9,
+            0.7
+          ],
+          "RR": [
+            45.5,
+            27.8
+          ],
+          "RL": [
+            15.8,
+            4.7
+          ]
+        }
+      },
+      "retro_7232": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.2,
+            2.4
+          ],
+          "R": [
+            28.5,
+            4.6
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10.6,
+            4.3
+          ]
+        }
+      },
+      "retro_8181": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.9,
+            4.2
+          ],
+          "R": [
+            22.2,
+            3.4
+          ],
+          "RR": [
+            51.3,
+            29.3
+          ],
+          "RL": [
+            11.7,
+            4.9
+          ]
+        }
+      },
+      "retro_8279": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.1,
+            1.9
+          ],
+          "R": [
+            44.3,
+            1
+          ],
+          "RR": [
+            28.4,
+            47.4
+          ],
+          "RL": [
+            9.5,
+            3.9
+          ]
+        }
+      },
+      "retro_8452": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            15.9,
+            5.7
+          ],
+          "R": [
+            26.2,
+            6.2
+          ],
+          "RR": [
+            45.6,
+            25.9
+          ],
+          "RL": [
+            14.3,
+            4.8
+          ]
+        }
+      },
+      "retro_8819": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            14.1,
+            5.9
+          ],
+          "R": [
+            45.7,
+            2.5
+          ],
+          "RR": [
+            46.3,
+            27.2
+          ],
+          "RL": [
+            16.2,
+            5.7
+          ]
+        }
+      },
+      "retro_8443": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.5,
+            4.8
+          ],
+          "R": [
+            21.6,
+            1.5
+          ],
+          "RR": [
+            45.6,
+            25.9
+          ],
+          "RL": [
+            9.6,
+            3.3
+          ]
+        }
+      },
+      "retro_8416": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.2,
+            4.5
+          ],
+          "R": [
+            22.2,
+            1
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10,
+            4.5
+          ]
+        }
+      },
+      "retro_1695": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.4,
+            5.5
+          ],
+          "R": [
+            21.1,
+            1.7
+          ],
+          "RR": [
+            47.2,
+            27.3
+          ],
+          "RL": [
+            9.7,
+            4.2
+          ]
+        }
+      },
+      "retro_8458": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            9.5,
+            3
+          ],
+          "R": [
+            25.2,
+            2.6
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10,
+            4.5
+          ]
+        }
+      },
+      "retro_8286": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            21.8,
+            10.7
+          ],
+          "R": [
+            34.3,
+            13.3
+          ],
+          "RR": [
+            46.4,
+            30.8
+          ],
+          "RL": [
+            17.9,
+            13.9
+          ]
+        }
+      },
+      "retro_8648": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.9,
+            5.5
+          ],
+          "R": [
+            36.6,
+            2.2
+          ],
+          "RR": [
+            45.5,
+            26.8
+          ],
+          "RL": [
+            9.8,
+            3.9
+          ]
+        }
+      },
+      "retro_8646": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12,
+            3.1
+          ],
+          "R": [
+            36.7,
+            6.8
+          ],
+          "RR": [
+            41.6,
+            21.8
+          ],
+          "RL": [
+            7.5,
+            3.5
+          ]
+        }
+      },
+      "retro_8642": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            18.4,
+            2.5
+          ],
+          "R": [
+            34,
+            -2.8
+          ],
+          "RR": [
+            45.5,
+            26.8
+          ],
+          "RL": [
+            9.8,
+            3.9
+          ]
+        }
+      },
+      "retro_8640": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.6,
+            4.9
+          ],
+          "R": [
+            26.9,
+            3.8
+          ],
+          "RR": [
+            45.5,
+            26.8
+          ],
+          "RL": [
+            8.8,
+            2.9
+          ]
+        }
+      },
+      "retro_8644": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            9.6,
+            4.4
+          ],
+          "R": [
+            25.9,
+            9.2
+          ],
+          "RR": [
+            46,
+            29.2
+          ],
+          "RL": [
+            9.7,
+            7.1
+          ]
+        }
+      },
+      "retro_8647": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13.5,
+            6.8
+          ],
+          "R": [
+            27.4,
+            3
+          ],
+          "RR": [
+            45.5,
+            26.9
+          ],
+          "RL": [
+            13.6,
+            5.6
+          ]
+        }
+      },
+      "retro_8639": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            9.3,
+            5.1
+          ],
+          "R": [
+            36,
+            -1.6
+          ],
+          "RR": [
+            46.4,
+            30.8
+          ],
+          "RL": [
+            8.1,
+            5.8
+          ]
+        }
+      },
+      "retro_8643": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            11.5,
+            6.5
+          ],
+          "R": [
+            31.5,
+            3
+          ],
+          "RR": [
+            45.5,
+            26.8
+          ],
+          "RL": [
+            8.7,
+            2.4
+          ]
+        }
+      },
+      "retro_8650": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            19.6,
+            9.7
+          ],
+          "R": [
+            30.1,
+            -2.8
+          ],
+          "RR": [
+            49.5,
+            34.3
+          ],
+          "RL": [
+            10.1,
+            5.9
+          ]
+        }
+      },
+      "retro_8645": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            13,
+            4.7
+          ],
+          "R": [
+            33.5,
+            3.9
+          ],
+          "RR": [
+            45.5,
+            26.9
+          ],
+          "RL": [
+            8.7,
+            3
+          ]
+        }
+      },
+      "retro_8641": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.8,
+            3.6
+          ],
+          "R": [
+            27.1,
+            4.4
+          ],
+          "RR": [
+            45.5,
+            26.9
+          ],
+          "RL": [
+            8.9,
+            3
+          ]
+        }
+      },
+      "retro_8649": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            20.2,
+            2.8
+          ],
+          "R": [
+            29.6,
+            6.2
+          ],
+          "RR": [
+            51.8,
+            31.1
+          ],
+          "RL": [
+            9.8,
+            2.9
+          ]
+        }
+      },
+      "retro_9141": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            14,
+            3.5
+          ],
+          "R": [
+            24,
+            3.1
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            10,
+            4.6
+          ]
+        }
+      },
+      "retro_9142": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.9,
+            3
+          ],
+          "R": [
+            16.8,
+            7.7
+          ],
+          "RR": [
+            46.4,
+            27.3
+          ],
+          "RL": [
+            11.5,
+            9
+          ]
+        }
+      },
+      "retro_8243": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            14.9,
+            30.7
+          ],
+          "L": [
+            11.4,
+            25.3
+          ],
+          "F": [
+            12.6,
+            30.9
+          ],
+          "B": [
+            12.1,
+            29.3
+          ],
+          "S": [
+            14.3,
+            26.3
+          ]
+        }
+      },
+      "retro_8533": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            16.7,
+            13.1
+          ],
+          "L": [
+            15.6,
+            14.8
+          ],
+          "F": [
+            15.9,
+            14.4
+          ],
+          "B": [
+            17.6,
+            16.1
+          ],
+          "S": [
+            17.2,
+            13.8
+          ]
+        }
+      },
+      "retro_8248": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            14.9,
+            30.6
+          ],
+          "L": [
+            11.4,
+            25.3
+          ],
+          "F": [
+            12.6,
+            30.9
+          ],
+          "B": [
+            12.1,
+            29.3
+          ],
+          "S": [
+            14.3,
+            26.4
+          ]
+        }
+      },
+      "retro_8244": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            14.9,
+            30.6
+          ],
+          "L": [
+            11.4,
+            25.3
+          ],
+          "F": [
+            12.6,
+            30.9
+          ],
+          "B": [
+            12.1,
+            29.3
+          ],
+          "S": [
+            14.3,
+            26.4
+          ]
+        }
+      },
+      "retro_8246": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            14.9,
+            30.6
+          ],
+          "L": [
+            11.4,
+            25.3
+          ],
+          "F": [
+            12.6,
+            30.9
+          ],
+          "B": [
+            12.1,
+            29.3
+          ],
+          "S": [
+            14.3,
+            26.4
+          ]
+        }
+      },
+      "retro_6797": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            28.4,
+            28.4
+          ],
+          "L": [
+            26.6,
+            26.6
+          ],
+          "F": [
+            32,
+            28.1
+          ],
+          "B": [
+            32.7,
+            31.1
+          ],
+          "S": [
+            23.2,
+            28.6
+          ]
+        }
+      },
+      "retro_8125": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            17.2,
+            14.4
+          ],
+          "L": [
+            17.7,
+            14.7
+          ],
+          "F": [
+            17.2,
+            14.4
+          ],
+          "B": [
+            17.7,
+            14.7
+          ],
+          "S": [
+            20.9,
+            13.4
+          ]
+        }
+      },
+      "retro_8245": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            14.9,
+            30.6
+          ],
+          "L": [
+            11.4,
+            25.3
+          ],
+          "F": [
+            12.6,
+            30.9
+          ],
+          "B": [
+            12.1,
+            29.3
+          ],
+          "S": [
+            14.3,
+            26.4
+          ]
+        }
+      },
+      "retro_8247": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            14.9,
+            30.6
+          ],
+          "L": [
+            11.4,
+            25.3
+          ],
+          "F": [
+            12.6,
+            30.9
+          ],
+          "B": [
+            12.1,
+            29.3
+          ],
+          "S": [
+            14.3,
+            26.4
+          ]
+        }
+      },
+      "retro_6913": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            30,
+            19.5
+          ],
+          "L": [
+            30,
+            15
+          ],
+          "F": [
+            24.2,
+            19.2
+          ],
+          "B": [
+            22.5,
+            16.3
+          ],
+          "S": [
+            29,
+            15.6
+          ]
+        }
+      },
+      "retro_6719": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            17.1,
+            18.9
+          ],
+          "L": [
+            19.6,
+            17.4
+          ],
+          "F": [
+            20.2,
+            15.1
+          ],
+          "B": [
+            19.6,
+            15
+          ],
+          "S": [
+            17.6,
+            16.5
+          ]
+        }
+      },
+      "retro_8259": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            20.9,
+            14.8
+          ],
+          "L": [
+            17.4,
+            14.2
+          ],
+          "F": [
+            14.7,
+            13.5
+          ],
+          "B": [
+            13.8,
+            15.3
+          ],
+          "S": [
+            15.7,
+            9.8
+          ]
+        }
+      },
+      "retro_7422": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            23.1,
+            26.8
+          ],
+          "L": [
+            16.5,
+            26
+          ],
+          "F": [
+            19,
+            27.3
+          ],
+          "B": [
+            18.8,
+            28.8
+          ],
+          "S": [
+            23.6,
+            28.2
+          ]
+        }
+      },
+      "retro_6921": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            32.4,
+            30
+          ],
+          "L": [
+            31.9,
+            28.7
+          ],
+          "F": [
+            32.1,
+            29.1
+          ],
+          "B": [
+            32.4,
+            26.4
+          ],
+          "S": [
+            32.2,
+            27.2
+          ]
+        }
+      },
+      "retro_9936": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            23.8,
+            12.7
+          ],
+          "L": [
+            19.9,
+            17.1
+          ],
+          "F": [
+            17.9,
+            16.1
+          ],
+          "B": [
+            20.8,
+            17.6
+          ],
+          "S": [
+            19.5,
+            16.8
+          ]
+        }
+      },
+      "retro_9410": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            21.2,
+            15.8
+          ],
+          "L": [
+            20,
+            15.6
+          ],
+          "F": [
+            18.8,
+            15.2
+          ],
+          "B": [
+            21.2,
+            17.1
+          ],
+          "S": [
+            17.6,
+            20
+          ]
+        }
+      },
+      "retro_2641": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            15.8,
+            16.8
+          ],
+          "L": [
+            15.8,
+            16.8
+          ],
+          "F": [
+            15.8,
+            16.8
+          ],
+          "B": [
+            15.8,
+            16.8
+          ],
+          "S": [
+            15.8,
+            16.8
+          ]
+        }
+      },
+      "retro_969": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            32,
+            23.1
+          ],
+          "L": [
+            29.1,
+            26.5
+          ],
+          "F": [
+            30.3,
+            22
+          ],
+          "B": [
+            32.2,
+            28.5
+          ],
+          "S": [
+            32.2,
+            22
+          ]
+        }
+      },
+      "retro_9414": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            21.9,
+            25.7
+          ],
+          "L": [
+            20.3,
+            25.4
+          ],
+          "F": [
+            20.3,
+            25.4
+          ],
+          "B": [
+            19.8,
+            26.9
+          ],
+          "S": [
+            20.3,
+            25.4
+          ]
+        }
+      },
+      "retro_9457": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            39.5,
+            46.2
+          ],
+          "L": [
+            36.1,
+            49.1
+          ],
+          "F": [
+            37.6,
+            46.4
+          ],
+          "B": [
+            37.1,
+            45.2
+          ],
+          "S": [
+            39.5,
+            46.2
+          ]
+        }
+      },
+      "retro_6764": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            30.4,
+            29.9
+          ],
+          "L": [
+            28.2,
+            28.2
+          ],
+          "F": [
+            29.3,
+            29.5
+          ],
+          "B": [
+            29.3,
+            29.6
+          ],
+          "S": [
+            28.4,
+            28.5
+          ]
+        }
+      },
+      "retro_6917": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            17,
+            7.8
+          ],
+          "L": [
+            23.5,
+            12
+          ],
+          "F": [
+            15.6,
+            10.6
+          ],
+          "B": [
+            18.4,
+            14.9
+          ],
+          "S": [
+            21.6,
+            13.6
+          ]
+        }
+      },
+      "retro_8114": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            24.6,
+            25.7
+          ],
+          "L": [
+            19.8,
+            25.5
+          ],
+          "F": [
+            22.1,
+            25
+          ],
+          "B": [
+            15.3,
+            24.8
+          ],
+          "S": [
+            23.3,
+            27.7
+          ]
+        }
+      },
+      "retro_9486": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            35.9,
+            37.6
+          ],
+          "L": [
+            34.3,
+            35.3
+          ],
+          "F": [
+            37.8,
+            34.4
+          ],
+          "B": [
+            36.9,
+            34.5
+          ],
+          "S": [
+            26.4,
+            31.2
+          ]
+        }
+      },
+      "retro_7109": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            17,
+            7.8
+          ],
+          "L": [
+            23.5,
+            12
+          ],
+          "F": [
+            15.6,
+            10.6
+          ],
+          "B": [
+            18.4,
+            14.9
+          ],
+          "S": [
+            21.6,
+            13.6
+          ]
+        }
+      },
+      "retro_9406": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            25.2,
+            5.3
+          ],
+          "L": [
+            20.3,
+            8
+          ],
+          "F": [
+            27.3,
+            3.3
+          ],
+          "B": [
+            29.6,
+            6.7
+          ],
+          "S": [
+            14.9,
+            4.9
+          ]
+        }
+      },
+      "retro_9937": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            20,
+            16.4
+          ],
+          "L": [
+            16.3,
+            14.4
+          ],
+          "F": [
+            17.3,
+            19.4
+          ],
+          "B": [
+            18.6,
+            16.4
+          ],
+          "S": [
+            19.3,
+            16.4
+          ]
+        }
+      },
+      "retro_9653": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            20.5,
+            16
+          ],
+          "L": [
+            18.5,
+            12.7
+          ],
+          "F": [
+            16.1,
+            11.9
+          ],
+          "B": [
+            15.6,
+            11.6
+          ],
+          "S": [
+            14.1,
+            15.8
+          ]
+        }
+      },
+      "retro_2519": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            18.5,
+            14.2
+          ],
+          "L": [
+            16.2,
+            13.5
+          ],
+          "F": [
+            19.5,
+            13.7
+          ],
+          "B": [
+            19.5,
+            13.2
+          ],
+          "S": [
+            17.3,
+            14.2
+          ]
+        }
+      },
+      "retro_9931": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            21.4,
+            25.2
+          ],
+          "L": [
+            19.8,
+            28
+          ],
+          "F": [
+            18.8,
+            25.7
+          ],
+          "B": [
+            18.4,
+            27.8
+          ],
+          "S": [
+            20.7,
+            25.3
+          ]
+        }
+      },
+      "retro_9663": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            18.3,
+            21.4
+          ],
+          "L": [
+            18.4,
+            20.6
+          ],
+          "F": [
+            16.7,
+            18.2
+          ],
+          "B": [
+            18.1,
+            18.9
+          ],
+          "S": [
+            9.3,
+            16.3
+          ]
+        }
+      },
+      "retro_2447": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            23.1,
+            22.7
+          ],
+          "L": [
+            23.2,
+            22.7
+          ],
+          "F": [
+            19.9,
+            17
+          ],
+          "B": [
+            19.9,
+            17
+          ],
+          "S": [
+            19.9,
+            17.6
+          ]
+        }
+      },
+      "retro_2546": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            22.8,
+            34.9
+          ],
+          "L": [
+            19.7,
+            32.9
+          ],
+          "F": [
+            23.9,
+            31.1
+          ],
+          "B": [
+            23.9,
+            33.6
+          ],
+          "S": [
+            19.7,
+            32.9
+          ]
+        }
+      },
+      "retro_2535": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            51.8,
+            47.6
+          ],
+          "L": [
+            70,
+            29.7
+          ],
+          "F": [
+            36.7,
+            69.9
+          ],
+          "B": [
+            41,
+            44.7
+          ],
+          "S": [
+            59.9,
+            46.6
+          ]
+        }
+      },
+      "retro_10188": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            20.5,
+            15.1
+          ],
+          "L": [
+            19.9,
+            15.8
+          ],
+          "F": [
+            22.4,
+            17.4
+          ],
+          "B": [
+            22.4,
+            19.5
+          ],
+          "S": [
+            23.1,
+            18.2
+          ]
+        }
+      },
+      "retro_6937": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            28.3,
+            21.4
+          ],
+          "L": [
+            26,
+            15.8
+          ],
+          "F": [
+            17.1,
+            22.4
+          ],
+          "B": [
+            29,
+            17.7
+          ],
+          "S": [
+            30,
+            20.9
+          ]
+        }
+      },
+      "retro_6938": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            28.3,
+            21.4
+          ],
+          "L": [
+            26,
+            15.8
+          ],
+          "F": [
+            17.1,
+            22.4
+          ],
+          "B": [
+            29,
+            17.7
+          ],
+          "S": [
+            30,
+            20.9
+          ]
+        }
+      },
+      "retro_6939": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            28.3,
+            21.4
+          ],
+          "L": [
+            26,
+            15.8
+          ],
+          "F": [
+            17.2,
+            22.4
+          ],
+          "B": [
+            29,
+            17.7
+          ],
+          "S": [
+            30,
+            20.9
+          ]
+        }
+      },
+      "retro_9418": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            25.1,
+            45.1
+          ],
+          "L": [
+            21.4,
+            45.1
+          ],
+          "F": [
+            21.5,
+            42.6
+          ],
+          "B": [
+            21.5,
+            45.4
+          ],
+          "S": [
+            21.5,
+            45.4
+          ]
+        }
+      },
+      "retro_9652": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            28.2,
+            5
+          ],
+          "L": [
+            27,
+            4.8
+          ],
+          "F": [
+            19.5,
+            12.4
+          ],
+          "B": [
+            12,
+            9.7
+          ],
+          "S": [
+            20.2,
+            5
+          ]
+        }
+      },
+      "retro_8133": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            28.3,
+            21.4
+          ],
+          "L": [
+            25.9,
+            15.8
+          ],
+          "F": [
+            17.1,
+            22.4
+          ],
+          "B": [
+            29,
+            17.7
+          ],
+          "S": [
+            30,
+            20.9
+          ]
+        }
+      },
+      "retro_8116": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            35.8,
+            20.9
+          ],
+          "L": [
+            33.3,
+            26.3
+          ],
+          "F": [
+            13.3,
+            18.8
+          ],
+          "B": [
+            16.7,
+            24.8
+          ],
+          "S": [
+            29,
+            23.6
+          ]
+        }
+      },
+      "retro_2531": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            30.8,
+            16.1
+          ],
+          "L": [
+            30.7,
+            16.1
+          ],
+          "F": [
+            30.8,
+            16.1
+          ],
+          "B": [
+            30.7,
+            16.1
+          ],
+          "S": [
+            30.8,
+            16.1
+          ]
+        }
+      },
+      "retro_8069": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            30.4,
+            27.6
+          ],
+          "L": [
+            20,
+            30.9
+          ],
+          "F": [
+            31.3,
+            23.1
+          ],
+          "B": [
+            31.7,
+            23.1
+          ],
+          "S": [
+            22.8,
+            28.2
+          ]
+        }
+      },
+      "retro_6760": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            34.4,
+            28.7
+          ],
+          "L": [
+            46,
+            20
+          ],
+          "F": [
+            24.8,
+            41
+          ],
+          "B": [
+            28.1,
+            32.3
+          ],
+          "S": [
+            40.9,
+            30.8
+          ]
+        }
+      },
+      "retro_7226": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            32.2,
+            16.6
+          ],
+          "L": [
+            29.6,
+            16.9
+          ],
+          "F": [
+            31.3,
+            14.9
+          ],
+          "B": [
+            31.1,
+            15.3
+          ],
+          "S": [
+            29.3,
+            16.6
+          ]
+        }
+      },
+      "retro_10553": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            56.2,
+            73.8
+          ],
+          "L": [
+            83.8,
+            82.3
+          ],
+          "F": [
+            15.8,
+            68.8
+          ],
+          "B": [
+            13,
+            80.8
+          ],
+          "S": [
+            66.3,
+            83.5
+          ]
+        }
+      },
+      "retro_9194": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            30.5,
+            14.7
+          ],
+          "L": [
+            30.5,
+            15.7
+          ],
+          "F": [
+            30.5,
+            15.7
+          ],
+          "B": [
+            30.5,
+            15.7
+          ],
+          "S": [
+            32.4,
+            13.3
+          ]
+        }
+      },
+      "retro_10102": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            18.8,
+            8.1
+          ],
+          "L": [
+            13.5,
+            6.7
+          ],
+          "F": [
+            16.1,
+            7.1
+          ],
+          "B": [
+            16.5,
+            14.8
+          ],
+          "S": [
+            13.2,
+            7.4
+          ]
+        }
+      },
+      "retro_6930": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            25.8,
+            49.4
+          ],
+          "L": [
+            21.6,
+            49.8
+          ],
+          "F": [
+            26.6,
+            48
+          ],
+          "B": [
+            27.8,
+            48.7
+          ],
+          "S": [
+            25.2,
+            46.9
+          ]
+        }
+      },
+      "retro_9541": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            18.6,
+            16.9
+          ],
+          "L": [
+            14.8,
+            17.8
+          ],
+          "F": [
+            17.8,
+            17.5
+          ],
+          "B": [
+            18.2,
+            17.8
+          ],
+          "S": [
+            20.2,
+            17.6
+          ]
+        }
+      },
+      "retro_7553": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            25.2,
+            24.8
+          ],
+          "L": [
+            22.5,
+            24.5
+          ],
+          "F": [
+            18.2,
+            24.6
+          ],
+          "B": [
+            18.4,
+            15
+          ],
+          "S": [
+            28.5,
+            19.3
+          ]
+        }
+      },
+      "retro_2485": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            30.9,
+            32
+          ],
+          "L": [
+            26.1,
+            31.8
+          ],
+          "F": [
+            35,
+            26.3
+          ],
+          "B": [
+            35,
+            30.7
+          ],
+          "S": [
+            17,
+            31.9
+          ]
+        }
+      },
+      "retro_6761": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            34.4,
+            24.4
+          ],
+          "L": [
+            46.7,
+            20.7
+          ],
+          "F": [
+            24.7,
+            41.1
+          ],
+          "B": [
+            28.4,
+            32.6
+          ],
+          "S": [
+            41,
+            31.9
+          ]
+        }
+      },
+      "retro_9930": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            14.7,
+            7.3
+          ],
+          "L": [
+            13.7,
+            10.8
+          ],
+          "F": [
+            13.7,
+            12.3
+          ],
+          "B": [
+            13.8,
+            15.9
+          ],
+          "S": [
+            13.4,
+            10.5
+          ]
+        }
+      },
+      "retro_10184": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            21.5,
+            20.9
+          ],
+          "L": [
+            13.9,
+            22.2
+          ],
+          "F": [
+            19.1,
+            25.8
+          ],
+          "B": [
+            22.3,
+            29
+          ],
+          "S": [
+            18.1,
+            21.5
+          ]
+        }
+      },
+      "retro_2410": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            30.1,
+            32.4
+          ],
+          "L": [
+            21.4,
+            33.6
+          ],
+          "F": [
+            45.5,
+            25.3
+          ],
+          "B": [
+            44.1,
+            26.5
+          ],
+          "S": [
+            30.3,
+            35.8
+          ]
+        }
+      },
+      "retro_9197": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            29.5,
+            34.4
+          ],
+          "L": [
+            25.9,
+            34.4
+          ],
+          "F": [
+            29.5,
+            34.4
+          ],
+          "B": [
+            29.5,
+            34.4
+          ],
+          "S": [
+            30.7,
+            32.2
+          ]
+        }
+      },
+      "retro_9479": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            36.3,
+            19.9
+          ],
+          "L": [
+            30.3,
+            19.9
+          ],
+          "F": [
+            36,
+            17.9
+          ],
+          "B": [
+            37.6,
+            22.5
+          ],
+          "S": [
+            24.1,
+            21.1
+          ]
+        }
+      },
+      "retro_2520": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            17.6,
+            15.1
+          ],
+          "L": [
+            16.7,
+            20.4
+          ],
+          "F": [
+            17,
+            13
+          ],
+          "B": [
+            17,
+            20.2
+          ],
+          "S": [
+            17.8,
+            22
+          ]
+        }
+      },
+      "retro_9567": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            24.6,
+            35.9
+          ],
+          "L": [
+            18,
+            31.1
+          ],
+          "F": [
+            19.2,
+            31.5
+          ],
+          "B": [
+            15.8,
+            36.9
+          ],
+          "S": [
+            29,
+            28.3
+          ]
+        }
+      },
+      "retro_7886": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            26.8,
+            27
+          ],
+          "L": [
+            18.6,
+            22.5
+          ],
+          "F": [
+            26.3,
+            17.8
+          ],
+          "B": [
+            25.7,
+            17.9
+          ],
+          "S": [
+            21,
+            23.7
+          ]
+        }
+      },
+      "retro_6500": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            11,
+            29.9
+          ],
+          "L": [
+            9.7,
+            33.6
+          ],
+          "F": [
+            9.6,
+            29.2
+          ],
+          "B": [
+            10.5,
+            31
+          ],
+          "S": [
+            12.8,
+            31.2
+          ]
+        }
+      },
+      "retro_10554": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            33.5,
+            13.2
+          ],
+          "L": [
+            19.7,
+            13.8
+          ],
+          "F": [
+            33.7,
+            12.5
+          ],
+          "B": [
+            32.7,
+            12.1
+          ],
+          "S": [
+            18.1,
+            12.5
+          ]
+        }
+      },
+      "retro_8009": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            26.1,
+            18.9
+          ],
+          "L": [
+            28.1,
+            22.8
+          ],
+          "F": [
+            25.7,
+            21.1
+          ],
+          "B": [
+            29.3,
+            24.4
+          ],
+          "S": [
+            18.7,
+            25.7
+          ]
+        }
+      },
+      "retro_2438": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            27.5,
+            31.4
+          ],
+          "L": [
+            18.7,
+            31.4
+          ],
+          "F": [
+            29.9,
+            33.5
+          ],
+          "B": [
+            29.9,
+            33.5
+          ],
+          "S": [
+            18.7,
+            32.4
+          ]
+        }
+      },
+      "retro_7339": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            28.6,
+            27.2
+          ],
+          "L": [
+            34.7,
+            43.1
+          ],
+          "F": [
+            10.5,
+            29.3
+          ],
+          "B": [
+            14.1,
+            16.5
+          ],
+          "S": [
+            24.7,
+            38.8
+          ]
+        }
+      },
+      "retro_6952": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            20.4,
+            17.9
+          ],
+          "L": [
+            17.2,
+            18
+          ],
+          "F": [
+            17.1,
+            16.9
+          ],
+          "B": [
+            14.2,
+            18.7
+          ],
+          "S": [
+            19.3,
+            15.3
+          ]
+        }
+      },
+      "retro_6834": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            21.2,
+            24.9
+          ],
+          "L": [
+            18.2,
+            14.8
+          ],
+          "F": [
+            13.8,
+            24.2
+          ],
+          "B": [
+            14.2,
+            24.5
+          ],
+          "S": [
+            17.5,
+            22.5
+          ]
+        }
+      },
+      "retro_7229": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            32.2,
+            16.6
+          ],
+          "L": [
+            29.6,
+            16.9
+          ],
+          "F": [
+            31.3,
+            14.9
+          ],
+          "B": [
+            31.1,
+            15.3
+          ],
+          "S": [
+            29.3,
+            16.6
+          ]
+        }
+      },
+      "retro_706": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            18.3,
+            27.8
+          ],
+          "L": [
+            18.3,
+            27.7
+          ],
+          "F": [
+            18.3,
+            27.7
+          ],
+          "B": [
+            18.3,
+            28.7
+          ],
+          "S": [
+            17.7,
+            27.8
+          ]
+        }
+      },
+      "retro_6778": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            13.9,
+            26.1
+          ],
+          "L": [
+            13.5,
+            26.1
+          ],
+          "F": [
+            13.5,
+            26.1
+          ],
+          "B": [
+            13.5,
+            26.1
+          ],
+          "S": [
+            11.2,
+            25.6
+          ]
+        }
+      },
+      "retro_8304": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            19.5,
+            21.1
+          ],
+          "L": [
+            16,
+            22.8
+          ],
+          "F": [
+            17.4,
+            24.9
+          ],
+          "B": [
+            16.4,
+            23.2
+          ],
+          "S": [
+            19.5,
+            21.1
+          ]
+        }
+      },
+      "retro_6813": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            18.6,
+            14.9
+          ],
+          "L": [
+            13.8,
+            14.4
+          ],
+          "F": [
+            17.2,
+            13.2
+          ],
+          "B": [
+            17.8,
+            13.4
+          ],
+          "S": [
+            10.4,
+            15.7
+          ]
+        }
+      },
+      "retro_7228": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            32.3,
+            16.6
+          ],
+          "L": [
+            29.6,
+            16.9
+          ],
+          "F": [
+            31.3,
+            14.9
+          ],
+          "B": [
+            31.1,
+            15.3
+          ],
+          "S": [
+            29.3,
+            16.6
+          ]
+        }
+      },
+      "retro_7887": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            27.1,
+            15.2
+          ],
+          "L": [
+            32.3,
+            19.8
+          ],
+          "F": [
+            28.2,
+            14.4
+          ],
+          "B": [
+            23.3,
+            22
+          ],
+          "S": [
+            25.5,
+            17.1
+          ]
+        }
+      },
+      "retro_8147": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            17.5,
+            14.4
+          ],
+          "L": [
+            14.2,
+            14.7
+          ],
+          "F": [
+            16.4,
+            15.2
+          ],
+          "B": [
+            17,
+            16.8
+          ],
+          "S": [
+            17.3,
+            13.3
+          ]
+        }
+      },
+      "retro_8823": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            14.3,
+            63.5
+          ],
+          "L": [
+            3.8,
+            61.1
+          ],
+          "F": [
+            17.1,
+            61.8
+          ],
+          "B": [
+            17.1,
+            61.8
+          ],
+          "S": [
+            3.9,
+            59.5
+          ]
+        }
+      },
+      "retro_707": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            20.5,
+            9.6
+          ],
+          "L": [
+            17.2,
+            10.7
+          ],
+          "F": [
+            21.5,
+            4.6
+          ],
+          "B": [
+            21.5,
+            4.6
+          ],
+          "S": [
+            3.5,
+            7.3
+          ]
+        }
+      },
+      "retro_8285": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            14,
+            12.4
+          ],
+          "L": [
+            14.6,
+            15.7
+          ],
+          "F": [
+            20.8,
+            15.9
+          ],
+          "B": [
+            19.7,
+            15.9
+          ],
+          "S": [
+            14.7,
+            14.2
+          ]
+        }
+      },
+      "retro_8451": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            20.3,
+            11.7
+          ],
+          "L": [
+            19.1,
+            12.4
+          ],
+          "F": [
+            19.4,
+            13.7
+          ],
+          "B": [
+            19.3,
+            13.6
+          ],
+          "S": [
+            22.4,
+            12.2
+          ]
+        }
+      },
+      "retro_8845": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            26.6,
+            15.5
+          ],
+          "L": [
+            34.8,
+            18.2
+          ],
+          "F": [
+            20.1,
+            25.9
+          ],
+          "B": [
+            16.9,
+            20.6
+          ],
+          "S": [
+            41,
+            17.5
+          ]
+        }
+      },
+      "retro_8442": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            12.2,
+            9.8
+          ],
+          "L": [
+            6.3,
+            18.2
+          ],
+          "F": [
+            18.5,
+            13.8
+          ],
+          "B": [
+            18.7,
+            16.5
+          ],
+          "S": [
+            3.5,
+            19.2
+          ]
+        }
+      },
+      "retro_8325": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            36.1,
+            19.9
+          ],
+          "L": [
+            25.9,
+            15.5
+          ],
+          "F": [
+            35.2,
+            12.9
+          ],
+          "B": [
+            37,
+            14.9
+          ],
+          "S": [
+            19.7,
+            16.8
+          ]
+        }
+      },
+      "retro_8824": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            18.8,
+            17.3
+          ],
+          "L": [
+            16.8,
+            24
+          ],
+          "F": [
+            17.9,
+            21.1
+          ],
+          "B": [
+            17.7,
+            22.5
+          ],
+          "S": [
+            23.1,
+            18.7
+          ]
+        }
+      },
+      "retro_8846": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            36,
+            15.6
+          ],
+          "L": [
+            36,
+            15.6
+          ],
+          "F": [
+            34.6,
+            16.1
+          ],
+          "B": [
+            34.6,
+            16.1
+          ],
+          "S": [
+            38.2,
+            16.8
+          ]
+        }
+      },
+      "retro_8457": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            28.4,
+            17.4
+          ],
+          "L": [
+            27.3,
+            18.7
+          ],
+          "F": [
+            27,
+            19.5
+          ],
+          "B": [
+            26.7,
+            18.8
+          ],
+          "S": [
+            27.8,
+            17.3
+          ]
+        }
+      },
+      "retro_8822": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            14.3,
+            63.5
+          ],
+          "L": [
+            3.8,
+            61.1
+          ],
+          "F": [
+            17.1,
+            61.8
+          ],
+          "B": [
+            17.1,
+            61.8
+          ],
+          "S": [
+            3.9,
+            59.5
+          ]
+        }
+      },
+      "retro_8287": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            35.1,
+            43.6
+          ],
+          "L": [
+            45.7,
+            39.1
+          ],
+          "F": [
+            23.6,
+            45.6
+          ],
+          "B": [
+            31.8,
+            38.2
+          ],
+          "S": [
+            41,
+            49.8
+          ]
+        }
+      },
+      "retro_8847": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            20.1,
+            13.2
+          ],
+          "L": [
+            19.2,
+            15.5
+          ],
+          "F": [
+            19.4,
+            16.6
+          ],
+          "B": [
+            19.4,
+            16.6
+          ],
+          "S": [
+            21.1,
+            13.7
+          ]
+        }
+      },
+      "retro_8636": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            26.4,
+            27.1
+          ],
+          "L": [
+            20.6,
+            18.2
+          ],
+          "F": [
+            13.8,
+            26
+          ],
+          "B": [
+            19.2,
+            22.9
+          ],
+          "S": [
+            35.2,
+            21.4
+          ]
+        }
+      },
+      "retro_8634": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            31.3,
+            31.5
+          ],
+          "L": [
+            18,
+            30.8
+          ],
+          "F": [
+            34.7,
+            17.2
+          ],
+          "B": [
+            30.7,
+            26.9
+          ],
+          "S": [
+            17.2,
+            28.3
+          ]
+        }
+      },
+      "retro_8630": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            36.3,
+            41
+          ],
+          "L": [
+            30.8,
+            44.1
+          ],
+          "F": [
+            32.4,
+            37.2
+          ],
+          "B": [
+            33.7,
+            41.7
+          ],
+          "S": [
+            36.3,
+            41
+          ]
+        }
+      },
+      "retro_8628": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            29.8,
+            19.1
+          ],
+          "L": [
+            27.7,
+            21.7
+          ],
+          "F": [
+            17.3,
+            18
+          ],
+          "B": [
+            17.4,
+            20.7
+          ],
+          "S": [
+            24.8,
+            21.7
+          ]
+        }
+      },
+      "retro_8632": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            15.2,
+            26.4
+          ],
+          "L": [
+            5.6,
+            23.2
+          ],
+          "F": [
+            17.7,
+            20.5
+          ],
+          "B": [
+            11.4,
+            23
+          ],
+          "S": [
+            -3.5,
+            23.3
+          ]
+        }
+      },
+      "retro_8635": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            22.1,
+            14.9
+          ],
+          "L": [
+            20.8,
+            21.5
+          ],
+          "F": [
+            16.4,
+            15
+          ],
+          "B": [
+            16.8,
+            18.7
+          ],
+          "S": [
+            18.3,
+            14.6
+          ]
+        }
+      },
+      "retro_8848": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            21.1,
+            15
+          ],
+          "L": [
+            21.1,
+            15
+          ],
+          "F": [
+            21.1,
+            15
+          ],
+          "B": [
+            21.1,
+            16.6
+          ],
+          "S": [
+            21.1,
+            15
+          ]
+        }
+      },
+      "retro_8619": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            21.8,
+            32.5
+          ],
+          "L": [
+            18.2,
+            28.4
+          ],
+          "F": [
+            12.3,
+            27.7
+          ],
+          "B": [
+            13.7,
+            32.8
+          ],
+          "S": [
+            23.7,
+            29.5
+          ]
+        }
+      },
+      "retro_8631": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            30.3,
+            20.1
+          ],
+          "L": [
+            26.6,
+            24.9
+          ],
+          "F": [
+            23.5,
+            20.8
+          ],
+          "B": [
+            27.8,
+            15.9
+          ],
+          "S": [
+            23.9,
+            26.4
+          ]
+        }
+      },
+      "retro_8638": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            40.7,
+            21
+          ],
+          "L": [
+            34,
+            24.2
+          ],
+          "F": [
+            38.4,
+            23.5
+          ],
+          "B": [
+            37.9,
+            24.2
+          ],
+          "S": [
+            37.8,
+            24.5
+          ]
+        }
+      },
+      "retro_8633": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            25.3,
+            34.4
+          ],
+          "L": [
+            24.4,
+            34.1
+          ],
+          "F": [
+            19.1,
+            36.3
+          ],
+          "B": [
+            20.6,
+            36.3
+          ],
+          "S": [
+            25.4,
+            34.6
+          ]
+        }
+      },
+      "retro_8629": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            20,
+            13.6
+          ],
+          "L": [
+            12.6,
+            21.8
+          ],
+          "F": [
+            27.3,
+            16.8
+          ],
+          "B": [
+            27.6,
+            19.3
+          ],
+          "S": [
+            13.7,
+            16
+          ]
+        }
+      },
+      "retro_8637": {
+        "kind": "coiffe",
+        "origins": {
+          "R": [
+            34.6,
+            16.7
+          ],
+          "L": [
+            27.6,
+            16.6
+          ],
+          "F": [
+            23.5,
+            16.9
+          ],
+          "B": [
+            26,
+            17.2
+          ],
+          "S": [
+            34,
+            15.3
+          ]
+        }
+      },
+      "retro_8131": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            8.8,
+            2.5
+          ],
+          "R": [
+            14.6,
+            3.4
+          ],
+          "RR": [
+            19.5,
+            6.9
+          ],
+          "RL": [
+            5.7,
+            7.3
+          ]
+        }
+      },
+      "retro_9945": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            8,
+            3.1
+          ],
+          "R": [
+            13.8,
+            2.8
+          ],
+          "RR": [
+            20,
+            9.9
+          ],
+          "RL": [
+            5.5,
+            6.9
+          ]
+        }
+      },
+      "retro_6916": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            7,
+            0.5
+          ],
+          "R": [
+            13.5,
+            0.5
+          ],
+          "RR": [
+            19.9,
+            7.4
+          ],
+          "RL": [
+            5.9,
+            4.6
+          ]
+        }
+      },
+      "retro_7108": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            7,
+            0.5
+          ],
+          "R": [
+            13.5,
+            0.5
+          ],
+          "RR": [
+            19.9,
+            7.4
+          ],
+          "RL": [
+            5.9,
+            4.5
+          ]
+        }
+      },
+      "retro_6501": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            9.9,
+            8
+          ],
+          "R": [
+            16.6,
+            9.7
+          ],
+          "RR": [
+            26.7,
+            15.3
+          ],
+          "RL": [
+            9.3,
+            12.3
+          ]
+        }
+      },
+      "retro_6830": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            7,
+            0.1
+          ],
+          "R": [
+            14.1,
+            -0.3
+          ],
+          "RR": [
+            19.5,
+            5.6
+          ],
+          "RL": [
+            6.2,
+            4.5
+          ]
+        }
+      },
+      "retro_7888": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            10.6,
+            5.7
+          ],
+          "R": [
+            20.4,
+            3.1
+          ],
+          "RR": [
+            32.2,
+            5.4
+          ],
+          "RL": [
+            5.6,
+            4.1
+          ]
+        }
+      },
+      "retro_10185": {
+        "kind": "cape",
+        "origins": {
+          "L": [
+            12.3,
+            7.3
+          ],
+          "R": [
+            23.2,
+            8.1
+          ],
+          "RR": [
+            50.2,
+            26.8
+          ],
+          "RL": [
+            6.9,
+            13.5
+          ]
+        }
       }
     }
   },
@@ -15174,6 +20413,1854 @@
         }
       },
       "shrunk": 0.75
+    },
+    "cra__mastery": {
+      "image": "mastery/cra.png",
+      "atlas": "mastery/cra.json",
+      "origin": [
+        0.493,
+        0.8116
+      ],
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 90,
+      "artStyle": "ink",
+      "revision": "dd1c6b85a8eadffa",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/cra.gear.json"
+    },
+    "iop__mastery": {
+      "image": "mastery/iop.png",
+      "atlas": "mastery/iop.json",
+      "origin": [
+        0.45,
+        0.913
+      ],
+      "scale": 0.84528,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 80,
+      "artStyle": "ink",
+      "revision": "84a9e7a2f284a388",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/iop.gear.json"
+    },
+    "eniripsa__mastery": {
+      "image": "mastery/eniripsa.png",
+      "atlas": "mastery/eniripsa.json",
+      "origin": [
+        0.512,
+        0.8803
+      ],
+      "scale": 0.67622,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 70,
+      "artStyle": "ink",
+      "revision": "e131e51b644f6ff9",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/eniripsa.gear.json"
+    },
+    "sacrieur__mastery": {
+      "image": "mastery/sacrieur.png",
+      "atlas": "mastery/sacrieur.json",
+      "origin": [
+        0.4802,
+        0.8958
+      ],
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 110,
+      "artStyle": "ink",
+      "revision": "ca508b97ee1feff7",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/sacrieur.gear.json"
+    },
+    "sram__mastery": {
+      "image": "mastery/sram.png",
+      "atlas": "mastery/sram.json",
+      "origin": [
+        0.4755,
+        0.8915
+      ],
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 40,
+      "artStyle": "ink",
+      "revision": "60a4bce3ea6134d8",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/sram.gear.json"
+    },
+    "sadida__mastery": {
+      "image": "mastery/sadida.png",
+      "atlas": "mastery/sadida.json",
+      "origin": [
+        0.4583,
+        0.8491
+      ],
+      "scale": 0.84528,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 100,
+      "artStyle": "ink",
+      "revision": "8215f20d86c153b8",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 30,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/sadida.gear.json"
+    },
+    "ecaflip__mastery": {
+      "image": "mastery/ecaflip.png",
+      "atlas": "mastery/ecaflip.json",
+      "origin": [
+        0.5033,
+        0.9409
+      ],
+      "scale": 0.84528,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 60,
+      "artStyle": "ink",
+      "revision": "43b78a756b6ad79d",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 31,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 12,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 30,
+            "frameRate": 15,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/ecaflip.gear.json"
+    },
+    "feca__mastery": {
+      "image": "mastery/feca.png",
+      "atlas": "mastery/feca.json",
+      "origin": [
+        0.4277,
+        0.8837
+      ],
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 10,
+      "artStyle": "ink",
+      "revision": "aa0a6b07c2635d67",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 20,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 15,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/feca.gear.json"
+    },
+    "osamodas__mastery": {
+      "image": "mastery/osamodas.png",
+      "atlas": "mastery/osamodas.json",
+      "origin": [
+        0.425,
+        0.8584
+      ],
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 20,
+      "artStyle": "ink",
+      "revision": "a20e75f2d41af0f4",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 10,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 15,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/osamodas.gear.json"
+    },
+    "enutrof__mastery": {
+      "image": "mastery/enutrof.png",
+      "atlas": "mastery/enutrof.json",
+      "origin": [
+        0.4796,
+        0.7714
+      ],
+      "scale": 0.76075,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 30,
+      "artStyle": "ink",
+      "revision": "e283ae980b5068c4",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 27,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 16,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/enutrof.gear.json"
+    },
+    "xelor__mastery": {
+      "image": "mastery/xelor.png",
+      "atlas": "mastery/xelor.json",
+      "origin": [
+        0.4796,
+        0.8151
+      ],
+      "scale": 0.67622,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 50,
+      "artStyle": "ink",
+      "revision": "43c8b5f84ea1dc43",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 17,
+            "frameRate": 30,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 26,
+            "frameRate": 15,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 15,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 23,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 22,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/xelor.gear.json"
+    },
+    "pandawa__mastery": {
+      "image": "mastery/pandawa.png",
+      "atlas": "mastery/pandawa.json",
+      "origin": [
+        0.5154,
+        0.911
+      ],
+      "scale": 0.84528,
+      "pixelsPerUnit": 2,
+      "sourceSprite": 120,
+      "artStyle": "ink",
+      "revision": "1bcc41c55602d778",
+      "anims": {
+        "idle": {
+          "0": {
+            "prefix": "idle_0_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "idle_1_",
+            "start": 0,
+            "end": 7,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "idle_2_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "idle_5_",
+            "start": 0,
+            "end": 8,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "idle_6_",
+            "start": 0,
+            "end": 0,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "run": {
+          "0": {
+            "prefix": "run_0_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "1": {
+            "prefix": "run_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "2": {
+            "prefix": "run_2_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "5": {
+            "prefix": "run_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          },
+          "6": {
+            "prefix": "run_6_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 60,
+            "repeat": -1
+          }
+        },
+        "attack": {
+          "1": {
+            "prefix": "attack_1_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "attack_5_",
+            "start": 0,
+            "end": 21,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        },
+        "cast1": {
+          "1": {
+            "prefix": "cast1_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast1_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "cast2": {
+          "1": {
+            "prefix": "cast2_1_",
+            "start": 0,
+            "end": 28,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "cast2_5_",
+            "start": 0,
+            "end": 29,
+            "frameRate": 30,
+            "repeat": 0
+          }
+        },
+        "death": {
+          "1": {
+            "prefix": "death_1_",
+            "start": 0,
+            "end": 25,
+            "frameRate": 20,
+            "repeat": 0
+          },
+          "5": {
+            "prefix": "death_5_",
+            "start": 0,
+            "end": 24,
+            "frameRate": 20,
+            "repeat": 0
+          }
+        }
+      },
+      "gear": "sprites/pandawa.gear.json"
     }
   },
   "classOutfits": {

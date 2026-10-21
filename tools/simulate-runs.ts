@@ -1,8 +1,8 @@
-import {ROGUELITE_CATALOG as C,ROGUELITE_SPELL_IDS,effectiveAbilityPreview} from '@rod/shared/roguelite';
+import {ROGUELITE_CATALOG as C,ROGUELITE_SPELL_IDS,ROGUELITE_SIGNATURES,effectiveAbilityPreview} from '@rod/shared/roguelite';
 // Runs complètes sans rendu : le bot utilise exclusivement les actions publiques.
 import fs from 'node:fs';
 import {performance} from 'node:perf_hooks';
-import {EQUIPMENT_RARITIES,type EquipmentRarity,getBlessing,ROUTES,getRoute,CLASSES,EQUIPMENT_BASES,EQUIPMENT_SLOTS,EQUIPMENT_TIERS,PHASE_PLAYING,ZAAP_IDLE,ZAAP_READY,ZAAP_RANGE,INTERACT_RANGE,MAP_SIZE,PLAYER_RADIUS,getSpell,createEquipment,equipmentTier,slotKind,makeRng,isBlocked,generateMap,RUN_BONUSES,type EquippedGear,type GameMap} from '@rod/shared';
+import {GAME_MODES,modeStages,runZone,EQUIPMENT_RARITIES,type EquipmentRarity,getBlessing,ROUTES,getRoute,CLASSES,EQUIPMENT_BASES,EQUIPMENT_SLOTS,EQUIPMENT_TIERS,PHASE_PLAYING,ZAAP_IDLE,ZAAP_READY,ZAAP_RANGE,INTERACT_RANGE,MAP_SIZE,PLAYER_RADIUS,getSpell,createEquipment,equipmentTier,slotKind,makeRng,isBlocked,generateMap,RUN_BONUSES,type EquippedGear,type GameMap} from '@rod/shared';
 import {Simulation,type PlayerRt,type MonsterRt} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 
@@ -14,9 +14,11 @@ const outfitRarity=arg('rarity','rare') as EquipmentRarity,forgeTier=Number(arg(
 if(!EQUIPMENT_RARITIES.includes(outfitRarity)||!Number.isInteger(forgeTier)||forgeTier<1||forgeTier>3)throw new Error('Qualite ou tier de forge invalide');
 if(forgeTier>1&&outfitRarity!=='legendaire')throw new Error('Seuls les legendaires peuvent avoir un tier de forge superieur a 1');
 for(const tier of tiers)if(!Number.isInteger(tier)||tier< -1||tier>=EQUIPMENT_TIERS.length)throw new Error('Palier inconnu : '+tier);
-for(const mode of modes)if(!Number.isInteger(mode)||mode<0||mode>3)throw new Error('Mode inconnu : '+mode);
+for(const mode of modes)if(!Number.isInteger(mode)||mode<0||mode>9)throw new Error('Mode inconnu : '+mode);
 const routes=arg('routes','normal').split(',');
 const seekElites=arg('elites','ignore')==='seek';
+// --bot=evolve : le bot monte d'abord sa signature et prend son passif d'évolution, comme un joueur qui vise l'évolution.
+const evolveBot=arg('bot','spread')==='evolve';
 const blessing=arg('blessing','none');if(blessing!=='none'&&!getBlessing(blessing))throw new Error('Benediction inconnue : '+blessing);
 for(const id of classes)if(!CLASSES[id])throw new Error('Classe inconnue : '+id);
 for(const id of routes)if(!Object.hasOwn(ROUTES,id))throw new Error('Serment inconnu : '+id);
@@ -45,10 +47,9 @@ class RunBot {
   drive():void {
     const {sim,p}=this,s=sim.state,ps=p.state;if(!ps.alive)return;
     if(s.intermission){sim.chooseRoute(p.id,this.routeId);sim.restReady(p.id);this.routeKey='';return;}
-    const boons: string[]=JSON.parse(ps.boonChoices);if(boons.length)sim.chooseBoon(p.id,boons.map((id,i)=>({i,score:score(id)})).sort((a,b)=>a.score-b.score)[0].i);
+    const boons: string[]=JSON.parse(ps.boonChoices);if(boons.length)sim.chooseBoon(p.id,boons.map((id,i)=>({i,score:score(id,p.def.id)})).sort((a,b)=>a.score-b.score)[0].i);
     const enemies=[...sim.monsters.values()].filter(m=>!m.state.ally&&!m.state.carried),near=enemies.sort((a,b)=>distance(a.state,ps)-distance(b.state,ps));
     const enemy=near[0],boss=near.find(m=>m.def.boss||m.state.elite),basic=effectiveAbilityPreview(sim.roguelite.ability(p,0)!);
-    if(enemy&&(p.def.id==='osamodas'||p.def.id==='pandawa'))sim.classAction(p.id,{tx:enemy.state.x,ty:enemy.state.y});
     let goal={x:s.zaapX,y:s.zaapY};
     const challenge=seekElites&&!boss?[...s.challenges.values()].filter(c=>!c.opened).sort((a,b)=>distance(a,ps)-distance(b,ps))[0]:undefined;
     const orb=[...s.xpOrbs.values()].filter(o=>distance(o,ps)<10).sort((a,b)=>distance(a,ps)-distance(b,ps))[0];
@@ -80,22 +81,27 @@ class RunBot {
   }
 }
 const distance=(a:{x:number;y:number},b:{x:number;y:number})=>Math.hypot(a.x-b.x,a.y-b.y);
-function score(id:string):number {const [kind]=id.split(':');return kind==='evolution'?-100:kind==='acquireSpell'?-40:kind==='acquirePassive'?-25:kind==='upgradeSpell'?-20:kind==='upgradePassive'?-15:0;}
+function score(id:string,classId:string):number {
+  const [kind,definition]=id.split(':');
+  if(evolveBot){const signature=ROGUELITE_SIGNATURES[classId],passive=C.evolution(C.spell(signature)!.evolutionId!)!.passiveId;
+    if(kind==='upgradeSpell'&&definition===signature)return -90;if((kind==='acquirePassive'||kind==='upgradePassive')&&definition===passive)return kind==='acquirePassive'?-95:-50;}
+  return kind==='evolution'?-100:kind==='acquireSpell'?-40:kind==='acquirePassive'?-25:kind==='upgradeSpell'?-20:kind==='upgradePassive'?-15:0;
+}
 
-interface Sample {outcome:string;runLevel:number;totalXp:number;blessings:number;route:string;classId:string;mode:number;seed:number;start:number;gear:string;tier:number;zone:number;waves:number;duration:number;kills:number;censored:boolean;maxEnemies:number}
+interface Sample {outcome:string;runLevel:number;evolved:number;evolvedZone:number;totalXp:number;blessings:number;route:string;classId:string;mode:number;seed:number;start:number;gear:string;tier:number;zone:number;waves:number;duration:number;kills:number;censored:boolean;maxEnemies:number}
 const original=Math.random,samples:Sample[]=[],startClock=performance.now();
 try {
   for(const route of routes)for(const mode of modes)for(const start of starts)for(const tier of tiers)for(const classId of classes)for(let seed=1;seed<=seeds;seed++) {
     Math.random=makeRng(seed*197+mode*11);const state=new GameState();state.mode=mode;
     const dangers:Danger[]=[];const sim=new Simulation(state,(type,message)=>{if(type==='bossWarning'){const d=message as Danger&{duration:number};dangers.push({...d,until:sim.now+d.duration});}while(dangers.length&&dangers[0].until<sim.now)dangers.shift();});sim.addPlayer('p','Bot',classId,undefined,botOutfit(tier),blessing,Object.fromEntries(ROGUELITE_SPELL_IDS.map(id=>[id,spellLevel])));sim.start();
-    if(start!==1){state.stage=start;state.seed=Math.floor(Math.random()*0xffffffff);sim.map=generateMap(state.seed,MAP_SIZE,start);(sim as unknown as {setupStage:()=>void}).setupStage();}
-    const p=sim.players.get('p')!,bot=new RunBot(sim,p,dangers,route);let maxEnemies=0,tick=0;
-    while(state.phase===PHASE_PLAYING&&state.stage<=cap&&state.time<seconds&&tick<seconds*30+3000){if(tick%3===0)bot.drive();sim.update(1/30);if(state.stage>1&&state.stageRoute!==route)throw new Error('Serment non applique dans la simulation: '+route);maxEnemies=Math.max(maxEnemies,sim.monsters.size);tick++;}
-    samples.push({outcome:state.outcome,runLevel:state.runLevel,totalXp:state.totalXp,blessings:Object.keys(p.blessingRanks).length,route,classId,mode,seed,start,tier,gear:tier<0?'Aucun':`Palier ${EQUIPMENT_TIERS[tier].level} ${outfitRarity} T${forgeTier}`,zone:state.stage,waves:(state as unknown as {waves?:number}).waves??0,duration:Math.round(state.time),kills:p.state.kills,censored:state.phase===PHASE_PLAYING,maxEnemies});
+    if(start!==1){state.stage=start;state.seed=Math.floor(Math.random()*0xffffffff);sim.map=generateMap(state.seed,MAP_SIZE,runZone(state.zoneOrder,start));(sim as unknown as {setupStage:()=>void}).setupStage();}
+    const p=sim.players.get('p')!,bot=new RunBot(sim,p,dangers,route);let maxEnemies=0,tick=0,evolvedZone=0;
+    while(state.phase===PHASE_PLAYING&&state.stage<=cap&&state.time<seconds&&tick<seconds*30+3000){if(tick%3===0)bot.drive();sim.update(1/30);if(!evolvedZone&&p.build.currentBuild.spells.some(s=>s?.evolutionId))evolvedZone=state.stage;if(state.stage>1&&state.stageRoute!==route)throw new Error('Serment non applique dans la simulation: '+route);maxEnemies=Math.max(maxEnemies,sim.monsters.size);tick++;}
+    samples.push({outcome:state.outcome,runLevel:state.runLevel,evolved:p.build.currentBuild.spells.filter(s=>s?.evolutionId).length,evolvedZone,totalXp:state.totalXp,blessings:Object.keys(p.blessingRanks).length,route,classId,mode,seed,start,tier,gear:tier<0?'Aucun':`Palier ${EQUIPMENT_TIERS[tier].level} ${outfitRarity} T${forgeTier}`,zone:state.stage,waves:(state as unknown as {waves?:number}).waves??0,duration:Math.round(state.time),kills:p.state.kills,censored:state.phase===PHASE_PLAYING,maxEnemies});
   }
 }finally{Math.random=original;}
 const groups=[];let md='| Serment | Départ | Mode | Stuff | Runs | Zone moyenne atteinte | Min–max | Victoires | Runs encore vivantes | Ennemis simultanés max |\n|---|---|---|---|---:|---:|---|---:|---:|---:|\n';
 for(const route of routes)for(const mode of modes)for(const start of starts)for(const tier of tiers){const group=samples.filter(s=>s.route===route&&s.mode===mode&&s.start===start&&s.tier===tier),mean=group.reduce((n,s)=>n+s.zone,0)/group.length;
-  const row={route,start,mode,gear:group[0].gear,runs:group.length,mean:Number(mean.toFixed(2)),min:Math.min(...group.map(s=>s.zone)),max:Math.max(...group.map(s=>s.zone)),victories:group.filter(s=>s.outcome==='victory').length,censored:group.filter(s=>s.censored).length,maxEnemies:Math.max(...group.map(s=>s.maxEnemies))};groups.push(row);md+=`| ${getRoute(route).name} | ${start} | ${mode} | ${row.gear} | ${row.runs} | ${row.mean} | ${row.min}–${row.max} | ${row.victories} | ${row.censored} | ${row.maxEnemies} |\n`;
+  const row={route,start,mode,gear:group[0].gear,runs:group.length,mean:Number(mean.toFixed(2)),min:Math.min(...group.map(s=>s.zone)),max:Math.max(...group.map(s=>s.zone)),victories:group.filter(s=>s.outcome==='victory').length,censored:group.filter(s=>s.censored).length,maxEnemies:Math.max(...group.map(s=>s.maxEnemies))};groups.push(row);md+=`| ${getRoute(route).name} | ${start===1?modeStages(mode)[0]:start} | ${GAME_MODES[mode].name} | ${row.gear} | ${row.runs} | ${row.mean} | ${row.min}–${row.max} | ${row.victories} | ${row.censored} | ${row.maxEnemies} |\n`;
 }
 fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync(`${out}.json`,JSON.stringify({seekElites,spellLevel,blessing,seeds,cap,seconds,elapsedSeconds:Math.round((performance.now()-startClock)/1000),groups,samples},null,2));fs.writeFileSync(`${out}.md`,md);console.log('Niveau des sorts : '+spellLevel+' ; benediction : '+blessing);console.log(md);console.log(`Résultats : ${out}.json ; ${samples.length} runs. Une run plafonnée est marquée encore vivante, pas considérée comme une mort.`);

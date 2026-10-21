@@ -8,6 +8,8 @@ import {forgeCost,recycleValue,type ForgeGrant} from '@rod/shared';
 import {sanitizeRunSummary,compareRuns,unlockedModeFromProgression} from '@rod/shared';
 import {sanitizeProfile} from '@rod/shared';
 import {ROGUELITE_CATALOG,ROGUELITE_SIGNATURES,permanentSpellCost} from '@rod/shared/roguelite';
+import {masteryStatus,masterySkins,MASTERY_MAX_XP,type MasteryGrant} from '@rod/shared';
+import {sanitizeVariantSelection,unlockedSpellVariants} from '@rod/shared/roguelite';
 
 let KEY = 'rod.compte';
 const listeners=new Set<()=>void>();
@@ -38,10 +40,23 @@ function save(): void {
 save();
 
 export const account = {
+  get mastery(){return {...data.mastery};},
+  masteryStatus(classId:string){return masteryStatus(data.mastery[classId]);},
+  get selectedVariants(){return [...data.selectedVariants];},
+  get unlockedVariants(){return unlockedSpellVariants(data.mastery);},
+  selectVariant(spellId:string,enabled:boolean):boolean {
+    if(!this.unlockedVariants.includes(spellId))return false;
+    data.selectedVariants=sanitizeVariantSelection(enabled?[...data.selectedVariants,spellId]:data.selectedVariants.filter(id=>id!==spellId),data.mastery);save();return true;
+  },
+  get disabledMasteryAuras(){return [...data.disabledMasteryAuras];},
+  setMasteryAura(classId:string,enabled:boolean):boolean {
+    if(!this.masteryStatus(classId).aura)return false;
+    data.disabledMasteryAuras=enabled?data.disabledMasteryAuras.filter(id=>id!==classId):[...new Set([...data.disabledMasteryAuras,classId])];save();return true;
+  },
   get ogrines(){return data.ogrines;},
   get skins(){return [...data.skins];},
   get equippedSkins(){return {...data.equippedSkins};},
-  buySkin(id:string,classId?:string):boolean {const skin=skinById(id);if(!skin||data.skins.includes(id)||data.ogrines<skin.price)return false;data.ogrines-=skin.price;data.skins.push(id);const target=skin.classId==='*'?classId:skin.classId;if(target)data.equippedSkins[target]=id;save();return true;},
+  buySkin(id:string,classId?:string):boolean {const skin=skinById(id);if(!skin||skin.masteryLevel||data.skins.includes(id)||data.ogrines<skin.price)return false;data.ogrines-=skin.price;data.skins.push(id);const target=skin.classId==='*'?classId:skin.classId;if(target)data.equippedSkins[target]=id;save();return true;},
   equipSkin(classId:string,id:string):boolean {if(!id){delete data.equippedSkins[classId];save();return true;}const skin=skinById(id);if(!skinFits(skin,classId)||!data.skins.includes(id))return false;data.equippedSkins[classId]=id;save();return true;},
   claimOgrines(grants:CurrencyGrant[]):number {let gained=0;for(const grant of grants){if(!grant||typeof grant.claimId!=='string'||grant.claimId.length>200||grant.amount!==1||data.claimedOgrines.includes(grant.claimId)||data.credited.includes(grant.claimId.split(':')[0]))continue;data.claimedOgrines.push(grant.claimId);data.ogrines++;gained++;}if(gained)save();return gained;},
   get unlockedMode(){return data.unlockedMode;},
@@ -272,6 +287,11 @@ export const account = {
   creditRun(reward: RunReward): boolean {
     if(reward?.summary){const run=sanitizeRunSummary(reward.summary);if(run){const unlocked=unlockedModeFromProgression({history:[run]});if(unlocked>data.unlockedMode){data.unlockedMode=unlocked;save();}this.recordRun(run);}}
     if (!reward || typeof reward.runId !== 'string' || !reward.runId || data.credited.includes(reward.runId)) return false;
+    const grant=reward.mastery as MasteryGrant|undefined;
+    if(grant&&grant.classId===reward.summary?.classId&&Number.isSafeInteger(grant.xp)&&grant.xp>0&&grant.xp<=MASTERY_MAX_XP){
+      data.mastery[grant.classId]=Math.min(MASTERY_MAX_XP,(data.mastery[grant.classId]??0)+grant.xp);
+      data.skins=[...new Set([...data.skins,...masterySkins(data.mastery)])];
+    }
     data.bank += Number.isFinite(reward.kamas) ? Math.max(0, Math.floor(reward.kamas)) : 0;
     this.claimDrops(Array.isArray(reward.drops) ? reward.drops : []);
     this.claimOgrines(Array.isArray(reward.ogrineGrants)?reward.ogrineGrants:[]);

@@ -9,3 +9,5 @@ export * from './content.ts';
 export * from './effective.ts';
 export * from './presentation.ts';
 export * from './geometry.ts';
+export * from './variants.ts';
+export * from './invocateur.ts';

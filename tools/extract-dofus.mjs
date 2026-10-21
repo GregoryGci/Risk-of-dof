@@ -82,6 +82,18 @@ export const ENTITIES = {
   // Invocations de l'Osamodas et de l'Enutrof.
   osa_tofu: { kind: 'monsters', sprite: 1165 },
   osa_bouftou: { kind: 'monsters', sprite: 1165 },
+  // Forme évoluée de l'Invocateur (PNJ Ilyzaelle, seul sprite Retro disponible).
+  ilyzaelle: { kind: 'monsters', sprite: 8036 },
+  // Créatures de l'Invocateur, une par niveau du sort : atlas partagés avec les monstres d'origine.
+  inv_tofu: { kind: 'monsters', sprite: 1558 },
+  inv_bouftou: { kind: 'monsters', sprite: 1566 },
+  inv_bwork_mage: { kind: 'monsters', sprite: 1012 },
+  inv_chafer: { kind: 'monsters', sprite: 1014 },
+  inv_scarafeuille: { kind: 'monsters', sprite: 1137 },
+  inv_craqueleur: { kind: 'monsters', sprite: 1008 },
+  inv_bitouf: { kind: 'monsters', sprite: 1631 },
+  inv_cybwork: { kind: 'monsters', sprite: 1243 },
+  inv_ilyzaelle: { kind: 'monsters', sprite: 8036 },
   coffre_anime: { kind: 'monsters', sprite: 1083 },
 };
 const extraFile=path.join(ROOT,'tools/dungeon-sprites.json');

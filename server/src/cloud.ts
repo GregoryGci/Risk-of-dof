@@ -4,6 +4,8 @@ import {fileURLToPath} from 'node:url';
 import type {RunSummary} from '@rod/shared';
 import {sanitizePermanentSpellRanks,type PermanentSpellRanks} from '@rod/shared/roguelite';
 import {sanitizeSkinBook,sanitizeProfile,unlockedModeFromProgression} from '@rod/shared';
+import {sanitizeMastery,masterySkins,type MasteryProgress} from '@rod/shared';
+import {sanitizeVariantSelection} from '@rod/shared/roguelite';
 
 // Les deux emplacements sont acceptés, sans écraser une variable du processus.
 for(const url of [new URL('../../.env',import.meta.url),new URL('../.env',import.meta.url)]){
@@ -33,14 +35,14 @@ export class ScoreWriteError extends Error{constructor(readonly status:number){s
 export function scoreFailureCode(error:unknown):string{
   if(error instanceof ScoreWriteError)return `HTTP_${error.status}`;
   if(!(error instanceof Error))return 'UNKNOWN';
-  if(error.message==='CAUCHEMAR_MIGRATION_REQUIRED')return 'DATABASE_MIGRATION';
+  if((error.message==='CAUCHEMAR_MIGRATION_REQUIRED'||error.message==='STASIS_MIGRATION_REQUIRED'))return 'DATABASE_MIGRATION';
   if(error.name==='TimeoutError'||error.name==='AbortError')return 'UPSTREAM_TIMEOUT';
   if(error instanceof TypeError&&/ByteString|header/i.test(error.message))return 'INVALID_SERVER_KEY_FORMAT';
   if(error instanceof TypeError&&/fetch failed/i.test(error.message))return 'UPSTREAM_NETWORK';
   return 'SCORE_WRITE_FAILED';
 }
 if(!cloudScoresEnabled)console.warn('[classement] SUPABASE_SECRET_KEY (ou SUPABASE_SERVICE_ROLE_KEY) manque sur ce serveur.');
-export async function authenticate(token:unknown):Promise<{userId:string;name:string;avatar:string;spellLevels:PermanentSpellRanks;unlockedMode:number;skinBook:Record<string,string>}>{
+export async function authenticate(token:unknown):Promise<{userId:string;name:string;avatar:string;spellLevels:PermanentSpellRanks;unlockedMode:number;skinBook:Record<string,string>;mastery:MasteryProgress;selectedVariants:string[];disabledMasteryAuras:string[]}>{
   if(!token)throw new Error('Connectez-vous à votre compte pour jouer.');
   if(typeof token!=='string'||token.length>16000)throw new Error('Session invalide.');
   const response=await fetch(`${url}/auth/v1/user`,{headers:{apikey:publicKey,Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(10000)});
@@ -50,7 +52,9 @@ export async function authenticate(token:unknown):Promise<{userId:string;name:st
   if(!saved.ok)throw new Error('Votre profil est indisponible. Réessayez.');
   const rows=await saved.json() as {data:{profile?:unknown;permanentSpellRanks?:unknown;spellLevels?:unknown;spellProgressionVersion?:unknown;equippedSkins?:unknown;skins?:unknown}}[],profile=sanitizeProfile(rows[0]?.data?.profile);
   if(!profile.complete)throw new Error('Choisissez votre pseudo et votre avatar avant de jouer.');
-  return {skinBook:sanitizeSkinBook(rows[0]?.data?.equippedSkins,rows[0]?.data?.skins),userId:user.id,name:profile.name,avatar:profile.avatar,spellLevels:sanitizePermanentSpellRanks(rows[0]?.data?.permanentSpellRanks),unlockedMode:unlockedModeFromProgression(rows[0]?.data)};
+  const savedData=rows[0]?.data as Record<string,unknown>|undefined,mastery=sanitizeMastery(savedData?.mastery),earned=masterySkins(mastery);
+  const skins=[...(Array.isArray(savedData?.skins)?savedData.skins.filter((id):id is string=>typeof id==='string'&&(!id.endsWith('__mastery')||earned.includes(id))):[]),...earned];
+  return {mastery,selectedVariants:sanitizeVariantSelection(savedData?.selectedVariants,mastery),disabledMasteryAuras:Array.isArray(savedData?.disabledMasteryAuras)?savedData.disabledMasteryAuras.filter((id):id is string=>typeof id==='string'&&Object.hasOwn(mastery,id)):[],skinBook:sanitizeSkinBook(rows[0]?.data?.equippedSkins,skins),userId:user.id,name:profile.name,avatar:profile.avatar,spellLevels:sanitizePermanentSpellRanks(rows[0]?.data?.permanentSpellRanks),unlockedMode:unlockedModeFromProgression(rows[0]?.data)};
 }
 export async function recordScore(userId:string,run:RunSummary):Promise<void>{
   if(!secret)throw new Error('Classement non configuré sur ce serveur.');
@@ -58,9 +62,9 @@ export async function recordScore(userId:string,run:RunSummary):Promise<void>{
   const response=await fetch(`${url}/rest/v1/rod_runs?on_conflict=run_id,user_id`,{method:'POST',headers:{...scoreHeaders(),'Content-Type':'application/json',Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify(row),signal:AbortSignal.timeout(10000)});
   if(!response.ok){
     scoreHealth={until:Date.now()+30000,value:{configured:true,ready:false,code:`HTTP_${response.status}`}};
-    if(run.mode===3&&response.status===400){
+    if(response.status===400){
       const failure=await response.json().catch(()=>({})) as {code?:string;message?:string};
-      if(failure.code==='23514'&&failure.message?.includes('rod_runs_difficulty_check'))throw new Error('CAUCHEMAR_MIGRATION_REQUIRED');
+      if(failure.code==='23514'&&failure.message?.includes('rod_runs_difficulty_check'))throw new Error('STASIS_MIGRATION_REQUIRED');
     }
     throw new ScoreWriteError(response.status);
   }

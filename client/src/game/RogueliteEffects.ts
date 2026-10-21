@@ -311,7 +311,7 @@ export class RogueliteEffects {
   for(let k=0;k<3;k++)this.arc(this.graphics,e.x,e.y,r*.7,spin+k*2*Math.PI/3,1.4,color,.6*fade,3);
   for(let i=0;i<8;i++){const t=(age*seconds*1.5+i/8)%1,d=-spin*1.5+i*Math.PI/4;this.dot(this.graphics,e.x+Math.cos(d)*r*(1-t),e.y+Math.sin(d)*r*(1-t),0xf0c840,fade*(.4+.6*t),2.5);}
  }
- /** Couronne du Tofu Royal, tourbillon des portés du Chamrak, racines de la Forêt Vivante, bulles des infectés. */
+ /** Couronne d’Ilyzaelle, tourbillon des portés du Chamrak, racines de la Forêt Vivante, bulles des infectés. */
  private monsterDecor(state:GameStateView,now:number) {
   const g=this.graphics,o=this.overhead;o.clear();let forest=false;state.players.forEach(p=>{if(p.abilities.includes('ev.foret_vivante'))forest=true;});
   state.monsters.forEach((m,id)=>{

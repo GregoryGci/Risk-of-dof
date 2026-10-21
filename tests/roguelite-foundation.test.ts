@@ -208,9 +208,11 @@ test('Roguelite charge logique : 800 choix, quatre autorités et quatre évoluti
   const started = performance.now(), catalog = preparationCatalog();
   const players = Array.from({length: 4}, (_, i) => new RunBuildController(catalog, 'load', `p${i}`, 'fixture_class', i));
   for (const p of players) {p.enqueueLevels(200, 0); consume(p, 200); assert.equal(p.getSnapshot().pendingLevels, 0);}
+  assert.ok(players.every(p => p.getSnapshot().build.spells.every(s => s?.evolutionId)), 'évolutions obtenues pendant les choix de niveau');
   for (const p of players) for (let i = 0; i < 4; i++) {
     assert.ok(p.enqueueBonus(`boss${i}`,'boss',[],201));
-    const offer=p.getSnapshot().offer!,choice=offer.choices.find(c=>c.definitionId===`fixture_evolution_${i}`)!;
+    const offer=p.getSnapshot().offer!,choice=offer.choices[0];
+    assert.ok(offer.choices.every(c=>c.kind!=='evolution'), 'un boss ne repropose pas une évolution déjà obtenue');
     assert.ok(p.choose({runId:'load',revision:offer.revision,choiceId:choice.id},201));
   }
   assert.ok(players.every(p => p.getSnapshot().build.spells.every(s => s?.evolutionId)));

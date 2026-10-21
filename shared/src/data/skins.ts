@@ -1,8 +1,10 @@
 import {CLASSES} from './classes.ts';
+import {MASTERY_LOOKS} from './mastery-looks.ts';
+import {MASTERY_SKIN_LEVEL} from '../mastery.ts';
 export const SKIN_PRICE=5;
 export const OGRINE_DROP_CHANCE=.05;
 export interface CurrencyGrant {claimId:string;amount:number}
-export interface SkinDef {id:string;classId:string;name:string;style:string;price:number}
+export interface SkinDef {id:string;classId:string;name:string;style:string;price:number;masteryLevel?:number}
 export const SKINS:SkinDef[]=Object.keys(CLASSES).flatMap(classId=>Object.entries({solomonk:'Solomonk',obvijevan:'Obvijevan',shushu:'Shushu'}).map(([style,name])=>({id:`${classId}__${style}`,classId,name,style,price:SKIN_PRICE})));
 /**
  * Costumes humoristiques : le personnage porte un vrai monstre 1.29 animé (voir tools/costume-skins.mjs).
@@ -22,7 +24,8 @@ export const COSTUMES:(SkinDef&{monster:string;scale:number})[]=([
   ['costume_pichon','Pichon d’avril','pichon_orange',1.2,5],
   ['costume_coffre','Coffre mimique','coffre',.8,8],
 ] as const).map(([id,name,monster,scale,price])=>({id,classId:'*',name,style:'costume',price,monster,scale}));
-export const ALL_SKINS:SkinDef[]=[...SKINS,...COSTUMES];
+export const MASTERY_SKINS:SkinDef[]=Object.values(MASTERY_LOOKS).map(look=>({id:look.skinId,classId:look.classId,name:look.name,style:'mastery',price:0,masteryLevel:MASTERY_SKIN_LEVEL}));
+export const ALL_SKINS:SkinDef[]=[...SKINS,...COSTUMES,...MASTERY_SKINS];
 export function skinById(id:unknown):SkinDef|undefined {return typeof id==='string'?ALL_SKINS.find(s=>s.id===id):undefined;}
 /** Un apparat va sur sa classe ; un costume va sur toutes. */
 export function skinFits(skin:SkinDef|undefined,classId:string):boolean {return !!skin&&(skin.classId===classId||skin.classId==='*');}

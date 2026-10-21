@@ -40,7 +40,6 @@ test('WebSocket : solo fermé aux invités, salon à deux, récompenses fiables 
     host.send('equipment',{equipment:{}});
     await new Promise(r=>setTimeout(r,60));assert.equal(p.state.maxHp,getClass('cra').maxHp+equippedStats({coiffe:createEquipment('coiffe_bouftou','legendaire')}).maxHp);
     host.send('input',{seq:7,dx:0,dy:0,dir:0});await until(()=>host.state.players.get(host.sessionId)!.inputSeq===7);
-    host.send('classAction',{tx:p.state.x+2,ty:p.state.y,choice:0});
     await until(()=>JSON.parse(host.state.players.get(host.sessionId)!.mechanic).status==='Visée active');
     assert.equal(JSON.parse(host.state.players.get(host.sessionId)!.mechanic).name,'Visée tendue');
     const elite=room.sim.spawnMonster((await import('@rod/shared')).getMonster('boufton'),p.state.x+2,p.state.y,1,1,1);elite.state.elite=true;room.sim.damageMonster(elite,1e6,p.id);await until(()=>JSON.parse(host.state.players.get(host.sessionId)!.boonChoices).length===3&&JSON.parse(guest.state.players.get(guest.sessionId)!.boonChoices).length===3);const guestChoices=guest.state.players.get(guest.sessionId)!.boonChoices;host.send('boon',{runId:simRunId(),choice:0,revision:host.state.players.get(host.sessionId)!.choiceRevision});await until(()=>host.state.players.get(host.sessionId)!.boonChoices==='[]');assert.equal(guest.state.players.get(guest.sessionId)!.boonChoices,guestChoices);guest.send('boon',{runId:simRunId(),choice:1,revision:guest.state.players.get(guest.sessionId)!.choiceRevision});await until(()=>guest.state.players.get(guest.sessionId)!.boonChoices==='[]');assert.equal(Object.keys(JSON.parse(host.state.players.get(host.sessionId)!.blessings)).length,1);assert.equal(Object.keys(JSON.parse(guest.state.players.get(guest.sessionId)!.blessings)).length,1);
@@ -61,6 +60,7 @@ test('WebSocket : solo fermé aux invités, salon à deux, récompenses fiables 
     host.send('restReady');await until(()=>guest.state.players.get(host.sessionId)!.restReady);assert.equal(host.state.intermission,true);
     guest.send('restReady');await until(()=>!host.state.intermission&&host.state.stage===2&&!guest.state.intermission);
     assert.equal(host.state.stageRoute,'ordeal');assert.equal(guest.state.stageRoute,'ordeal');
+    const resumedAt=room.sim.now;await until(()=>room.sim.now>=resumedAt+1.3);
     for(const player of room.sim.players.values()) room.sim.damagePlayer(player,1e6);
     await until(()=>rewards.length===1 && guest.state.phase===PHASE_LOST);
     assert.ok(rewards[0].gear.length>=1);assert.equal(rewards[0].runId,host.state.runId);

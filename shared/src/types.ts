@@ -226,6 +226,8 @@ export interface InputMessage {
 
 /** Serveur -> clients : un sort est lancé (le client affiche le projectile). */
 export interface CastEvent {
+  /** Visual source only; damage attribution remains on the owning player. */
+  companionOwner?: string;
   enemyProjectile?:{shape:NonNullable<SpellDef['projectile']>;color:number};
   visual?: {assetKey:string;color:number;handler:string;projectile?:SpellDef['projectile'];duration?:number;owner:string};
   level?:number;
@@ -243,6 +245,13 @@ export interface CastEvent {
   /** Emplacement de sort (joueurs uniquement) et temps de recharge effectif (ms). */
   slot?: number;
   cooldown?: number;
+}
+/** Authoritative companion action, independent of the player's own cast animation. */
+export interface CompanionActionEvent {
+  owner:string;base:string;attackId:string;
+  kind:'ranged'|'area'|'heal'|'shield'|'summon';
+  x:number;y:number;tx:number;ty:number;color:number;
+  runId:string;stage:number;at:number;
 }
 /** Un projectile s'arrête avant son point d'arrivée (il a touché). */
 export interface ProjEndEvent {
@@ -323,6 +332,8 @@ export interface PlayerView {
   abilities:string;
   choiceOffer:string;
   skin:string;
+  masteryAura?:string;
+  masteryLevel?:number;
   ogrinesEarned:number;
   ogrineGrants:string;
   spellLevels:string;
@@ -423,6 +434,8 @@ export interface GameStateView {
   cursedZaapX:number;
   cursedZaapY:number;
   stageRoute:string;
+  /** Ordre des douze donjons de la run (indices de ZONES séparés par des virgules). */
+  zoneOrder:string;
   protocolVersion:number;
   waves:number;
   zoneWave:number;

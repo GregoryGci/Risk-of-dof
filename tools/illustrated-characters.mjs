@@ -17,7 +17,10 @@ import {decodePng,crop,opaqueBounds,encodePng,blit} from './png.mjs';
 import {updateManifest,readManifest} from './manifest.mjs';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const OUTPUT=path.join(ROOT,'artifacts/illustrated-characters');
+// INK_STYLE=v3 : trait plus fin teinté par la matière, ombrage plus léger et couleurs de classe des portraits.
+// Dossier de travail séparé : le style v2 installé et ses rapports restent intacts tant que v3 n'est pas validé.
+const STYLE=process.env.INK_STYLE==='v3'?'v3':'v2';
+const OUTPUT=path.join(ROOT,STYLE==='v3'?'artifacts/illustrated-characters-v3':'artifacts/illustrated-characters');
 const FIXTURES=path.join(ROOT,'tools/fixtures/illustrated-characters');
 const RETRO=process.env.DOFUS_RETRO??path.join(process.env.LOCALAPPDATA??'','Ankama/Retro/resources/app/retroclient');
 const FFDEC=process.env.FFDEC??'C:/Program Files (x86)/FFDec/ffdec.jar';
@@ -36,6 +39,24 @@ const CONFIG={
  enutrof:{primary:'#736749',headHeight:1,cloth:'#d6c7a2',accent:'#8b7348',leather:'#64503a'},
  pandawa:{heads:{S:45,R:89,F:152,B:176,L:120},colors:{'#3a3d21':'#292923','#696543':'#3d3b31','#545035':'#302e27','#f6f2d9':'cloth','#bca46d':'#b4a68b'},primary:'#38362f',headHeight:1,cloth:'#ddd5bf',accent:'#8b3d31',leather:'#494238'},
 };
+// Couleurs des portraits du menu : tunique claire, couleur de classe franche, cuir chaud.
+const PALETTE_V3={
+ iop:{cloth:'#ece3cc',accent:'#b8352a',leather:'#6e4b2f'},
+ osamodas:{primary:'#3d64a8',cloth:'#e8e0cb',accent:'#3d64a8',leather:'#7a5a3a',dark:'#2f3c60'},
+ xelor:{primary:'#2f4f8f',cloth:'#e9e1c9',accent:'#2f4f8f',leather:'#b08a3e'},
+ cra:{primary:'#55702f',cloth:'#dcd2a4',accent:'#55702f',leather:'#7c5734'},
+ eniripsa:{cloth:'#f1e7d1',accent:'#b8382e',leather:'#8b6541'},
+ sacrieur:{primary:'#2f2b27',cloth:'#dac8a8',accent:'#b02d27',leather:'#4e3c2d',dark:'#2c2623'},
+ sram:{cloth:'#d0c4ae',accent:'#63407e',leather:'#5c4333',dark:'#2e2638'},
+ sadida:{primary:'#4f7a2b',cloth:'#cdbd8c',accent:'#4f7a2b',leather:'#6b5036'},
+ ecaflip:{primary:'#b8382e',cloth:'#e5d1a3',accent:'#b8382e',leather:'#4a3a30',dark:'#2d2826'},
+ feca:{cloth:'#e3d8b3',accent:'#5f7034',leather:'#75593b'},
+ enutrof:{primary:'#6c6d3a',cloth:'#dccba1',accent:'#7f6a3c',leather:'#76573a'},
+ pandawa:{cloth:'#ede7d4',accent:'#2f5592',leather:'#b4a68b',colors:{'#3a3d21':'#2b2925','#696543':'cloth','#545035':'accent','#f6f2d9':'cloth','#bca46d':'#b4a68b'},
+  roleColors:{'#3a3d21':[['Jambe|Cuisse|Bassin','accent']],'#000000':[['Jambe|Cuisse','#233f6e']]}},
+};
+const INK=STYLE==='v3'?{stroke:.075,line:.085,light:.25,mid:40,shade:.1,shadeAt:60,dark:.3}:{stroke:.13,line:.14,light:.18,mid:42,shade:.18,shadeAt:48,dark:.4};
+const outline=color=>STYLE==='v3'?mix(color,'#140d08',.78):'#2b251c';
 const digest=file=>createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const writeJson=(file,value)=>fs.writeFileSync(file,JSON.stringify(value,null,2));
 const assert=(condition,message)=>{if(!condition)throw Error(message);};
@@ -112,32 +133,35 @@ function heads(file,dest){
 }
 function rgb(hex){return [1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));}
 function mix(hex,other,t){const a=rgb(hex),b=rgb(other);return '#'+a.map((v,i)=>Math.round(v*(1-t)+b[i]*t).toString(16).padStart(2,'0')).join('');}
-function paintSvg(file,config,role){
+function paintSvg(file,config,role,leatherLimbs=config===CONFIG.iop){
  let svg=fs.readFileSync(file,'utf8'),n=0,defs=[];
  svg=svg.replace(/<path\b[^>]*\/>/g,tag=>{
   const fill=/\bfill="(#[\da-f]{6})"/i.exec(tag)?.[1];
-  if(!fill){return tag.replace(/stroke-width="[^"]+"/g,'stroke-width="0.14"').replace(/stroke-opacity="[^"]+"/g,'stroke-opacity="0.85"');}
+  if(!fill){return tag.replace(/stroke-width="[^"]+"/g,`stroke-width="${INK.line}"`).replace(/stroke-opacity="[^"]+"/g,'stroke-opacity="0.85"');}
   const [r,g,b]=rgb(fill),max=Math.max(r,g,b),min=Math.min(r,g,b),s=(max-min)/Math.max(1,max);
-  if(max<45||Number(/fill-opacity="([\d.]+)"/.exec(tag)?.[1]??1)<.5)return tag;
-  let color=fill,leather=/Pied|Semelle|Main|Manche/i.test(role)&&config===CONFIG.iop;
-  const mapped=config.colors?.[fill.toLowerCase()];
+  // roleColors : même couleur source, matière différente selon la pièce (ex. pantalon bleu, bras en fourrure).
+  const mapped=config.roleColors?.[fill.toLowerCase()]?.find(([pattern])=>new RegExp(pattern,'i').test(role))?.[1]??config.colors?.[fill.toLowerCase()];
+  if(max<45&&!mapped||Number(/fill-opacity="([\d.]+)"/.exec(tag)?.[1]??1)<.5)return tag;
+  let color=fill,leather=/Pied|Semelle|Main|Manche/i.test(role)&&leatherLimbs;
   if(mapped)color=config[mapped]??mapped;
   else if(/Aile/i.test(role))color=config.cloth;
   else if(leather||fill.toLowerCase()==='#ca7015')color=config.leather;
   else if(fill.toLowerCase()==='#bfac2b')color=config.primary??config.cloth;
   else if(['#fbd436','#ffff33'].includes(fill.toLowerCase()))color='#b5934f';
   else if(fill.toLowerCase()==='#ff910b')color=config.accent;
-  else if(s<.13)color=max>160?config.cloth:mix('#504a3c',config.leather,.3);
+  else if(s<.13)color=max>160?config.cloth:config.dark??mix('#504a3c',config.leather,.3);
   else if(r>g*1.15&&g>b&&g>70&&r>110)color=mix(fill,'#b79368',.15);
   else color=mix(config.accent,fill,.12);
-  const key='inkPaint'+n++;defs.push(`<linearGradient id="${key}" x1="0%" y1="0%" x2="90%" y2="100%"><stop offset="0%" stop-color="${mix(color,'#fff2c9',.18)}"/><stop offset="42%" stop-color="${color}"/><stop offset="48%" stop-color="${mix(color,'#30271b',.18)}"/><stop offset="100%" stop-color="${mix(color,'#211e17',.4)}"/></linearGradient>`);
-  const painted=tag.replace(/\bfill="[^"]+"/,`fill="url(#${key})"`).replace(/\bstroke="[^"]+"/,'stroke="#2b251c"').replace(/stroke-width="[^"]+"/g,'stroke-width="0.13"');
-  return painted.includes(' stroke=')?painted:painted.replace('/>',' stroke="#2b251c" stroke-width="0.13" stroke-linejoin="round"/>');
+  const key='inkPaint'+n++;defs.push(`<linearGradient id="${key}" x1="0%" y1="0%" x2="90%" y2="100%"><stop offset="0%" stop-color="${mix(color,'#fff2c9',INK.light)}"/><stop offset="${INK.mid}%" stop-color="${color}"/><stop offset="${INK.shadeAt}%" stop-color="${mix(color,'#30271b',INK.shade)}"/><stop offset="100%" stop-color="${mix(color,'#211e17',INK.dark)}"/></linearGradient>`);
+  const painted=tag.replace(/\bfill="[^"]+"/,`fill="url(#${key})"`).replace(/\bstroke="[^"]+"/,`stroke="${outline(color)}"`).replace(/stroke-width="[^"]+"/g,`stroke-width="${INK.stroke}"`);
+  return painted.includes(' stroke=')?painted:painted.replace('/>',` stroke="${outline(color)}" stroke-width="${INK.stroke}" stroke-linejoin="round"/>`);
  });
  return svg.replace('</svg>',`<defs>${defs.join('')}</defs></svg>`);
 }
+// Même dessin et mêmes ombres que la classe : seules les matières changent de palette.
+export function recolorBodySvg(file,id,palette,role){return paintSvg(file,{...CONFIG[id],...palette},role,id==='iop');}
 function build(id){
- const c=load(id),config=CONFIG[id],headFile=path.join(FIXTURES,id,'heads-v2.png');assert(fs.existsSync(headFile),'Planche de têtes manquante : '+id);
+ const c=load(id),config=STYLE==='v3'?{...CONFIG[id],...PALETTE_V3[id]}:CONFIG[id],headFile=path.join(FIXTURES,id,'heads-v2.png');assert(fs.existsSync(headFile),'Planche de têtes manquante : '+id);
  if(!config.heads){const auditFile=path.join(c.work,'audit.json');assert(fs.existsSync(auditFile),'Auditer la classe avant de construire.');const a=JSON.parse(fs.readFileSync(auditFile));config.heads=Object.fromEntries(Object.entries(a.parts).map(([dir,p])=>{const candidates=p.filter(p=>p.headCandidate);assert(candidates.length===1,`${id}/${dir} : identification de tête ambiguë`);return [dir,candidates[0].id];}));}
  const headSet=new Set([...Object.values(config.heads),...(config.hide??[])]),skip=new Set(),roles=new Map(),bodyShapes=new Set();
  function visit(n,role='',isHead=false,seen=new Set(),wholeBody=false){
@@ -162,7 +186,7 @@ function build(id){
  for(const n of bodyShapes){const file=path.join(shapeDir,n+'.svg');if(!fs.existsSync(file))continue;const art=nextId++,b=bounds(file);originalBounds.set(art,b);
   const placeholder=c.doc.defs.get(n).replace(/\bshapeId="\d+"/,`shapeId="${art}"`);added.push(placeholder);
   replaced.set(n,sprite(n,place(art,1,matrix(1,1,Math.round(b.x*20),Math.round(b.y*20)))));
-  fs.writeFileSync(path.join(imports,art+'.svg'),paintSvg(file,config,roles.get(n)??''));drawings.push({source:n,art,role:roles.get(n)??'corps'});
+  fs.writeFileSync(path.join(imports,art+'.svg'),paintSvg(file,config,roles.get(n)??'',id==='iop'));drawings.push({source:n,art,role:roles.get(n)??'corps'});
  }
  const headReport=[];
  for(const [dir,n]of Object.entries(config.heads)){
@@ -194,7 +218,7 @@ function build(id){
  console.log(`${id} : ${drawings.length} pièces de corps, ${headReport.length} têtes, ${checks.length} timelines inchangées.`);
 }
 
-async function repairRasterFrames(c,dest,swf,wanted,zoom){
+export async function repairRasterFrames(c,dest,swf,wanted,zoom){
  const missing=[];
  for(const n of new Set(wanted.map(w=>w.id))){const folder=clipPath(path.join(dest,'png'),n),count=c.parsed.sprites.get(n).frames;
   for(let f=1;f<=count;f++)if(!fs.existsSync(path.join(folder,f+'.png')))missing.push({clip:n,frame:f,file:path.join(folder,f+'.png')});

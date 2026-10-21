@@ -1,3 +1,4 @@
+import {getStasis,STASIS_LEVELS} from '../stasis.ts';
 import {RETRO_ITEMS} from './retro-equipment.ts';
 // Équipements permanents. Les bonus de niveau restent propres à chaque run.
 // Adaptation Retro : caractéristiques élémentaires -> dégâts, sagesse -> récupération,
@@ -6,7 +7,7 @@ import {RETRO_ITEMS} from './retro-equipment.ts';
 import type { StatKey } from '../types.ts';
 import { emptyStats, sumRunStats } from './items.ts';
 import { makeRng } from '../rng.ts';
-import { getMode, FINAL_STAGE } from '../difficulty.ts';
+import { getMode, FINAL_STAGE, CAMPAIGN_LENGTH } from '../difficulty.ts';
 import {flatDamageForLevel,standaloneEquipmentStats,scaleEquipmentStats} from './equipment-scaling.ts';
 import {equipmentSet,setBonusStats} from './equipment-sets.ts';
 
@@ -265,7 +266,7 @@ export interface Equipment {
 export interface EquipmentStack extends Equipment { quantity: number }
 export interface GearDrop { claimId: string; gear: Equipment }
 export type EquippedGear = Partial<Record<EquipmentSlot, Equipment>>;
-export interface RunReward { ogrineGrants?:import('./skins.ts').CurrencyGrant[];runId: string; kamas: number; stage: number; tier: number; gear: EquipmentStack[]; drops: GearDrop[]; forgeGrants?:import('./forge.ts').ForgeGrant[];summary?:import('./run-history.ts').RunSummary }
+export interface RunReward { mastery?:import('../mastery.ts').MasteryGrant;ogrineGrants?:import('./skins.ts').CurrencyGrant[];runId: string; kamas: number; stage: number; tier: number; gear: EquipmentStack[]; drops: GearDrop[]; forgeGrants?:import('./forge.ts').ForgeGrant[];summary?:import('./run-history.ts').RunSummary }
 
 export function slotKind(slot: EquipmentSlot): EquipmentKind {
   return slot.startsWith('anneau') ? 'anneau' : slot.startsWith('dofus') ? 'dofus' : slot as EquipmentKind;
@@ -353,11 +354,18 @@ export function dropRarity(random = Math.random,boost=1): EquipmentRarity {
  * d'objets bas niveau. Les Dofus restent droppables partout.
  */
 export const DROP_LEVEL_BANDS:readonly (readonly [number,number])[]=[[0,50],[51,100],[101,150],[151,200]];
-export function dropLevelBand(mode:number):readonly [number,number]{return DROP_LEVEL_BANDS[Math.max(0,Math.min(DROP_LEVEL_BANDS.length-1,mode))];}
+export function dropLevelBand(mode:number):readonly [number,number]{return DROP_LEVEL_BANDS[getStasis(mode).lootBand];}
 /** Facteur de rareté selon l'avancée dans la run : ×1 en zone 1, ×3,5 en dernière zone. */
-export function stageRarityBoost(stage:number):number{return 1+2.5*Math.min(1,Math.max(0,stage-1)/(FINAL_STAGE-1));}
+/**
+ * Rareté du butin : la zone de la run est replacée dans l'ancienne campagne du Stasis (lootStages),
+ * pour que les Stasis élevés gardent leur butin plus rare dès la première zone.
+ */
+export function stageRarityBoost(stage:number,mode=0):number{
+  const [first,last]=getStasis(mode).lootStages,progress=Math.min(1,Math.max(0,stage-1)/(FINAL_STAGE-1)),campaign=first+(last-first)*progress;
+  return 1+2.5*Math.min(1,Math.max(0,campaign-1)/(CAMPAIGN_LENGTH-1));
+}
 export function dropSources(stage:number,mode=0):{zone:number;tier:number;weight:number;rarityBoost:number;levels:readonly [number,number]}[] {
-  return [{zone:stage,tier:equipmentTier(stage),weight:1,rarityBoost:stageRarityBoost(stage),levels:dropLevelBand(mode)}];
+  return [{zone:stage,tier:equipmentTier(stage),weight:1,rarityBoost:stageRarityBoost(stage,mode),levels:dropLevelBand(mode)}];
 }
 /**
  * Niveau de drop d'un équipement : une panoplie tombe entière dans une seule difficulté, celle de sa
@@ -371,9 +379,10 @@ export function dropLevel(id:string):number {
 export function dropModeOf(id:string):number {
   const level=dropLevel(id);return Math.max(0,DROP_LEVEL_BANDS.findIndex(([min,max])=>level>=min&&level<=max));
 }
+export function dropModesOf(id:string):number[]{const band=dropModeOf(id);return STASIS_LEVELS.filter(s=>s.lootBand===band).map(s=>s.id);}
 const dropPools=new Map<string,string[]>();
 export function dropPool(_stage: number, dofus: boolean, mode=0): string[] {
-  const band=Math.max(0,Math.min(DROP_LEVEL_BANDS.length-1,mode)),key=`${dofus}:${band}`;
+  const band=getStasis(mode).lootBand,key=`${dofus}:${band}`;
   let pool=dropPools.get(key);
   if(!pool)dropPools.set(key,pool=Object.keys(EQUIPMENT_BASES).filter(id => {const b=EQUIPMENT_BASES[id];return dofus?b.kind==='dofus':b.kind!=='dofus'&&dropModeOf(id)===band;}));
   return pool;
@@ -381,7 +390,7 @@ export function dropPool(_stage: number, dofus: boolean, mode=0): string[] {
 /** Probabilité exacte d'un objet/rareté par ennemi éligible, pour les tableaux et simulations. */
 export function equipmentDropChance(stage:number,base:string,rarity:EquipmentRarity,multiplier=1,mode=0):number {
   const def=EQUIPMENT_BASES[base];if(!def)return 0;
-  const weights=dropRarityWeights(stageRarityBoost(stage));
+  const weights=dropRarityWeights(stageRarityBoost(stage,mode));
   if(def.kind==='dofus')return Math.min(1,DOFUS_DROP_CHANCE*multiplier)*weights[rarity]/dropPool(stage,true,mode).length;
   const pool=dropPool(stage,false,mode);if(!pool.includes(base))return 0;
   return Math.min(1,GEAR_DROP_CHANCE*multiplier)*weights[rarity]/pool.length;
@@ -394,7 +403,7 @@ export function monsterEquipmentDrops(stage: number, boss: boolean, random = Mat
     if (random() >= Math.min(1,(dofus ? DOFUS_DROP_CHANCE : GEAR_DROP_CHANCE)*lootMultiplier*(dofus?dofusMultiplier:1))) continue;
     const pool=dropPool(stage,dofus,mode);
     if (!pool.length) continue;
-    items.push(createEquipment(pool[Math.floor(random()*pool.length)],dropRarity(random,stageRarityBoost(stage))));
+    items.push(createEquipment(pool[Math.floor(random()*pool.length)],dropRarity(random,stageRarityBoost(stage,mode))));
   }
   return items;
 }
@@ -403,7 +412,7 @@ export function equipmentReward(runId: string, seed: number, stage: number, mode
   const tier = equipmentTier(stage);
   const random = makeRng(seed);
   const candidates = dropPool(stage,false,modeId);
-  const bonus = createEquipment(candidates[Math.floor(random()*candidates.length)],dropRarity(random,stageRarityBoost(stage)));
+  const bonus = createEquipment(candidates[Math.floor(random()*candidates.length)],dropRarity(random,stageRarityBoost(stage,modeId)));
   const drops = [...loot,{claimId:`${runId}:${seed}:completion`,gear:bonus}];
   return { runId, stage, tier, kamas: Math.max(0, Math.round(completionKamas * getMode(modeId).reward)), gear: stackEquipment(drops.map(d=>d.gear)), drops };
 }

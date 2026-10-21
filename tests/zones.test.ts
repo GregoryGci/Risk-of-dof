@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {ZONES,zoneForStage,bossForStage,generateMap,isBlocked,stepMovement,MAP_BASE_SIZE,MAP_SIZE,PHASE_PLAYING,ZAAP_READY,ZAAP_RANGE,INTERACT_RANGE,PLAYER_RADIUS,getMonster,type GameMap} from '@rod/shared';
+import {ZONES,zoneForStage,bossForStage,runZone,generateMap,isBlocked,stepMovement,MAP_BASE_SIZE,MAP_SIZE,PHASE_PLAYING,ZAAP_READY,ZAAP_RANGE,INTERACT_RANGE,PLAYER_RADIUS,getMonster,type GameMap} from '@rod/shared';
 import {GameState} from '../server/src/state.ts';
 import {Simulation} from '../server/src/game/Simulation.ts';
 
@@ -71,20 +71,20 @@ test('passage de Zaap : carte, vagues, élite et cooldowns changent ensemble',()
   const state=new GameState(),sim=new Simulation(state,()=>{});sim.addPlayer('p','Test','iop');sim.start();const p=sim.players.get('p')!;
   p.def={...p.def,maxHp:100000};p.state.maxHp=p.state.hp=100000;p.buffs.push({stats:{armor:1000},until:100000,invisible:false,invulnerable:true});
   for(let stage=1;stage<=7;stage++) {
-    assert.equal(state.stage,stage);assert.equal(sim.map.zoneId,zoneForStage(stage).id);
+    assert.equal(state.stage,stage);assert.equal(sim.map.zoneId,runZone(state.zoneOrder,stage).id);
     assert.ok([...state.challenges.values()].every(ch=>Math.hypot(ch.x-state.zaapX,ch.y-state.zaapY)>=ZAAP_RANGE+INTERACT_RANGE+.2));
     // Le build auto-lancé peut vider l'écran à tout instant : contrôle une fois par seconde pendant la vague.
     // Les invocations alliées (Tofus acquis en montant de niveau) ne sont pas des monstres de la zone.
     let seen=0;
     for(let tick=0;tick<900;tick++){sim.update(1/30);while(p.state.boonChoices!=='[]')sim.chooseBoon(p.id,0);
-      if(tick%30===0){const enemies=[...sim.monsters.values()].filter(m=>!m.state.ally);seen+=enemies.length;assert.ok(enemies.every(m=>zoneForStage(stage).monsters.includes(m.def.id)));}}
+      if(tick%30===0){const enemies=[...sim.monsters.values()].filter(m=>!m.state.ally);seen+=enemies.length;assert.ok(enemies.every(m=>runZone(state.zoneOrder,stage).monsters.includes(m.def.id)));}}
     assert.equal(state.phase,PHASE_PLAYING);assert.ok(seen>0);
     const challenge=[...state.challenges.values()].find(c=>!c.opened)!;
     // Le build auto-lancé peut tuer l'élite très vite : on la mémorise dès son apparition.
     p.state.x=challenge.x;p.state.y=challenge.y;sim.interact(p.id);let elite:{def:{id:string}}|undefined;
     for(let i=0;i<61;i++){sim.update(1/30);while(p.state.boonChoices!=='[]')sim.chooseBoon(p.id,0);elite??=[...sim.monsters.values()].find(m=>m.state.elite);}
     assert.ok(elite,'élite apparue');
-    assert.ok(zoneForStage(stage).monsters.includes(elite.def.id));assert.equal(challenge.opened,true);
+    assert.ok(runZone(state.zoneOrder,stage).monsters.includes(elite.def.id));assert.equal(challenge.opened,true);
     if(stage===7)break;
     p.readyAt=[999,999,999,999];p.push={vx:20,vy:0,time:.2};
     state.zaapState=ZAAP_READY;p.state.x=state.zaapX;p.state.y=state.zaapY;sim.interact(p.id);

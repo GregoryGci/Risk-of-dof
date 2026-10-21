@@ -2,11 +2,22 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import {CLASSES,SKINS,COSTUMES,sanitizeSkinBook} from '@rod/shared';
+import {CLASSES,SKINS,COSTUMES,sanitizeSkinBook,EQUIPMENT_BASES} from '@rod/shared';
 import type {Manifest,GearTracks} from '../client/src/assets/manifest.ts';
 
 const root=path.resolve('client/public/assets/dofus');
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8')) as Manifest;
+test('Chaque coiffe et cape équipable possède les visuels directionnels portés en jeu',()=>{
+ const atlas=JSON.parse(fs.readFileSync(path.join(root,manifest.gear!.atlas),'utf8'));
+ for(const [id,base]of Object.entries(EQUIPMENT_BASES)){
+  if(base.kind!=='coiffe'&&base.kind!=='cape')continue;
+  const item=manifest.gear!.items[id];assert.ok(item,`${id} (${base.name})`);assert.equal(item.kind,base.kind);
+  for(const dir of base.kind==='coiffe'?['R','L','F','B','S']:['L','R','RR','RL']){
+   assert.ok(item.origins[dir]?.every(Number.isFinite),id+'/'+dir);
+   assert.ok(atlas.frames[id+':'+dir],id+'/'+dir);
+  }
+ }
+});
 test('Douze corps illustrés : atlas légers, animations complètes et équipements synchronisés',()=>{
  for(const id of Object.keys(CLASSES)){
   const def=manifest.characters![id]!;

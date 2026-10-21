@@ -48,3 +48,17 @@ export function zoneForStage(stage: number): ZoneDef {
   return ZONES[(Math.max(1,Math.floor(Number.isFinite(stage)?stage:1))-1)%ZONES.length];
 }
 export function getZone(id: string): ZoneDef { return ZONES.find(z=>z.id===id) ?? ZONES[0]; }
+
+/** Zones d'une run : douze donjons tirés au hasard, chacun avec son gardien. */
+export const RUN_ZONES=12;
+/** Ordre des donjons d'une run (indices de ZONES séparés par des virgules), tiré une fois au départ. */
+export function rollZoneOrder(random:()=>number):string {
+  const indices=ZONES.map((_,i)=>i);
+  for(let i=indices.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[indices[i],indices[j]]=[indices[j],indices[i]];}
+  return indices.slice(0,RUN_ZONES).join(',');
+}
+/** Donjon de la zone `stage` (1 à RUN_ZONES) ; sans ordre tiré (salon, outils), la liste fixe sert de repli. */
+export function runZone(order:string|undefined,stage:number):ZoneDef {
+  const index=Number(order?.split(',')[Math.max(1,Math.floor(Number.isFinite(stage)?stage:1))-1]);
+  return order&&Number.isInteger(index)&&ZONES[index]?ZONES[index]:zoneForStage(stage);
+}

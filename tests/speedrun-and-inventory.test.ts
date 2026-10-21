@@ -42,8 +42,8 @@ test('Élite de défi : annonce au sol puis apparition après 2 s',()=>{
 
 test('Gardiens : cadence plus vive avec la difficulté et la progression',()=>{
   assert.equal(bossPace(0,1),1);
-  assert.ok(bossPace(3,1)<bossPace(0,1));assert.ok(bossPace(0,20)<bossPace(0,1));
-  assert.ok(bossPace(3,33)>.5&&bossPace(3,33)<.6);
+  assert.ok(bossPace(4,1)<bossPace(0,1));assert.ok(bossPace(0,20)<bossPace(0,1));
+  assert.ok(bossPace(4,33)>.5&&bossPace(4,33)<.6);
 });
 
 test('DPS : moyenne de la run ou des 5 dernières secondes',()=>{

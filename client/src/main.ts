@@ -17,6 +17,7 @@ import './legends.css';
 import './mobile.css';
 import './run-recap.css';
 import {inviteCode} from './ui/invite.ts';
+import {stasisLabel} from './ui/stasis.ts';
 import {startThemeMotion} from './ui/themeMotion.ts';
 import {SkinShop} from './ui/SkinShop.ts';
 import {startHomeAmbience} from './ui/HomeAmbience.ts';
@@ -29,6 +30,8 @@ import {cloud} from './cloud.ts';
 import { setupDialogNavigation } from './ui/dialogNavigation.ts';
 import { mountSettings } from './ui/settingsForm.ts';
 import { account } from './account.ts';
+import {MasteryPage} from './ui/MasteryPage.ts';
+import './mastery.css';
 import { settings, subscribeSettings } from './settings.ts';
 import { ambiance, music, MENU_TRACK } from './music.ts';
 import { applyCrosshair } from './crosshair.ts';
@@ -159,6 +162,7 @@ function renderProfile(): void {
   renderModes();
   const tier = EQUIPMENT_TIERS[account.bestTier];
   const count = Object.keys(account.equipment).length;
+  $('btn-mastery').querySelector('small')!.textContent=`${CLASSES[classId].name} · niveau ${account.masteryStatus(classId).level} / 50`;
   // En haut à gauche : nom de l'invocateur et ses monnaies, rien d'autre.
   $('home-profile').innerHTML = `<button type="button" class="profile-name" id="btn-account" title="${cloud.session?'Mon compte':'Se connecter'}">${escapeHtml(account.profile.name||pseudoInput.value.trim() || 'Aventurier')}</button><span class="profile-stat"><b>${account.bank.toLocaleString('fr')}</b> kamas</span><span class="profile-stat forge"><b>${account.fragments.toLocaleString('fr')}</b> ◈ forge</span><span class="profile-stat"><b>${account.ogrines}</b> Ogrines</span>`;
   $('home-progress').textContent = `PALIER ${tier.level} · ${account.inventory.length} ÉQUIPEMENTS`;
@@ -204,7 +208,10 @@ const homeSettings = mountSettings($('home-settings'));
 function renderSettings(): void { homeSettings.render(); }
 function renderModes(): void {
   setupMode=Math.min(setupMode,account.unlockedMode);
-  $('setup-modes').innerHTML = GAME_MODES.map((m,i) => {const locked=m.id>account.unlockedMode;return`<button class="setup-mode${setupMode === m.id ? ' active' : ''}${locked?' locked':''}" data-setup-mode="${m.id}" aria-pressed="${setupMode === m.id}" ${locked?'disabled':''} title="${escapeHtml(locked?`Terminez le mode ${GAME_MODES[m.id-1].name} pour débloquer ce mode.`:m.description)}"><span>${['Facile','Normal','Difficile','Cauchemar'][i]}${locked?' · Verrouillé':''}</span><b>${m.name}</b><small>${locked?`Terminer le mode ${GAME_MODES[m.id-1].name}`:`Donjons ${modeStages(m.id)[0]} à ${modeStages(m.id)[1]} · ${['Découvrez les champs','Avec une première tenue','Tenue de palier 80 conseillée','2 boss / 3 boss toutes les 3 zones'][i]}`}</small></button>`;}).join('');
+  if(!$('setup-stasis-help').hasChildNodes())$('setup-stasis-help').innerHTML=stasisLabel('setup-stasis-tooltip');
+  $('setup-modes').innerHTML = GAME_MODES.map(m => {const locked=m.id>account.unlockedMode;return`<button class="stasis-number${setupMode === m.id ? ' active' : ''}${locked?' locked':''}" data-setup-mode="${m.id}" aria-label="${m.name}${locked?' · Verrouillé':''}" aria-pressed="${setupMode === m.id}" ${locked?'disabled':''} title="${escapeHtml(locked?`Terminez le Stasis ${m.stasis-1} pour débloquer ce niveau.`:m.description)}">${m.stasis}</button>`;}).join('');
+  const selected=GAME_MODES[setupMode];
+  $('setup-mode-details').textContent=`${modeStages(selected.id)[1]} donjons aléatoires · ${selected.recommendation}`;
 }
 $('setup-modes').addEventListener('click', e => {
   const button = (e.target as HTMLElement).closest<HTMLElement>('[data-setup-mode]');
@@ -213,6 +220,8 @@ $('setup-modes').addEventListener('click', e => {
 renderModes();
 // Boutique d'apparats : progression permanente et atlas chargés à la demande.
 const skinShop=new SkinShop(()=>{renderProfile();void cloud.flush().then(()=>currentRoom?.send('refreshProgression'));});
+const masteryPage=new MasteryPage(()=>{renderProfile();void cloud.flush().then(()=>currentRoom?.send('refreshProgression'));},()=>!currentRoom||currentRoom.state.phase!==PHASE_PLAYING);
+$('btn-mastery').onclick=()=>masteryPage.open(classId);
 $('btn-skins').hidden=false;$('btn-skins').onclick=()=>skinShop.open(classId);
 fetch('assets/dofus/manifest.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(data=>{if(data&&Object.keys(data).length)$('btn-skins').hidden=false;}).catch(()=>{});
 if (invited) showView('multi');
@@ -305,7 +314,7 @@ async function startGame(room: Room): Promise<void> {
       room.onStateChange(receive);
     });
   }
-  runLoader.zone(room.state.stage,room.state.mode??0);
+  runLoader.zone(room.state.stage,room.state.mode??0,room.state.zoneOrder??'');
   if(room.state.protocolVersion!==GAME_PROTOCOL_VERSION)throw new Error('Le serveur de jeu utilise encore une ancienne version. Attendez la mise à jour du serveur Railway puis réessayez.');
   currentRoom = room;
   if(invited){const url=new URL(location.href);url.searchParams.delete('code');window.history.replaceState(null,'',url);}
@@ -370,7 +379,7 @@ async function startGame(room: Room): Promise<void> {
   room.onMessage('gearDrop',(message:{player:string;drop:GearDrop})=>{ if(message.player===room.sessionId) hud.collectDrop(message.drop); });
   room.onMessage('ogrineDrop',(message:{player:string})=>{if(message.player===room.sessionId)hud.announceOgrine();});
   room.onMessage('forgeGrant',(message:{player:string;grant:import('@rod/shared').ForgeGrant})=>{if(message.player===room.sessionId)account.claimFragments([message.grant]);});
-  room.onMessage('runReward',(message:{player:string;reward:RunReward})=>{ if(message.player===room.sessionId) { account.creditRun(message.reward); renderProfile();renderModes(); } });
+  room.onMessage('runReward',(message:{player:string;reward:RunReward})=>{ if(message.player===room.sessionId) { const before=account.masteryStatus(classId).level;account.creditRun(message.reward);renderProfile();renderModes();if(message.reward.mastery?.xp)hud.toast(`+${message.reward.mastery.xp} XP de maîtrise · ${CLASSES[classId].name}${account.masteryStatus(classId).level>before?` · niveau ${account.masteryStatus(classId).level} !`:''}`); } });
   room.onMessage('scoreSaved',()=>hud.toast('Votre run est inscrite au classement.'));
   room.onMessage('scoreError',(message:{message:string})=>hud.toast(escapeHtml(message.message)));
   room.onMessage('progressionError',(message:{message:string})=>hud.toast(escapeHtml(message.message)));

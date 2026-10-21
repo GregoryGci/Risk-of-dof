@@ -38,9 +38,9 @@ test('E10 : Colère frappe la ligne du plus robuste au cinquième coup et émet 
 test('E11 : Jugement plante les grandes épées et produit les six impacts de l’anneau',()=>{
  const s=setup('sp.epee_celeste');dummy(s.sim,44);cast(s);advance(s.sim,1.4);assert.ok(s.sim.grounds.size>0);assert.ok(s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius===.8).length>=6);
 });
-test('E12 : un seul Royal, nuée chercheuse, écrasement et maintien près du propriétaire',()=>{
- const s=setup('sp.invocation_de_tofu');dummy(s.sim,44);cast(s);advance(s.sim,3.3);const owned=[...s.sim.monsters.values()].filter(m=>m.allyOwner===s.p.id),royal=owned.filter(m=>m.rogueliteSummon?.royal);
- assert.equal(royal.length,1);assert.ok(Math.hypot(royal[0].state.x-s.p.state.x,royal[0].state.y-s.p.state.y)<3.6);assert.ok(s.events.some(e=>e.type==='cast'&&e.data.visual?.handler==='projectile'));assert.ok(s.events.some(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius===2.5));
+test('E12 : Ilyzaelle seule, salve chercheuse, onde et maintien près du propriétaire',()=>{
+ const s=setup('sp.invocation_de_tofu');dummy(s.sim,44);cast(s);advance(s.sim,6.5);const owned=[...s.sim.monsters.values()].filter(m=>m.allyOwner===s.p.id),royal=owned.filter(m=>m.rogueliteSummon?.royal);
+ assert.equal(owned.length,1);assert.equal(royal.length,1);assert.ok(Math.hypot(royal[0].state.x-s.p.state.x,royal[0].state.y-s.p.state.y)<3.6);assert.ok(s.events.some(e=>e.type==='cast'&&e.data.visual?.handler==='projectile'));assert.ok(s.events.some(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius===3));
 });
 test('E13 : Forêt relie les pousses par des racines, attire et émet les éruptions',()=>{
  const s=setup('sp.arbre_sadida');dummy(s.sim,44);cast(s);const tree=[...s.sim.monsters.values()].find(m=>m.allyOwner===s.p.id)!;assert.ok(tree);const target=dummy(s.sim,tree.state.x+1.5,tree.state.y),x=target.state.x;advance(s.sim,.2);assert.ok(target.rootUntil!>0);assert.ok(target.state.x<x);advance(s.sim,2.1);assert.ok(s.events.some(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius===5));
@@ -58,8 +58,11 @@ test('E16 : le Sceau soigne l’équipe, convertit le surplus en bouclier et son
  const s=setup('sp.mot_de_reconstitution');s.sim.addPlayer('q','Allié','iop');const q=s.sim.players.get('q')!;q.state.x=41;q.state.y=40;q.readyAt[0]=Infinity;s.p.readyAt[0]=Infinity;dummy(s.sim,44.5);
  advance(s.sim,4.3);assert.ok(q.state.shield>0);assert.ok(q.state.shield<=q.state.maxHp*.15);assert.ok(s.events.some(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius===6));
 });
-test('E18 : Piège de Masse détonne le réseau connecté une seule fois',()=>{
- // Les fils ne sont actifs qu'à partir de 4 pièges armés : deux lancers de 2 pièges.
+test('E18 : Piège de Masse explose individuellement et conserve le reste du réseau',()=>{
  const s=setup('sp.piege_sournois');cast(s);advance(s.sim,.1);cast(s);advance(s.sim,.5);const traps=[...s.sim.grounds.values()];assert.ok(traps.length>=4);const count=traps.length;
- dummy(s.sim,traps[0].state.x,traps[0].state.y);advance(s.sim,.1);assert.equal(s.sim.grounds.size,0);const impacts=s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact').length;advance(s.sim,.5);assert.equal(s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact').length,impacts);assert.ok(impacts>=count+1);
+ const enemy=dummy(s.sim,traps[0].state.x,traps[0].state.y),hp=enemy.state.hp;
+ advance(s.sim,.1);assert.equal(s.sim.grounds.size,count-1);assert.ok(!s.sim.grounds.has(traps[0].id));assert.ok(enemy.state.hp<hp);
+ for(const trap of traps.slice(1))assert.ok(s.sim.grounds.has(trap.id));
+ const impacts=s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact').length;advance(s.sim,.5);assert.equal(s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact').length,impacts);
+ const next=traps[1];dummy(s.sim,next.state.x,next.state.y);advance(s.sim,.1);assert.equal(s.sim.grounds.size,count-2);assert.ok(!s.sim.grounds.has(next.id));
 });

@@ -48,6 +48,12 @@ Les kamas de fin de partie financent **cinq paliers par sort**, communs aux clas
 
 L’équipement, les panoplies, six emplacements de Dofus, la fusion, la forge, le recyclage et les apparats restent séparés du build temporaire. L’encyclopédie est alimentée par le catalogue réel. Les raretés conservent leurs couleurs dans le thème encre pour rester identifiables.
 
+## Maîtrise et variantes
+
+La [maîtrise des classes](docs/MAITRISE.md) débloque des auras au niveau 10, des variantes de sorts partagées au niveau 20 et douze skins spéciaux au niveau 30. Le menu **Maîtrise** permet de choisir les variantes et apparences pour les prochaines runs. L'atelier animé est disponible à [mastery-test.html](client/mastery-test.html).
+
+Le prestige reste prévu dans la [liste des tâches](docs/TACHES.md).
+
 ## Commandes
 
 | Action | Commande |

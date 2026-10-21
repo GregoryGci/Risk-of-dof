@@ -6,7 +6,7 @@ import { Simulation } from '../game/Simulation.ts';
 import type {PermanentSpellRanks} from '@rod/shared/roguelite';
 import { GameState } from '../state.ts';
 import {authenticate,recordScore,cloudScoresEnabled,getScoreHealth,ScoreWriteError,scoreFailureCode} from '../cloud.ts';
-import {PHASE_LOBBY,type RunReward} from '@rod/shared';
+import {PHASE_LOBBY,GAME_MODES,type RunReward} from '@rod/shared';
 
 /** Codes des parties en cours, pour éviter les doublons. */
 const activeCodes = new Set<string>();
@@ -43,7 +43,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     if(this.state.phase!==PHASE_LOBBY)return;
     const pending=this.refreshing.get(id);if(pending)return pending;
     const token=this.accessTokens.get(id);if(!token)return;
-    const request=(async()=>{try{const profile=await authenticate(token);if(profile.userId!==this.accounts.get(id)||this.state.phase!==PHASE_LOBBY)return;this.progression.set(id,profile.spellLevels);this.sim.setSpellLevels(id,profile.spellLevels);this.sim.setUnlockedMode(id,profile.unlockedMode);this.sim.setSkins(id,profile.skinBook);}catch{this.clients.find(c=>c.sessionId===id)?.send('progressionError',{message:'Niveaux de sorts : synchronisation indisponible. Le dernier deck synchronisé sera utilisé.'});}finally{this.refreshing.delete(id);}})();
+    const request=(async()=>{try{const profile=await authenticate(token);if(profile.userId!==this.accounts.get(id)||this.state.phase!==PHASE_LOBBY)return;this.progression.set(id,profile.spellLevels);this.sim.setSpellLevels(id,profile.spellLevels);this.sim.setUnlockedMode(id,profile.unlockedMode);this.sim.setSkins(id,profile.skinBook);this.sim.setMastery(id,profile.mastery,profile.selectedVariants,profile.disabledMasteryAuras);}catch{this.clients.find(c=>c.sessionId===id)?.send('progressionError',{message:'Niveaux de sorts : synchronisation indisponible. Le dernier deck synchronisé sera utilisé.'});}finally{this.refreshing.delete(id);}})();
     this.refreshing.set(id,request);return request;
   }
   async onAuth(_client:Client,options:{accessToken?:unknown}) {return await authenticate(options?.accessToken)??true;}
@@ -90,7 +90,6 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage('boon',(client:Client,message:{choice?:unknown;revision?:number;runId?:string})=>{if(Number.isInteger(message?.revision)&&message.runId===this.state.runId)this.sim.chooseBoon(client.sessionId,message?.choice,message.revision,message.runId);});
     this.onMessage('reroll',(client:Client,message:{runId?:unknown;revision?:unknown})=>this.sim.rerollBoon(client.sessionId,message));
     this.onMessage('banish',(client:Client,message:{runId?:unknown;revision?:unknown;choiceId?:unknown})=>this.sim.banishBoon(client.sessionId,message));
-    this.onMessage('classAction',(client:Client,message:{tx?:unknown;ty?:unknown;choice?:unknown})=>this.sim.classAction(client.sessionId,message));
     this.onMessage('start', async (client: Client) => {
       if(client.sessionId!==this.state.hostId||this.state.phase!==PHASE_LOBBY||this.starting)return;
       this.starting=true;try{await Promise.all([...this.accounts.keys()].map(id=>this.refreshProgression(id)));if(client.sessionId===this.state.hostId)this.sim.start();}finally{this.starting=false;}
@@ -100,15 +99,16 @@ export class GameRoom extends Room<{ state: GameState }> {
     console.log(`[salle ${this.roomId}] créée`);
   }
 
-  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown; blessing?:unknown;accessToken?:unknown },auth?:{userId?:string;spellLevels?:PermanentSpellRanks;unlockedMode?:number;skinBook?:Record<string,string>}|boolean): void {
+  onJoin(client: Client, options?: { name?: string; classId?: string; spells?: string[]; equipment?: unknown; blessing?:unknown;accessToken?:unknown },auth?:{userId?:string;spellLevels?:PermanentSpellRanks;unlockedMode?:number;skinBook?:Record<string,string>;mastery?:import('@rod/shared').MasteryProgress;selectedVariants?:string[];disabledMasteryAuras?:string[]}|boolean): void {
     if(auth&&typeof auth==='object'&&auth.userId)this.accounts.set(client.sessionId,auth.userId);
     client.send('cloudStatus',{ranked:this.accounts.has(client.sessionId)&&cloudScoresEnabled});
     const name = cleanName(auth&&typeof auth==='object'&&'name' in auth?auth.name:options?.name);
     const levels=auth&&typeof auth==='object'?auth.spellLevels:undefined;
     if(levels)this.progression.set(client.sessionId,levels);if(typeof options?.accessToken==='string')this.accessTokens.set(client.sessionId,options.accessToken);
-    const unlockedMode=auth&&typeof auth==='object'?(auth.unlockedMode??0):3;
+    const unlockedMode=auth&&typeof auth==='object'?(auth.unlockedMode??0):GAME_MODES.length-1;
     this.sim.addPlayer(client.sessionId, name, typeof options?.classId === 'string' ? options.classId : undefined, options?.spells, options?.equipment, undefined,levels,unlockedMode);
     this.sim.setSkins(client.sessionId,auth&&typeof auth==='object'?auth.skinBook:{});
+    if(auth&&typeof auth==='object')this.sim.setMastery(client.sessionId,auth.mastery,auth.selectedVariants,auth.disabledMasteryAuras);
     this.sim.players.get(client.sessionId)!.state.rankStatus=this.accounts.has(client.sessionId)&&cloudScoresEnabled?'ready':'disabled';
     if(this.accounts.has(client.sessionId))void getScoreHealth().then(health=>{
       const player=this.sim.players.get(client.sessionId);
@@ -127,7 +127,7 @@ export class GameRoom extends Room<{ state: GameState }> {
     }
     if(p)p.state.rankStatus='failed';
     console.error('[classement]',error instanceof Error?error.message:'Enregistrement impossible');
-    const message=error instanceof Error&&error.message==='CAUCHEMAR_MIGRATION_REQUIRED'?'Classement Cauchemar : la migration Supabase doit encore être appliquée. Votre historique est conservé.':'Classement : le serveur n’a pas pu enregistrer votre score. Votre historique est conservé.';
+    const message=error instanceof Error&&scoreFailureCode(error)==='DATABASE_MIGRATION'?'Classement Stasis : la migration Supabase doit encore être appliquée. Votre historique est conservé.':'Classement : le serveur n’a pas pu enregistrer votre score. Votre historique est conservé.';
     this.clients.find(c=>c.sessionId===playerId)?.send('scoreError',{message,code:scoreFailureCode(error),...(error instanceof ScoreWriteError?{status:error.status}:{})});
   }
 

@@ -10,6 +10,8 @@ export const PlayerState = schema(
     abilities:t.string().default('[]'),
     choiceOffer:t.string().default('null'),
     skin:t.string().default(''),
+    masteryAura:t.string().default(''),
+    masteryLevel:t.uint8().default(1),
     ogrinesEarned:t.uint16().default(0),
     ogrineGrants:t.string().default('[]'),
     spellLevels:t.string().default('{}'),
@@ -137,6 +139,8 @@ export const GameState = schema(
     protocolVersion:t.uint16().default(GAME_PROTOCOL_VERSION),
     singlePlayer: t.boolean().default(false),
     stageRoute:t.string().default('normal'),
+    /** Ordre des douze donjons de la run (indices de ZONES), tiré au départ. */
+    zoneOrder:t.string().default(''),
     intermission: t.boolean().default(false),
     runId: t.string().default(''),
     phase: t.uint8().default(PHASE_LOBBY),
@@ -166,7 +170,7 @@ export const GameState = schema(
     paused: t.boolean().default(false),
     /** Joueurs dont le menu Échap fige la run d'équipe, séparés par des virgules. */
     pausedBy: t.string().default(''),
-    /** Facile par défaut : le client envoie la difficulté choisie dès l'arrivée dans le salon. */
+    /** Stasis 1 par défaut : le client envoie sa sélection dès l'arrivée dans le salon. */
     mode: t.uint8().default(0),
     restX: t.float32().default(0),
     restY: t.float32().default(0),

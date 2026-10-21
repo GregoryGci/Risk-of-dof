@@ -1,6 +1,6 @@
 // Directeur de spawn façon Risk of Rain : il accumule des crédits avec le temps
 // (de plus en plus vite) et les dépense en vagues de monstres autour des joueurs.
-import { runStageIndex, assaultPlan, easyLateRelief, getRoute, nightmareSpawnRamp, ZAAP_CHARGING, getMode, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
+import { runStageIndex, assaultPlan, easyLateRelief, getRoute, stasisSpawnRamp, ZAAP_CHARGING, getMode, isBlocked, monsterDamageMultiplier, monsterHpMultiplier, spawnCreditsPerSecond, type MonsterDef } from '@rod/shared';
 import type { Simulation } from './Simulation.ts';
 import {easyRamp,enemyPopulationLimit,introductoryZone} from './spawn-pressure.ts';
 
@@ -69,13 +69,13 @@ export class Director {
     const pressure=bossIntroduction?Math.min(this.pressure,1.25):this.pressure;
     const rush = sim.state.zaapState === ZAAP_CHARGING ? (bossIntroduction?.8:1.8) : 1;
     const ramp=easyRamp(sim.state),cap=introduction?18:sim.state.mode===0&&!sim.state.cursed?40+20*ramp:300;
-    this.credits = Math.min(cap,this.credits+spawnCreditsPerSecond(diff, sim.players.size,runStageIndex(sim.state.mode,sim.state.stage)) * rush * pressure * getMode(sim.state.mode).spawn * nightmareSpawnRamp(sim.state.mode,runStageIndex(sim.state.mode,sim.state.stage)) * (sim.state.mode===0?.55+.45*ramp:1) * getRoute(sim.state.stageRoute).spawn * dt);
+    this.credits = Math.min(cap,this.credits+spawnCreditsPerSecond(diff, sim.players.size,runStageIndex(sim.state.mode,sim.state.stage)) * rush * pressure * getMode(sim.state.mode).spawn * stasisSpawnRamp(sim.state.mode,runStageIndex(sim.state.mode,sim.state.stage)) * (sim.state.mode===0?.55+.45*ramp:1) * getRoute(sim.state.stageRoute).spawn * dt);
 
     this.nextWaveIn -= dt;
     if (this.nextWaveIn <= 0) {
       this.wave++;
       sim.state.waves++;sim.state.zoneWave++;
-      this.nextWaveIn = (bossIntroduction?6+Math.random()*1.5:this.wave%5===0 && sim.state.zaapState!==ZAAP_CHARGING ? 6 : 4+Math.random()*1.5)/Math.sqrt(pressure);
+      this.nextWaveIn = (bossIntroduction?6+Math.random()*1.5:this.wave%5===0 && sim.state.zaapState!==ZAAP_CHARGING ? 6 : 4+Math.random()*1.5)/Math.sqrt(pressure)/getMode(sim.state.mode).waveCadence;
       this.spawnWave();
     }
 
@@ -96,9 +96,10 @@ export class Director {
     const plan=assaultPlan(this.wave,runStageIndex(sim.state.mode,sim.state.stage)),def = plan.fast ? fast : pickWeighted(eligible);
     // Une vague mixte sur quatre : arrière-garde à distance, mêlée devant.
     const fullBaseline=10+Math.floor(diff*1.5)+Math.floor(this.wave/3),ramp=easyRamp(sim.state);
-    const baseline=runStageIndex(sim.state.mode,sim.state.stage)===1?(this.wave<3?2:4+Math.floor(this.wave/3)):sim.state.mode===0&&!sim.state.cursed?Math.round(6+Math.floor(this.wave/4)+(fullBaseline-6-Math.floor(this.wave/4))*ramp):fullBaseline;
+    const baseline=runStageIndex(sim.state.mode,sim.state.stage)===1?(this.wave<3?getMode(sim.state.mode).openingPack[0]:getMode(sim.state.mode).openingPack[1]+Math.floor(this.wave/3)):sim.state.mode===0&&!sim.state.cursed?Math.round(6+Math.floor(this.wave/4)+(fullBaseline-6-Math.floor(this.wave/4))*ramp):fullBaseline;
     const introduction=introductoryZone(sim.state),bossIntroduction=introduction&&sim.state.zaapState===ZAAP_CHARGING;
-    const maxPack=introduction?(bossIntroduction?4:6)+2*Math.max(0,sim.players.size-1):Math.min(36,Math.ceil(baseline*Math.sqrt(this.pressure)));
+    const teamPack=1+.5*Math.max(0,sim.players.size-1);
+    const maxPack=introduction?(bossIntroduction?4:6)+2*Math.max(0,sim.players.size-1):Math.min(72,Math.ceil(Math.min(36,baseline*Math.sqrt(this.pressure))*teamPack));
     const enemies=[...sim.monsters.values()].filter(m=>!m.state.ally).length;
     const count = Math.min(Math.floor(this.credits / def.cost), maxPack, enemyPopulationLimit(sim.state,sim.players.size) - enemies);
     if (count <= 0) return;

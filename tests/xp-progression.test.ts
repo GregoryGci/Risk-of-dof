@@ -68,9 +68,9 @@ test('Les valeurs de combat synchronisées incluent les buffs, les plafonds et l
   const {sim,p}=setup(false,'iop');sim.applyBuff(p,{duration:4,stats:{haste:3,crit:3,armor:20}});const stats=JSON.parse(p.state.combatStats);assert.deepEqual(stats,p.stats);assert.equal(stats.haste,1);assert.equal(stats.crit,.95);assert.ok(stats.armor<9);
   sim.damagePlayer(p,1e9);assert.equal(p.buffs.length,0);assert.equal(p.state.blessings,'{}');assert.equal(JSON.parse(p.state.combatStats).haste,0);
 });
-test('Pause de choix solo : le serveur rejette sorts, esquive, action et interaction anticipés',()=>{
+test('Pause de choix solo : le serveur rejette sorts, esquive et interaction anticipés',()=>{
   const {sim,state,p,events}=setup();sim.experience.drop(40,40,12);sim.update(1/30);const casts=events.filter(e=>e.type==='cast').length,cds=[...p.readyAt],position={x:p.state.x,y:p.state.y};
-  sim.playerDash(p.id,{dx:1,dy:0});sim.classAction(p.id,{tx:45,ty:40});p.state.x=state.zaapX;p.state.y=state.zaapY;sim.interact(p.id);
+  sim.playerDash(p.id,{dx:1,dy:0});p.state.x=state.zaapX;p.state.y=state.zaapY;sim.interact(p.id);
   assert.equal(events.filter(e=>e.type==='cast').length,casts);assert.deepEqual(p.readyAt,cds);assert.equal(p.push,null);assert.equal(state.zaapState,0);assert.equal(p.state.pendingLevels,1);
 });
 test('Mort réentrante : un effet déclenché pendant la mort ne duplique ni XP, ni boss, ni aspiration',()=>{

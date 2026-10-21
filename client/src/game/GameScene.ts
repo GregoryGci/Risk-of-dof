@@ -16,7 +16,7 @@ import {
   ZAAP_READY,
   dirFromVector,
   generateMap,
-  zoneForStage,
+  runZone,
   getClass,
   getRunBonus,
   RARITY_NAMES,
@@ -28,6 +28,7 @@ import {
   worldToScreen,
   type AttackEvent,
   type CastEvent,
+  type CompanionActionEvent,
   type ChallengeView,
   type DamageEvent,
   type PackedDamage,
@@ -196,7 +197,7 @@ export class GameScene extends Phaser.Scene {
     this.store = this.ctx.store;
     this.hud = this.ctx.hud;
     this.inputSeq=this.state.players.get(this.room.sessionId)?.inputSeq??0;
-    const zone=zoneForStage(this.state.stage??1);
+    const zone=runZone(this.state.zoneOrder,this.state.stage??1);
     const characters:string[]=[];this.state.players.forEach(p=>characters.push(p.classId));
     this.store.preload(this,[...zone.monsters,zone.boss,'epouvantail','marchand','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable'],characters);
 
@@ -219,11 +220,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.mechanicHud=new MechanicHud(choice=>{
-      const state=this.state,p=state.players.get(this.room.sessionId);
-      if(!p?.alive||state.paused||state.phase===PHASE_LOST)return;
-      const aim=this.aimPoint();this.room.send('classAction',{tx:aim.x,ty:aim.y,choice});
-    },(choice,revision)=>this.room.send('boon',{choice,revision,runId:this.state.runId}),(type,revision,choiceId)=>this.room.send(type,{revision,choiceId,runId:this.state.runId}));
+    this.mechanicHud=new MechanicHud((choice,revision)=>this.room.send('boon',{choice,revision,runId:this.state.runId}),(type,revision,choiceId)=>this.room.send(type,{revision,choiceId,runId:this.state.runId}));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.mechanicHud.destroy());
     this.store.finalize(this);
     this.createdAt=this.time.now;
@@ -260,6 +257,13 @@ export class GameScene extends Phaser.Scene {
     // Événements ponctuels envoyés par le serveur.
     this.room.onMessage('pong',(e:{sentAt:number})=>{this.ping=Math.max(0,Math.round(performance.now()-e.sentAt));});
     this.room.onMessage('cast', (e: CastEvent) => this.onCast(e));
+    this.room.onMessage('companionAction',(e:CompanionActionEvent)=>{
+      const player=this.state.players.get(e.owner);
+      if(document.hidden||!player?.alive||e.runId!==this.state.runId||e.stage!==this.state.stage||wornGear(player.equipment)[2]!==e.base)return;
+      const view=this.players.get(e.owner);view?.petAction(e);
+      const pet=view?.petPosition;
+      if(pet&&(e.kind==='area'||e.kind==='summon'))this.effects.dashTrail(pet.x,pet.y,e.tx,e.ty,e.color);
+    });
     this.room.onMessage('momentum',(e:{player:string;x:number;y:number})=>{if(!document.hidden)this.effects.blessingBurst(e.x,e.y,1,0xffd58a);});
     this.room.onMessage('projEnd', (e: ProjEndEvent) => {this.effects.endProjectile(e.id,e.x,e.y);this.rogueliteEffects.end(e.id);});
     const abilityFx=(e:Parameters<RogueliteEffects['event']>[0])=>{if(document.hidden)return;const handled=this.rogueliteEffects.event(e);if(!handled&&e.kind==='impact'&&e.asset)this.effects.playSpellFx(e.asset,e.x,e.y);};
@@ -303,7 +307,7 @@ export class GameScene extends Phaser.Scene {
       this.store.playSound(this, 'boss');
     });
     this.room.onMessage('stage', (e: { stage: number }) => {
-      this.hud.toast(`<b>Zone ${e.stage} — ${zoneForStage(e.stage).name}</b>`);
+      this.hud.toast(`<b>Zone ${e.stage} — ${runZone(this.state.zoneOrder,e.stage).name}</b>`);
       this.store.playSound(this, 'stage');
     });
     this.room.onMessage('heal', (e: HealEvent) => {
@@ -354,7 +358,7 @@ export class GameScene extends Phaser.Scene {
     // Mort : un clic change de joueur observé.
     this.input.on(Phaser.Input.Events.POINTER_DOWN, () => this.cycleSpectate());
 
-    let cleaned=false;const clean=()=>{if(cleaned)return;cleaned=true;const menu=gameSettings();menu.onToggle=()=>{};menu.toggle(false);this.effects.clear();this.rogueliteEffects.destroy();this.xpView.destroy();this.controls.destroy();this.touch.destroy();this.unwatchHudScale();this.details.destroy();this.rest.destroy();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
+    let cleaned=false;const clean=()=>{if(cleaned)return;cleaned=true;const menu=gameSettings();menu.onToggle=()=>{};menu.toggle(false);this.effects.clear();this.rogueliteEffects.destroy();this.xpView.destroy();this.controls.destroy();this.touch.destroy();this.unwatchHudScale();this.details.destroy();this.rest.destroy();for(const view of this.players.values())view.destroy();this.players.clear();this.playerClass.clear();const debug=window as unknown as {__scene?:GameScene};if(debug.__scene===this)delete debug.__scene;};
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, clean);
     this.events.once(Phaser.Scenes.Events.DESTROY, clean);
   }
@@ -380,7 +384,7 @@ export class GameScene extends Phaser.Scene {
     this.hud.performance(this.fps,this.ping,state.monsters.size,settings.showPerformance);
 
     // La carte est régénérée à partir de la graine (et à chaque nouvelle partie).
-    if (!this.mapView || this.map.seed !== state.seed || this.map.zoneId !== zoneForStage(state.stage).id) this.rebuildMap(state.seed);
+    if (!this.mapView || this.map.seed !== state.seed || this.map.zoneId !== runZone(state.zoneOrder,state.stage).id) this.rebuildMap(state.seed);
 
     this.syncOgrines(state);
     this.xpView.update(state,dt);
@@ -388,7 +392,7 @@ export class GameScene extends Phaser.Scene {
     if(time>=this.nextAssetCheck){
     this.nextAssetCheck=time+150;
     const monsterIds:string[]=[];state.monsters.forEach(m=>monsterIds.push(m.type));
-    if(state.intermission){const next=zoneForStage(state.stage+1);monsterIds.push(...next.monsters,next.boss);}
+    if(state.intermission){const next=runZone(state.zoneOrder,state.stage+1);monsterIds.push(...next.monsters,next.boss);}
     this.store.loadMonsters(this,monsterIds);
     const skins:string[]=[],characters:string[]=[];state.players.forEach(p=>{skins.push(p.skin);characters.push(p.classId);});this.store.loadSkins(this,skins);this.store.loadCharacters(this,characters);
     }
@@ -473,8 +477,8 @@ export class GameScene extends Phaser.Scene {
     if (time < this.nextMusicCheck) return;
     this.nextMusicCheck = time + 500;
     if (state.phase === PHASE_LOBBY || state.phase === PHASE_LOST) { music.play(MENU_TRACK); ambiance.play(''); return; }
-    const zone = zoneForStage(state.stage).id;
-    ambiance.play(zoneForStage(state.stage).ambiance??zone);
+    const current = runZone(state.zoneOrder,state.stage),zone = current.id;
+    ambiance.play(current.ambiance??zone);
     let bossFight = false;
     state.monsters.forEach((m: MonsterView) => { if (!m.ally && getMonster(m.type).boss) bossFight = true; });
     music.play(zoneTrack(zone, bossFight));
@@ -482,13 +486,14 @@ export class GameScene extends Phaser.Scene {
 
   private rebuildMap(seed: number): void {
     for(const view of this.monsters.values())view.destroy();this.monsters.clear();
-    const zone=zoneForStage(this.state.intermission?this.state.stage+1:this.state.stage),keep=[...zone.monsters,zone.boss,'epouvantail','marchand','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable'];
+    const zone=runZone(this.state.zoneOrder,this.state.intermission?this.state.stage+1:this.state.stage),keep=[...zone.monsters,zone.boss,'epouvantail','marchand','coffre_anime','osa_tofu','osa_bouftou','poupee_folle','poupee_bloqueuse','poupee_gonflable'];
     this.state.monsters.forEach(m=>keep.push(m.type));this.store.releaseMonsters(this,keep);this.store.loadMonsters(this,keep);
     this.mapView?.destroy();
-    this.map = generateMap(seed,undefined,this.state.stage);
+    this.map = generateMap(seed,undefined,runZone(this.state.zoneOrder,this.state.stage));
     this.mapView = new MapView(this, this.store, this.map,this.state.cursed);
     this.minimap.setMap(this.map);
     this.effects.clear();this.rogueliteEffects.clear();
+    for(const view of this.players.values())view.resetPet();
     // Nouvelle partie : on repart de la position serveur et les sorts sont de nouveau prêts.
     this.meReady = false;
     this.cam.ready = false;
@@ -565,7 +570,6 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if(this.state.intermission){this.targeting=null;return;}
-    if(this.controls.consumePress('KeyF'))this.room.send('classAction',{tx:aim.x,ty:aim.y,choice:0});
 
     // Dash (Maj), commun à toutes les classes.
     if ((this.controls.consumePress('ShiftLeft') || this.controls.consumePress('ShiftRight')) && time >= this.dashCdEnd) {
@@ -614,8 +618,9 @@ export class GameScene extends Phaser.Scene {
       // Apparence : la coiffe et la cape équipées sont portées en jeu, synchronisées par l'état du joueur.
       const [head, back, pet] = wornGear(p.equipment);
       view.setGear(head, back);
+      view.setMasteryAura(id===myId||settings.allyEffects?p.masteryAura||undefined:undefined);
       view.setPet(this.petTexture(pet));
-      view.update(dt);
+      view.update(dt,state.paused||state.intermission);
     });
     for (const [id, view] of this.players) {
       if (state.players.get(id)) continue;
@@ -846,8 +851,9 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     // Onglet en arrière-plan : la boucle de rendu est en pause, on n'empile pas d'effets.
-    if (!document.hidden) this.effects.spawnProjectile(e);
     const spell = getSpell(e.spell);
+    const petPosition=e.companionOwner?this.players.get(e.companionOwner)?.petPosition:undefined;
+    if (!document.hidden) this.effects.spawnProjectile(petPosition&&spell.projectile?{...e,x:petPosition.x,y:petPosition.y}:e);
     // Animation officielle Dofus : sur le lanceur pour les bonus (type 10), au point visé sinon.
     // Les projectiles l'ont déjà en vol (clip « move ») ; les zones à retardement la jouent à l'impact.
     // Pièges : l'animation joue quand ils se déclenchent (événement « explode »), pas à la pose.
@@ -862,13 +868,13 @@ export class GameScene extends Phaser.Scene {
       const sign = dash.direction === 'back' ? -1 : 1;
       this.effects.dashTrail(e.x, e.y, e.x + ((e.tx - e.x) / len) * dash.distance * sign, e.y + ((e.ty - e.y) / len) * dash.distance * sign, spell.color);
     }
-    (this.players.get(e.caster) ?? this.monsters.get(e.caster))?.attack(this.store.spellFx(this,spell.id)?.casterAnim??0);
+    if(!e.companionOwner)(this.players.get(e.caster) ?? this.monsters.get(e.caster))?.attack(this.store.spellFx(this,spell.id)?.casterAnim??0);
     // Téléportation : traînée entre le départ et l'arrivée ; invocation : petit nuage.
     if (spell.teleport && !document.hidden) this.effects.dashTrail(e.x, e.y, e.tx, e.ty, spell.color);
     if (spell.summon && !document.hidden) this.effects.poof(e.tx, e.ty, spell.color);
     if (spell.teleport && e.caster === this.room.sessionId) this.followServerUntil = this.time.now + 300;
 
-    if (e.caster !== this.room.sessionId || e.slot === undefined) return;
+    if (e.companionOwner || e.caster !== this.room.sessionId || e.slot === undefined) return;
     // Le serveur confirme notre sort : le temps de recharge démarre.
     const now = this.time.now;
     if (Math.hypot(e.tx - e.x, e.ty - e.y) > 0.001) this.facing = dirFromVector(e.tx - e.x, e.ty - e.y);
@@ -898,17 +904,32 @@ export class GameScene extends Phaser.Scene {
     if (big && d < 10) this.shake(140, 0.0035 * (1 - d / 10));
   }
 
-  /**
-   * Compagnon : l'icône du familier équipé flotte à côté du joueur. Chargée à la demande ;
-   * renvoie la clé de texture une fois prête.
-   */
+  private pendingPets=new Set<string>();
+  private failedPets=new Set<string>();
+  /** Equipped illustration, loaded once; a small original silhouette covers loading/failure. */
   private petTexture(base?: string): string | undefined {
     if (!base) return;
     const key = `pet_${base}`;
     if (this.textures.exists(key)) return key;
+    if(!this.textures.exists('ph_companion')){
+      const g=this.make.graphics({x:0,y:0});
+      g.fillStyle(0xc5bca8).fillEllipse(24,29,29,27).fillTriangle(10,22,11,6,23,19).fillTriangle(25,19,38,6,39,24);
+      g.fillStyle(0x24211e).fillCircle(19,26,2).fillCircle(30,26,2).fillTriangle(22,31,27,31,25,34);
+      g.generateTexture('ph_companion',48,48);g.destroy();
+    }
+    if(this.failedPets.has(key)||this.pendingPets.has(key))return 'ph_companion';
     const url = this.store.itemIconUrl(base);
-    if (url && !this.load.textureManager.exists(key) && !this.load.isLoading()) { this.load.image(key, url); this.load.start(); }
-    return;
+    if(url&&!this.load.isLoading()){
+      this.pendingPets.add(key);
+      const failed=(file:Phaser.Loader.File)=>{if(file.key!==key)return;this.failedPets.add(key);done();};
+      const completed=()=>{if(!this.textures.exists(key))this.failedPets.add(key);done();};
+      const done=()=>{this.pendingPets.delete(key);this.load.off(Phaser.Loader.Events.FILE_LOAD_ERROR,failed);this.load.off(`filecomplete-image-${key}`,done);this.load.off(Phaser.Loader.Events.COMPLETE,completed);};
+      this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR,failed);this.load.once(`filecomplete-image-${key}`,done);
+      this.load.once(Phaser.Loader.Events.COMPLETE,completed);
+      // The loader already has assets/dofus/ as its path; an absolute URL avoids doubling it.
+      this.load.image(key,new URL(url,document.baseURI).href);this.load.start();
+    }
+    return 'ph_companion';
   }
   private shakeUntil = 0;
   /**

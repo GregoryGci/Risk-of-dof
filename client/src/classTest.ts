@@ -88,7 +88,6 @@ export class ClassArena extends Phaser.Scene {
     if(el<HTMLInputElement>('immortal').checked&&this.p.state.alive){this.p.state.hp=this.p.state.maxHp;this.p.dodgeUntil=this.sim.now+.2;}
     this.sim.setInput(this.p.id,{dx:move.x,dy:move.y,dir:dirFromVector(this.aim.x-this.p.state.x,this.aim.y-this.p.state.y)});
     if(this.controls.consumePress('ShiftLeft')||this.controls.consumePress('ShiftRight')){const dir=move.x||move.y?move:{x:this.aim.x-this.p.state.x,y:this.aim.y-this.p.state.y};this.sim.playerDash(this.p.id,{dx:dir.x,dy:dir.y});}
-    if(this.controls.consumePress('KeyF'))this.sim.classAction(this.p.id,{tx:this.aim.x,ty:this.aim.y});
     // L'arène n'a pas de fenêtre de choix : la première carte est prise pour ne pas figer la simulation.
     this.accumulator+=dt;while(this.accumulator>=1/30){while(this.p.state.boonChoices!=='[]')this.sim.chooseBoon(this.p.id,0);this.sim.update(1/30);this.accumulator-=1/30;}
     const active=new Set<string>();

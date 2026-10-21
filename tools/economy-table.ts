@@ -1,6 +1,6 @@
 // Audit déterministe de l'XP et de l'économie permanente, sans rendu.
 // Usage : node --import tsx tools/economy-table.ts --seconds=90 --seeds=3
-import {GAME_MODES,MAP_SIZE,generateMap,makeRng,runKamasReward} from '@rod/shared';
+import {GAME_MODES,MAP_SIZE,generateMap,runZone,makeRng,runKamasReward} from '@rod/shared';
 import {Simulation} from '../server/src/game/Simulation.ts';
 import {GameState} from '../server/src/state.ts';
 const arg=(name:string,fallback:string)=>process.argv.find(a=>a.startsWith(`--${name}=`))?.split('=')[1]??fallback;
@@ -9,7 +9,7 @@ export function measure(mode:number,stage:number,seed:number):{xpPerMinute:numbe
   const original=Math.random;Math.random=makeRng(seed*977+mode*31+stage);
   try{
     const state=new GameState();state.mode=mode;const sim=new Simulation(state,()=>{});sim.addPlayer('p','Bot','cra');sim.start();
-    if(stage!==1){state.stage=stage;state.seed=Math.floor(Math.random()*0xffffffff);sim.map=generateMap(state.seed,MAP_SIZE,stage);(sim as unknown as {setupStage():void}).setupStage();}
+    if(stage!==1){state.stage=stage;state.seed=Math.floor(Math.random()*0xffffffff);sim.map=generateMap(state.seed,MAP_SIZE,runZone(state.zoneOrder,stage));(sim as unknown as {setupStage():void}).setupStage();}
     const p=sim.players.get('p')!;
     for(let tick=0;tick<seconds*30;tick++){
       p.state.hp=p.state.maxHp;

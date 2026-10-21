@@ -33,10 +33,10 @@ test('Vol de vie : aucun soin des sorts par la stat auto, aucun soin sur les dé
  hit(sim,p,false);assert.equal(p.state.hp,100);hit(sim,p,true,10);assert.equal(p.state.hp,101);
  p.stats.lifesteal=0;p.stats.vampirism=.5;hit(sim,p,true);assert.equal(p.state.hp,101);hit(sim,p,false);assert.ok(p.state.hp>101);
 });
-test('Zaap maudit : choix collectif, même zone, nouvelle carte et gardiens boostés',()=>{
+test('Zaap maudit : choix collectif, même zone, même carte et gardiens boostés',()=>{
  const {sim,p,state,events}=setup();state.hasCursedZaap=true;state.cursedZaapX=state.zaapX-6;state.cursedZaapY=state.zaapY;const seed=state.seed;
  p.state.x=state.cursedZaapX;p.state.y=state.cursedZaapY;assert.equal(state.zaapState,ZAAP_IDLE);sim.interact(p.id);
- assert.equal(state.cursed,true);assert.equal(state.hasCursedZaap,false);assert.equal(state.stage,1);assert.notEqual(state.seed,seed);assert.equal(state.zaapState,ZAAP_CHARGING);
+ assert.equal(state.cursed,true);assert.equal(state.hasCursedZaap,false);assert.equal(state.stage,1);assert.equal(state.seed,seed);assert.equal(state.zaapState,ZAAP_CHARGING);
  for(let i=0;i<61;i++)sim.update(1/30);const boss=[...sim.monsters.values()].find(m=>m.def.boss)!;assert.equal(boss.state.cursed,true);assert.equal(boss.dofusMultiplier,3);assert.equal(boss.lootMultiplier,1);assert.ok(events.some(e=>e.type==='boss'&&e.data.cursed));
 });
 test('Butin maudit : Dofus ×3, équipement inchangé',()=>{

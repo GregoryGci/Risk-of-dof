@@ -4,7 +4,7 @@ export function setupDialogNavigation(): void {
   const topDialog=()=>[...document.querySelectorAll<HTMLElement>('#boon-choices:not(.hidden),.overlay:not(.hidden)')]
     .filter(el=>el.getBoundingClientRect().width>0).reverse()
     .sort((a,b)=>Number(getComputedStyle(b).zIndex)-Number(getComputedStyle(a).zIndex))[0];
-  const closeButton=(dialog:HTMLElement)=>dialog.id==='skin-shop'
+  const closeButton=(dialog:HTMLElement)=>dialog.id==='skin-shop'||dialog.id==='mastery'
     ?dialog.querySelector<HTMLButtonElement>('[data-close]')
     :document.getElementById(closes[dialog.id]) as HTMLButtonElement|null;
   // Une pression commencée dans la fenêtre puis relâchée dehors n'est pas un clic de fermeture.

@@ -1,12 +1,12 @@
 import {getSpell,getMonster,isBlocked,stepMovement,sourceDamageMultiplier,lifestealCrowdFactor,PHASE_PLAYING,PHASE_LOST} from '@rod/shared';
-import {ROGUELITE_CATALOG as C,ROGUELITE_BALANCE as B,createRunBuild,effectiveRogueliteAbility,passiveParameters,rogueliteDamage,circleTouchesStrip,segmentIntersection,type EffectiveRogueliteAbility as Ability} from '@rod/shared/roguelite';
+import {ROGUELITE_CATALOG as C,ROGUELITE_BALANCE as B,createRunBuild,effectiveRogueliteAbility,passiveParameters,rogueliteDamage,circleTouchesStrip,segmentIntersection,invocateurForm,type EffectiveRogueliteAbility as Ability} from '@rod/shared/roguelite';
 import {dofusOf,dofusOnHit,dofusOnCast,dofusConditional,dofusCriticalDamage} from '../dofus.ts';
 import type {Simulation,PlayerRt,MonsterRt,Projectile,GroundRt} from '../Simulation.ts';
 import type {SpellDef} from '@rod/shared';
 type CombatSnapshot=NonNullable<SpellDef['roguelite']>['stats'];
 
 export interface MovingAbility {born:number;phase:number;travel:number;bounces:number;cards:number;hits:Map<string,number>;target?:string;end?:boolean}
-export interface SummonedAbility {ability:Ability;slot:number;royal:boolean;hits:number;specialAt:number}
+export interface SummonedAbility {ability:Ability;slot:number;royal:boolean;hits:number;specialAt:number;form?:string}
 interface SlotRuntime {id:string;began:number;next:number;count:number;charges:number;reform:number;recover:number;hits:Map<string,number>;stored:Map<string,number>}
 interface Dot {owner:string;target:string;kind:string;stacks:number;max:number;dps:number;until:number;next:number;ability:Ability;slot:number;contagionAt:number}
 const dist=(a:{x:number;y:number},b:{x:number;y:number})=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -272,14 +272,8 @@ export class RogueliteCombat {
     const a=snapshot.ability,v=a.parameters,now=this.sim.now;
     if(g.state.kind==='trap') {
       if(now<g.armedAt)return;g.state.armed=true;
-      let trigger=this.enemies(g.state.x,g.state.y,v.detection??.9).length>0;
-      // Les fils ne s'activent qu'avec un réseau d'au moins 4 pièges armés : sinon la horde les coupe avant qu'il grandisse.
-      if(v.mass&&!trigger&&this.armedTraps(g.owner)>=4)for(const other of this.trapNeighbors(g)) {
-        const dx=other.state.x-g.state.x,dy=other.state.y-g.state.y,len2=dx*dx+dy*dy;
-        trigger=this.enemies(g.state.x,g.state.y,5).some(m=>{const t=Math.max(0,Math.min(1,((m.state.x-g.state.x)*dx+(m.state.y-g.state.y)*dy)/(len2||1)));return Math.hypot(m.state.x-g.state.x-dx*t,m.state.y-g.state.y-dy*t)<=m.def.radius+.1;});if(trigger)break;
-      }
-      // Le réseau se referme sur la horde : 3 ennemis à l'intérieur d'un réseau d'au moins 4 pièges suffisent.
-      if(v.mass&&!trigger)trigger=this.networkClosed(g);
+      // Chaque Piège de Masse se déclenche uniquement au passage d'un ennemi à proximité.
+      const trigger=this.enemies(g.state.x,g.state.y,v.detection??.9).length>0;
       if(trigger)this.detonate(g);return;
     }
     if(v.wave)this.updateGroundWaves(g,p,a);
@@ -315,23 +309,12 @@ export class RogueliteCombat {
     }
     rt.waves=rt.waves.filter(w=>this.sim.now-w.began<.6);
   }
-  private networkClosed(g:GroundRt):boolean {
-    const traps=[...this.sim.grounds.values()].filter(o=>o.owner===g.owner&&o.state.kind==='trap'&&this.sim.now>=o.armedAt);if(traps.length<4)return false;
-    const x=traps.reduce((n,o)=>n+o.state.x,0)/traps.length,y=traps.reduce((n,o)=>n+o.state.y,0)/traps.length,r=traps.reduce((n,o)=>n+dist(o.state,{x,y}),0)/traps.length;
-    return this.enemies(x,y,r*.9).length>=3;
-  }
-  private armedTraps(owner:string):number {let n=0;for(const o of this.sim.grounds.values())if(o.owner===owner&&o.state.kind==='trap'&&this.sim.now>=o.armedAt)n++;return n;}
-  private trapNeighbors(g:GroundRt):GroundRt[] {
-    const list=[...this.sim.grounds.values()].filter(o=>o!==g&&o.owner===g.owner&&o.state.kind==='trap'&&this.sim.now>=o.armedAt&&dist(o.state,g.state)<=5);
-    const nearest=(x:GroundRt,others:GroundRt[])=>others.sort((a,b)=>dist(a.state,x.state)-dist(b.state,x.state)).slice(0,2);
-    return list.filter(o=>nearest(g,[...list]).includes(o)||nearest(o,[g,...list.filter(x=>x!==o)]).includes(g));
-  }
   detonate(start:GroundRt):void {
     const p=this.sim.players.get(start.owner),snapshot=start.pr.spell.roguelite;if(!p||!snapshot)return;
-    const a=snapshot.ability,v=a.parameters,pending=[start],connected:GroundRt[]=[],seen=new Set<string>(),wired=!!v.mass&&this.armedTraps(start.owner)>=4,chainPower=v.chainPower??(v.mass?.2:0);
+    const a=snapshot.ability,v=a.parameters,pending=[start],connected:GroundRt[]=[],seen=new Set<string>(),chainPower=v.chainPower??0;
     while(pending.length) {
       const g=pending.shift()!;if(seen.has(g.id)||!this.sim.grounds.has(g.id))continue;seen.add(g.id);connected.push(g);
-      if(v.networkRange)pending.push(...(wired?this.trapNeighbors(g):[...this.sim.grounds.values()].filter(o=>o.owner===g.owner&&o.state.kind==='trap'&&this.sim.now>=o.armedAt&&dist(o.state,g.state)<=(v.mass?3:v.networkRange))));
+      if(v.networkRange&&!v.mass)pending.push(...[...this.sim.grounds.values()].filter(o=>o.owner===g.owner&&o.state.kind==='trap'&&this.sim.now>=o.armedAt&&dist(o.state,g.state)<=v.networkRange));
     }
     for(const g of connected)this.sim.removeGround(g.id);
     connected.forEach((g,i)=>this.area(p,g.pr.spell.roguelite!.ability,snapshot.slot,g.state.x,g.state.y,g.state.radius,snapshot.scale*(1+Math.min(.6,i*chainPower)),true));
@@ -432,22 +415,26 @@ export class RogueliteCombat {
   private reductions=new Map<string,number>();
   private shield(p:PlayerRt,fraction:number,duration:number) {p.state.shield=Math.max(p.state.shield,Math.round(p.state.maxHp*fraction));p.shieldUntil=Math.max(p.shieldUntil,this.sim.now+duration);}
   private summon(p:PlayerRt,a:Ability,slot:number,point?:{x:number;y:number}) {
-    const own=[...this.sim.monsters.values()].filter(m=>m.allyOwner===p.id&&m.rogueliteSummon?.slot===slot),totem=a.handler==='totem';
+    const totem=a.handler==='totem',form=totem?undefined:invocateurForm(a.parameters.form??1,a.handler==='royal');
+    // Nouveau niveau ou évolution : l'ancienne meute laisse place à la nouvelle créature.
+    const own:MonsterRt[]=[];
+    for(const m of [...this.sim.monsters.values()])if(m.allyOwner===p.id&&m.rogueliteSummon?.slot===slot){if(form&&m.rogueliteSummon.form!==form.monster)this.sim.removeMonster(m.id);else own.push(m);}
     const wanted=totem?1:a.stats.projectiles;
     if(totem){while(own.length>=Math.min(3,a.parameters.forest?1:a.stats.projectiles))this.sim.removeMonster(own.shift()!.id);}
+    else while(own.length>wanted)this.sim.removeMonster(own.pop()!.id);
     for(let i=totem?0:own.length;i<wanted;i++) {
       const all=[...this.sim.monsters.values()].filter(m=>m.allyOwner===p.id&&m.rogueliteSummon&&(m.rogueliteSummon.ability.handler==='totem')===totem);
-      if(all.length>=(totem?3:8))break;
-      const royal=a.handler==='royal'&&!all.some(m=>m.rogueliteSummon!.royal),def=getMonster(totem?'arbre_sadida':'osa_tofu');
+      if(all.length>=(totem?B.caps.totems:B.caps.summons))break;
+      const royal=a.handler==='royal',def=getMonster(totem?'arbre_sadida':form!.monster);
       let pos=point??{x:p.state.x+Math.cos(i*2*Math.PI/wanted)*1.5,y:p.state.y+Math.sin(i*2*Math.PI/wanted)*1.5};
       if(isBlocked(this.sim.map,pos.x,pos.y,def.radius)) {
         let free:{x:number;y:number}|undefined;for(let ring=0;ring<=5&&!free;ring++)for(let direction=0;direction<16;direction++){const d=direction*Math.PI/8,x=p.state.x+Math.cos(d)*ring*.5,y=p.state.y+Math.sin(d)*ring*.5;if(!isBlocked(this.sim.map,x,y,def.radius)){free={x,y};break;}}
         if(!free)continue;pos=free;
       }
-      const m=this.sim.spawnMonster({...def,ally:true,taunt:totem||royal,speed:totem?0:a.stats.speed||6},pos.x,pos.y,1,1,1);
-      m.state.ally=true;m.allyOwner=p.id;m.rogueliteSummon={ability:a,slot,royal,hits:0,specialAt:this.sim.now+2};
+      const m=this.sim.spawnMonster({...def,ally:true,taunt:totem||!!form?.taunt,speed:totem?0:(a.stats.speed||6)*form!.speed},pos.x,pos.y,1,1,1);
+      m.state.ally=true;m.allyOwner=p.id;m.rogueliteSummon={ability:a,slot,royal,hits:0,specialAt:this.sim.now+2,form:form?.monster};
       m.expiresAt=totem?this.sim.now+a.stats.durationMs/1000:Infinity;
-      const values=passiveParameters(p.build.currentBuild),hp=(royal?a.parameters.royalHp:a.parameters.hpFraction)*p.state.maxHp*(1+(values.creationPower??0))*(p.blessingRanks.legion?1+.35*(1+.2*(p.blessingRanks.legion-1)):1);
+      const values=passiveParameters(p.build.currentBuild),hp=(royal?a.parameters.royalHp:a.parameters.hpFraction)*(form?.hp??1)*(a.parameters.packScale??1)*(a.parameters.variantSummonHp??1)*p.state.maxHp*(1+(values.creationPower??0))*(p.blessingRanks.legion?1+.35*(1+.2*(p.blessingRanks.legion-1)):1);
       m.state.hp=m.state.maxHp=Math.max(1,Math.round(hp));m.meleeReadyAt=this.sim.now;
       this.fx(p,a,'summon',pos.x,pos.y,{monsterId:m.id,royal});
     }
@@ -471,22 +458,30 @@ export class RogueliteCombat {
       }else if(v.root&&++rt.hits%3===0)for(const e of this.enemies(m.state.x,m.state.y,a.stats.radius))this.control(e,'root',v.root);
       return;
     }
+    const form=invocateurForm(v.form??1,a.handler==='royal'),ranged=form.role==='ranged',now=this.sim.now;
+    // Le sort a changé de niveau ou évolué : relance immédiate pour transformer la meute.
+    if(rt.form!==form.monster){p.readyAt[rt.slot]=Math.min(p.readyAt[rt.slot]??0,now);return;}
     const leash=dist(m.state,p.state)>(rt.royal?3:8);let goal:{x:number;y:number}=leash||!target?p.state:target.state;
     if(rt.royal&&!leash){const distance=dist(goal,p.state);if(distance>3)goal={x:p.state.x+(goal.x-p.state.x)/distance*3,y:p.state.y+(goal.y-p.state.y)/distance*3};}
-    const d=dist(m.state,goal),stop=leash?2:rt.royal?.3:target?1+target.def.radius:2;
-    if(d>stop) {const pos={x:m.state.x,y:m.state.y};stepMovement(this.sim.map,pos,(goal.x-pos.x)/d,(goal.y-pos.y)/d,a.stats.speed||6,dt,m.def.radius);m.state.x=pos.x;m.state.y=pos.y;}
+    const d=dist(m.state,goal),stop=leash?2:rt.royal?.3:target?(ranged?form.range!-.8:1)+target.def.radius:2;
+    if(d>stop) {const pos={x:m.state.x,y:m.state.y};stepMovement(this.sim.map,pos,(goal.x-pos.x)/d,(goal.y-pos.y)/d,(a.stats.speed||6)*form.speed,dt,m.def.radius);m.state.x=pos.x;m.state.y=pos.y;}
     if(!target)return;
-    const roar=this.sim.now<(p.summonRoarUntil??0)?1.4:1;
-    if(rt.royal&&this.sim.now>=rt.specialAt) {
-      rt.specialAt=this.sim.now+3/roar;
-      this.area(p,a,rt.slot,m.state.x,m.state.y,v.stompRadius,roar,false,{min:v.stompMin,max:v.stompMax,flat:.5,stun:.4});
-      for(let i=0;i<v.swarm;i++)this.projectile(p,{...a,handler:'projectile',stats:{...a.stats,range:8,speed:10},parameters:{...v,min:v.swarmMin,max:v.swarmMax,collision:.3,homing:1,pierce:0}},rt.slot,m.state.x,m.state.y,angle(m.state,target.state)+i*.1,roar,true);
-    }
-    if(rt.royal||!target||dist(m.state,target.state)>1.2+target.def.radius||this.sim.now<m.meleeReadyAt)return;
-    m.meleeReadyAt=this.sim.now+a.stats.intervalMs/1000/roar;rt.hits++;
-    const pr=this.instance(p,a,rt.slot,roar);pr.critChance=p.def.id==='osamodas'?(.05+p.stats.crit)*.6:0;
-    this.hit(pr,target,0,0);this.sim.blessings.mark(p,target);this.sim.broadcast('atk',{id:m.id});
-    if(v.diveEvery&&rt.hits%v.diveEvery===0)this.area(p,a,rt.slot,target.state.x,target.state.y,v.diveRadius,2,true);
+    const power=(v.packScale??1)*form.damage;
+    if(rt.royal){if(now>=rt.specialAt){rt.specialAt=now+(v.spellEvery??2);this.ilyzaelle(p,a,rt,m,target,power);}return;}
+    if(dist(m.state,target.state)>(ranged?form.range!:1.2)+target.def.radius||now<m.meleeReadyAt)return;
+    m.meleeReadyAt=now+a.stats.intervalMs/1000*form.interval;rt.hits++;this.sim.broadcast('atk',{id:m.id});
+    if(ranged){this.projectile(p,{...a,handler:'projectile',stats:{...a.stats,range:form.range!+1,speed:12},parameters:{...v,collision:.3,homing:1,pierce:0,summonShot:1,slow:form.slow??0}},rt.slot,m.state.x,m.state.y,angle(m.state,target.state),power);return;}
+    this.hit(this.instance(p,a,rt.slot,power),target,0,0);this.sim.blessings.mark(p,target);
+    if(form.cleave){const other=this.enemies(target.state.x,target.state.y,1.2).find(o=>o!==target);if(other)this.hit(this.instance(p,a,rt.slot,power),other,0,0);}
+    if(form.area&&rt.hits%(form.areaEvery??1)===0)this.area(p,a,rt.slot,target.state.x,target.state.y,form.area,power*(form.areaPower??1),true,{stun:form.stun??0});
+  }
+  /** Ilyzaelle enchaîne trois sorts de zone : pluie d'étoiles, onde étourdissante, salve chercheuse. */
+  private ilyzaelle(p:PlayerRt,a:Ability,rt:SummonedAbility,m:MonsterRt,target:MonsterRt,power:number) {
+    const v=a.parameters,spell=rt.hits++%3;this.sim.broadcast('atk',{id:m.id});
+    if(spell===0){const points:{x:number;y:number}[]=[];for(let i=0;i<v.starCount;i++){const aim=this.dense(p,a.stats.range,v.starRadius,points);points.push(aim);
+      this.later(p,i*.12,()=>{this.fx(p,a,'warning',aim.x,aim.y,{radius:v.starRadius,duration:.45});this.later(p,.45,()=>this.area(p,a,rt.slot,aim.x,aim.y,v.starRadius,power,true,{min:v.starMin,max:v.starMax,flat:.5}));});}}
+    else if(spell===1)this.area(p,a,rt.slot,m.state.x,m.state.y,v.waveRadius,power,false,{min:v.waveMin,max:v.waveMax,flat:.5,stun:v.waveStun});
+    else for(let i=0;i<v.salvo;i++)this.projectile(p,{...a,handler:'projectile',stats:{...a.stats,range:8,speed:10},parameters:{...v,min:v.salvoMin,max:v.salvoMax,collision:.3,homing:1,pierce:0,summonShot:1}},rt.slot,m.state.x,m.state.y,angle(m.state,target.state)+(i-(v.salvo-1)/2)*.25,power,true);
   }
   private throwEnemy(p:PlayerRt,a:Ability,slot:number,target:MonsterRt,index:number,scale:number,proc:boolean) {
     const v=a.parameters;
@@ -549,7 +544,7 @@ export class RogueliteCombat {
     const rg=pr.spell.roguelite,p=this.sim.players.get(pr.owner);if(!rg||!p||m.state.ally||m.state.carried||m.state.hp<=0||!this.sim.monsters.has(m.id))return;
     const a=rg.ability,v=a.parameters,stats=rg.stats,periodic=!!v.periodic;
     const judged=(this.judged.get(m.id)??0)>this.sim.now?.15:0;
-    const summon=['summon','royal','totem'].includes(a.handler),inherit=summon?(p.def.id==='osamodas'?.6:0):1,gearInherit=summon?(p.def.id==='osamodas'?.7:.4):1;
+    const summon=['summon','royal','totem'].includes(a.handler)||!!v.summonShot,inherit=summon?(p.def.id==='osamodas'?.6:0):1,gearInherit=summon?(p.def.id==='osamodas'?.7:.4):1;
     const critical=!periodic&&this.sim.random()<Math.min(1,(summon?0:.05)+(stats.crit??0)*inherit+(v.crit??0)+judged);
     const raw=(v.min??0)+this.sim.random()*((v.max??0)-(v.min??0));
     const extraPower=(p.build.currentBuild.fallbackCounts[`fb.eveil:${a.id}`]??0)*.08;

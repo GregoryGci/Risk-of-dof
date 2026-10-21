@@ -47,6 +47,6 @@ const test={sim,game,store,events:listeners,
   await b.evaluate('__recapTest.stop()');assert.deepEqual(b.errors,[]);assert.deepEqual(b.httpErrors,[]);
   console.log(JSON.stringify({checks,errors:b.errors},null,2));
 }finally{
-  fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync('artifacts/run-enhancements-browser.json',JSON.stringify({checks,errors:b.errors,httpErrors:b.httpErrors},null,2));await b.close();
-  for(const file of [entry,html])if(fs.existsSync(file))fs.unlinkSync(file);
+  fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync('artifacts/run-enhancements-browser.json',JSON.stringify({checks,errors:b.errors,httpErrors:b.httpErrors},null,2));
+  try{await b.close();}finally{for(const file of [entry,html])if(fs.existsSync(file))fs.unlinkSync(file);}
 }

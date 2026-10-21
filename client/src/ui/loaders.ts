@@ -1,6 +1,6 @@
 // Écrans de chargement « Encre des Douze » : l'accueil au démarrage de la page, puis le lancement de chaque partie.
 // L'écran d'accueil est déjà dans index.html (styles en ligne) pour couvrir la page avant le chargement du code.
-import { CLASSES, DEFAULT_CLASS, GAME_MODES, zoneForStage } from '@rod/shared';
+import { CLASSES, DEFAULT_CLASS, GAME_MODES, runZone } from '@rod/shared';
 import { classPortrait } from './classPortrait.ts';
 import '../loaders.css';
 
@@ -69,10 +69,10 @@ export class RunLoader {
   }
 
   /** Le serveur a envoyé la partie : on connaît le donjon de départ et la difficulté. */
-  zone(stage: number, mode: number): void {
+  zone(stage: number, mode: number, order = ''): void {
     if (!this.el) return;
     this.el.querySelector('.run-loader-eyebrow')!.textContent = `${(GAME_MODES[mode]?.name ?? '').toUpperCase()} · ZONE ${stage}`;
-    this.el.querySelector('h2')!.textContent = zoneForStage(stage).name;
+    this.el.querySelector('h2')!.textContent = runZone(order,stage).name;
     this.status('Préparation du donjon…');
   }
 

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {generateMap,nightmareSpawnRamp,MONSTER_MAX_SPEED,monsterSpeedMultiplier,bossSpeedMultiplier,BOSS_MIN_SPEED} from '@rod/shared';
+import {generateMap,stasisSpawnRamp,MONSTER_MAX_SPEED,monsterSpeedMultiplier,bossSpeedMultiplier,BOSS_MIN_SPEED} from '@rod/shared';
 import {GameState} from '../server/src/state.ts';
 import {Simulation,SPAWN_WARNING} from '../server/src/game/Simulation.ts';
 import {BOSS_LEAP_RANGE,BOSS_LEAP_WARNING} from '../server/src/game/bosses.ts';
@@ -9,14 +9,14 @@ const advance=(sim:Simulation,seconds:number)=>{for(let i=0;i<Math.ceil(seconds*
 
 test('Cauchemar : monstres ordinaires un peu moins rapides, gardiens plus rapides avec la difficulté',()=>{
   // Coefficient de départ du Cauchemar : 1 + 12.
-  assert.ok(monsterSpeedMultiplier(13,3)<monsterSpeedMultiplier(13,0));
-  assert.ok(monsterSpeedMultiplier(13,3)>=1.4&&monsterSpeedMultiplier(40,3)<=1.55);
+  assert.ok(monsterSpeedMultiplier(13,4)<monsterSpeedMultiplier(13,0));
+  assert.ok(monsterSpeedMultiplier(13,4)>=1.4&&monsterSpeedMultiplier(40,4)<=1.55);
   assert.equal(monsterSpeedMultiplier(2,1),monsterSpeedMultiplier(2),'les autres difficultés ne changent pas');
-  assert.ok(bossSpeedMultiplier(3)>bossSpeedMultiplier(0));
-  assert.ok(BOSS_MIN_SPEED*bossSpeedMultiplier(3)<4.6,'un gardien reste plus lent qu’un joueur');
+  assert.ok(bossSpeedMultiplier(4)>bossSpeedMultiplier(0));
+  assert.ok(BOSS_MIN_SPEED*bossSpeedMultiplier(4)<4.6,'un gardien reste plus lent qu’un joueur');
 });
 
-for(const mode of [0,3])test(`Gardien (mode ${mode}) : bondit vers un joueur éloigné après une annonce au sol`,()=>{
+for(const mode of [0,4])test(`Gardien (mode ${mode}) : bondit vers un joueur éloigné après une annonce au sol`,()=>{
   const state=new GameState(),events:{type:string;data:any}[]=[],sim=new Simulation(state,(type,data)=>events.push({type,data}));
   sim.addPlayer('p','P','cra');state.mode=mode;sim.start();state.stage=4;sim.map=generateMap(7,undefined,4);sim.map.obstacles.fill(0);
   (sim as any).director.update=()=>{};
@@ -36,9 +36,9 @@ for(const mode of [0,3])test(`Gardien (mode ${mode}) : bondit vers un joueur él
 });
 
 test('Cauchemar : moins de monstres dans les premières zones, pression pleine dès la zone 7',()=>{
-  assert.equal(nightmareSpawnRamp(3,1),.6);
-  assert.ok(nightmareSpawnRamp(3,4)>.6&&nightmareSpawnRamp(3,4)<1);
-  assert.equal(nightmareSpawnRamp(3,7),1);assert.equal(nightmareSpawnRamp(3,20),1);
-  assert.equal(nightmareSpawnRamp(1,1),1,'les autres difficultés ne changent pas');
+  assert.equal(stasisSpawnRamp(4,1),.6);
+  assert.ok(stasisSpawnRamp(4,4)>.6&&stasisSpawnRamp(4,4)<1);
+  assert.equal(stasisSpawnRamp(4,7),1);assert.equal(stasisSpawnRamp(4,20),1);
+  assert.equal(stasisSpawnRamp(1,1),1,'les autres difficultés ne changent pas');
   assert.ok(MONSTER_MAX_SPEED<4.6,'un monstre ordinaire reste sous la vitesse d’un joueur');
 });

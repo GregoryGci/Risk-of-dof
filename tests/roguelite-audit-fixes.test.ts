@@ -22,20 +22,30 @@ test('P2-02 : deux Glyphes Agressives superposées ne cumulent pas leurs ticks s
  assert.ok(hits<=Math.ceil(2.1/tick)+1,`${hits} touches pour ${Math.ceil(2.1/tick)} ticks attendus au plus`);
 });
 
-test('P1-01 : le Piège de Masse se referme sur une horde à l’intérieur de son réseau',()=>{
+test('Piège de Masse : une horde au centre du réseau ne déclenche pas les pièges à distance',()=>{
  const s=setup('sp.piege_sournois',true);
  for(let i=0;i<2;i++){s.p.readyAt[s.slot]=0;s.sim.roguelite.castSlot(s.p,s.slot);s.p.readyAt[s.slot]=Infinity;advance(s.sim,.6);}
  assert.ok(s.sim.grounds.size>=4,'4 pièges armés');
  for(let i=0;i<3;i++)dummy(s.sim,40+i*.3,40.2);s.events.length=0;advance(s.sim,.2);
- assert.equal(s.sim.grounds.size,0,'tout le réseau a explosé');
- const mass=s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius>2.4);assert.equal(mass.length,1,'une seule explosion de masse');
+ assert.equal(s.sim.grounds.size,4,'les pièges restent armés tant qu’aucun ennemi ne passe à proximité');
+ assert.equal(s.events.filter(e=>e.type==='abilityFx'&&e.data.kind==='impact').length,0);
 });
 
-test('P1-01 : avec moins de 4 pièges, les fils sont inactifs et seuls les pièges proches s’enchaînent',()=>{
+test('Piège de Masse : traverser un lien ne déclenche pas les pièges',()=>{
  const s=setup('sp.piege_sournois',true);s.p.readyAt[s.slot]=0;s.sim.roguelite.castSlot(s.p,s.slot);s.p.readyAt[s.slot]=Infinity;advance(s.sim,.6);
  const traps=[...s.sim.grounds.values()];assert.equal(traps.length,2);
  const [a,b]=traps,mx=(a.state.x+b.state.x)/2,my=(a.state.y+b.state.y)/2;dummy(s.sim,mx,my);advance(s.sim,.2);
- assert.equal(s.sim.grounds.size,2,'un ennemi sur le fil ne déclenche rien tant que le réseau est petit');
+ assert.equal(s.sim.grounds.size,2,'un ennemi sur le fil ne déclenche aucun piège à distance');
+});
+
+test('Trois pièges voisins : Masse reste individuel, Sournois N8 conserve son enchaînement',()=>{
+ for(const evolved of[false,true]){
+  const s=setup('sp.piege_sournois',evolved),ability=s.sim.roguelite.ability(s.p,s.slot)!;
+  for(const x of[40,42,44])(s.sim.roguelite as any).ground(s.p,ability,s.slot,x,40);
+  advance(s.sim,.6);assert.equal(s.sim.grounds.size,3);
+  const enemy=dummy(s.sim,40,40),hp=enemy.state.hp;advance(s.sim,.1);
+  assert.ok(enemy.state.hp<hp);assert.equal(s.sim.grounds.size,evolved?2:0);
+ }
 });
 
 test('P2-01 : les instances ajoutées par Multitude comptent pour 60 %',()=>{

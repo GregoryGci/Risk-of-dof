@@ -2,6 +2,7 @@
 // par le serveur (voir difficulty.ts).
 import type { MonsterDef } from '../types.ts';
 import {DUNGEON_MONSTERS} from './dungeon-monsters.ts';
+import {INVOCATEUR_FORMS,ILYZAELLE} from '../roguelite/invocateur.ts';
 
 export const MONSTERS: Record<string, MonsterDef> = {
   bouftou: {
@@ -340,6 +341,8 @@ for(const [id,spec] of Object.entries(DUNGEON_MONSTERS)) {
     behavior:spec.stationary?{type:'ranged',spell:'boule_bworkette',preferredRange:7}:base.behavior,
     cost:spec.boss?999:base.cost,minDifficulty:spec.boss?999:1,weight:spec.boss?0:1,};
 }
+// Créatures de l'Invocateur : les valeurs de combat viennent du sort, seuls l'aspect et la taille comptent ici.
+for(const form of [...INVOCATEUR_FORMS,ILYZAELLE])MONSTERS[form.monster]={...MONSTERS.osa_tofu_meute,id:form.monster,name:form.name,taunt:!!form.taunt,radius:form.hp>=2?.42:.3,scale:form.monster==='inv_ilyzaelle'?1.2:1};
 MONSTERS.arbre_sadida={...MONSTERS.poupee_bloqueuse,id:'arbre_sadida',name:'Arbre du Sadida',speed:0,hp:240,melee:{damage:0,range:0,cooldown:99},behavior:{type:'melee'},taunt:true};
 
 export function getMonster(id: string): MonsterDef {

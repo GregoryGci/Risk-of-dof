@@ -23,7 +23,7 @@ test('Boss précoce : récompense régulière immédiatement, aucun ancien jeton
  assert.equal(p.getSnapshot().offer,undefined);assert.equal(p.enqueueBonus('early','boss',[],0),false);
 });
 
-test('Boss après surplus XP : choix de niveau traités avant calcul des évolutions à l’ouverture',()=>{
+test('Sort N8 avec son passif : évolution immédiate avant la récompense du boss en attente',()=>{
  let build=buildWith('cra',[],7);const passive=C.evolution('ev.fleches_celestes')!.passiveId;
  build=applyLevelReward(C,build,{id:`acquirePassive:${passive}:1`,kind:'acquirePassive',definitionId:passive,nextLevel:1});
  const p=new RunBuildController(C,'run','p','cra',4,build);p.enqueueLevels(1,0);p.enqueueBonus('boss','boss',[],0);
@@ -31,10 +31,10 @@ test('Boss après surplus XP : choix de niveau traités avant calcul des évolut
  // Find a seeded offer with the source upgrade while retaining the server validation path.
  for(let seed=1;!offer.choices.some(c=>c.definitionId==='sp.fleche_magique');seed++){
   const candidate=new RunBuildController(C,'run','p','cra',seed,build);candidate.enqueueLevels(1,0);
-  if(candidate.getSnapshot().offer!.choices.some(c=>c.definitionId==='sp.fleche_magique')){const selected=candidate.getSnapshot().offer!.choices.find(c=>c.definitionId==='sp.fleche_magique')!;candidate.enqueueBonus('boss','boss',[],0);assert.ok(candidate.choose({runId:'run',revision:candidate.getSnapshot().offer!.revision,choiceId:selected.id},0));assert.equal(candidate.getSnapshot().offer!.source,'boss');assert.ok(candidate.getSnapshot().offer!.choices.some(c=>c.definitionId==='ev.fleches_celestes'));return;}
+  if(candidate.getSnapshot().offer!.choices.some(c=>c.definitionId==='sp.fleche_magique')){const selected=candidate.getSnapshot().offer!.choices.find(c=>c.definitionId==='sp.fleche_magique')!;candidate.enqueueBonus('boss','boss',[],0);assert.ok(candidate.choose({runId:'run',revision:candidate.getSnapshot().offer!.revision,choiceId:selected.id},0));assert.equal(candidate.getSnapshot().offer!.source,'boss');assert.equal(candidate.currentBuild.spells[0]!.spellId,'ev.fleches_celestes');assert.ok(candidate.getSnapshot().offer!.choices.every(c=>c.kind!=='evolution'));return;}
   assert.ok(seed<100);
  }
- const selected=offer.choices.find(c=>c.definitionId==='sp.fleche_magique')!;p.choose({runId:'run',revision:offer.revision,choiceId:selected.id},0);assert.ok(p.getSnapshot().offer!.choices.some(c=>c.definitionId==='ev.fleches_celestes'));
+ const selected=offer.choices.find(c=>c.definitionId==='sp.fleche_magique')!;p.choose({runId:'run',revision:offer.revision,choiceId:selected.id},0);assert.equal(p.currentBuild.spells[0]!.spellId,'ev.fleches_celestes');assert.ok(p.getSnapshot().offer!.choices.every(c=>c.kind!=='evolution'));
 });
 
 test('Relancer et bannir : validation atomique, compteurs personnels et exclusion durable',()=>{
@@ -42,7 +42,9 @@ test('Relancer et bannir : validation atomique, compteurs personnels et exclusio
  const offer=p.getSnapshot().offer!,first=offer.choices[0];assert.equal(p.reroll({runId:'forged',revision:offer.revision},0),false);assert.equal(p.currentBuild.rerolls,2);
  assert.ok(p.banish({runId:'run',revision:offer.revision,choiceId:first.id},0));assert.equal(p.currentBuild.banishes,2);assert.ok(p.currentBuild.banned.includes(first.definitionId));assert.ok(!p.getSnapshot().offer!.choices.some(c=>c.definitionId===first.definitionId));
  for(let seed=0;seed<100;seed++)assert.ok(generateLevelRewards(C,p.currentBuild,makeRng(seed)).every(c=>c.definitionId!==first.definitionId));
- const next=p.getSnapshot().offer!;assert.equal(p.reroll({runId:'run',revision:offer.revision},0),false);assert.ok(p.reroll({runId:'run',revision:next.revision},0));assert.equal(p.currentBuild.rerolls,1);assert.deepEqual(other.getSnapshot(),before);
+ // Le bannissement garde la relance gratuite du niveau : la première relance est offerte, la suivante coûte un jeton.
+ const next=p.getSnapshot().offer!;assert.equal(next.freeReroll,true);assert.equal(p.reroll({runId:'run',revision:offer.revision},0),false);assert.ok(p.reroll({runId:'run',revision:next.revision},0));assert.equal(p.currentBuild.rerolls,2);
+ const paid=p.getSnapshot().offer!;assert.equal(paid.freeReroll,false);assert.ok(p.reroll({runId:'run',revision:paid.revision},0));assert.equal(p.currentBuild.rerolls,1);assert.deepEqual(other.getSnapshot(),before);
 });
 
 test('Multijoueur : morts et déconnectés gardent leurs choix, délai de sélection borné',()=>{
@@ -63,8 +65,10 @@ test('Build saturé : Potion seule proposée, puis aucune offre vide si elle est
  build={...build,fallbackCounts:{'fb.surcharge':15,'fb.robustesse':15},rerolls:5};
  const p=new RunBuildController(C,'run','p','cra',7,build);p.enqueueLevels(1,0);
  const offer=p.getSnapshot().offer!;assert.deepEqual(offer.choices.map(c=>c.definitionId),['fb.potion']);
- // La relance consomme un jeton : la carte Relance redevient disponible et remplace la Potion exclue.
- assert.ok(p.reroll({runId:'run',revision:offer.revision},0));assert.deepEqual(p.getSnapshot().offer!.choices.map(c=>c.definitionId),['fb.relance']);
+ // Relance gratuite du niveau : aucun jeton consommé, la Potion revient seule.
+ assert.ok(p.reroll({runId:'run',revision:offer.revision},0));assert.equal(p.currentBuild.rerolls,5);const again=p.getSnapshot().offer!;assert.deepEqual(again.choices.map(c=>c.definitionId),['fb.potion']);
+ // La relance suivante consomme un jeton : la carte Relance redevient disponible et remplace la Potion exclue.
+ assert.ok(p.reroll({runId:'run',revision:again.revision},0));assert.deepEqual(p.getSnapshot().offer!.choices.map(c=>c.definitionId),['fb.relance']);
  const banned=new RunBuildController(C,'run','q','cra',7,{...build,banned:['fb.potion']});banned.enqueueLevels(2,0);
  assert.equal(banned.getSnapshot().offer,undefined);assert.equal(banned.getSnapshot().pendingLevels,0);assert.equal(banned.updateMultiplayer(1e9),undefined);
 });

@@ -192,7 +192,8 @@ export class AssetStore {
     const key = `mon_${canonical}`;
     const def = this.manifest.monsters?.[canonical];
     if (def && scene.textures.exists(key)) {
-      const boss=!!MONSTERS[type]?.boss,cacheKey=key+':'+boss;
+      // Ilyzaelle, forme évoluée de l'Invocateur, garde la stature d'un gardien.
+      const boss=!!MONSTERS[type]?.boss||type==='inv_ilyzaelle',cacheKey=key+':'+boss;
       let scale=this.monsterScales.get(cacheKey);
       if(scale===undefined){
         const idle=Object.values(def.anims?.idle??{})[0];
@@ -218,7 +219,7 @@ export class AssetStore {
   }
   loadSkins(scene:Phaser.Scene,ids:Iterable<string>):void {
     const needed=[...new Set(ids)].filter(id=>id&&this.manifest.skins?.[id]&&!scene.textures.exists(`skin_${id}`)&&!this.pendingSkins.has(id)&&!this.failedSkins.has(id));if(!needed.length)return;
-    for(const id of needed){const def=this.manifest.skins![id];this.pendingSkins.add(id);scene.load.atlas(`skin_${id}`,`${def.image}?v=${this.assetVersion}`,`${def.atlas}?v=${this.assetVersion}`);}
+    for(const id of needed){const def=this.manifest.skins![id];this.pendingSkins.add(id);scene.load.atlas(`skin_${id}`,`${def.image}?v=${this.assetVersion}`,`${def.atlas}?v=${this.assetVersion}`);if(def.gear)scene.load.json(`gear_skin_${id}`,`${def.gear}?v=${this.assetVersion}`);}
     scene.load.once(Phaser.Loader.Events.COMPLETE,()=>{for(const id of needed){this.pendingSkins.delete(id);if(scene.textures.exists(`skin_${id}`))this.createAnims(scene,`skin_${id}`,this.manifest.skins![id]);else this.failedSkins.add(id);}});if(!scene.load.isLoading())scene.load.start();
   }
   /** En solo, ne télécharge pas les onze classes absentes de la partie. */
@@ -298,7 +299,7 @@ export class AssetStore {
   /** Points d'accroche d'un personnage (clé `char_<classe>`) et objets portables, si extraits. */
   gearFor(scene: Phaser.Scene, key: string): { tracks: GearTracks; gear: GearManifest } | null {
     const gear = this.manifest.gear;
-    const tracks = key.startsWith('char_') ? scene.cache.json.get(`gear_${key.slice(5)}`) as GearTracks | undefined : undefined;
+    const tracks = (key.startsWith('char_') ? scene.cache.json.get(`gear_${key.slice(5)}`) : key.startsWith('skin_') ? scene.cache.json.get(`gear_skin_${key.slice(5)}`) : undefined) as GearTracks | undefined;
     return gear && tracks && scene.textures.exists('gear') ? { tracks, gear } : null;
   }
 

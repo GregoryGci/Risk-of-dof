@@ -61,6 +61,7 @@
             <button id="btn-ladder" class="home-nav-button"><span>Classement<small>Les plus grandes aventures</small></span></button>
             <button id="btn-history" class="home-nav-button"><span>Chroniques<small>Vos runs, vos records, vos trouvailles</small></span></button>
             <button id="btn-skins" class="home-nav-button"><span>Apparats<small>Une allure qui vous ressemble</small></span></button>
+            <button id="btn-mastery" class="home-nav-button"><span>Maîtrise<small>Auras, skins et variantes de sorts</small></span></button>
             <button class="home-nav-button" data-view="settings"><span>Réglages<small>À votre façon</small></span></button>
           </nav>
         </section>
@@ -74,7 +75,7 @@
           <div id="view-solo" class="home-view-content hidden">
             <p class="view-intro">Préparez votre départ. Votre équipement et vos améliorations permanentes vous accompagnent.</p>
             <div class="setup-loadout"><div id="solo-character" class="setup-character"></div><button class="btn" data-view="character">Modifier le personnage</button></div>
-            <div class="page-section-heading"><h3>Votre difficulté</h3><span>Les suivantes se débloquent en jouant</span></div><div id="setup-modes" class="setup-modes"></div>
+            <div class="page-section-heading"><h3>Votre difficulté</h3><span>Les suivantes se débloquent en jouant</span></div><div class="stasis-selector" role="group" aria-label="Choisir le Stasis"><span id="setup-stasis-help"></span><div id="setup-modes" class="stasis-options"></div></div><p id="setup-mode-details" class="stasis-details" aria-live="polite"></p>
             <div class="preparation-note"><b>Un build à construire pendant la run</b><p>Ramassez l’XP pour choisir de nouveaux sorts et passifs. Les élites offrent aussi des bénédictions.</p></div>
             <div class="preparation-footer"><button id="btn-solo" class="btn btn-primary start-adventure">Partir à l’aventure <span aria-hidden="true">→</span></button><p class="setup-hint">Tab pour mettre en pause · Butin conservé après la défaite</p></div>
           </div>
@@ -99,7 +100,7 @@
             <button id="btn-encyclopedia" class="collection-link">Encyclopédie des équipements <span id="collection-summary"></span><span>→</span></button>
             <div class="character-departure"><button id="character-return" class="btn btn-primary" hidden>Revenir aux préparatifs</button><span>Prêt à partir ?</span><button class="btn" data-view="solo">Jouer en solo</button><button class="btn" data-view="multi">Jouer ensemble</button></div>
           </div>
-          <div id="view-settings" class="home-view-content hidden"><p class="view-intro">Vos préférences vous suivent dans chaque aventure.</p><div id="home-settings"></div><h3 class="setup-label">À portée de main</h3><div class="home-controls"><div><kbd>ZQSD</kbd><span>Se déplacer · WASD / flèches</span></div><div><kbd>Souris</kbd><span>Visée facultative · sorts automatiques</span></div><div><kbd>F</kbd><span>Cri de l’Osamodas · Ivresse du Pandawa</span></div><div><kbd>Maj</kbd><span>Dash</span></div><div><kbd>E</kbd><span>Défis · Zaap · halte</span></div><div><kbd>Tab</kbd><span>Détails · pause en solo · options</span></div></div></div>
+          <div id="view-settings" class="home-view-content hidden"><p class="view-intro">Vos préférences vous suivent dans chaque aventure.</p><div id="home-settings"></div><h3 class="setup-label">À portée de main</h3><div class="home-controls"><div><kbd>ZQSD</kbd><span>Se déplacer · WASD / flèches</span></div><div><kbd>Souris</kbd><span>Visée facultative · sorts automatiques</span></div><div><kbd>Maj</kbd><span>Dash</span></div><div><kbd>E</kbd><span>Défis · Zaap · halte</span></div><div><kbd>Tab</kbd><span>Détails · pause en solo · options</span></div></div></div>
           <p id="menu-error" class="error" role="status" aria-live="polite"></p>
         </section>
         </div>

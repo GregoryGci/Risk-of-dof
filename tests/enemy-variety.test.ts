@@ -1,5 +1,5 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
-import {ENEMY_ATTACKS,ENEMY_PROFILES,BOSS_ATTACK_PROFILES,ENEMY_ATTACK_LIMITS,getMonster,getSpell,bossForStage,modeFinalStage,MSTATE_NORMAL,type EnemyAttack} from '@rod/shared';
+import {ENEMY_ATTACKS,ENEMY_PROFILES,BOSS_ATTACK_PROFILES,ENEMY_ATTACK_LIMITS,getMonster,getSpell,bossForRun,modeFinalStage,ZONES,MSTATE_NORMAL,type EnemyAttack} from '@rod/shared';
 import {Simulation} from '../server/src/game/Simulation.ts';import {GameState} from '../server/src/state.ts';
 import {executeEnemyAttack,updateEnemyAttack} from '../server/src/game/enemy-attacks.ts';import {updateBoss} from '../server/src/game/bosses.ts';
 function setup(){const state=new GameState(),events:{type:string;data:any}[]=[],sim=new Simulation(state,(type,data)=>events.push({type,data}));sim.addPlayer('p','P','cra');sim.start();sim.map.obstacles.fill(0);(sim as any).director.update=()=>{};sim.roguelite.update=()=>{};const p=sim.players.get('p')!;p.state.hp=p.state.maxHp=1e6;p.state.x=22;p.state.y=20;return{state,sim,p,events};}
@@ -40,9 +40,12 @@ test('Horde : au plus quatre gros sorts ordinaires simultanés, sans supprimer l
   for(let i=0;i<160;i++){const m=attacker(sim,'rose_demoniaque');m.enemyReadyAt=0;m.specialReadyAt=100;m.state.state=MSTATE_NORMAL;if(updateEnemyAttack(sim,m))active++;}
   assert.equal(active,ENEMY_ATTACK_LIMITS.ordinaryConcurrent);
 });
-test('Quatre fins de difficulté : profils propres, phase finale à 25 %, annonces réseau et aucun dégât immédiat',()=>{
-  for(let mode=0;mode<4;mode++){
-    const{sim,state,p,events}=setup();state.mode=mode;state.stage=modeFinalStage(mode);const id=bossForStage(state.stage),profile=BOSS_ATTACK_PROFILES[id];assert.ok(profile.finale?.length!>=4,id);
+test('Tout gardien peut finir une run : phase finale d’au moins quatre attaques',()=>{
+  for(const zone of ZONES){const profile=BOSS_ATTACK_PROFILES[zone.boss]??BOSS_ATTACK_PROFILES.default;assert.ok(profile.finale!.length>=4,zone.boss);assert.equal(new Set(profile.finale).size,profile.finale!.length,zone.boss);}
+});
+test('Dix fins de Stasis : profils propres, phase finale à 25 %, annonces réseau et aucun dégât immédiat',()=>{
+  for(let mode=0;mode<10;mode++){
+    const{sim,state,p,events}=setup();state.mode=mode;state.stage=modeFinalStage(mode);const id=bossForRun(state.zoneOrder,state.stage),profile=BOSS_ATTACK_PROFILES[id]??BOSS_ATTACK_PROFILES.default;assert.ok(profile.finale?.length!>=4,id);
     const m=attacker(sim,id);m.state.hp=m.state.maxHp*.2;m.bossReadyAt=0;m.bossLeapAt=Infinity;
     assert.equal(updateBoss(sim,m),true);assert.equal(p.state.dmgTaken,0);assert.equal(events.filter(e=>e.type==='bossPhase').length,1);
     sim.now+=10;m.bossHoldUntil=0;m.bossReadyAt=0;updateBoss(sim,m);assert.equal(events.filter(e=>e.type==='bossPhase').length,1,'une annonce de dernière phase');

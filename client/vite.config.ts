@@ -11,6 +11,7 @@ export default defineConfig({
     host: true,
   },
   build: {
+    rollupOptions:{input:{game:fileURLToPath(new URL('./index.html',import.meta.url)),mastery:fileURLToPath(new URL('./mastery-test.html',import.meta.url))}},
     // Phaser est volumineux : inutile d'avertir.
     chunkSizeWarningLimit: 2500,
   },

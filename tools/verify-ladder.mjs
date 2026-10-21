@@ -6,7 +6,7 @@ const env={...process.env};for(const f of ['.env','server/.env','client/.env'])i
 const base=(env.SUPABASE_URL??'https://gwhorrgwaefsvayctqig.supabase.co').replace(/\/$/,''),key=env.SUPABASE_PUBLISHABLE_KEY??'sb_publishable_aUJ7d827aJ7JAXoEuHjSyg_Hlw9uVJX';
 const secret=(env.SUPABASE_SECRET_KEY??env.SUPABASE_SERVICE_ROLE_KEY??'').trim();
 const server=process.argv.find(v=>v.startsWith('--server='))?.slice(9)??'wss://risk-of-dof-production.up.railway.app';
-const mode=Number(process.argv.find(v=>v.startsWith('--mode='))?.slice(7)??0);if(!Number.isInteger(mode)||mode<0||mode>3)throw Error('Invalid mode');
+const mode=Number(process.argv.find(v=>v.startsWith('--mode='))?.slice(7)??0);if(!Number.isInteger(mode)||mode<0||mode>9)throw Error('Invalid mode');
 const report={server,at:new Date().toISOString(),filters:[],run:null,cleanup:null};
 const until=async(fn,ms=20000)=>{const end=Date.now()+ms;while(!await fn()){if(Date.now()>end)throw Error('Verification timed out');await new Promise(r=>setTimeout(r,200));}};
 const request=async(path,{admin=false,token,...init}={})=>{const api=admin?secret:key;const response=await fetch(base+path,{...init,headers:{apikey:api,...(token?{Authorization:'Bearer '+token}:admin&&!secret.startsWith('sb_secret_')?{Authorization:'Bearer '+secret}:{}),'Content-Type':'application/json',...init.headers},signal:AbortSignal.timeout(15000)});const text=await response.text();let data;try{data=JSON.parse(text);}catch{}return {status:response.status,data};};
@@ -21,7 +21,7 @@ try{
     if(created.status!==200||!created.data?.id)throw Error('Disposable account creation failed: HTTP '+created.status);fixtureId=created.data.id;
     const login=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});if(!login.data?.access_token)throw Error('Test login failed');const token=login.data.access_token;
     const name='Audit '+suffix.slice(0,8);
-    const profile=await request('/rest/v1/rod_accounts',{token,method:'POST',body:JSON.stringify({user_id:fixtureId,data:{version:3,unlockedMode:mode,profile:{name,avatar:'cra',complete:true}},settings:{},character:'cra',display_name:name,revision:1})});
+    const profile=await request('/rest/v1/rod_accounts',{token,method:'POST',body:JSON.stringify({user_id:fixtureId,data:{version:3,difficultyVersion:2,unlockedMode:mode,profile:{name,avatar:'cra',complete:true}},settings:{},character:'cra',display_name:name,revision:1})});
     if(profile.status!==201)throw Error('Test profile failed: HTTP '+profile.status);
     const client=new Client(server);room=await client.create('partie',{accessToken:token,classId:'cra',name});room.onMessage('*',()=>{});
     await until(()=>room.state?.players?.size===1);room.send('mode',{mode});await until(()=>room.state?.mode===mode);room.send('start');await until(()=>room.state?.runId&&room.state?.phase===1);

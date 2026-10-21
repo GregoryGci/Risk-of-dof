@@ -9,18 +9,18 @@ import {updateBoss} from '../server/src/game/bosses.ts';
 import {Director} from '../server/src/game/director.ts';
 import {modeStages,runStageIndex,spawnCreditsPerSecond,getMode,getRoute} from '@rod/shared';
 
-test('Cauchemar : pression progressive du directeur dès la vraie zone de départ 26',()=>{
-  const state=new GameState();state.mode=3;
+test('Cauchemar : pression progressive du directeur dès la première zone de la run',()=>{
+  const state=new GameState();state.mode=4;
   const sim=new Simulation(state,()=>{});sim.addPlayer('p','Audit','cra');sim.start();
-  assert.equal(state.stage,26);
+  assert.equal(state.stage,1);
   const director=new Director(sim),dt=.1;
   for(const [offset,factor] of [[0,.6],[3,.8],[6,1],[7,1]]){
-    state.stage=modeStages(3)[0]+offset;
+    state.stage=modeStages(4)[0]+offset;
     director.reset();
     const rt=director as unknown as {credits:number};
     const initial=rt.credits;
     director.update(dt);
-    const full=spawnCreditsPerSecond(state.difficulty,1,runStageIndex(3,state.stage))*getMode(3).spawn*getRoute(state.stageRoute).spawn*dt;
+    const full=spawnCreditsPerSecond(state.difficulty,1,runStageIndex(4,state.stage))*getMode(4).spawn*getRoute(state.stageRoute).spawn*dt;
     assert.ok(Math.abs(rt.credits-initial-full*factor)<1e-9,`zone ${state.stage} : cadence ×${factor}`);
   }
 });
@@ -59,8 +59,10 @@ test('Fin de jeu : le Cauchemar ne donne que des objets 151-200, total 3 % et Do
   assert.equal(equipmentDropChance(33,'kralano','rare',1,0),0);assert.ok(equipmentDropChance(1,'kralano','rare',1,3)>0);
 });
 
-function encounter(stage:number,mode=3){
-  const state=new GameState(),events:{type:string;data:any}[]=[],sim=new Simulation(state,(type,data)=>events.push({type,data}));state.mode=mode;sim.addPlayer('p','P','cra');sim.start();state.stage=stage;sim.map.obstacles.fill(0);const p=sim.players.get('p')!;p.state.x=state.zaapX;p.state.y=state.zaapY;
+function encounter(stage:number,mode=4){
+  const state=new GameState(),events:{type:string;data:any}[]=[],sim=new Simulation(state,(type,data)=>events.push({type,data}));state.mode=mode;sim.addPlayer('p','P','cra');sim.start();state.stage=stage;
+  // Donjons dans l'ordre du catalogue : les gardiens de chaque zone restent ceux que les tests attendent.
+  state.zoneOrder=Array.from({length:12},(_,i)=>i).join(',');sim.map.obstacles.fill(0);const p=sim.players.get('p')!;p.state.x=state.zaapX;p.state.y=state.zaapY;
   const random=Math.random;try{Math.random=()=>.5;sim.interact(p.id);}finally{Math.random=random;}
   // Les gardiens apparaissent après leur annonce au sol.
   for(let i=0;i<61;i++)sim.update(1/30);
@@ -88,9 +90,9 @@ test('Cauchemar : les grosses attaques alternent sans perdre de pattern quand un
 });
 
 test('Cauchemar : mode choisi par hôte, récompense dédiée et historique sans rabattement vers Difficile',()=>{
-  const state=new GameState(),sim=new Simulation(state,()=>{});sim.addPlayer('p','P','cra');sim.addPlayer('q','Q','cra');state.hostId='p';sim.setMode('q',3);assert.equal(state.mode,0);sim.setMode('p',3);assert.equal(state.mode,3);sim.setMode('p',4);assert.equal(state.mode,3);
-  sim.start();sim.setMode('p',1);assert.equal(state.mode,3);assert.equal(state.phase,PHASE_PLAYING);
-  assert.ok(equipmentReward('r',123,1,3,100).kamas>equipmentReward('r',123,1,2,100).kamas);
-  assert.equal(sanitizeRunSummary({runId:'x',classId:'cra',startedAt:new Date().toISOString(),mode:3})?.mode,3);
-  for(let stage=1;stage<=33;stage++){assert.equal(guardianCount(3,stage),stage%3===0?3:2);assert.equal(guardianCount(2,stage),1);}
+  const state=new GameState(),sim=new Simulation(state,()=>{});sim.addPlayer('p','P','cra');sim.addPlayer('q','Q','cra');state.hostId='p';sim.setMode('q',4);assert.equal(state.mode,0);sim.setMode('p',4);assert.equal(state.mode,4);sim.setMode('p',4);assert.equal(state.mode,4);
+  sim.start();sim.setMode('p',1);assert.equal(state.mode,4);assert.equal(state.phase,PHASE_PLAYING);
+  assert.ok(equipmentReward('r',123,1,4,100).kamas>equipmentReward('r',123,1,2,100).kamas);
+  assert.equal(sanitizeRunSummary({runId:'x',classId:'cra',startedAt:new Date().toISOString(),mode:3})?.mode,4);
+  for(let stage=1;stage<=33;stage++){assert.equal(guardianCount(4,stage),stage%3===0?3:2);assert.equal(guardianCount(2,stage),1);}
 });

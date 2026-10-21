@@ -257,7 +257,7 @@ function updateAlly(sim: Simulation, m: MonsterRt, dt: number): void {
   }
   const b = m.def.behavior;
   if(sim.now<(m.attackHoldUntil??0))return;
-  const inherited=summonPower(m,owner,sim.now);
+  const inherited=summonPower(m,owner);
   m.damageMult=inherited.damage;
   const speed = inherited.speed;
   const moveTo = (x: number, y: number, stopAt: number) => {

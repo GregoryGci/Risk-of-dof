@@ -14,7 +14,7 @@ async function clickAt(x,y){await send('Input.dispatchMouseEvent',{type:'mouseMo
 async function dark(selector){assert.ok(await evaluate(`(()=>{const c=getComputedStyle(document.querySelector(${JSON.stringify(selector)})).backgroundColor.replace('rgba(','').replace('rgb(','').replace(')','').split(',').slice(0,3).map(Number);return c.length===3&&Math.max(...c)<75;})()`),selector+' uses a dark surface');}
 try {
  await viewport();await send('Page.navigate',{url:base});
- await until(()=>evaluate(`!!document.querySelector('#account-panel #auth-form')&&document.querySelectorAll('#class-picker .home-class').length===12`));
+ await until(()=>evaluate(`!!document.querySelector('#account-panel #auth-form')&&document.querySelectorAll('#class-picker .home-class').length===12&&!document.getElementById('home-loader')`));
  assert.ok(await evaluate(`document.body.classList.contains('legends')`));
  await shot('account-desktop');await framed('#account-panel .sheet');
  await dark('#account-panel .sheet');await clickAt(5,5);assert.ok(await visible('account-panel'),'Required login keeps its existing close guard');
@@ -80,7 +80,7 @@ try {
   assert.equal(await evaluate(`document.body.classList.contains('legends')`),theme==='legends');
  }
  const oldOrigin=await evaluate('performance.timeOrigin');
- await send('Page.reload');await until(()=>evaluate(`performance.timeOrigin!==${oldOrigin}&&!!document.querySelector('#account-panel #auth-form')&&document.querySelectorAll('#class-picker .home-class').length===12&&document.body.classList.contains('legends')`));
+ await send('Page.reload');await until(()=>evaluate(`performance.timeOrigin!==${oldOrigin}&&!!document.querySelector('#account-panel #auth-form')&&document.querySelectorAll('#class-picker .home-class').length===12&&!document.getElementById('home-loader')&&document.body.classList.contains('legends')`));
  await evaluate(`document.getElementById('account-panel').classList.add('hidden');document.querySelector('[data-view="character"]').click()`);
  checks.push('Legacy/cloud visual migration, other preferences/account preserved, three themes persisted');
  for(const [button,panel,close] of [['btn-equipment','equipment','equipment-close'],['btn-talents','talents','talents-close'],['btn-encyclopedia','encyclopedia','encyclopedia-close'],['btn-atlas','atlas','atlas-close'],['btn-history','history','history-close'],['btn-ladder','ladder','ladder-close']]) {
@@ -128,6 +128,7 @@ try {
  fs.writeFileSync(html,fs.readFileSync('client/index.html','utf8').replace('/src/main.ts','/src/.codexThemeSmoke.ts'));
  fs.writeFileSync(entry,`
  import Phaser from 'phaser';
+ import {finishHomeLoader} from './ui/loaders.ts';void finishHomeLoader();
  import './skin-shop.css';import './roguelite.css';import './run-hud.css';import './legends.css';
  import {Simulation} from '../../server/src/game/Simulation.ts';import {GameState} from '../../server/src/state.ts';
  import {GameScene} from './game/GameScene.ts';import {AssetStore} from './assets/store.ts';import {Hud} from './ui/Hud.ts';
@@ -145,7 +146,7 @@ try {
  (window as any).__theme={sim,game,hud,gameSettings:gameSettings(),stop(){clearInterval(timer);hud.hide();game.destroy(true);}};
  `);
  await viewport();await send('Page.navigate',{url:base+'/.codex-theme-smoke.html'});
- await until(()=>evaluate(`!!window.__scene?.xpView&&!!document.querySelector('#banner [data-action="start"]')`));
+ await until(()=>evaluate(`!document.getElementById('home-loader')&&!!window.__scene?.xpView&&!!document.querySelector('#banner [data-action="start"]')`));
  await shot('lobby-desktop');
  await evaluate(`__theme.sim.start()`);await until(()=>evaluate(`__theme.sim.state.phase===1`));
  await delay(400);await shot('combat-desktop');

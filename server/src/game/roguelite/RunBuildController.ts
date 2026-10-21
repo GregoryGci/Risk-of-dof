@@ -3,7 +3,9 @@ import {applyEvolution, applyLevelReward, applyRetune, retuneOptions, createRunB
   type LevelReward, type RogueliteCatalog, type RunBuild} from '@rod/shared/roguelite';
 
 export type RunChoice=LevelReward|{id:string;kind:'evolution'|'blessing';definitionId:string;nextLevel:number}|{id:string;kind:'retune';definitionId:string;nextLevel:number;targetId:string};
-export interface BuildChoiceOffer {runId: string; revision: number; buildRevision: number; expiresAtMs: number; choices: RunChoice[];source:'level'|'boss'|'elite'}
+export interface BuildChoiceOffer {runId: string; revision: number; buildRevision: number; expiresAtMs: number; choices: RunChoice[];source:'level'|'boss'|'elite';
+  /** Chaque niveau gagné offre une relance gratuite, utilisée avant les relances en réserve. */
+  freeReroll?:boolean}
 /**
  * Authoritative personal build, wired to the existing shared XP callback.
  * One instance per (run, player); the room derives the player from Client.sessionId.
@@ -20,9 +22,11 @@ export class RunBuildController {
   private offerNumber=0;
   private luck=0;
   constructor(private catalog: RogueliteCatalog, readonly runId: string, readonly playerId: string,
-    classId: string, private seed: number, trustedBuild?:RunBuild) {
+    classId: string, private seed: number, trustedBuild?:RunBuild, variants:string[]=[]) {
     if (!runId || !playerId || !Number.isSafeInteger(seed)) throw new Error('Invalid build authority identity');
-    this.build = trustedBuild?structuredClone(trustedBuild):createRunBuild(catalog,classId);validateRunBuild(catalog,this.build);
+    this.build = trustedBuild?structuredClone(trustedBuild):createRunBuild(catalog,classId);
+    if(!trustedBuild&&variants.length)this.build.variants=[...new Set(variants)].filter(id=>catalog.spell(id)?.acquire);
+    validateRunBuild(catalog,this.build);
   }
   getSnapshot() {
     return structuredClone({runId: this.runId, playerId: this.playerId, build: this.build,
@@ -67,7 +71,7 @@ export class RunBuildController {
     } else choices=generateLevelRewards(this.catalog,this.build,makeRng((this.seed+Math.imul(this.offerRevision,0x9e3779b9))>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:++this.offerNumber});
     // Plus rien à proposer (secours plafonnés, Potion bannie) : le niveau ou le bonus est consommé sans carte.
     if(!choices.length){if(bonus)this.bonusQueue.shift();else{this.pendingLevels--;this.levelCursor++;}this.ensureOffer(nowMs);return;}
-    this.offer = {runId: this.runId, revision: this.offerRevision, buildRevision: this.build.revision,source:bonus?.source??'level',
+    this.offer = {runId: this.runId, revision: this.offerRevision, buildRevision: this.build.revision,source:bonus?.source??'level',freeReroll:!bonus,
       expiresAtMs: nowMs + this.catalog.config.choiceTimeoutMs,
       choices};
   }
@@ -82,6 +86,11 @@ export class RunBuildController {
     }else if(selected.kind==='retune')this.build=applyRetune(this.catalog,this.build,selected.definitionId);
     else if(selected.kind!=='blessing')this.build=applyLevelReward(this.catalog,this.build,selected as LevelReward);
     else this.build.revision++;
+    // Un sort prêt évolue dans son propre emplacement, avant le prochain tirage.
+    // Aucun nouveau boss, jeton ou départ de vague n'est nécessaire.
+    if(selected.kind!=='evolution')for(const source of ['boss','elite'] as const) {
+      for(const id of eligibleEvolutions(this.catalog,this.build,source))this.build=applyEvolution(this.catalog,this.build,id,source);
+    }
     if(this.offer.source==='level'){this.pendingLevels--;this.levelCursor++;}
     else this.bonusQueue.shift();
     this.offer = undefined; this.ensureOffer(nowMs); return structuredClone(selected);
@@ -94,9 +103,10 @@ export class RunBuildController {
   }
   reroll(message:{runId?:unknown;revision?:unknown},nowMs:number):boolean {
     this.validateClock(nowMs);
-    if(!this.offer||this.offer.source!=='level'||message.runId!==this.runId||message.revision!==this.offer.revision||this.build.rerolls<=0)return false;
-    const old=this.offer.choices.map(c=>c.id);this.build.rerolls--;this.build.revision++;this.offer=undefined;this.ensureOffer(nowMs);
+    if(!this.offer||this.offer.source!=='level'||message.runId!==this.runId||message.revision!==this.offer.revision||!this.offer.freeReroll&&this.build.rerolls<=0)return false;
+    const old=this.offer.choices.map(c=>c.id);if(!this.offer.freeReroll)this.build.rerolls--;this.build.revision++;this.offer=undefined;this.ensureOffer(nowMs);
     const offer=this.offer as BuildChoiceOffer|undefined;if(!offer)return true;
+    offer.freeReroll=false;
     const fresh=generateLevelRewards(this.catalog,this.build,makeRng((this.seed+this.offerRevision*17)>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:this.offerNumber,exclude:old});
     // Pool épuisé : on garde le tirage normal plutôt qu'une offre vide.
     if(fresh.length)offer.choices=fresh;return true;
@@ -106,8 +116,9 @@ export class RunBuildController {
     if(!this.offer||this.offer.source!=='level'||message.runId!==this.runId||message.revision!==this.offer.revision||this.build.banishes<=0)return false;
     const selected=this.offer.choices.find(c=>c.id===message.choiceId);if(!selected)return false;
     this.build.banned.push(selected.definitionId);this.build.banishes--;this.build.revision++;
-    const old=this.offer.choices.filter(c=>c.id!==selected.id);this.offer=undefined;this.ensureOffer(nowMs);
+    const old=this.offer.choices.filter(c=>c.id!==selected.id),free=this.offer.freeReroll;this.offer=undefined;this.ensureOffer(nowMs);
     const offer=this.offer as BuildChoiceOffer|undefined;if(!offer)return true;
+    offer.freeReroll=free;
     const replacement=generateLevelRewards(this.catalog,this.build,makeRng((this.seed+this.offerRevision*19)>>>0),{level:this.levelCursor,luck:this.luck,offerNumber:this.offerNumber,exclude:old.map(c=>c.id)});
     const choices=[...old,...replacement.slice(0,1)];if(choices.length)offer.choices=choices;return true;
   }

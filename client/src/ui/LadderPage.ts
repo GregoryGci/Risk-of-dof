@@ -1,6 +1,7 @@
 import {CLASSES,GAME_MODES} from '@rod/shared';
 import {supabase} from '../cloud.ts';
 import {escapeHtml} from './Hud.ts';
+import {stasisLabel} from './stasis.ts';
 interface Score{rank:number;player_name:string;class_id:string;party_size:number;zone:number;waves:number;kills:number;duration:number;started_at:string}
 // Les filtres sont posés une seule fois : changer de catégorie garde l'ancien tableau (estompé) jusqu'à
 // l'arrivée du nouveau, au lieu de tout vider puis tout redessiner — ce qui faisait clignoter la page.
@@ -9,7 +10,7 @@ export class LadderPage {
   private el=document.getElementById('ladder')!;private body=document.getElementById('ladder-body')!;private multiplayer=false;private mode=1;private request=0;
   private cache=new Map<string,string>();
   constructor(private serverUrl?:string){document.getElementById('ladder-close')!.onclick=()=>this.el.classList.add('hidden');this.body.onclick=event=>{const target=(event.target as HTMLElement).closest<HTMLElement>('button');if(target?.dataset.ladderRetry!==undefined)void this.render();if(target?.dataset.ladderParty!==undefined){this.multiplayer=target.dataset.ladderParty==='multi';void this.render();}if(target?.dataset.ladderMode!==undefined){this.mode=Number(target.dataset.ladderMode);void this.render();}};}
-  /** S'ouvre sur la difficulté choisie à l'accueil : un nouveau compte ne joue d'abord qu'en Facile. */
+  /** S'ouvre sur le Stasis choisi à l'accueil ; un nouveau compte commence au Stasis 1. */
   open(mode=this.mode):void {this.mode=GAME_MODES.some(m=>m.id===mode)?mode:0;this.el.classList.remove('hidden');document.getElementById('ladder-close')!.focus();void this.render();void this.checkServer();}
   private async checkServer():Promise<void>{
     if(!this.serverUrl)return;
@@ -20,7 +21,7 @@ export class LadderPage {
   private skeleton():HTMLElement{
     let results=document.getElementById('ladder-results');
     if(results)return results;
-    this.body.innerHTML=`<div class="ladder-filters"><div class="ladder-filter-group" role="group" aria-label="Type de partie"><span class="eyebrow">Type de partie</span><div><button data-ladder-party="solo" class="btn">Solo</button><button data-ladder-party="multi" class="btn">Multijoueur</button></div></div><div class="ladder-filter-group" role="group" aria-label="Difficulté"><span class="eyebrow">Difficulté</span><div>${GAME_MODES.map(m=>`<button class="btn" data-ladder-mode="${m.id}">${escapeHtml(m.name)}</button>`).join('')}</div></div></div><p class="auth-status">Une meilleure run par joueur. Zones, puis assauts et victimes départagent les scores.</p><p id="ladder-server-status" class="auth-status" role="status"></p><p id="ladder-error" class="auth-status" role="alert"></p><div id="ladder-results" role="status" aria-live="polite">Chargement…</div>`;
+    this.body.innerHTML=`<div class="ladder-filters"><div class="ladder-filter-group" role="group" aria-label="Type de partie"><span class="eyebrow">Type de partie</span><div><button data-ladder-party="solo" class="btn">Solo</button><button data-ladder-party="multi" class="btn">Multijoueur</button></div></div><div class="ladder-filter-group stasis-selector" role="group" aria-label="Filtrer par Stasis">${stasisLabel('ladder-stasis-tooltip')}<div class="stasis-options">${GAME_MODES.map(m=>`<button class="btn stasis-number" data-ladder-mode="${m.id}" aria-label="${m.name}">${m.stasis}</button>`).join('')}</div></div></div><p class="auth-status">Une meilleure run par joueur. Zones, puis assauts et victimes départagent les scores.</p><p id="ladder-server-status" class="auth-status" role="status"></p><p id="ladder-error" class="auth-status" role="alert"></p><div id="ladder-results" role="status" aria-live="polite">Chargement…</div>`;
     return document.getElementById('ladder-results')!;
   }
   private async render():Promise<void>{
