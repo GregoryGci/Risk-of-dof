@@ -126,11 +126,9 @@ Les atlas de combat sont distincts des grands atlas de diagnostic : rendu source
 
 Les tracks de coiffes/capes restent calés sur les mêmes frames source. L’installation vérifie le nombre d’accroches de chaque animation avant de modifier le manifeste. Un équipement dont les données arrivent après le corps est réessayé, pour éviter qu’il reste invisible après un chargement différé.
 
-Les **36 apparats de classe** utilisent maintenant `Manifest.classOutfits` : ils superposent leurs coiffes/capes cosmétiques au corps illustré de leur classe. Leurs anciennes définitions d’atlas complets sont retirées du registre `skins`. Les six pièces d’apparats sont ajoutées à l’atlas d’équipements, sans copier les douze textures de corps pour chaque apparat. Les **12 costumes** gardent leurs modèles spécifiques dans `skins`.
+**Boutique d'apparats (2026-10-21).** Les 36 apparats de classe et les 12 costumes ont été retirés ; leurs acheteurs sont remboursés en Ogrines lors de la migration du compte (`LEGACY_SKIN_REFUNDS`). La boutique vend désormais chaque coiffe (3 Ogrines) et chaque cape (2 Ogrines) du jeu, achetée une fois pour toutes les classes : les 224 pièces du catalogue et toutes les formes des objets vivants (Obvijevan, Shushuté, Valeureux, Belliciste, Parchomancia, Bushidobvi), soit 382 apparats (`shared/src/data/skins.ts`). La garde-robe enregistre par classe `<classe>:coiffe`, `<classe>:cape` et le corps de maîtrise (`<classe>`) dans `equippedSkins` ; le serveur publie `PlayerState.apparel` (`coiffe|cape`). En jeu, l'apparat cache la coiffe ou la cape portée, sans toucher aux statistiques. Les corps de maîtrise reprennent les points d'accroche de leur classe.
 
-Le retrait ou changement d’un apparat est distingué d’un changement de texture : `appearanceKey` permet à `GameScene` de reconstruire la vue alors que le corps de classe est partagé. Les apparats remplacent visuellement les coiffes/capes équipées sans toucher aux statistiques d’équipement.
-
-Les identifiants d’achat et de sélection sont inchangés (`iop__solomonk`, etc.). **Aucun compte, achat, ogrine, équipement ou choix sauvegardé n’est effacé ou converti.** Les 36 aperçus de boutique ont été régénérés à partir du rendu Phaser des nouveaux personnages, sur fond transparent.
+Les formes des objets vivants sont extraites par `node tools/extract-apparats.mjs`, qui complète l'atlas d'équipement installé (relançable). `illustrated-outfits.mjs`, `illustrated-game-smoke.mjs`, `costume-skins.mjs` et `prepare-skin-shop.mjs` ont été supprimés avec l'ancien système.
 
 ### Reproduction et validations
 
@@ -138,14 +136,13 @@ Les identifiants d’achat et de sélection sont inchangés (`iop__solomonk`, et
 node tools/illustrated-characters.mjs build iop sadida
 node tools/illustrated-characters.mjs export iop sadida
 node tools/illustrated-characters.mjs install
-node tools/illustrated-outfits.mjs
+node tools/extract-apparats.mjs
 node tools/illustrated-characters.mjs gallery
 # Avec le serveur Vite local lancé :
-node tools/illustrated-game-smoke.mjs --previews
 node tools/illustrated-run-smoke.mjs
 ```
 
-`install` est la seule commande du premier générateur qui écrit les nouveaux corps et leurs définitions dans le dossier public. `illustrated-outfits.mjs` installe les superpositions. Les SWF de l’installation source ne sont jamais modifiés.
+`install` est la seule commande du premier générateur qui écrit les nouveaux corps et leurs définitions dans le dossier public. Les SWF de l’installation source ne sont jamais modifiés.
 
 Contrôles réussis après intégration :
 

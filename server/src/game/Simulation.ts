@@ -1,4 +1,4 @@
-import {skinFits,getPetAttack,lifestealCrowdFactor,LIFESTEAL_HEAL_PER_SECOND,innateLifesteal,modeDifficulty,skinById,OGRINE_DROP_CHANCE,sourceDamageMultiplier,clampCombatStats,isRangedAttack,lifestealCap,bonusUseful} from '@rod/shared';
+import {appearanceFor,getPetAttack,lifestealCrowdFactor,LIFESTEAL_HEAL_PER_SECOND,innateLifesteal,modeDifficulty,OGRINE_DROP_CHANCE,sourceDamageMultiplier,clampCombatStats,isRangedAttack,lifestealCap,bonusUseful} from '@rod/shared';
 // Simulation autoritaire d'une partie : joueurs, sorts, projectiles, dégâts.
 // L'IA des monstres est dans monsters.ts, le spawn dans director.ts.
 import {
@@ -436,7 +436,7 @@ export class Simulation {
     p.def = getClass(classId);
     p.state.classId = p.def.id;
     this.syncMasteryAppearance(p);
-    p.state.skin=skinFits(skinById(p.skinBook?.[p.def.id]),p.def.id)?p.skinBook![p.def.id]:'';
+    this.syncWardrobe(p);
     this.setSpells(p, loadout);
     const { x, y } = p.state;
     this.resetPlayer(p);
@@ -639,7 +639,9 @@ export class Simulation {
     this.setupStage();this.broadcast('stage',{stage:this.state.stage,name:this.zone().name});
   }
 
-  setSkins(id:string,book:Record<string,string>={}):void {const p=this.players.get(id);if(!p||(this.state.phase!==PHASE_LOBBY&&p.skinBook))return;p.skinBook={...book};p.state.skin=skinFits(skinById(book[p.def.id]),p.def.id)?book[p.def.id]:'';}
+  setSkins(id:string,book:Record<string,string>={}):void {const p=this.players.get(id);if(!p||(this.state.phase!==PHASE_LOBBY&&p.skinBook))return;p.skinBook={...book};this.syncWardrobe(p);}
+  /** Corps de maîtrise, coiffe et cape d'apparat de la classe jouée (livre vérifié par cloud.ts). */
+  private syncWardrobe(p:PlayerRt):void {const look=appearanceFor(p.skinBook,p.def.id);p.state.skin=look.skin;p.state.apparel=look.head||look.back?`${look.head}|${look.back}`:'';}
   /** Appelé uniquement avec le profil authentifié ; aucun message client ne fournit d'XP. */
   setMastery(id:string,raw:unknown,selected:unknown=[],disabledAuras:unknown=[]):void {
     const p=this.players.get(id);if(!p||this.state.phase!==PHASE_LOBBY&&p.mastery!==undefined)return;

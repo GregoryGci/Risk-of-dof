@@ -9,12 +9,12 @@ Demandes du 20 octobre 2026. Maîtrise et variantes implémentées ; le prestige
 - [x] Débloquer une aura propre à chaque classe, visible en jeu et en multijoueur.
 - [x] Créer un skin spécial travaillé pour chacune des douze classes.
 - [x] Conserver les animations, directions et attaches des coiffes et capes équipées.
-- [x] Afficher la progression et les récompenses dans le menu Maîtrise ; sauvegarder la progression sur le compte.
+- [x] Intégrer la maîtrise à Personnages : nom, XP et niveau, bouton qui déplie les récompenses ; sauvegarder la progression sur le compte.
 - [x] Fournir une page de test locale pour comparer les skins et auras animés.
 
 ## Variantes de sorts
 
-- [x] Ajouter une variante pour chacun des 18 sorts, débloquée par la maîtrise de sa classe d'origine.
+- [x] Ajouter une variante pour chacun des 17 sorts, débloquée par la maîtrise de sa classe d'origine.
 - [x] Permettre de choisir entre le sort de base et sa variante avant une run.
 - [x] Partager le déblocage au niveau du compte : disponibilité dans toutes les runs, quelle que soit la classe jouée.
 - [x] Donner aux variantes des compromis de gameplay et conserver les huit niveaux, paliers permanents et évolutions des sorts.

@@ -615,9 +615,9 @@ export class GameScene extends Phaser.Scene {
       view.setShield(p.shield, p.maxHp);
       view.setDead(!p.alive);
       view.setInvisible(p.invisible);
-      // Apparence : la coiffe et la cape équipées sont portées en jeu, synchronisées par l'état du joueur.
-      const [head, back, pet] = wornGear(p.equipment);
-      view.setGear(head, back);
+      // Apparence : l'apparat cache la coiffe ou la cape équipée ; sinon on voit l'équipement porté.
+      const [head, back, pet] = wornGear(p.equipment),[apparelHead,apparelBack]=(p.apparel??'').split('|');
+      view.setGear(apparelHead||head, apparelBack||back);
       view.setMasteryAura(id===myId||settings.allyEffects?p.masteryAura||undefined:undefined);
       view.setPet(this.petTexture(pet));
       view.update(dt,state.paused||state.intermission);

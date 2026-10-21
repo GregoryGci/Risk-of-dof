@@ -30,7 +30,7 @@ import {cloud} from './cloud.ts';
 import { setupDialogNavigation } from './ui/dialogNavigation.ts';
 import { mountSettings } from './ui/settingsForm.ts';
 import { account } from './account.ts';
-import {MasteryPage} from './ui/MasteryPage.ts';
+import {MasteryPage,renderMasteryProgress} from './ui/MasteryPage.ts';
 import './mastery.css';
 import { settings, subscribeSettings } from './settings.ts';
 import { ambiance, music, MENU_TRACK } from './music.ts';
@@ -95,6 +95,7 @@ const classPicker = $('class-picker');
 const classIds = Object.keys(CLASSES);
 let portraitMotion: Animation | undefined;
 let characterOrigin = '';
+let masteryPage:MasteryPage|undefined;
 function renderClassPicker(): void {
   const focusedClass = classPicker.contains(document.activeElement) ? (document.activeElement as HTMLElement).dataset.class : undefined;
   classPicker.innerHTML = Object.values(CLASSES).map(c => `<button class="home-class${c.id === classId ? ' active' : ''}" data-class="${c.id}" aria-pressed="${c.id === classId}" title="${escapeHtml(c.description)}">${classPortrait(c.id)}<span class="class-name">${escapeHtml(c.name)}</span></button>`).join('');
@@ -112,6 +113,7 @@ function renderClassPicker(): void {
   $('class-innate').innerHTML = `<span>Passif inné · propre à la classe</span><b>${escapeHtml(innate.name)}</b><small>${escapeHtml(innate.description)}</small>`;
   if (focusedClass) classPicker.querySelector<HTMLElement>(`[data-class="${focusedClass}"]`)?.focus({preventScroll:true});
   renderProfile();
+  masteryPage?.setClass(classId);
 }
 function selectClass(id:string): void {
   if(!CLASSES[id]||id===classId)return;
@@ -162,7 +164,7 @@ function renderProfile(): void {
   renderModes();
   const tier = EQUIPMENT_TIERS[account.bestTier];
   const count = Object.keys(account.equipment).length;
-  $('btn-mastery').querySelector('small')!.textContent=`${CLASSES[classId].name} · niveau ${account.masteryStatus(classId).level} / 50`;
+  renderMasteryProgress(classId);
   // En haut à gauche : nom de l'invocateur et ses monnaies, rien d'autre.
   $('home-profile').innerHTML = `<button type="button" class="profile-name" id="btn-account" title="${cloud.session?'Mon compte':'Se connecter'}">${escapeHtml(account.profile.name||pseudoInput.value.trim() || 'Aventurier')}</button><span class="profile-stat"><b>${account.bank.toLocaleString('fr')}</b> kamas</span><span class="profile-stat forge"><b>${account.fragments.toLocaleString('fr')}</b> ◈ forge</span><span class="profile-stat"><b>${account.ogrines}</b> Ogrines</span>`;
   $('home-progress').textContent = `PALIER ${tier.level} · ${account.inventory.length} ÉQUIPEMENTS`;
@@ -220,8 +222,9 @@ $('setup-modes').addEventListener('click', e => {
 renderModes();
 // Boutique d'apparats : progression permanente et atlas chargés à la demande.
 const skinShop=new SkinShop(()=>{renderProfile();void cloud.flush().then(()=>currentRoom?.send('refreshProgression'));});
-const masteryPage=new MasteryPage(()=>{renderProfile();void cloud.flush().then(()=>currentRoom?.send('refreshProgression'));},()=>!currentRoom||currentRoom.state.phase!==PHASE_PLAYING);
-$('btn-mastery').onclick=()=>masteryPage.open(classId);
+masteryPage=new MasteryPage(()=>{renderProfile();void cloud.flush().then(()=>currentRoom?.send('refreshProgression'));},()=>!currentRoom||currentRoom.state.phase!==PHASE_PLAYING);
+masteryPage.setClass(classId);
+$('btn-mastery').onclick=()=>masteryPage?.toggle(classId);
 $('btn-skins').hidden=false;$('btn-skins').onclick=()=>skinShop.open(classId);
 fetch('assets/dofus/manifest.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(data=>{if(data&&Object.keys(data).length)$('btn-skins').hidden=false;}).catch(()=>{});
 if (invited) showView('multi');

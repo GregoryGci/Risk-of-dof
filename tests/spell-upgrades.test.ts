@@ -11,7 +11,7 @@ test('Migration : remboursements archivés, ressources conservées et conversion
  assert.deepEqual(migrated.rogueliteMigration.source.spellLevels,old.spellLevels);assert.deepEqual(migrated.permanentSpellRanks,{});assert.deepEqual(migrateAccount(migrated),migrated);
  assert.deepEqual(sanitizePermanentSpellRanks({'__proto__':5,'sp.fleche_magique':6,'sp.pression':2.5,'ev.fleches_celestes':5}),{});
 });
-test('Cinq achats pour chacun des 18 sorts : coût, plafond, persistance et partage entre classes',async()=>{
+test('Cinq achats pour chacun des 17 sorts : coût, plafond, persistance et partage entre classes',async()=>{
  const memory=new Map<string,string>();Object.defineProperty(globalThis,'localStorage',{value:{getItem:(k:string)=>memory.get(k)??null,setItem:(k:string,v:string)=>memory.set(k,v)},configurable:true});const {account}=await import('../client/src/account.ts');
  for(const id of ROGUELITE_SPELL_IDS){account.replace({version:3,bank:20000});let spent=0;
   for(let rank=1;rank<=5;rank++){spent+=permanentSpellCost(id,rank);assert.ok(account.upgradeSpell('cra',id));assert.equal(account.bank,20000-spent);assert.equal(account.spellLevel('iop',id),rank);account.replace(account.snapshot());assert.equal(account.spellLevel('cra',id),rank);}

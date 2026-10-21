@@ -332,6 +332,7 @@ export interface PlayerView {
   abilities:string;
   choiceOffer:string;
   skin:string;
+  apparel?:string;
   masteryAura?:string;
   masteryLevel?:number;
   ogrinesEarned:number;

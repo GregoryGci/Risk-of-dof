@@ -19,7 +19,7 @@ test('Maîtrise : 50 niveaux bornés, paliers exacts et rejet des valeurs invali
 test('Compte : migration idempotente, skins gagnés uniquement par maîtrise et aucun achat gratuit',async()=>{
  const raw={version:3,bank:100,skins:['cra__mastery','costume_bouftou'],equippedSkins:{cra:'cra__mastery'},mastery:{sram:masteryLevelXp(30)},selectedVariants:['sp.piege_sournois','sp.fleche_magique'],disabledMasteryAuras:['sram','bogus']};
  const migrated=migrateAccount(raw);assert.deepEqual(migrateAccount(migrated),migrated);assert.ok(!migrated.skins.includes('cra__mastery'));assert.ok(migrated.skins.includes('sram__mastery'));assert.equal(migrated.equippedSkins.cra,undefined);assert.deepEqual(migrated.selectedVariants,['sp.piege_sournois']);
- const {account}=await import('../client/src/account.ts');account.replace(raw,'rod.mastery-test');assert.equal(account.buySkin('cra__mastery'),false);assert.equal(account.equipSkin('cra','cra__mastery'),false);assert.ok(account.equipSkin('sram','sram__mastery'));assert.equal(account.bank,100);
+ const {account}=await import('../client/src/account.ts');account.replace(raw,'rod.mastery-test');assert.equal(account.buyApparat('cra__mastery'),false);assert.equal(account.equipSkin('cra','cra__mastery'),false);assert.ok(account.equipSkin('sram','sram__mastery'));assert.equal(account.bank,100);
  assert.ok(account.selectVariant('sp.piege_sournois',true));assert.equal(account.selectVariant('sp.pression',true),false);assert.ok(account.setMasteryAura('sram',false));
  account.replace(account.snapshot());assert.ok(account.selectedVariants.includes('sp.piege_sournois'));assert.ok(account.disabledMasteryAuras.includes('sram'));
 });
@@ -41,8 +41,8 @@ test('Variantes partagées : choix autorisés par la maîtrise, utilisables depu
  const frozen=p.state.build;sim.setMastery(p.id,{iop:MASTERY_MAX_XP},['sp.pression']);assert.equal(p.state.build,frozen);assert.equal(state.phase,1);
 });
 
-test('Variantes : les 18 sorts progressent sur 8 niveaux sans modifier le catalogue, puis évoluent normalement',()=>{
- assert.equal(SPELL_VARIANTS.length,18);
+test('Variantes : les 17 sorts progressent sur 8 niveaux sans modifier le catalogue, puis évoluent normalement',()=>{
+ assert.equal(SPELL_VARIANTS.length,17);
  for(const v of SPELL_VARIANTS){
   const before=structuredClone(C.spell(v.spellId));let build=buildWith(v.classId,[v.spellId],1);build.variants=[v.spellId];
   for(let level=1;level<=8;level++){

@@ -1,5 +1,5 @@
 import {getPetAttack,rollPetAttack,petRerollCost,type PetAttackDef} from '@rod/shared';
-import {skinById,skinFits,type CurrencyGrant} from '@rod/shared';
+import {skinById,skinFits,apparatById,wardrobeKey,type ApparatKind,type CurrencyGrant} from '@rod/shared';
 // Progression entre les parties, mémorisée dans le navigateur :
 // bourse de kamas (gagnée en fin de partie), sorts débloqués et sorts équipés par classe.
 import { bestLoadout, EQUIPMENT_TIERS, EQUIPMENT_BASES, EQUIPMENT_SLOTS, FUSION_COST, fusionResult, equippedStats, sanitizeEquipment, slotKind, type EquipmentRarity, type EquipmentStack, type EquipmentSlot, type GearDrop, type RunReward } from '@rod/shared';
@@ -56,7 +56,11 @@ export const account = {
   get ogrines(){return data.ogrines;},
   get skins(){return [...data.skins];},
   get equippedSkins(){return {...data.equippedSkins};},
-  buySkin(id:string,classId?:string):boolean {const skin=skinById(id);if(!skin||skin.masteryLevel||data.skins.includes(id)||data.ogrines<skin.price)return false;data.ogrines-=skin.price;data.skins.push(id);const target=skin.classId==='*'?classId:skin.classId;if(target)data.equippedSkins[target]=id;save();return true;},
+  /** Achat définitif d'un apparat, valable pour toutes les classes ; l'équipe sur `classId` si fourni. */
+  buyApparat(id:string,classId?:string):boolean {const item=apparatById(id);if(!item||data.skins.includes(id)||data.ogrines<item.price)return false;data.ogrines-=item.price;data.skins.push(id);if(classId)data.equippedSkins[wardrobeKey(classId,item.kind)]=id;save();return true;},
+  /** Apparat porté par une classe ; `id` vide retire l'apparat de l'emplacement. */
+  equipApparat(classId:string,slot:ApparatKind,id:string):boolean {const key=wardrobeKey(classId,slot);if(!id){delete data.equippedSkins[key];save();return true;}if(apparatById(id)?.kind!==slot||!data.skins.includes(id))return false;data.equippedSkins[key]=id;save();return true;},
+  /** Apparence du corps (maîtrise) ; `id` vide revient au corps de base. */
   equipSkin(classId:string,id:string):boolean {if(!id){delete data.equippedSkins[classId];save();return true;}const skin=skinById(id);if(!skinFits(skin,classId)||!data.skins.includes(id))return false;data.equippedSkins[classId]=id;save();return true;},
   claimOgrines(grants:CurrencyGrant[]):number {let gained=0;for(const grant of grants){if(!grant||typeof grant.claimId!=='string'||grant.claimId.length>200||grant.amount!==1||data.claimedOgrines.includes(grant.claimId)||data.credited.includes(grant.claimId.split(':')[0]))continue;data.claimedOgrines.push(grant.claimId);data.ogrines++;gained++;}if(gained)save();return gained;},
   get unlockedMode(){return data.unlockedMode;},

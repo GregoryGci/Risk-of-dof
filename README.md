@@ -33,7 +33,7 @@ Un clic extérieur ferme la fenêtre supérieure ou les préparatifs de l’accu
 
 - **12 classes**, chacune avec son sort signature et son passif inné.
 - **4 emplacements de sorts** et **4 de passifs**, individuels en multijoueur.
-- **18 sorts**, jusqu’au niveau temporaire 8 ; **12 passifs**, jusqu’au niveau 5 ; **18 évolutions**.
+- **17 sorts**, jusqu’au niveau temporaire 8 ; **12 passifs**, jusqu’au niveau 5 ; **17 évolutions**.
 - L’XP au sol, le niveau et la barre sont communs à l’équipe. Chaque joueur reçoit ses propres trois propositions et conserve son build individuel.
 - Les niveaux permettent d’acquérir ou d’améliorer sorts et passifs. Les offres sont validées par le serveur. En solo, le combat est suspendu pendant le choix ; en coop, le délai est limité.
 - Les boss aspirent l’XP et ouvrent une récompense d’évolution distincte. L’évolution exige son sort au maximum et le passif associé. Les élites conservent leurs bénédictions personnelles.
@@ -50,7 +50,7 @@ L’équipement, les panoplies, six emplacements de Dofus, la fusion, la forge, 
 
 ## Maîtrise et variantes
 
-La [maîtrise des classes](docs/MAITRISE.md) débloque des auras au niveau 10, des variantes de sorts partagées au niveau 20 et douze skins spéciaux au niveau 30. Le menu **Maîtrise** permet de choisir les variantes et apparences pour les prochaines runs. L'atelier animé est disponible à [mastery-test.html](client/mastery-test.html).
+La [maîtrise des classes](docs/MAITRISE.md) débloque des auras au niveau 10, des variantes de sorts partagées au niveau 20 et douze skins spéciaux au niveau 30. Dans **Personnages**, le bouton **Maîtrise**, à côté du nom et de la progression, déplie les variantes et apparences pour les prochaines runs. Le lien vers l’atelier animé [mastery-test.html](client/mastery-test.html) est réservé au développement local.
 
 Le prestige reste prévu dans la [liste des tâches](docs/TACHES.md).
 

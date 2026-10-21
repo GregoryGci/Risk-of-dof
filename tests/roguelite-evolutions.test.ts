@@ -42,9 +42,6 @@ test('E12 : Ilyzaelle seule, salve chercheuse, onde et maintien près du propri�
  const s=setup('sp.invocation_de_tofu');dummy(s.sim,44);cast(s);advance(s.sim,6.5);const owned=[...s.sim.monsters.values()].filter(m=>m.allyOwner===s.p.id),royal=owned.filter(m=>m.rogueliteSummon?.royal);
  assert.equal(owned.length,1);assert.equal(royal.length,1);assert.ok(Math.hypot(royal[0].state.x-s.p.state.x,royal[0].state.y-s.p.state.y)<3.6);assert.ok(s.events.some(e=>e.type==='cast'&&e.data.visual?.handler==='projectile'));assert.ok(s.events.some(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius===3));
 });
-test('E13 : Forêt relie les pousses par des racines, attire et émet les éruptions',()=>{
- const s=setup('sp.arbre_sadida');dummy(s.sim,44);cast(s);const tree=[...s.sim.monsters.values()].find(m=>m.allyOwner===s.p.id)!;assert.ok(tree);const target=dummy(s.sim,tree.state.x+1.5,tree.state.y),x=target.state.x;advance(s.sim,.2);assert.ok(target.rootUntil!>0);assert.ok(target.state.x<x);advance(s.sim,2.1);assert.ok(s.events.some(e=>e.type==='abilityFx'&&e.data.kind==='impact'&&e.data.radius===5));
-});
 test('E14 : contagion autonome, poisons par joueur, spores à la mort et aucun critique de tick',()=>{
  const s=setup('sp.ronce');const target=s.sim.spawnMonster({...getMonster('boufton'),hp:10000,speed:0},44,40,1,1,1),neighbor=dummy(s.sim,45),a=s.sim.roguelite.ability(s.p,s.slot)!;
  s.sim.roguelite.addDot(s.p,a,s.slot,target,'poison',10,10,8,3);advance(s.sim,1.1);assert.ok(s.sim.roguelite.stacks(s.p.id,neighbor.id,'poison')>0);

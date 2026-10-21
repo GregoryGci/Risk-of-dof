@@ -24,7 +24,6 @@ const SOUND_GAP_MS = 70;
 export interface EntityVisual {
   key: string;
   appearanceKey?: string;
-  cosmeticGear?: {head?:string;back?:string};
   origin: [number, number];
   scale: number;
   /** Définition d'animations si c'est un vrai asset, null pour un placeholder. */
@@ -180,8 +179,7 @@ export class AssetStore {
     const key = `char_${classId}`;
     const def = this.manifest.characters?.[classId];
     if (def && !this.pendingCharacters.has(classId) && scene.textures.exists(key)) {
-      const outfit=this.manifest.classOutfits?.[skin];
-      return {key,origin:def.origin??[0.5,0.9],scale:def.scale??1,sprite:def,...(outfit?.classId===classId?{appearanceKey:`${key}:${skin}`,cosmeticGear:outfit}:{})};
+      return {key,origin:def.origin??[0.5,0.9],scale:def.scale??1,sprite:def};
     }
     const ph = scene.textures.exists(characterPlaceholderKey(classId, slot)) ? characterPlaceholderKey(classId, slot) : characterPlaceholderKey('cra', slot);
     return { key: ph, origin: ENTITY_PLACEHOLDER_ORIGIN, scale: 1, sprite: null };
@@ -299,7 +297,9 @@ export class AssetStore {
   /** Points d'accroche d'un personnage (clé `char_<classe>`) et objets portables, si extraits. */
   gearFor(scene: Phaser.Scene, key: string): { tracks: GearTracks; gear: GearManifest } | null {
     const gear = this.manifest.gear;
-    const tracks = (key.startsWith('char_') ? scene.cache.json.get(`gear_${key.slice(5)}`) : key.startsWith('skin_') ? scene.cache.json.get(`gear_skin_${key.slice(5)}`) : undefined) as GearTracks | undefined;
+    // Un corps de maîtrise reprend image par image le corps de sa classe : mêmes points d'accroche.
+    const mastery = /^skin_([a-z]+)__mastery$/.exec(key)?.[1];
+    const tracks = (key.startsWith('char_') ? scene.cache.json.get(`gear_${key.slice(5)}`) : key.startsWith('skin_') ? scene.cache.json.get(`gear_skin_${key.slice(5)}`) ?? (mastery ? scene.cache.json.get(`gear_${mastery}`) : undefined) : undefined) as GearTracks | undefined;
     return gear && tracks && scene.textures.exists('gear') ? { tracks, gear } : null;
   }
 

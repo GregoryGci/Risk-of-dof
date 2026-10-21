@@ -81,8 +81,6 @@ export class EntityView {
 
   /** Objets d'apparence portés (coiffe, cape) ; sans effet sur un placeholder ou un monstre. */
   setGear(head?: string, back?: string): void {
-    // Le stuff porté est prioritaire ; l'apparat habille seulement les emplacements vides.
-    head??=this.visual.cosmeticGear?.head;back??=this.visual.cosmeticGear?.back;
     const key = `${head ?? ''}|${back ?? ''}`;
     if (key === this.gearKey) return;
     for (const w of this.gear?.worn ?? []) { w.img.destroy(); this.parts = this.parts.filter(p => p !== w.part); }

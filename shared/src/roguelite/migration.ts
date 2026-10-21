@@ -1,10 +1,15 @@
 import legacyInvestments from './legacy-investments.json';
 import {sanitizePermanentSpellRanks,type PermanentSpellRanks} from './effective.ts';
-export interface RogueliteInvestmentMigration {version:1;refund:number;source:{spellLevels:unknown;spellProgressionVersion:unknown;unlocked:string[];loadouts?:unknown}}
+export interface RogueliteInvestmentMigration {version:1;refund:number;retiredSpellRefunds?:Record<string,number>;source:{spellLevels:unknown;spellProgressionVersion:unknown;unlocked:string[];loadouts?:unknown}}
 /** Retain the source and credit its complete reconstructed cost exactly once. */
 export function migrateRogueliteInvestment(raw:Record<string,unknown>):{permanentSpellRanks:PermanentSpellRanks;rogueliteMigration:RogueliteInvestmentMigration;refund:number} {
  const previous=raw.rogueliteMigration as RogueliteInvestmentMigration|undefined;
- if(previous?.version===1&&Number.isSafeInteger(previous.refund)&&previous.refund>=0)return{permanentSpellRanks:sanitizePermanentSpellRanks(raw.permanentSpellRanks),rogueliteMigration:previous,refund:0};
+ if(previous?.version===1&&Number.isSafeInteger(previous.refund)&&previous.refund>=0){
+  const ranks=raw.permanentSpellRanks&&typeof raw.permanentSpellRanks==='object'?raw.permanentSpellRanks as Record<string,unknown>:{};
+  const rank=ranks['sp.arbre_sadida'];
+  const refund=!previous.retiredSpellRefunds?.['sp.arbre_sadida']&&typeof rank==='number'&&Number.isInteger(rank)&&rank>=1&&rank<=5?[200,400,650,950,1400].slice(0,rank).reduce((a,b)=>a+b,0):0;
+  return{permanentSpellRanks:sanitizePermanentSpellRanks(raw.permanentSpellRanks),refund,rogueliteMigration:refund?{...previous,refund:previous.refund+refund,retiredSpellRefunds:{...previous.retiredSpellRefunds,'sp.arbre_sadida':refund}}:previous};
+ }
  const unlocked=Array.isArray(raw.unlocked)?[...new Set(raw.unlocked.filter((id):id is string=>typeof id==='string'))]:[];
  let refund=0;
  const rows=raw.spellLevels&&typeof raw.spellLevels==='object'?raw.spellLevels as Record<string,unknown>:{};

@@ -9,7 +9,7 @@ Chaque classe possède une maîtrise permanente de niveau 1 à 50. Les niveaux t
 | 30 | Skin spécial animé de la classe |
 | 50 | Maîtrise maximale |
 
-L'écran **Maîtrise** est accessible depuis l'accueil. Il présente les douze classes, l'XP restante, les récompenses et le choix entre version de base et variante. Le skin peut aussi être équipé dans la galerie des apparats. Les skins de maîtrise ne s'achètent pas avec des Ogrines.
+Dans **Personnages**, l’en-tête présente le nom de la classe, sa barre d’XP et son niveau, puis un bouton **Maîtrise**. Ce bouton déplie les récompenses et les choix de variantes dans la même page, en suivant la classe sélectionnée. Le lien vers l’atelier d’aperçu apparaît uniquement en développement local. Le skin peut aussi être équipé dans la galerie des apparats. Les skins de maîtrise ne s’achètent pas avec des Ogrines.
 
 ## XP et sauvegarde
 
@@ -23,7 +23,7 @@ L'XP totale requise pour le niveau `n` est `(n − 1) × (80 + 10 × n)`. Les ma
 
 ## Variantes
 
-Les 18 sorts ont chacun une variante avec un compromis de gameplay. Une variante débloquée avec une classe est utilisable par toutes les autres classes lorsqu'elles obtiennent ce sort pendant une run. Les préférences sont choisies à l'accueil ou au salon, puis figées jusqu'à la fin de la run.
+Les 17 sorts ont chacun une variante avec un compromis de gameplay. Une variante débloquée avec une classe est utilisable par toutes les autres classes lorsqu'elles obtiennent ce sort pendant une run. Les préférences sont choisies à l'accueil ou au salon, puis figées jusqu'à la fin de la run.
 
 La variante remplace la version du sort proposée dans les cartes et conserve son identité, ses huit niveaux, ses paliers permanents et son évolution habituelle. La forme évoluée utilise son propre comportement. Le nom choisi apparaît sur les cartes, dans les détails de combat et dans les récapitulatifs.
 

@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {SKINS,SKIN_PRICE,getMonster,sanitizeSkinBook,PHASE_PLAYING,createEquipment,EQUIPMENT_TIERS} from '@rod/shared';
+import {APPARATS,APPARAT_PRICES,LIVING_APPARATS,apparatById,getMonster,sanitizeSkinBook,PHASE_PLAYING,createEquipment,EQUIPMENT_TIERS} from '@rod/shared';
 import {GameState} from '../server/src/state.ts';
 import {Simulation} from '../server/src/game/Simulation.ts';
 import {migrateAccount} from '../client/src/progression.ts';
@@ -20,15 +20,40 @@ test('Ogrine : boss uniquement, ramassage personnel, récompense finale et aucun
  }finally{Math.random=original;}
 });
 
-test('Apparats : achat à 5, propriété permanente, aucun débit répété et choix par classe',async()=>{
- const storage=new Map<string,string>();Object.defineProperty(globalThis,'localStorage',{value:{getItem:(k:string)=>storage.get(k)??null,setItem:(k:string,v:string)=>storage.set(k,v)},configurable:true});const {account}=await import('../client/src/account.ts');account.replace({version:3,equipmentCatalogVersion:2,ogrines:10});
- assert.equal(account.buySkin('inconnu'),false);assert.equal(account.buySkin('cra__solomonk'),true);assert.equal(account.ogrines,5);assert.equal(account.buySkin('cra__solomonk'),false);assert.equal(account.ogrines,5);assert.equal(account.equipSkin('iop','cra__solomonk'),false);assert.equal(account.equipSkin('cra','cra__shushu'),false);assert.equal(account.equipSkin('cra',''),true);assert.equal(account.equipSkin('cra','cra__solomonk'),true);account.replace(account.snapshot());assert.equal(account.equippedSkins.cra,'cra__solomonk');assert.equal(account.ogrines,5);assert.equal(account.buySkin('iop__shushu'),true);assert.equal(account.ogrines,0);assert.equal(account.buySkin('feca__shushu'),false);
- assert.deepEqual(sanitizeSkinBook({cra:'cra__solomonk',iop:'iop__shushu'},['cra__solomonk']),{cra:'cra__solomonk'});
+test('Apparats : coiffe 3, cape 2, achat définitif pour toutes les classes et emplacement vérifié',async()=>{
+ const storage=new Map<string,string>();Object.defineProperty(globalThis,'localStorage',{value:{getItem:(k:string)=>storage.get(k)??null,setItem:(k:string,v:string)=>storage.set(k,v)},configurable:true});const {account}=await import('../client/src/account.ts');account.replace({version:3,equipmentCatalogVersion:2,ogrines:5});
+ const hat='apparat_16_211_3',cape='cape_bouftou';
+ assert.equal(account.buyApparat('inconnu'),false);assert.equal(account.buyApparat(hat,'cra'),true);assert.equal(account.ogrines,2);assert.equal(account.buyApparat(hat),false);assert.equal(account.ogrines,2);
+ assert.equal(account.equippedSkins['cra:coiffe'],hat,'L’achat habille la classe affichée.');
+ assert.equal(account.equipApparat('iop','coiffe',hat),true,'Un apparat va sur toutes les classes.');assert.equal(account.equipApparat('iop','cape',hat),false,'Une coiffe ne va pas dans le dos.');
+ assert.equal(account.equipApparat('iop','cape',cape),false,'Il faut posséder l’apparat.');assert.equal(account.buyApparat(cape,'iop'),true);assert.equal(account.ogrines,0);assert.equal(account.buyApparat('apparat_17_149_0'),false,'Pas assez d’Ogrines.');
+ account.replace(account.snapshot());assert.deepEqual(account.equippedSkins,{'cra:coiffe':hat,'iop:coiffe':hat,'iop:cape':cape});
+ assert.equal(account.equipApparat('iop','coiffe',''),true);assert.equal(account.equippedSkins['iop:coiffe'],undefined);
+ assert.deepEqual(sanitizeSkinBook({'cra:coiffe':hat,'cra:cape':hat,'iop:cape':cape,cra:'cra__mastery'},[hat]),{'cra:coiffe':hat});
 });
 
-test('Apparats originaux : 36 offres, prix uniforme, atlas et aperçu réellement livrés',()=>{
- const manifest=JSON.parse(fs.readFileSync('client/public/assets/dofus/manifest.json','utf8'));assert.equal(SKINS.length,36);
- for(const skin of SKINS){assert.equal(skin.price,SKIN_PRICE);const outfit=manifest.classOutfits[skin.id];assert.equal(outfit.classId,skin.classId);const def=manifest.characters[outfit.classId];assert.ok(manifest.gear.items[outfit.head]&&manifest.gear.items[outfit.back]);for(const file of[def.image,def.atlas,`apparats/${skin.id}__preview.png`])assert.ok(fs.statSync('client/public/assets/dofus/'+file).size>100,file);assert.ok(def.anims.idle&&def.anims.run&&def.anims.attack);}
+test('Boutique : toutes les coiffes et capes du jeu, chaque forme des objets vivants, prix fixes',()=>{
+ const gearItems=Object.entries(JSON.parse(fs.readFileSync('client/public/assets/dofus/manifest.json','utf8')).gear.items);
+ assert.equal(APPARATS.length,new Set(APPARATS.map(a=>a.id)).size);
+ for(const item of APPARATS)assert.equal(item.price,APPARAT_PRICES[item.kind]);
+ assert.deepEqual([APPARAT_PRICES.coiffe,APPARAT_PRICES.cape],[3,2]);
+ for(const [part,name,models]of LIVING_APPARATS){const forms=APPARATS.filter(a=>a.family===part);assert.equal(forms.length,models,name);assert.deepEqual(forms.map(f=>f.model),[...Array(models).keys()]);}
+ assert.equal(APPARATS.filter(a=>a.family==='16_211').length,20,'Les vingt formes de l’Obvijevan.');
+ // Tout ce que l’atlas sait dessiner est en vente.
+ assert.deepEqual(gearItems.map(([id])=>id).filter(id=>!apparatById(id)),[]);
+});
+
+test('Anciens apparats de classe et costumes remboursés une seule fois',()=>{
+ const next=migrateAccount({version:3,equipmentCatalogVersion:2,ogrines:1,skins:['cra__solomonk','iop__shushu','costume_coffre','apparat_16_211_0'],equippedSkins:{cra:'cra__solomonk','iop:coiffe':'apparat_16_211_0'}});
+ assert.equal(next.ogrines,1+5+5+8);assert.deepEqual(next.skins,['apparat_16_211_0']);assert.deepEqual(next.equippedSkins,{'iop:coiffe':'apparat_16_211_0'});
+ assert.deepEqual(migrateAccount(next),next);
+});
+
+test('Serveur : coiffe et cape d’apparat de la classe jouée, livre invalide ignoré',()=>{
+ const state=new GameState(),sim=new Simulation(state,()=>{});sim.addPlayer('a','A');const p=sim.players.get('a')!;sim.setClass('a','cra');
+ sim.setSkins('a',{'cra:coiffe':'apparat_16_362_2','cra:cape':'cape_bouftou','iop:cape':'apparat_16_211_0'});assert.equal(p.state.apparel,'apparat_16_362_2|cape_bouftou');
+ sim.setClass('a','iop');assert.equal(p.state.apparel,'','Une coiffe à la place d’une cape est refusée.');
+ sim.setClass('a','feca');assert.equal(p.state.apparel,'');assert.equal(p.state.skin,'');
 });
 
 test('Migration des paliers : conserve le palier 200 et la tenue, relecture idempotente',()=>{

@@ -77,9 +77,8 @@ export interface ImageDef {
 }
 
 export interface Manifest {
+  /** Corps de maîtrise par identifiant d'apparence (ex. "cra__mastery"). */
   skins?:Record<string,SpriteDef>;
-  /** Apparats sur le corps de classe ; les costumes gardent leurs atlas propres. */
-  classOutfits?:Record<string,{classId:string;head?:string;back?:string}>;
   /** Personnages par id de classe (ex. "cra"). */
   characters?: Record<string, SpriteDef>;
   /** Monstres par id (ex. "bouftou"). */

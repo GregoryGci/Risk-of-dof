@@ -10,6 +10,8 @@ export const PlayerState = schema(
     abilities:t.string().default('[]'),
     choiceOffer:t.string().default('null'),
     skin:t.string().default(''),
+    /** Apparats portés : `coiffe|cape` (identifiants de l'atlas d'équipement), vide sans apparat. */
+    apparel:t.string().default(''),
     masteryAura:t.string().default(''),
     masteryLevel:t.uint8().default(1),
     ogrinesEarned:t.uint16().default(0),

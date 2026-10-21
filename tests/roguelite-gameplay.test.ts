@@ -5,8 +5,8 @@ import {makeRng} from '@rod/shared';
 import {buildWith,setupRoguelite,installBuild,dummy,advance} from './fixtures/roguelite-simulation.ts';
 import {migrateAccount} from '../client/src/progression.ts';
 
-test('Design validé : 18 sorts × 8, 12 passifs × 5, 18 évolutions et 12 signatures distinctes',()=>{
- assert.equal(C.spells().filter(s=>s.acquire).length,18);assert.equal(C.spells().filter(s=>!s.acquire).length,18);
+test('Design validé : 17 sorts × 8, 12 passifs × 5, 17 évolutions et 12 signatures distinctes',()=>{
+ assert.equal(C.spells().filter(s=>s.acquire).length,17);assert.equal(C.spells().filter(s=>!s.acquire).length,17);
  assert.equal(C.passives().filter(p=>!p.innate).length,12);assert.equal(C.passives().filter(p=>p.innate).length,12);
  assert.ok(C.spells().filter(s=>s.acquire).every(s=>s.maxLevel===8));assert.ok(C.passives().filter(p=>!p.innate).every(p=>p.ranks.length===5));
  assert.equal(new Set(Object.values(ROGUELITE_SIGNATURES)).size,12);
@@ -27,7 +27,7 @@ test('Offres : nouvelles acquisitions aux niveaux 2/3, puis trois cartes admissi
  let fourth=0;const build=createRunBuild(C,'cra');
  for(let seed=0;seed<10000;seed++){const cards=generateLevelRewards(C,build,makeRng(seed),{level:2,luck:2});assert.ok(cards.some(c=>c.kind==='acquireSpell'));assert.equal(new Set(cards.map(c=>c.id)).size,cards.length);if(cards.length===4)fourth++;}
  assert.ok(fourth/10000>.18&&fourth/10000<.22);
- for(const classId of Object.keys(ROGUELITE_SIGNATURES)){const seen=new Set<string>();for(let seed=0;seed<500;seed++)for(const card of generateLevelRewards(C,createRunBuild(C,classId),makeRng(seed),{level:3}))if(card.kind==='acquireSpell'||card.kind==='upgradeSpell')seen.add(card.definitionId);assert.equal(seen.size,18);}
+ for(const classId of Object.keys(ROGUELITE_SIGNATURES)){const seen=new Set<string>();for(let seed=0;seed<500;seed++)for(const card of generateLevelRewards(C,createRunBuild(C,classId),makeRng(seed),{level:3}))if(card.kind==='acquireSpell'||card.kind==='upgradeSpell')seen.add(card.definitionId);assert.equal(seen.size,17);}
 });
 test('Calcul : seaux séparés, caps et Puissance non diluée par une tenue avancée',()=>{
  const base={base:10,flat:10,coefficient:.5,equipment:5,rapid:true,power:0,innate:0,surcharge:0,conditional:0,vulnerability:0,critical:false,criticalDamage:0};
@@ -46,7 +46,7 @@ test('Collecte : l’XP capturée n’est créditée qu’à la livraison, et su
  sim.experience.deliver(value,'p');sim.update(1/30);assert.equal(state.totalXp,35);
 });
 
-test('Combinaisons extrêmes : 18 sorts N8 ou évolués, palier permanent 5 et quatre passifs maximisés',()=>{
+test('Combinaisons extrêmes : 17 sorts N8 ou évolués, palier permanent 5 et quatre passifs maximisés',()=>{
  for(const id of ROGUELITE_SPELL_IDS)for(const evolved of[false,true]){
   const origin=C.spell(id)!.originClassId;let build=buildWith(origin,[id],8,evolved);
   const relevant=[...(evolved?[C.evolution(C.spell(id)!.evolutionId!)!.passiveId]:[]),'pa.celerite','pa.expansion','pa.multitude','pa.persistance'].filter((x,i,list)=>list.indexOf(x)===i).slice(0,4);

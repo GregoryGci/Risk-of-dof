@@ -38,6 +38,6 @@ test('Passifs : la régénération proposée tient compte de la menace, les effe
   assert.doesNotMatch(ROGUELITE_INNATES.ecaflip.description,/relance par zone/);assert.doesNotMatch(ROGUELITE_INNATES.osamodas.description,/familier/);
   assert.match(passiveRankSummary('pa.expansion',1),/Dégâts de zone \+3 %/);assert.match(passiveRankSummary('pa.persistance',1),/Dégâts répétés \+7 %/);
   assert.match(C.passive('pa.protection')!.description,/5 s/);assert.match(C.passive('pa.maitrise_invocations')!.description,/glyphes et pièges/);
-  const build=buildWith('sadida',['sp.arbre_sadida'],1),tree=abilitySummary(effectiveRogueliteAbility(build.spells.find(s=>s?.spellId==='sp.arbre_sadida')!,build));
-  assert.match(tree,/Recharge 10 s/);assert.match(tree,/Cadence des dégâts 1 s/);
+  const build=buildWith('feca',['sp.glyphe_agressif'],1),glyph=abilitySummary(effectiveRogueliteAbility(build.spells[0]!,build));
+  assert.match(glyph,/Recharge 5 s/);assert.match(glyph,/Cadence des dégâts 0,5 s/);
 });

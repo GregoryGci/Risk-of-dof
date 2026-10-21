@@ -61,7 +61,6 @@
             <button id="btn-ladder" class="home-nav-button"><span>Classement<small>Les plus grandes aventures</small></span></button>
             <button id="btn-history" class="home-nav-button"><span>Chroniques<small>Vos runs, vos records, vos trouvailles</small></span></button>
             <button id="btn-skins" class="home-nav-button"><span>Apparats<small>Une allure qui vous ressemble</small></span></button>
-            <button id="btn-mastery" class="home-nav-button"><span>Maîtrise<small>Auras, skins et variantes de sorts</small></span></button>
             <button class="home-nav-button" data-view="settings"><span>Réglages<small>À votre façon</small></span></button>
           </nav>
         </section>
@@ -88,12 +87,18 @@
             <div class="preparation-note"><b>Ensemble, à votre façon</b><p>Chaque particule d’XP fait progresser toute l’équipe. Chacun choisit ses sorts, ses passifs et ses améliorations.</p></div>
           </div>
           <div id="view-character" class="home-view-content hidden">
+            <div class="character-heading">
+              <h3 id="character-name"></h3>
+              <div id="character-mastery-progress" class="character-mastery-progress"></div>
+              <button id="btn-mastery" class="btn character-mastery-button" aria-expanded="false" aria-controls="mastery">Maîtrise <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button>
+            </div>
             <div id="class-carousel" class="class-carousel" role="group" aria-roledescription="carrousel" aria-label="Choisir votre classe" tabindex="0">
               <div class="carousel-stage"><div class="carousel-art"><img id="character-portrait" alt=""><span id="class-illustration" class="class-illustration" aria-hidden="true"></span><span class="carousel-ground" aria-hidden="true"></span></div>
                 <div class="carousel-controls"><button class="carousel-arrow" data-class-step="-1" aria-label="Classe précédente"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m14 6-6 6 6 6"/></svg></button><span id="class-position" class="eyebrow" aria-live="polite"></span><button class="carousel-arrow" data-class-step="1" aria-label="Classe suivante"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m10 6 6 6-6 6"/></svg></button></div>
               </div>
-              <div class="character-intro" aria-live="polite" aria-atomic="true"><span class="eyebrow">VOTRE CLASSE DE DÉPART</span><h3 id="character-name"></h3><p id="class-desc"></p><div id="class-signature" class="class-feature"></div><div id="class-innate" class="class-feature"></div></div>
+              <div class="character-intro" aria-live="polite" aria-atomic="true"><span class="eyebrow">VOTRE CLASSE DE DÉPART</span><p id="class-desc"></p><div id="class-signature" class="class-feature"></div><div id="class-innate" class="class-feature"></div></div>
             </div>
+            <section id="mastery" class="character-mastery hidden" aria-label="Maîtrise du personnage"></section>
             <div class="page-section-heading"><h3>Les douze classes</h3><span>Sélection enregistrée automatiquement</span></div><div id="class-picker" class="home-class-picker" aria-label="Accès direct aux douze classes"></div>
             <div class="page-section-heading"><h3>Votre progression permanente</h3></div>
             <div class="character-actions"><button id="btn-equipment" class="character-action"><span>◈</span><div><b>Équipement</b><small id="equipment-summary"></small></div><span>→</span></button><button id="btn-talents" class="character-action"><span>✦</span><div><b>Grimoire</b><small id="talents-summary"></small></div><span>→</span></button></div>

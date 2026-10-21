@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import {CLASSES,SKINS,COSTUMES,sanitizeSkinBook,EQUIPMENT_BASES} from '@rod/shared';
+import {CLASSES,APPARATS,EQUIPMENT_BASES} from '@rod/shared';
 import type {Manifest,GearTracks} from '../client/src/assets/manifest.ts';
 
 const root=path.resolve('client/public/assets/dofus');
@@ -33,10 +33,9 @@ test('Douze corps illustrés : atlas légers, animations complètes et équipeme
   }
  }
 });
-test('Les 36 apparats partagent les corps illustrés et les 12 costumes sont conservés',()=>{
- assert.equal(Object.keys(manifest.classOutfits!).length,SKINS.length);
- for(const skin of SKINS){const outfit=manifest.classOutfits![skin.id]!;assert.equal(outfit.classId,skin.classId);assert.ok(manifest.gear!.items[outfit.head!]);assert.ok(manifest.gear!.items[outfit.back!]);assert.equal(manifest.skins![skin.id],undefined);}
- for(const costume of COSTUMES){const def=manifest.skins![costume.id]!;assert.ok(def,costume.id);assert.ok(fs.existsSync(path.join(root,def.image)));}
- const owned=SKINS.map(s=>s.id),equipped=Object.fromEntries(Object.keys(CLASSES).map(id=>[id,id+'__solomonk']));
- assert.deepEqual(sanitizeSkinBook(equipped,owned),equipped,'Les identifiants possédés et équipés restent valides.');
+test('Chaque apparat a son image dans l’atlas d’équipement, sans tenue de classe ni costume',()=>{
+ assert.equal((manifest as any).classOutfits,undefined);
+ assert.deepEqual(Object.keys(manifest.skins!).filter(id=>!id.endsWith('__mastery')),[]);
+ for(const item of APPARATS){const gear=manifest.gear!.items[item.id];assert.ok(gear,item.id);assert.equal(gear.kind,item.kind);assert.ok(Object.keys(gear.origins).length>=4,item.id);}
+ assert.ok(Object.keys(CLASSES).length===12);
 });

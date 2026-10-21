@@ -6,36 +6,36 @@ import {RunBuildController} from '../server/src/game/roguelite/RunBuildControlle
 import {Director} from '../server/src/game/director.ts';
 import {advance,buildWith,setupRoguelite} from './fixtures/roguelite-simulation.ts';
 
-test('Arbre évolue à N8 dans son emplacement sans changer les autres sorts ni attendre une vague',()=>{
+test('Glyphe évolue à N8 dans son emplacement sans changer les autres sorts ni attendre une vague',()=>{
  const {sim,p,state,events}=setupRoguelite('cra');
- let build=buildWith('cra',['sp.arbre_sadida','sp.pression'],7);
+ let build=buildWith('cra',['sp.glyphe_agressif','sp.pression'],7);
  build=applyLevelReward(C,build,availableLevelRewards(C,build).find(c=>c.definitionId==='pa.expansion')!);
  for(let seed=0;seed<200;seed++){
   p.build=new RunBuildController(C,state.runId,p.id,'cra',seed,build);p.build.enqueueLevels(2,0);
-  const offer=p.build.getSnapshot().offer!,index=offer.choices.findIndex(c=>c.definitionId==='sp.arbre_sadida');if(index<0)continue;
-  sim.applyStats(p);const other=build.spells.filter(s=>s?.spellId!=='sp.arbre_sadida'),slot=build.spells.findIndex(s=>s?.spellId==='sp.arbre_sadida');
+  const offer=p.build.getSnapshot().offer!,index=offer.choices.findIndex(c=>c.definitionId==='sp.glyphe_agressif');if(index<0)continue;
+  sim.applyStats(p);const other=build.spells.filter(s=>s?.spellId!=='sp.glyphe_agressif'),slot=build.spells.findIndex(s=>s?.spellId==='sp.glyphe_agressif');
   p.readyAt=[100,100,100,100];const waves=state.waves,now=sim.now;
   sim.chooseBoon(p.id,index,offer.revision,state.runId);
-  assert.equal(p.build.currentBuild.spells[slot]!.spellId,'ev.foret_vivante');
+  assert.equal(p.build.currentBuild.spells[slot]!.spellId,'ev.sanctuaire_runique');
   assert.deepEqual(p.build.currentBuild.spells.filter((_,i)=>i!==slot),other);
   assert.equal(p.readyAt[slot],now);assert.equal(p.readyAt[0],100);assert.equal(state.waves,waves);assert.equal(sim.now,now);
-  assert.equal(p.state.pendingLevels,1);assert.ok(events.some(e=>e.type==='abilityFx'&&e.data.kind==='evolution'&&e.data.ability==='ev.foret_vivante'));
+  assert.equal(p.state.pendingLevels,1);assert.ok(events.some(e=>e.type==='abilityFx'&&e.data.kind==='evolution'&&e.data.ability==='ev.sanctuaire_runique'));
   const after=p.state.build;sim.chooseBoon(p.id,index,offer.revision,state.runId);assert.equal(p.state.build,after);return;
  }
- assert.fail('Offre Arbre attendue');
+ assert.fail('Offre Glyphe attendue');
 });
 
 test('Passif obtenu après N8 : tous les sorts compatibles évoluent immédiatement, chacun dans son slot',()=>{
- const {sim,p,state}=setupRoguelite('cra');const build=buildWith('cra',['sp.arbre_sadida','sp.glyphe_agressif']);
+ const {sim,p,state}=setupRoguelite('cra');const build=buildWith('cra',['sp.fleche_enflammee','sp.ronce']);
  for(let seed=0;seed<200;seed++){
   p.build=new RunBuildController(C,state.runId,p.id,'cra',seed,build);p.build.enqueueLevels(1,0);
-  const offer=p.build.getSnapshot().offer!,index=offer.choices.findIndex(c=>c.definitionId==='pa.expansion');if(index<0)continue;
+  const offer=p.build.getSnapshot().offer!,index=offer.choices.findIndex(c=>c.definitionId==='pa.persistance');if(index<0)continue;
   sim.applyStats(p);sim.chooseBoon(p.id,index,offer.revision);
   assert.equal(p.build.currentBuild.spells[0]!.spellId,'sp.fleche_magique');
-  assert.equal(p.build.currentBuild.spells[1]!.spellId,'ev.foret_vivante');
-  assert.equal(p.build.currentBuild.spells[2]!.spellId,'ev.sanctuaire_runique');return;
+  assert.equal(p.build.currentBuild.spells[1]!.spellId,'ev.sillage_ardent');
+  assert.equal(p.build.currentBuild.spells[2]!.spellId,'ev.epidemie');return;
  }
- assert.fail('Offre Expansion attendue');
+ assert.fail('Offre Persistance attendue');
 });
 
 test('Zaap rouge : même carte, mêmes positions, ennemis et XP au sol pour toute l’équipe',()=>{
